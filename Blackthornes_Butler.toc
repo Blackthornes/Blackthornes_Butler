@@ -16,6 +16,10 @@
 
 Core\Init.lua
 
+Logic\Items.lua
+Logic\Bags.lua
+Logic\Verdicts.lua
+
 UI\Theme.lua
 UI\BlizzardLook.lua
 UI\Widgets.lua
@@ -24,5 +28,7 @@ UI\SettingsPages.lua
 UI\Minimap.lua
 UI\Settings.lua
 UI\MainWindow.lua
+
+Logic\Selling.lua
 
 Probe\Probe.lua

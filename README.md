@@ -14,9 +14,22 @@ They share a palette and a framework on purpose, and Butler will ask each of
 them about your items when they are installed. Without them it still works,
 from vendor prices and the game's own quest marks.
 
-So far this is the addon's frame: the Butler window (empty for now),
-settings, a minimap button and `/bbutler probe`. The item list and selling
-come next.
+So far it works on its own (the other four are asked in a later version):
+
+- **The Butler window** lists every item in your bags in three groups, each
+  with its count and what it is worth: **Sell** (grey items, and anything on
+  your Always sell list), **Look at it** (everything Butler can't judge yet,
+  with what a vendor pays) and **Keep** (quest items, items that start a
+  quest, anything a vendor won't buy, and your Always keep list). Click a
+  group's heading to fold it; Keep starts folded.
+- **Right-click** an item to always keep it, always sell it, or let Butler
+  decide again. The lists are account wide.
+- **Sell at a vendor.** The window comes up by itself at a vendor when there
+  is something to sell, with a Sell button at its foot. Nothing sells until
+  you click it, and it only ever sells what is under Sell. Each click sells
+  one stack; if `/bbutler selltest` finds the game lets Butler sell from its
+  own code, each click sells up to 12, which is what the vendor's Buyback
+  tab holds, so every sale can be bought back.
 
 ## Install
 
@@ -62,6 +75,10 @@ inside it. If they differ, the client ignores the folder and says nothing.
 /bbutler probe     check what this client supports for bags, vendors and mail; it only reads
 /bbutler settings  open the settings window (so does right-clicking the minimap button)
 /bbutler minimap   show or hide the minimap button
+/bbutler vendor    turn the window coming up at a vendor on or off
+/bbutler selltest  at a vendor, sell your cheapest grey to test whether Butler may sell 12 a click
+/bbutler lists     show your Always keep and Always sell lists
+/bbutler reset confirm   empty both lists (typed only)
 ```
 
 The settings window is also under the game's Options > AddOns. Hover a
@@ -69,7 +86,8 @@ setting to see what it does, or tick **Show descriptions** to see it under
 every row; **Find a setting** searches every page. **Text size** makes all
 of the addon's text a point or two bigger after a `/reload`, and **Window
 style** picks the house look or the game's own. Every command above has a
-button there too.
+button there too, apart from `reset confirm`, which deletes your lists and
+so stays typed.
 
 `/butler` works too.
 
@@ -78,13 +96,12 @@ button there too.
 | Folder | What is in it |
 |---|---|
 | `Core/` | Namespace, module registry, event dispatch, slash commands, saved variables |
+| `Logic/` | Item prices, reading the bags, the verdicts and selling at a vendor |
 | `UI/` | Theme, widgets, the house window frame, the minimap button, the Butler window and the settings window |
 | `Media/` | The window frame's art (`Frame/*.tga`), drawn by `tools/make_frame_art.py` |
 | `Probe/` | `/bbutler probe`, which checks what the running game actually supports instead of guessing |
 | `tools/` | Checks, tests, the frame art script and the link script. Not shipped to the client |
 | `docs/` | What the Forever client actually does, found with `/bbutler probe`. Not shipped |
-
-`Data/` and `Logic/` arrive with the first features.
 
 `Blackthornes_Butler.toc` lists every Lua file in load order. A file that is
 not in it does not load, and WoW says nothing about it.

@@ -65,14 +65,24 @@ suite.check("/bbutler minimap ticks it again", minimapBox:GetChecked())
 controls.debug:GetScript("OnClick")(controls.debug)
 suite.check("the debug box sets debug", ns.db.debug == true)
 
--- The pages along the top, as Tradeskills' Settings tab has them. Butler
--- has one page so far; the others come with the features they hold.
+-- The pages along the top, as Tradeskills' Settings tab has them: Selling,
+-- then General. The plan's others come with the features they hold.
 local pages = SettingsUI.pages
-suite.check("it opens on the first page", pages.shown == "general")
-suite.check("with the general rows showing", pages.pages.general.content:IsShown())
+suite.check("it opens on the first page", pages.shown == "selling", pages.shown)
+suite.check("with the selling rows showing", pages.pages.selling.content:IsShown())
+pages:Show("general")
+suite.check("General is the second page", pages.shown == "general" and pages.pages.general.content:IsShown())
 SettingsUI:Hide()
 SettingsUI:Show()
 suite.check("it opens again on the page left", pages.shown == "general")
+
+-- Open at a vendor: on unless unticked, saved as the box says.
+suite.check("Open at a vendor starts ticked", controls.openAtVendor:GetChecked())
+controls.openAtVendor:GetScript("OnClick")(controls.openAtVendor)
+suite.check("unticking it saves off", ns.db.openAtVendor == false)
+ns.HandleSlash("vendor")
+suite.check("/bbutler vendor turns it back on, and the box follows",
+    ns.db.openAtVendor == true and controls.openAtVendor:GetChecked())
 
 -- What a setting does is a tooltip until Show descriptions is ticked.
 local minimapRow
@@ -123,12 +133,20 @@ suite.check("back to Normal needs no reload", ns.db.textSize == "normal"
 local ran = {}
 local realSlash = ns.HandleSlash
 ns.HandleSlash = function(text) ran[#ran + 1] = text end
-for _, key in ipairs({ "openWindow", "probe", "help" }) do
+for _, key in ipairs({ "openWindow", "probe", "help", "sellTest", "lists" }) do
     controls[key]:GetScript("OnClick")(controls[key])
 end
 ns.HandleSlash = realSlash
 suite.check("the command buttons run their commands",
-    table.concat(ran, ",") == "window,probe,help")
+    table.concat(ran, ",") == "window,probe,help,selltest,lists", table.concat(ran, ","))
+
+-- Every command has a button or a control here, apart from the one that
+-- deletes the player's lists, which stays typed (a house rule).
+local covered = { window = true, probe = true, help = true, selltest = true, lists = true,
+    vendor = true, minimap = true, settings = true, reset = true }
+for _, name in ipairs(ns.commandOrder) do
+    suite.check("/bbutler " .. name .. " has a place in Settings", covered[name] == true)
+end
 
 -- Position.
 ns.db.settingsX = 400
