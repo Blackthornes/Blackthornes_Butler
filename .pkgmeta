@@ -1,0 +1,34 @@
+# Packaging instructions for the BigWigs packager, which builds the zip that
+# CurseForge, Wago and WoWInterface hand to players.
+#
+# The folder inside the zip must be named exactly as the .toc file, or the
+# client will not see the addon.
+package-as: Blackthornes_Butler
+
+# Development-only files. None of it belongs in a player's
+# Interface\AddOns folder.
+ignore:
+  - .github
+  - .gitattributes
+  - .gitignore
+  - .pkgmeta
+  - docs
+  - tools
+  - deploy.ps1
+  # Notes for Claude about working on the addon, shared with the other
+  # addons' projects. Not for players.
+  - CLAUDE.md
+  # The #general Discord posts; tools/post_general.py checks and posts them.
+  - NEWS.md
+  # The README is for working on the addon: it names the owner's own folders.
+  # Players read the CurseForge description instead.
+  - README.md
+
+license-output: LICENSE
+
+# Ship CHANGELOG.md as written. Without this the packager writes its own from
+# the full commit history, which is the private repository's development log
+# and not something a player needs to read.
+manual-changelog:
+  filename: CHANGELOG.md
+  markup-type: markdown
