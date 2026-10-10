@@ -219,7 +219,7 @@ function SettingsUI:BuildPages()
     pages:Section("selling", 1, "AT A VENDOR")
 
     local vendorRow = pages:Row("selling", 1, "Open at a vendor",
-        "The Butler window comes up by itself at a vendor when there is something to sell, and goes when you leave. Nothing sells until you click Sell. Also /bbutler vendor.")
+        "The Butler window comes up by itself at every vendor, and goes when you leave. Nothing sells until you click Sell. Also /bbutler vendor.")
     controls.openAtVendor = Widgets.CreateCheckbox(vendorRow, "On", function(checked)
         ns.db.openAtVendor = checked
     end, true)

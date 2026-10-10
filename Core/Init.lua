@@ -303,8 +303,8 @@ local DEFAULTS = {
     -- login, so a change waits for /reload. See UI/BlizzardLook.lua.
     windowStyle = "titanforged",
 
-    -- The Butler window comes up by itself at a vendor when there is
-    -- something to sell, and goes when the vendor closes.
+    -- The Butler window comes up by itself at a vendor, and goes when the
+    -- vendor closes.
     openAtVendor = true,
 
     -- Also kept here, never renamed (made when first needed, so not given

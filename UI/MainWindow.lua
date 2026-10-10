@@ -3,7 +3,7 @@
 -- groups (Sell, Look at it, Keep), each with its count and what it is worth.
 --
 -- It is what a click on the minimap button and a bare /bbutler open, and it
--- comes up by itself at a vendor when there is something to sell (the
+-- comes up by itself at every vendor and goes when the vendor closes (the
 -- "Open at a vendor" setting). The Sell button (Logic/Selling.lua) sits over
 -- its foot while a vendor is open.
 --
@@ -455,12 +455,19 @@ end
 -- At a vendor
 --------------------------------------------------------------------------------
 
---- A vendor opened: come up by itself when there is something to sell and
---- the player wants that ("Open at a vendor").
+-- Whether the window waits for something to sell before it comes up at a
+-- vendor. The owner asked (2026-10-10) for it at every vendor "for now",
+-- and may want the wait back: setting this true restores it.
+UI.ONLY_WITH_SALES = false
+
+--- A vendor opened: come up by itself when the player wants that ("Open at
+--- a vendor").
 function UI:AtVendor()
     if self:IsShown() or not (ns.db and ns.db.openAtVendor) then return end
-    local sell = ns.Verdicts:Group("sell")
-    if not (sell and sell.count > 0) then return end
+    if UI.ONLY_WITH_SALES then
+        local sell = ns.Verdicts:Group("sell")
+        if not (sell and sell.count > 0) then return end
+    end
     self:Show()
     self.openedByVendor = true
 end

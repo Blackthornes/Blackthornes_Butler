@@ -24,8 +24,8 @@ So far it works on its own (the other four are asked in a later version):
   group's heading to fold it; Keep starts folded.
 - **Right-click** an item to always keep it, always sell it, or let Butler
   decide again. The lists are account wide.
-- **Sell at a vendor.** The window comes up by itself at a vendor when there
-  is something to sell, with a Sell button at its foot. Nothing sells until
+- **Sell at a vendor.** The window comes up by itself at every vendor, with
+  a Sell button at its foot when there is something to sell. Nothing sells until
   you click it, and it only ever sells what is under Sell. Each click sells
   one stack; if `/bbutler selltest` finds the game lets Butler sell from its
   own code, each click sells up to 12, which is what the vendor's Buyback

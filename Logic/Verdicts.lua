@@ -259,7 +259,7 @@ end)
 
 ns.RegisterCommand("vendor", "turn the Butler window coming up at a vendor on or off", function()
     ns.db.openAtVendor = not ns.db.openAtVendor
-    ns.Print(ns.db.openAtVendor and "the Butler window comes up at a vendor when there is something to sell."
+    ns.Print(ns.db.openAtVendor and "the Butler window comes up at every vendor."
         or "the Butler window no longer comes up at a vendor by itself.")
 end)
 
