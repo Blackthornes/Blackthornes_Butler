@@ -31,6 +31,8 @@ Selling:Update()
 local button = Selling.button
 suite.check("with the Sell button", button and button:IsShown())
 suite.check("over the window's foot, not anchored to it", button._point[2] == UIParent)
+suite.check("in a layer above the window, so the window never covers it",
+    button:GetFrameStrata() == "FULLSCREEN_DIALOG" and UI.frame:GetFrameStrata() == "DIALOG")
 suite.check("which names the stack it sells", button.label:GetText() == "Sell Junk 1", button.label:GetText())
 suite.check("and the version label makes room", not UI.versionLabel:IsShown())
 

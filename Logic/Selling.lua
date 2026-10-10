@@ -152,8 +152,11 @@ function Selling:Create()
         primary = true, width = BUTTON_WIDTH, height = BUTTON_HEIGHT,
     })
     button:Hide()
-    button:SetFrameStrata("DIALOG")
-    button:SetFrameLevel(100)
+    -- A layer above the window's (DIALOG): in the same layer the window,
+    -- raised on top when shown or clicked, drew over the button and hid it
+    -- (seen in game 2026-10-10).
+    button:SetFrameStrata("FULLSCREEN_DIALOG")
+    button:SetFrameLevel(10)
     button:RegisterForClicks("AnyUp")
     button:SetAttribute("useOnKeyDown", false)
 
