@@ -507,6 +507,9 @@ end
 function UI:Show()
     self:Build()
     if not self.frame:IsShown() then
+        -- Ask the other addons afresh each time the window opens: a goal
+        -- met, a craft queued or a level gained since the last look.
+        ns.Verdicts:Forget()
         self:RestorePosition()
         self.frame:Show()
         ns.Motion:Open(self.frame)

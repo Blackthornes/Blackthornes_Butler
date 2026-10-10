@@ -34,8 +34,8 @@ local APIS = {
     "C_Bank.CanUseBank", "C_QuestLog.GetNumQuestLogEntries",
 }
 
--- The other four, and the call each would answer Butler through once phase 2
--- adds it ("Butler:Advise", see the plan).
+-- The other four, and the call each answers Butler through ("Butler:Advise",
+-- Logic/Sisters.lua).
 local SISTERS = {
     { name = "Tradeskills", global = "BlackthornesTS" },
     { name = "Equipment", global = "BlackthornesEquipment" },
@@ -130,7 +130,7 @@ local function Sister(info)
     local version = type(global.VERSION) == "string" and global.VERSION or "?"
     local butler = rawget(global, "Butler")
     local answers = type(butler) == "table" and type(butler.Advise) == "function"
-    return ("loaded (%s), %s"):format(version, answers and "answers Butler" or "no Butler call yet")
+    return ("loaded (%s), %s"):format(version, answers and "answers Butler" or "no Butler call (update it)")
 end
 
 --- The first item in the backpack, as the bag calls read it.

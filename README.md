@@ -10,18 +10,28 @@ LibStub, matching
 [Blackthornes Tradeskills](https://github.com/Blackthornes/Blackthornes_Tradeskills),
 [Blackthornes Equipment](https://github.com/Blackthornes/Blackthornes_Equipment)
 and [Blackthornes Pets](https://github.com/Blackthornes/Blackthornes_Pets).
-They share a palette and a framework on purpose, and Butler will ask each of
+They share a palette and a framework on purpose, and Butler asks each of
 them about your items when they are installed. Without them it still works,
 from vendor prices and the game's own quest marks.
 
-So far it works on its own (the other four are asked in a later version):
+- **The Butler window** lists every item in your bags in groups, each
+  with its count and what it is worth:
+  - **Sell**: grey items, your Always sell list, and items a vendor pays
+    more for than the auction house.
+  - **Auction**: items worth more on the auction house, after the cut
+    (marked down when they sell slowly).
+  - **Disenchant**: items worth more as enchanting materials, when you can
+    disenchant them.
+  - **Mail**: items an alt needs for their crafts, or that your enchanter
+    alt should disenchant.
+  - **Look at it**: everything Butler can't judge yet, with what a vendor
+    pays. Soulbound green or better gear never goes under Sell.
+  - **Keep**: quest items, upgrades and tools, what your Farmer goals and
+    craft queue need, your pet's food, anything a vendor won't buy, and your
+    Always keep list.
 
-- **The Butler window** lists every item in your bags in three groups, each
-  with its count and what it is worth: **Sell** (grey items, and anything on
-  your Always sell list), **Look at it** (everything Butler can't judge yet,
-  with what a vendor pays) and **Keep** (quest items, items that start a
-  quest, anything a vendor won't buy, and your Always keep list). Click a
-  group's heading to fold it; Keep starts folded.
+  Click a group's heading to fold it; Keep starts folded. Without the other
+  addons, Butler sorts by vendor price and the game's quest marks alone.
 - **Right-click** an item to always keep it, always sell it, or let Butler
   decide again. The lists are account wide.
 - **Sell at a vendor.** The window comes up by itself at every vendor, with

@@ -25,7 +25,7 @@ it, or look at it yourself. The full plan, with the order the verdicts are
 decided in and the four phases, is `ideas/bag-butler-plan.md` in the
 project's files.
 
-Phase 1 is built (2026-10-10, the owner said go): Butler on its own.
+Phase 1 is built and seen in game (2026-10-10): Butler on its own.
 `Logic/Bags.lua` reads the bags only while the window is up or a vendor is
 open, 0.2 s after a burst of bag events, 40 slots a frame, and looks further
 only at slots whose key (link, count, locked) changed (`Bags.version`).
@@ -55,24 +55,38 @@ Rules from the plan that hold from the first feature on:
 - **Grey items are worth vendor only;** everything else is the best of
   vendor, auction (after the cut and deposit) and disenchant.
 
-## How Butler will talk to the other four
+## How Butler talks to the other four
 
-Read only, inside a pcall, with no TOC dependency, as Farmer reads
-Tradeskills' prices. Without a sister addon its verdicts are skipped. Phase 2
-adds one stable call to each sister, made for Butler, so Butler never reaches
-into their insides:
+Phase 2 (2026-10-10, the owner said start): each sister has one call made
+for Butler, so Butler never reaches into their insides. `Logic/Sisters.lua`
+reads them, read only, inside a pcall, with no TOC dependency; a sister
+that is not loaded, raises or answers something other than a table is
+skipped, and a field of the wrong type counts as not given.
 
 ```lua
-_G.BlackthornesTS.Butler:Advise(itemID)          -- auction value, demand, disenchant value, queue need, which alt
-_G.BlackthornesEquipment.Butler:Advise(link)     -- upgrade now or later, sell coin, a tool
-_G.BlackthornesFarmer.Butler:Advise(itemID)      -- a goal needs it, how many more
-_G.BlackthornesPets.Butler:Advise(itemID)        -- the pet eats it, buff food, hours of food carried
+_G.BlackthornesTS.Butler:Advise(itemID)
+  -- { auction (net copper each after the cut and deposit; nil for greys
+  --   and bind on pickup), fast (true, false, or nil for middling),
+  --   disenchant, canDisenchant, enchanter, need, mailTo, mailCount }
+_G.BlackthornesEquipment.Butler:Advise(link, bag, slot)
+  -- { upgrade = "now" | "later" | nil, gain, sell (its bag coin), tool }
+  -- nil for anything that is not gear; bag and slot let it see soulbound
+_G.BlackthornesFarmer.Butler:Advise(itemID)
+  -- { goal, have, target, need }: the character playing's own goals
+_G.BlackthornesPets.Butler:Advise(itemID)
+  -- { eats, buff, hours, count }: hours is for all the food carried and
+  -- only a rough guess, so Butler shows it and never sells food on it
 ```
 
-None exists yet. When one is added, write it in that repo's `CLAUDE.md`
-("What Butler calls here") and here, the way Farmer and Tradeskills write
-down `Prices:GetValue` and `Goals:Set`. `/bbutler probe` says which sisters
-are loaded and which answer Butler.
+Each sister's `CLAUDE.md` lists its call under "What Butler calls here".
+If one changes, change `Logic/Sisters.lua` and `Logic/Verdicts.lua` here
+in the same breath. `Verdicts:Judge` keeps each item's verdict until
+`Verdicts.version` moves, and `UI:Show` moves it (`Verdicts:Forget`), so the
+sisters are asked once per item each time the window opens, never on a
+redraw. The verdicts they feed, in order, are at the top of
+`Logic/Verdicts.lua`. Soulbound green or better gear is never put under
+Sell: Disenchant, or Look at it. `/bbutler probe` says which sisters are
+loaded and which answer Butler.
 
 ## How this repo was set up
 
