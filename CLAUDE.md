@@ -88,6 +88,35 @@ redraw. The verdicts they feed, in order, are at the top of
 Sell: Disenchant, or Look at it. `/bbutler probe` says which sisters are
 loaded and which answer Butler.
 
+## All characters
+
+A player asked for an account-wide inventory and the owner said build it
+as the next phase (2026-10-10). The window's second view (`UI.view =
+"all"`, the header's All characters button, `/bbutler all`, a Settings
+button) lists every character's items with a search box: who has each,
+how many in all, and a click opens a line per character with bags, bank
+and mail and how old that read is. `Logic/Everyone.lua` builds it from one
+call to Tradeskills, which already saves every character's bags, bank and
+mail, inside a pcall, read only:
+
+```lua
+_G.BlackthornesTS.Butler:Holdings()
+  -- { { key, name, short, realm, faction, isCurrent, linked,
+  --     bags, bank, mail ([itemID] = count copies), bagsAt, bankAt, mailAt } }
+```
+
+The playing character's bags are Butler's own read (`Bags.slots`), the
+freshest there is. Without Tradeskills (or when it raises) the view shows
+only those bags and says so. Butler saves nothing for this view. Smooth
+play: built only while shown, again when `Bags.version` moves or the window
+opens, 300 counts and 40 new names a frame (`Everyone.BUDGET`,
+`NAME_BUDGET`); a name the client has not loaded shows as "Item N", sorts
+last and is filled in by `Everyone:NamesArrived` after `Items:Loaded`'s
+burst. Search filters the built list. The Sell button stays off in this
+view, and a vendor opens the window on Your bags. Tradeskills'
+`CLAUDE.md` lists `Holdings` under "What Butler calls here"; if it
+changes, change `Logic/Everyone.lua` too. Not yet seen in game.
+
 ## How this repo was set up
 
 It copies Pets (itself Equipment's, itself Farmer's) on purpose, so check the

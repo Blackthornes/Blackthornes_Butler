@@ -248,6 +248,11 @@ function SettingsUI:BuildPages()
     end, { width = 100, height = 20, primary = true })
     controls.openWindow:SetPoint("TOPLEFT", CONTROL_X, 0)
 
+    local _, allButton = CommandRow(pages, "general", 1, "All characters",
+        "Every character's items in one list, with who has each and whether it is in their bags, bank or mail. Needs Blackthornes Tradeskills for the other characters. Same as /bbutler all.",
+        "Show them", "all")
+    controls.all = allButton
+
     local minimapRow = pages:Row("general", 1, "Minimap button",
         "Click it for the Butler window, right-click for this page. Drag it to move it. Also /bbutler minimap.")
 

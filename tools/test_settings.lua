@@ -133,16 +133,16 @@ suite.check("back to Normal needs no reload", ns.db.textSize == "normal"
 local ran = {}
 local realSlash = ns.HandleSlash
 ns.HandleSlash = function(text) ran[#ran + 1] = text end
-for _, key in ipairs({ "openWindow", "probe", "help", "sellTest", "lists" }) do
+for _, key in ipairs({ "openWindow", "all", "probe", "help", "sellTest", "lists" }) do
     controls[key]:GetScript("OnClick")(controls[key])
 end
 ns.HandleSlash = realSlash
 suite.check("the command buttons run their commands",
-    table.concat(ran, ",") == "window,probe,help,selltest,lists", table.concat(ran, ","))
+    table.concat(ran, ",") == "window,all,probe,help,selltest,lists", table.concat(ran, ","))
 
 -- Every command has a button or a control here, apart from the one that
 -- deletes the player's lists, which stays typed (a house rule).
-local covered = { window = true, probe = true, help = true, selltest = true, lists = true,
+local covered = { window = true, all = true, probe = true, help = true, selltest = true, lists = true,
     vendor = true, minimap = true, settings = true, reset = true }
 for _, name in ipairs(ns.commandOrder) do
     suite.check("/bbutler " .. name .. " has a place in Settings", covered[name] == true)

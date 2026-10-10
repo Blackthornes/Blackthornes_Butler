@@ -20,6 +20,7 @@ Logic\Items.lua
 Logic\Bags.lua
 Logic\Sisters.lua
 Logic\Verdicts.lua
+Logic\Everyone.lua
 
 UI\Theme.lua
 UI\BlizzardLook.lua

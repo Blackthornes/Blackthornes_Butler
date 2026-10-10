@@ -7,13 +7,25 @@
 -- "Open at a vendor" setting). The Sell button (Logic/Selling.lua) sits over
 -- its foot while a vendor is open.
 --
+-- It has a second view, All characters (Logic/Everyone.lua; /bbutler all,
+-- the header's All characters button): every character's items in one
+-- list with a search box, who has each and whether it is in their bags,
+-- bank or mail. A click on an item opens a line per character under it.
+--
 -- Smooth play: the list is set again only when the bags or a verdict changed
--- (Bags.version, Verdicts.version), and only while the window is up. Only
--- the rows on screen exist (Widgets.CreateRowList).
+-- (Bags.version, Verdicts.version; Everyone.version in All characters), and
+-- only while the window is up. Only the rows on screen exist
+-- (Widgets.CreateRowList).
 
 local _, ns = ...
 
 local UI = ns.NewModule("UI")
+
+-- Which list the window shows: "bags" (what to do with each item) or "all"
+-- (every character's items). Bags each time it opens at a vendor.
+UI.view = "bags"
+-- Items opened in All characters: { [itemID] = true }, for the session.
+UI.open = {}
 
 local Theme = ns.Theme
 local Widgets = ns.Widgets
@@ -178,11 +190,52 @@ function UI:BuildHeader()
     subtitle:SetPoint("LEFT", header, "LEFT", 48, -4)
     self.subtitle = subtitle
 
+    -- All characters' search, in the subtitle's place.
+    local search = Widgets.CreateSearchBox(header, "Search all characters", function()
+        UI:Refresh()
+    end)
+    search:SetPoint("LEFT", header, "LEFT", 48, -2)
+    search:SetWidth(230)
+    search:Hide()
+    self.search = search
+
     -- Below the close gem on the corner.
     local settings = Widgets.CreateButton(header, "Settings", function()
         if ns.SettingsUI then ns.SettingsUI:Toggle() end
     end, { width = 70, height = 20 })
     settings:SetPoint("BOTTOMRIGHT", header, "BOTTOMRIGHT", -10, 4)
+
+    -- Between the two lists.
+    local view = Widgets.CreateButton(header, "All characters", function()
+        UI:SetView(UI.view == "all" and "bags" or "all")
+    end, { width = 110, height = 20 })
+    view:SetPoint("RIGHT", settings, "LEFT", -6, 0)
+    view.tooltipText = "Every character's items, and where each one is"
+    self.viewButton = view
+end
+
+--- Show one list or the other: "bags" or "all".
+function UI:SetView(view)
+    view = view == "all" and "all" or "bags"
+    local changed = view ~= self.view
+    self.view = view
+    if not self.frame then return end
+
+    local all = view == "all"
+    self.subtitle:SetShown(not all)
+    self.search:SetShown(all)
+    if not all then self.search:ClearFocus() end
+    self.viewButton:SetText(all and "Your bags" or "All characters")
+    self.viewButton.tooltipText = all and "What to do with each item in your bags"
+        or "Every character's items, and where each one is"
+
+    if changed then
+        self.drawnKey = nil
+        GameTooltip:Hide()
+        if all then ns.Everyone:Changed() end
+        if ns.Selling then ns.Selling:Update() end
+        self:Refresh(true)
+    end
 end
 
 --------------------------------------------------------------------------------
@@ -219,6 +272,10 @@ local function Plural(count, one, many)
 end
 
 function UI.UpdateRow(row, data)
+    row.worth:SetTextColor(Theme.Unpack("text"))
+    if data.type == "everyone" then return UI.UpdateItemRow(row, data) end
+    if data.type == "holder" then return UI.UpdateHolderRow(row, data) end
+
     if data.type == "header" then
         local group = data.group
         row.icon:Hide()
@@ -239,6 +296,38 @@ function UI.UpdateRow(row, data)
     row.name:SetText(data.count > 1 and ("%s x%d"):format(data.name, data.count) or data.name)
     row.reason:SetText(data.reason or "")
     row.worth:SetText((data.worth or 0) > 0 and Items.FormatMoney(data.worth) or "")
+end
+
+--- An item in All characters: its name, who has it and how many in all.
+function UI.UpdateItemRow(row, data)
+    local item = data.item
+    row.fold:Hide()
+    row.icon:Show()
+    row.icon:SetTexture(item.icon or [[Interface\Icons\INV_Misc_QuestionMark]])
+    local color = QUALITY[item.quality or 1] or QUALITY[1]
+    row.name:SetTextColor(color[1], color[2], color[3])
+    row.name:SetText(item.name)
+    row.reason:SetText(ns.Everyone.Summary(item))
+    row.worth:SetText(tostring(item.total))
+end
+
+--- One character's share of an opened item, set in under it.
+function UI.UpdateHolderRow(row, data)
+    local holder = data.holder
+    local character = holder.character
+    row.fold:Hide()
+    row.icon:Hide()
+    local name = "    " .. character.short
+    if character.isCurrent then
+        name = name .. " (you)"
+    elseif character.linked then
+        name = name .. " (other account)"
+    end
+    row.name:SetTextColor(Theme.Unpack("text"))
+    row.name:SetText(name)
+    row.reason:SetText(ns.Everyone.Where(holder))
+    row.worth:SetTextColor(Theme.Unpack("muted"))
+    row.worth:SetText(ns.Everyone.Age(ns.Everyone.Seen(holder)))
 end
 
 --- The rows to show: each group's heading, then its items unless folded.
@@ -271,6 +360,13 @@ end
 --------------------------------------------------------------------------------
 
 function UI:Clicked(data, button)
+    if data.type == "everyone" or data.type == "holder" then
+        local itemID = data.item.itemID
+        self.open[itemID] = not self.open[itemID] or nil
+        self.openVersion = (self.openVersion or 0) + 1
+        self:Refresh()
+        return
+    end
     if data.type == "header" then
         local folded = self:Folded()
         folded[data.group.verdict] = not folded[data.group.verdict] or nil
@@ -284,6 +380,9 @@ end
 
 function UI:Enter(row, data)
     GameTooltip:SetOwner(row, "ANCHOR_RIGHT")
+    if data.type == "everyone" or data.type == "holder" then
+        return self:EnterEveryone(data)
+    end
     if data.type == "header" then
         GameTooltip:AddLine(data.group.label, Theme.Unpack("accent"))
         GameTooltip:AddLine(data.folded and "Click to show these items" or "Click to fold these away", 1, 1, 1, true)
@@ -302,6 +401,22 @@ function UI:Enter(row, data)
         GameTooltip:AddLine(data.reason, 1, 1, 1, true)
     end
     GameTooltip:AddLine("Right-click to always keep or always sell it", Theme.Unpack("muted"))
+    GameTooltip:Show()
+end
+
+--- An item in All characters: the item's own tooltip, then who has it.
+function UI:EnterEveryone(data)
+    local item = data.item
+    pcall(GameTooltip.SetHyperlink, GameTooltip, "item:" .. item.itemID)
+    GameTooltip:AddLine(" ")
+    local r, g, b = Theme.Unpack("accent")
+    GameTooltip:AddLine(("Butler: %d on %s"):format(item.total,
+        Plural(#item.holders, "character", "characters")), r, g, b)
+    for _, holder in ipairs(item.holders) do
+        GameTooltip:AddDoubleLine(holder.character.short, ns.Everyone.Where(holder), 1, 1, 1, 1, 1, 1)
+    end
+    GameTooltip:AddLine(data.type == "holder" and "Click to close"
+        or (data.open and "Click to close" or "Click to see each character"), Theme.Unpack("muted"))
     GameTooltip:Show()
 end
 
@@ -402,6 +517,7 @@ end
 --- a verdict or a fold changed (`force` for a fold).
 function UI:Refresh(force)
     if not self:IsShown() then return end
+    if self.view == "all" then return self:RefreshAll(force) end
 
     local key = ("%d:%d"):format(ns.Bags.version, ns.Verdicts.version)
     if force or key ~= self.drawnKey then
@@ -426,7 +542,55 @@ function UI:Refresh(force)
     self:UpdateFooter()
 end
 
+--- All characters: built again when the bags moved (once Butler's own read
+--- of them is done), set again when the list, the search or an opened item
+--- changed.
+function UI:RefreshAll(force)
+    local everyone = ns.Everyone
+    if not ns.Bags.scanning and (everyone.building or everyone:IsStale()) then
+        everyone:Fresh(function() UI:Refresh() end)
+    end
+
+    local search = self.search:GetText() or ""
+    local key = ("all:%d:%s:%d"):format(everyone.version, search, self.openVersion or 0)
+    if force or key ~= self.drawnKey then
+        -- The same search keeps its place; a new one starts at the top.
+        local keep = self.drawnKey ~= nil and search == self.drawnSearch
+        self.drawnKey, self.drawnSearch = key, search
+        local lines, shown = everyone:Lines(search, self.open)
+        self.shownItems = shown
+        self.list:SetData(lines, keep)
+    end
+
+    local text = ""
+    if #everyone.sorted == 0 and (everyone.building or ns.Bags.scanning or everyone:IsStale()) then
+        text = "Reading every character's items..."
+    elseif #everyone.sorted == 0 then
+        text = everyone:FromTradeskills() and "No items on record yet."
+            or "Your bags are empty. Blackthornes Tradeskills keeps your other characters' items."
+    elseif (self.shownItems or 0) == 0 then
+        text = ('Nothing matches "%s".'):format(search)
+    end
+    self.emptyLabel:SetText(text)
+    self.emptyLabel:SetShown(text ~= "")
+
+    self:UpdateFooter()
+end
+
 function UI:UpdateFooter()
+    if self.view == "all" then
+        local everyone = ns.Everyone
+        local text
+        if not everyone:FromTradeskills() then
+            text = "Only your bags. Load Blackthornes Tradeskills to add your other characters."
+        else
+            text = ("%s on %s. Bank and mail as each last saw them."):format(
+                Plural(#everyone.sorted, "item", "items"),
+                Plural(everyone:Holders(), "character", "characters"))
+        end
+        self.footer:SetText(text)
+        return
+    end
     local sell = ns.Verdicts:Group("sell")
     local text = ""
     if self.sellShown then
@@ -468,7 +632,7 @@ function UI:AtVendor()
         local sell = ns.Verdicts:Group("sell")
         if not (sell and sell.count > 0) then return end
     end
-    self:Show()
+    self:Show("bags")
     self.openedByVendor = true
 end
 
@@ -504,12 +668,15 @@ function UI:IsShown()
     return self.frame ~= nil and self.frame:IsShown() == true
 end
 
-function UI:Show()
+--- Bring the window up, on `view` ("bags" or "all") when one is given.
+function UI:Show(view)
     self:Build()
+    if view then self:SetView(view) end
     if not self.frame:IsShown() then
         -- Ask the other addons afresh each time the window opens: a goal
         -- met, a craft queued or a level gained since the last look.
         ns.Verdicts:Forget()
+        ns.Everyone:Changed()
         self:RestorePosition()
         self.frame:Show()
         ns.Motion:Open(self.frame)
@@ -544,4 +711,12 @@ end
 
 ns.RegisterCommand("window", "open the Butler window (so does /bbutler on its own)", function()
     UI:Toggle()
+end)
+
+ns.RegisterCommand("all", "every character's items in one list, with where each one is", function()
+    if UI:IsShown() and UI.view == "all" then
+        UI:Hide()
+    else
+        UI:Show("all")
+    end
 end)

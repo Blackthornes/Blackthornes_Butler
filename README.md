@@ -34,6 +34,11 @@ from vendor prices and the game's own quest marks.
   addons, Butler sorts by vendor price and the game's quest marks alone.
 - **Right-click** an item to always keep it, always sell it, or let Butler
   decide again. The lists are account wide.
+- **All characters** lists every item on all your characters in one place,
+  with a search box. Each line says who has it and how many in all; click
+  it to see each character's bags, bank and mail, and how long ago that was
+  seen. Your other characters come from Blackthornes Tradeskills, which
+  remembers them as you play each one; without it you see your own bags.
 - **Sell at a vendor.** The window comes up by itself at every vendor, with
   a Sell button at its foot when there is something to sell. Nothing sells until
   you click it, and it only ever sells what is under Sell. Each click sells
@@ -81,6 +86,7 @@ inside it. If they differ, the client ignores the folder and says nothing.
 
 ```
 /bbutler           open the Butler window (so does clicking the minimap button)
+/bbutler all       every character's items in one list, with where each one is
 /bbutler help      list every command
 /bbutler probe     check what this client supports for bags, vendors and mail; it only reads
 /bbutler settings  open the settings window (so does right-clicking the minimap button)
