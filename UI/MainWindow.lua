@@ -320,6 +320,8 @@ function UI:BuildMenu()
     local menu = CreateFrame("Frame", "BlackthornesButlerMenu", UIParent)
     menu:SetSize(MENU_WIDTH, 112)
     menu:SetFrameStrata("FULLSCREEN_DIALOG")
+    -- Over the Sell button, which shares this layer.
+    menu:SetFrameLevel(50)
     menu:SetClampedToScreen(true)
     menu:EnableMouse(true)
     Theme.Fill(menu, "window")
@@ -503,6 +505,11 @@ function UI:Show()
         ns.Motion:Open(self.frame)
         -- A light runs round the portrait as it opens.
         if ns.Titanforged then ns.Titanforged:Opened(self.frame) end
+        -- The window rises a few pixels as it opens: place the Sell button
+        -- again once it has landed.
+        C_Timer.After(0.25, function()
+            if ns.Selling then ns.Selling:Update() end
+        end)
     end
     self:Refresh()
     -- Read the bags if they changed while the window was closed; the list
