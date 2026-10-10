@@ -27,5 +27,9 @@ only while a vendor is open and the game's vendor window shows. `/bbutler
 selltest` (Settings > Selling > Test selling) sells the cheapest grey from
 Butler's own code and keeps whether the item left and gold came in
 (`sellTest` in the account save); if it works, each click sells up to 12.
-`/bbutler probe` shows the result as "sell from Butler". Record here what
-it finds on Forever.
+`/bbutler probe` shows the result as "sell from Butler".
+
+**Seen in game 2026-10-10: selling from addon code works on Forever.**
+`/bbutler selltest` sold a grey through `C_Container.UseContainerItem`
+called from Butler's own code, gold came in, and the Sell button then sold
+the Sell group up to 12 a click.

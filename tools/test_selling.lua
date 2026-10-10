@@ -23,7 +23,7 @@ local function Place(frame)
     frame.GetBottom = function() return 200 end
 end
 
--- At a vendor, the window comes up by itself when there is something to sell.
+-- At a vendor, the window comes up by itself.
 env.Fire("MERCHANT_SHOW")
 suite.check("the window comes up at a vendor", UI:IsShown() and UI.openedByVendor)
 Place(UI.frame)
@@ -103,7 +103,17 @@ env.Fire("MERCHANT_CLOSED")
 suite.check("a window the player opened stays open", UI:IsShown())
 
 -- Open at a vendor, unticked.
+-- At every vendor, even with nothing under Sell (asked 2026-10-10), and it
+-- goes again when the vendor closes.
 UI:Hide()
+fake.bags[0] = {}
+env.Fire("BAG_UPDATE_DELAYED")
+env.Fire("MERCHANT_SHOW")
+suite.check("it comes up with nothing to sell", UI:IsShown() and UI.openedByVendor)
+suite.check("with no Sell button", not button:IsShown())
+env.Fire("MERCHANT_CLOSED")
+suite.check("and goes when the vendor closes", not UI:IsShown())
+
 ns.db.openAtVendor = false
 env.Fire("MERCHANT_SHOW")
 suite.check("with Open at a vendor off, it stays shut", not UI:IsShown())
