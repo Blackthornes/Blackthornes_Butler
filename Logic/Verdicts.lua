@@ -1,21 +1,28 @@
 -- Blackthornes Butler -- Logic/Verdicts.lua
 -- One verdict for every item in the bags, and the reason for it.
 --
--- Phase 1 of the plan: Butler on its own, with no other Blackthornes addon
--- asked yet. The first rule that applies wins, and keeping always beats
--- selling:
+-- The first rule that applies wins, and keeping always beats selling:
 --
---   1. On the player's Always keep list       Keep
---   2. A quest item, or one that starts one   Keep
---   3. A vendor won't buy it                  Keep
---   4. On the player's Always sell list       Sell
---   5. Its price has not loaded yet           Look at it
---   6. Grey (worth vendor only)               Sell
---   7. Anything else                          Look at it
+--   1. On the player's Always keep list            Keep
+--   2. A quest item, or one that starts one        Keep
+--   3. A vendor won't buy it                       Keep
+--   4. On the player's Always sell list            Sell
+--   5. Equipment: an upgrade now or later, a tool  Keep
+--   6. Farmer: a goal of this character needs it   Keep
+--   7. Tradeskills: the craft queue needs it here  Keep
+--      ... or an alt needs it for theirs           Mail
+--   8. Pets: the pet eats it                       Keep
+--   9. Its price has not loaded yet                Look at it
+--  10. Grey (worth vendor only)                    Sell
+--  11. The best of vendor, auction (marked down when it sells slowly)
+--      and disenchant                              Sell, Auction,
+--                                                  Disenchant or Mail
+--  12. Anything else                               Look at it
 --
--- "Look at it" is never sold for the player. Phase 2 asks the other four
--- addons before step 6 (an upgrade, a goal, a craft, pet food) and turns
--- most "Look at it" rows into Keep, Auction or Disenchant.
+-- Steps 5 to 8 and 11 ask the other four addons (Logic/Sisters.lua); a
+-- sister that is not loaded is skipped. "Look at it" is never sold for the
+-- player, and neither is soulbound green or better gear: it can only be
+-- disenchanted or looked at.
 --
 -- The Always keep and Always sell lists are the player's own choices,
 -- account wide, by item ID: BlackthornesButlerDB.alwaysKeep and .alwaysSell
@@ -26,15 +33,24 @@ local _, ns = ...
 local Verdicts = ns.NewModule("Verdicts")
 
 local Items = ns.Items
+local Sisters = ns.Sisters
 
 -- The order the groups show in: what to do first at the top.
-Verdicts.ORDER = { "sell", "look", "keep" }
+Verdicts.ORDER = { "sell", "auction", "disenchant", "mail", "look", "keep" }
 
 Verdicts.LABELS = {
     sell = "Sell",
+    auction = "Auction",
+    disenchant = "Disenchant",
+    mail = "Mail",
     look = "Look at it",
     keep = "Keep",
 }
+
+-- An auction price is worth this much of itself when Tradeskills says the
+-- item sells slowly: a slow sale ties up the slot and the deposit.
+Verdicts.SLOW = 0.75
+
 
 -- Moves whenever a judgement could change (a choice made, an item loaded),
 -- so kept answers and the drawn list are known to be stale.
@@ -124,6 +140,10 @@ function Verdicts:Decide(entry)
         return "sell", "On your Always sell list", unit, unit ~= nil
     end
 
+    local said = Sisters:AskAll(entry)
+    local verdict, reason, worth = self:Kept(said)
+    if verdict then return verdict, reason, worth or unit, unit ~= nil end
+
     if unit == nil then
         return "look", "Still loading from the game", nil, false
     end
@@ -132,8 +152,117 @@ function Verdicts:Decide(entry)
         return "sell", "Grey, vendor only", unit, true
     end
 
+    verdict, reason, worth = self:Best(entry, unit, said)
+    return verdict, reason, worth, true
+end
+
+--- Steps 5 to 8: a sister says to keep the item (or mail it to the alt who
+--- needs it). Returns verdict, reason and what one is worth, or nil.
+function Verdicts:Kept(said)
+    local Number, String, True = Sisters.Number, Sisters.String, Sisters.True
+
+    local eq = said.equipment
+    if eq then
+        if eq.upgrade == "now" then
+            return "keep", "An upgrade: wear it"
+        elseif eq.upgrade == "later" then
+            return "keep", "An upgrade at a later level"
+        elseif True(eq, "tool") then
+            return "keep", "A tool you use"
+        end
+    end
+
+    local farmer = said.farmer
+    local need = Number(farmer, "need")
+    if need and need > 0 then
+        local goal = String(farmer, "goal")
+        return "keep", goal and ("Your %s goal needs %d more"):format(goal, need)
+            or ("A goal needs %d more"):format(need)
+    end
+
+    local ts = said.ts
+    local queued = Number(ts, "need")
+    if queued and queued > 0 then
+        return "keep", ("Your craft queue needs %d"):format(queued)
+    end
+    local mailTo = String(ts, "mailTo")
+    if mailTo then
+        local count = Number(ts, "mailCount")
+        return "mail", count and ("Mail %d to %s for their crafts"):format(count, mailTo)
+            or ("Mail to %s for their crafts"):format(mailTo)
+    end
+
+    local pets = said.pets
+    -- Pets' hours are for all the food carried, and only a rough guess
+    -- (classic's hunger rule), so they are shown, never used to sell food.
+    if True(pets, "eats") then
+        local what = True(pets, "buff") and "Buff food for your pet" or "Your pet eats it"
+        local hours = Number(pets, "hours")
+        if hours and hours > 0 then
+            what = ("%s (about %s h of food carried)"):format(what, Verdicts.Hours(hours))
+        end
+        return "keep", what
+    end
+end
+
+--- Step 11: the best of what a vendor pays, the auction house (after the
+--- cut) and disenchanting. Returns verdict, reason and one's worth.
+function Verdicts:Best(entry, unit, said)
+    local Number, String, True = Sisters.Number, Sisters.String, Sisters.True
+    local ts, eq = said.ts, said.equipment
+
+    -- Soulbound gear can only be sold or disenchanted, and green or better
+    -- is never sold for the player (the plan: it needs a second look).
+    local bound = entry.bound == true
+
+    local auction = not bound and Number(ts, "auction") or nil
+    local slow = auction and ts.fast == false
+    local auctionWorth = auction and math.floor(auction * (slow and Verdicts.SLOW or 1)) or nil
+
+    local disenchant = Number(ts, "disenchant")
+    local canDisenchant = True(ts, "canDisenchant")
+    local enchanter = not bound and String(ts, "enchanter") or nil
+    if disenchant and not canDisenchant and not enchanter then disenchant = nil end
+
+    local best, value = "sell", unit
+    if auctionWorth and auctionWorth > value then best, value = "auction", auctionWorth end
+    if disenchant and disenchant > value then best, value = "disenchant", disenchant end
+
+    if best == "disenchant" then
+        if canDisenchant then
+            return "disenchant", ("Disenchant, about %s"):format(Items.FormatMoney(disenchant)), disenchant
+        end
+        return "mail", ("Mail to %s to disenchant, about %s"):format(enchanter, Items.FormatMoney(disenchant)),
+            disenchant
+    end
+
+    if best == "auction" then
+        local text = ("Auction about %s each"):format(Items.FormatMoney(auction))
+        if slow then text = text .. ", sells slowly" end
+        return "auction", text, auctionWorth
+    end
+
+    -- A vendor pays the most. Sold only when something says so: the auction
+    -- house was asked and pays less, or Equipment found no use for it.
+    local judged = auction ~= nil or (eq and True(eq, "sell"))
+    if judged and not (bound and (entry.quality or 0) >= 2) then
+        local why = auction and "Vendor pays more than the auction house" or "Not an upgrade"
+        return "sell", ("%s: %s each"):format(why, Items.FormatMoney(unit)), unit
+    end
+
+    if bound and (entry.quality or 0) >= 2 and eq and True(eq, "sell") then
+        return "look", ("Not an upgrade. %s"):format(Each(unit)), unit
+    end
+
     -- Short enough for the row; the tooltip says right-click decides it.
-    return "look", Each(unit), unit, true
+    return "look", Each(unit), unit
+end
+
+--- "2.5" or "8": hours as the row shows them.
+function Verdicts.Hours(hours)
+    local rounded = math.floor(hours * 10 + 0.5) / 10
+    if rounded == math.floor(rounded) then return tostring(math.floor(rounded)) end
+    return tostring(rounded)
 end
 
 --------------------------------------------------------------------------------
@@ -218,6 +347,12 @@ end
 function Verdicts:Changed(now)
     self.version = self.version + 1
     self:Redraw(now)
+end
+
+--- Judge every item again next time it is asked, without a redraw: the
+--- window opening, so what the other addons say is fresh for each look.
+function Verdicts:Forget()
+    self.version = self.version + 1
 end
 
 --- The bags changed (Bags.version moved).

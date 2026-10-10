@@ -18,6 +18,7 @@ Core\Init.lua
 
 Logic\Items.lua
 Logic\Bags.lua
+Logic\Sisters.lua
 Logic\Verdicts.lua
 
 UI\Theme.lua
