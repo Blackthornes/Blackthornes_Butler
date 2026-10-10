@@ -1,0 +1,28 @@
+## Interface: 16001
+## Title: Blackthornes Butler
+## Notes: Tells you what to do with every item in your bags: keep it, sell it, post it, disenchant it or mail it to the alt who needs it.
+## Author: Blackthornes
+## Version: @project-version@
+## X-License: MIT
+## SavedVariables: BlackthornesButlerDB
+## SavedVariablesPerCharacter: BlackthornesButlerCharDB
+## IconTexture: Interface\Icons\INV_Misc_Bag_08
+
+# Filled in once the project exists on each site. The packager reads these
+# to know where to upload; a line that stays commented is simply skipped.
+# X-Curse-Project-ID: 
+# X-Wago-ID: 
+# X-WoWI-ID: 
+
+Core\Init.lua
+
+UI\Theme.lua
+UI\BlizzardLook.lua
+UI\Widgets.lua
+UI\Titanforged.lua
+UI\SettingsPages.lua
+UI\Minimap.lua
+UI\Settings.lua
+UI\MainWindow.lua
+
+Probe\Probe.lua

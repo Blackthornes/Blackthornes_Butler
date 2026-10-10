@@ -1,0 +1,23 @@
+# WoW client data, if the addon is ever worked on in place under the game folder.
+# Saved variables hold your characters and their bags; never commit them.
+WTF/
+*.lua.bak
+BlackthornesButlerDB.lua
+BlackthornesButlerCharDB.lua
+
+# Python tooling
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Editors and OS
+.vscode/
+.idea/
+*.swp
+Thumbs.db
+desktop.ini
+.DS_Store
+
+# Packager output
+.release/

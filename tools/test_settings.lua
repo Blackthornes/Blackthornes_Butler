@@ -1,0 +1,142 @@
+-- The settings window.
+--
+-- What matters is that every way in opens it, that each control changes the
+-- same saved value its chat command does, and that the page shows what is
+-- saved rather than what it last drew.
+
+local env = dofile(lfs_cwd .. "/tools/testenv.lua")
+local suite = env.NewSuite("settings")
+
+local ns = env.Load()
+
+local SettingsUI = ns.SettingsUI
+
+-- A client with retail's Settings API, recording what is registered.
+local registered = {}
+_G.Settings = {
+    RegisterCanvasLayoutCategory = function(panel, name) return { panel = panel, name = name } end,
+    RegisterAddOnCategory = function(category) registered[#registered + 1] = category end,
+}
+
+for _, module in ipairs(ns.moduleOrder) do
+    if module.OnEnable then module:OnEnable() end
+end
+
+suite.check("it is listed under the game's AddOns options",
+    registered[1] and registered[1].name == "Blackthornes Butler")
+
+-- Ways in.
+ns.HandleSlash("settings")
+suite.check("/bbutler settings opens it", SettingsUI.frame:IsShown())
+ns.HandleSlash("settings")
+suite.check("and closes it", not SettingsUI.frame:IsShown())
+ns.HandleSlash("options")
+suite.check("/bbutler options works too", SettingsUI.frame:IsShown())
+suite.check("options is not listed twice in help",
+    not (function()
+        for _, name in ipairs(ns.commandOrder) do
+            if name == "options" or name == "config" then return true end
+        end
+    end)())
+
+-- The house frame: the plate and close gem, without the portrait.
+local trim = SettingsUI.frame.titan
+suite.check("settings wears the house frame", trim ~= nil)
+suite.check("with the name on the plate", trim and trim.plate.label:GetText() == "Blackthornes Butler")
+-- A stub answers any field it lacks with a function, so "no portrait"
+-- means no portrait frame.
+suite.check("and no portrait", trim and type(trim.portrait) ~= "table")
+trim.closeButton:GetScript("OnClick")(trim.closeButton)
+suite.check("the close gem closes it", not SettingsUI.frame:IsShown())
+SettingsUI:Show()
+
+local controls = SettingsUI.controls
+
+-- The minimap checkbox.
+local minimapBox = controls.minimap
+suite.check("the minimap box starts ticked", minimapBox:GetChecked())
+minimapBox:GetScript("OnClick")(minimapBox)
+suite.check("unticking hides the button",
+    ns.db.minimapHidden == true and not ns.MinimapButton.button:IsShown())
+ns.HandleSlash("minimap")
+suite.check("/bbutler minimap ticks it again", minimapBox:GetChecked())
+
+-- Debug.
+controls.debug:GetScript("OnClick")(controls.debug)
+suite.check("the debug box sets debug", ns.db.debug == true)
+
+-- The pages along the top, as Tradeskills' Settings tab has them. Butler
+-- has one page so far; the others come with the features they hold.
+local pages = SettingsUI.pages
+suite.check("it opens on the first page", pages.shown == "general")
+suite.check("with the general rows showing", pages.pages.general.content:IsShown())
+SettingsUI:Hide()
+SettingsUI:Show()
+suite.check("it opens again on the page left", pages.shown == "general")
+
+-- What a setting does is a tooltip until Show descriptions is ticked.
+local minimapRow
+for _, row in ipairs(pages.pages.general.rows) do
+    if row.labelText == "Minimap button" then minimapRow = row end
+end
+suite.check("descriptions start hidden", ns.db.settingsDescriptions == false
+    and not minimapRow.hint:IsShown())
+GameTooltip._lines = {}
+minimapRow:GetScript("OnEnter")(minimapRow)
+suite.check("a row lights under the mouse", minimapRow.hover:IsShown())
+suite.check("and says what it does in a tooltip", GameTooltip._lines[1] and
+    GameTooltip._lines[1]:find("Butler window") ~= nil)
+local before = SettingsUI.frame:GetHeight()
+pages.describe:GetScript("OnClick")(pages.describe)
+suite.check("Show descriptions is saved", ns.db.settingsDescriptions == true)
+suite.check("and puts the words under the rows", minimapRow.hint:IsShown())
+suite.check("and the window grows to fit them", SettingsUI.frame:GetHeight() > before)
+pages.describe:GetScript("OnClick")(pages.describe)
+suite.check("unticked, the window goes back", SettingsUI.frame:GetHeight() == before)
+
+-- Find a setting.
+pages.find:SetText("debug")
+pages:Search("debug")
+local lit = 0
+for _, entry in ipairs(pages.searchables) do
+    if entry.glow:IsShown() then lit = lit + 1 end
+end
+suite.check("the search lights only what matches", lit == 1)
+pages:Search("")
+lit = 0
+for _, entry in ipairs(pages.searchables) do
+    if entry.glow:IsShown() then lit = lit + 1 end
+end
+suite.check("an empty search lights nothing", lit == 0)
+
+-- Text size, saved as a word, waits for a reload.
+controls.textSize.plus:GetScript("OnClick")(controls.textSize.plus)
+suite.check("Text size saves Large", ns.db.textSize == "large")
+suite.check("and offers Reload", controls.textSize.reload:IsShown())
+suite.check("beside the stepper, inside its column", controls.textSize.reload._point[2] == controls.textSize
+    and controls.textSize.reload._point[1] == "LEFT")
+controls.textSize.minus:GetScript("OnClick")(controls.textSize.minus)
+suite.check("back to Normal needs no reload", ns.db.textSize == "normal"
+    and not controls.textSize.reload:IsShown())
+
+-- Every /bbutler command has a button here.
+local ran = {}
+local realSlash = ns.HandleSlash
+ns.HandleSlash = function(text) ran[#ran + 1] = text end
+for _, key in ipairs({ "openWindow", "probe", "help" }) do
+    controls[key]:GetScript("OnClick")(controls[key])
+end
+ns.HandleSlash = realSlash
+suite.check("the command buttons run their commands",
+    table.concat(ran, ",") == "window,probe,help")
+
+-- Position.
+ns.db.settingsX = 400
+SettingsUI:ResetPositions()
+suite.check("putting it back forgets where it was dragged", ns.db.settingsX == nil)
+
+-- A client with neither options API still loads.
+local ns2 = env.Load()
+suite.check("no options API is not an error", ns2.SettingsUI:RegisterGameOptions() == false)
+
+suite.done()
