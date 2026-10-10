@@ -34,6 +34,8 @@ local TITLE = "Blackthornes Butler"
 -- The pages along the top (UI/SettingsPages.lua), as Tradeskills' Settings
 -- tab has them. Every setting kept its saved name; only its place moved.
 local PAGES = {
+    { key = "selling", text = "SELLING",
+      tip = "Selling at a vendor, and your Always keep and Always sell lists" },
     { key = "general", text = "GENERAL",
       tip = "The minimap button, window position, text size and debug output" },
 }
@@ -213,6 +215,29 @@ function SettingsUI:BuildPages()
     local controls = self.controls
     local pages = self.pages
 
+    -- Selling: the vendor on the left, the player's lists on the right.
+    pages:Section("selling", 1, "AT A VENDOR")
+
+    local vendorRow = pages:Row("selling", 1, "Open at a vendor",
+        "The Butler window comes up by itself at a vendor when there is something to sell, and goes when you leave. Nothing sells until you click Sell. Also /bbutler vendor.")
+    controls.openAtVendor = Widgets.CreateCheckbox(vendorRow, "On", function(checked)
+        ns.db.openAtVendor = checked
+    end, true)
+    controls.openAtVendor:SetPoint("TOPLEFT", CONTROL_X, -2)
+
+    local testRow, testButton = CommandRow(pages, "selling", 1, "Test selling",
+        "At a vendor, sells your cheapest grey item from Butler's own code to see whether the game allows it. If it does, Sell sells up to 12 a click; if not, one stack a click. Same as /bbutler selltest.",
+        "Test it", "selltest")
+    controls.sellTest = testButton
+    controls.sellTestRow = testRow
+
+    pages:Section("selling", 2, "YOUR LISTS")
+
+    local _, listsButton = CommandRow(pages, "selling", 2, "Keep and sell",
+        "Right-click an item in the Butler window to always keep it or always sell it. This lists both in chat. To empty them, type /bbutler reset confirm. Same as /bbutler lists.",
+        "List them", "lists")
+    controls.lists = listsButton
+
     -- General: windows and text on the left, debug on the right.
     pages:Section("general", 1, "WINDOWS")
 
@@ -286,6 +311,7 @@ function SettingsUI:Refresh()
 
     local controls = self.controls
     controls.minimap:SetChecked(not ns.db.minimapHidden)
+    controls.openAtVendor:SetChecked(ns.db.openAtVendor ~= false)
     controls.debug:SetChecked(ns.db.debug == true)
     controls.textSize:Sync()
     controls.windowStyle:Sync()

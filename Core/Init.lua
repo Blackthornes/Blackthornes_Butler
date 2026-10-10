@@ -302,10 +302,19 @@ local DEFAULTS = {
     -- game's own frames, buttons and tick boxes, asked 2026-10-10). Read at
     -- login, so a change waits for /reload. See UI/BlizzardLook.lua.
     windowStyle = "titanforged",
+
+    -- The Butler window comes up by itself at a vendor when there is
+    -- something to sell, and goes when the vendor closes.
+    openAtVendor = true,
+
+    -- Also kept here, never renamed (made when first needed, so not given
+    -- defaults): alwaysKeep and alwaysSell ([itemID] = true, the player's
+    -- right-click choices) and sellTest (what /bbutler selltest found).
 }
 
 -- Per character, because bags are: what one character carries is its own.
--- Empty until there are features to save.
+-- Holds folded (which groups of the Butler window are folded away), made
+-- when first needed.
 local CHAR_DEFAULTS = {
 }
 

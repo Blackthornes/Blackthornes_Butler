@@ -10,9 +10,9 @@
 -- because Forever hands out secret values in instances that raise when
 -- touched.
 --
--- No Butler feature leans on these yet. The probe is here so the first ones
--- (the item list and Sell at a vendor) are built on what the client answers,
--- recorded in docs/FOREVER_API_FINDINGS.md, instead of on a guess.
+-- The item list and Sell at a vendor lean on these; what the client answers
+-- goes in docs/FOREVER_API_FINDINGS.md, so later features are built on it
+-- instead of on a guess. It also says what /bbutler selltest found.
 
 local _, ns = ...
 
@@ -179,6 +179,7 @@ function Probe:Run()
     Line("backpack slots", Read("C_Container.GetContainerNumSlots", 0))
     Line("first item", FirstItem())
     Line("buyback", Read("GetNumBuybackItems"))
+    if ns.Selling then Line("sell from Butler", ns.Selling:ProbeText()) end
 end
 
 ns.RegisterCommand("probe", "check what this client supports for bags, vendors and mail (reads only)", function()

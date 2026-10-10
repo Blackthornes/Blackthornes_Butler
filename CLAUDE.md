@@ -25,9 +25,19 @@ it, or look at it yourself. The full plan, with the order the verdicts are
 decided in and the four phases, is `ideas/bag-butler-plan.md` in the
 project's files.
 
-So far it is the bones: the empty Butler window (`/bbutler`), settings, the
-minimap button and `/bbutler probe`, which lists the bag, vendor and mail
-calls the client has and which sister addons are loaded.
+Phase 1 is built (2026-10-10, the owner said go): Butler on its own.
+`Logic/Bags.lua` reads the bags only while the window is up or a vendor is
+open, 0.2 s after a burst of bag events, 40 slots a frame, and looks further
+only at slots whose key (link, count, locked) changed (`Bags.version`).
+`Logic/Verdicts.lua` judges each item in order (Always keep, quest item or
+quest starter, no vendor value, Always sell, price still loading, grey,
+else Look at it) and groups them Sell, Look at it, Keep (`Verdicts:Groups`,
+kept until `Bags.version` or `Verdicts.version` moves). `Logic/Selling.lua`
+is the Sell button (see the findings file for why it is secure).
+`UI/MainWindow.lua` draws the groups with `Widgets.CreateRowList` (Farmer's,
+with the dark glass rows) and Butler's own right-click menu. Saved and never
+renamed: `alwaysKeep`, `alwaysSell` (`[itemID] = true`), `sellTest`,
+`openAtVendor` (account), `folded` (per character). Not yet seen in game.
 
 Rules from the plan that hold from the first feature on:
 
@@ -69,8 +79,8 @@ are loaded and which answer Butler.
 It copies Pets (itself Equipment's, itself Farmer's) on purpose, so check the
 sisters before inventing a convention:
 
-- **Layout** `Core/ UI/ Probe/ tools/ docs/` so far (`Data/` and `Logic/`
-  come with the first features), one module per file through
+- **Layout** `Core/ Logic/ UI/ Probe/ tools/ docs/` so far (`Data/` comes
+  when a feature needs it), one module per file through
   `ns.NewModule`, no Ace3 or LibStub. The global is `_G.BlackthornesButler`,
   the commands `/bbutler` and `/butler`, the saved data
   `BlackthornesButlerDB` (account) and `BlackthornesButlerCharDB` (per
@@ -115,8 +125,9 @@ a setting", and Text size (`textSize` normal/large/larger adds 0/1/2 to
 setting with `pages:Row(page, column, label, description)` and
 `pages:Section(page, column, "HEADING")` in `UI/Settings.lua`; every
 `/bbutler` command has a button there, but never one that deletes data.
-Butler has one page (General) so far; the plan's pages (Verdicts, Selling,
-Pet & craft, Window) come with their features.
+Butler has Selling and General so far; the plan's other pages (Verdicts,
+Pet & craft, Window) come with their features. `reset confirm`, which
+empties the player's lists, stays typed.
 
 ## The house frame (Titanforged)
 
@@ -141,7 +152,7 @@ heading. Butler has no Window effects setting, so `Motion.Level()` is always
 "full" and the glint always runs. Anything placed inside a dressed window
 stays 6 pixels in from its edge, or it covers the rim.
 
-List rows are to be dark glass, as in the other addons (the owner picked it
+List rows are dark glass, as in the other addons (the owner picked it
 2026-10-10 over a gold glow that lit every row): `glass`/`glassAlt` bands
 in the well with a fine line under each, the gold wash only under the
 mouse. A gradient that fades goes through `Theme.LightGradient`, which

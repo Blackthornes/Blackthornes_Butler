@@ -158,6 +158,105 @@ function env.InstallClient()
     _G.UnitLevel = nil
     _G.UnitExists = nil
     _G.UnitName = nil
+
+    -- No bags, vendor or item calls until a suite fakes them (env.FakeBags).
+    _G.C_Container = nil
+    _G.C_Item = nil
+    _G.C_TooltipInfo = nil
+    _G.MerchantFrame = nil
+    _G.InCombatLockdown = nil
+    _G.GetMoney = nil
+    _G.NUM_BAG_SLOTS = nil
+end
+
+--------------------------------------------------------------------------------
+-- Bags
+--------------------------------------------------------------------------------
+
+--- A client with bags, items and a vendor. `items` is a list of
+--- { bag, slot, id, name, count, quality, price, quest, noValue, class },
+--- `price` what a vendor pays for one (nil: the item has not loaded yet).
+--- Returns the fake, whose `bags[bag][slot]` the suite can change and whose
+--- `used` lists the slots sold through UseContainerItem.
+function env.FakeBags(items)
+    local fake = { bags = {}, info = {}, used = {}, money = 0, numSlots = 16 }
+    for bag = 0, 4 do fake.bags[bag] = {} end
+
+    function fake.Put(item)
+        fake.bags[item.bag][item.slot] = item
+        fake.info[item.id] = item
+    end
+    for _, item in ipairs(items or {}) do fake.Put(item) end
+
+    local function Link(item)
+        return ("|cffffffff|Hitem:%d::::::::|h[%s]|h|r"):format(item.id, item.name)
+    end
+
+    _G.NUM_BAG_SLOTS = 4
+    _G.C_Container = {
+        GetContainerNumSlots = function(bag) return bag == 0 and fake.numSlots or 0 end,
+        GetContainerItemInfo = function(bag, slot)
+            local item = fake.bags[bag] and fake.bags[bag][slot]
+            if not item then return nil end
+            return {
+                itemID = item.id, hyperlink = Link(item), stackCount = item.count or 1,
+                quality = item.quality or 1, isLocked = item.locked or false,
+                hasNoValue = item.noValue or false, isBound = item.bound or false,
+                iconFileID = 134400,
+            }
+        end,
+        GetContainerItemQuestInfo = function(bag, slot)
+            local item = fake.bags[bag] and fake.bags[bag][slot]
+            if item and item.quest == "starts" then
+                return { isQuestItem = false, questID = 99, isActive = false }
+            elseif item and item.quest == "item" then
+                return { isQuestItem = true, questID = nil, isActive = false }
+            end
+            return { isQuestItem = false, isActive = false }
+        end,
+        UseContainerItem = function(bag, slot)
+            local item = fake.bags[bag][slot]
+            fake.used[#fake.used + 1] = bag .. ":" .. slot
+            if item and fake.canSell then
+                fake.money = fake.money + (item.price or 0) * (item.count or 1)
+                fake.bags[bag][slot] = nil
+            end
+        end,
+    }
+    _G.C_Item = {
+        GetItemInfo = function(id)
+            local item = fake.info[id]
+            if not item or item.price == nil then return nil end
+            return item.name, Link(item), item.quality, 1, 1, "Misc", "Misc", 20, "", 134400, item.price
+        end,
+        GetItemInfoInstant = function(id)
+            local item = fake.info[id]
+            return id, "Misc", "Misc", "", 134400, item and item.class or 15, 0
+        end,
+        RequestLoadItemDataByID = function(id) fake.requested = id end,
+    }
+    _G.GetMoney = function() return fake.money end
+    _G.time = _G.time or os.time
+    _G.MerchantFrame = env.Stub()
+
+    env.bags = fake
+    return fake
+end
+
+--- Turn every module on, as PLAYER_LOGIN does.
+function env.Enable(ns)
+    for _, module in ipairs(ns.moduleOrder) do
+        if module.OnEnable then module:OnEnable() end
+    end
+end
+
+--- Send an event to the addon as the client would.
+function env.Fire(event, ...)
+    local handler = _G.BlackthornesButlerEventFrame:GetScript("OnEvent")
+    -- The game shows and hides its vendor window with these.
+    if event == "MERCHANT_SHOW" and _G.MerchantFrame then _G.MerchantFrame:Show() end
+    if event == "MERCHANT_CLOSED" and _G.MerchantFrame then _G.MerchantFrame:Hide() end
+    handler(_G.BlackthornesButlerEventFrame, event, ...)
 end
 
 --------------------------------------------------------------------------------

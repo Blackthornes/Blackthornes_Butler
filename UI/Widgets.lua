@@ -1,7 +1,8 @@
 -- Blackthornes Butler -- UI/Widgets.lua
--- The controls the windows need: a button, a checkbox, a stepper and a search
--- box, with the small tweens that make them feel alive. Farmer's Widgets.lua,
--- trimmed to those, so the pages feel the same under the mouse.
+-- The controls the windows need: a button, a checkbox, a stepper, a search
+-- box and the scrolling row list, with the small tweens that make them feel
+-- alive. Farmer's Widgets.lua, trimmed to those, so the pages feel the same
+-- under the mouse.
 
 local _, ns = ...
 
@@ -741,4 +742,409 @@ function Widgets.CreateSearchBox(parent, placeholder, onChange, onAccept, opts)
 
     UpdateHint()
     return holder
+end
+
+--------------------------------------------------------------------------------
+-- Scrollbar
+--------------------------------------------------------------------------------
+
+--- The thin bar down a list's right edge: a dark track, and a thumb that is
+--- as long as the part of the list on screen and lights gold under the
+--- mouse or while dragged.
+local function CreateScrollbar(list, thumbKey)
+    local scrollbar = CreateFrame("Slider", nil, list)
+    scrollbar:SetOrientation("VERTICAL")
+    scrollbar:SetWidth(8)
+    scrollbar:SetPoint("TOPRIGHT", 0, 0)
+    scrollbar:SetPoint("BOTTOMRIGHT", 0, 0)
+    scrollbar:SetValueStep(1)
+    scrollbar:SetObeyStepOnDrag(true)
+
+    local track = scrollbar:CreateTexture(nil, "BACKGROUND")
+    track:SetAllPoints(scrollbar)
+    track:SetColorTexture(Theme.Unpack("panel"))
+
+    local thumb = scrollbar:CreateTexture(nil, "ARTWORK")
+    thumb:SetColorTexture(Theme.Unpack(thumbKey))
+    thumb:SetSize(8, 40)
+    scrollbar:SetThumbTexture(thumb)
+    scrollbar.thumb = thumb
+
+    -- The Blizzard window style draws the thumb as the game's knob, lit by
+    -- tint (UI/BlizzardLook.lua).
+    local Look = ns.BlizzardLook
+    if Look then Look.Thumb(thumb) end
+
+    local function Light(p)
+        if Look and Look.LightThumb(thumb, p >= 0.5) then return end
+        thumb:SetColorTexture(Motion.Mix(thumbKey, "accent", p, 1, 0.9))
+    end
+
+    scrollbar:SetScript("OnEnter", function(self) Motion:Blend(self, "hover", 1, 0.12, Light) end)
+    scrollbar:SetScript("OnLeave", function(self)
+        if not self.held then Motion:Blend(self, "hover", 0, 0.2, Light) end
+    end)
+    scrollbar:SetScript("OnMouseDown", function(self)
+        self.held = true
+        Motion:Blend(self, "hover", 1, 0.08, Light)
+    end)
+    scrollbar:SetScript("OnMouseUp", function(self)
+        self.held = false
+        local over = type(self.IsMouseOver) == "function" and self:IsMouseOver()
+        if not over then Motion:Blend(self, "hover", 0, 0.2, Light) end
+    end)
+
+    -- Hidden mid-drag (the list shrank), the mouse-up never comes: let go.
+    scrollbar:SetScript("OnHide", function(self)
+        self.held = false
+        Motion:Stop(self, "hover")
+        Motion:SetValue(self, "hover", 0)
+        Light(0)
+    end)
+
+    --- Size the thumb for `visible` of `total` rows on screen.
+    function scrollbar:SizeThumb(visible, total)
+        local height = tonumber(self:GetHeight())
+        if not (height and height > 0 and total and total > 0) then return end
+        thumb:SetHeight(math.max(18, math.min(height, height * visible / total)))
+    end
+
+    return scrollbar
+end
+
+--------------------------------------------------------------------------------
+-- Fade
+--------------------------------------------------------------------------------
+
+--- A soft fade over one cut edge of a scrolling list, drawn above its rows
+--- in the colour behind them (`key`), so a list with more above or below
+--- fades out rather than stopping hard. The caller anchors it. Nil where
+--- the client has no gradients: a flat band would only hide a row.
+function Widgets.CreateFade(parent, side, key, height)
+    if type(CreateColor) ~= "function" then return nil end
+
+    local fade = CreateFrame("Frame", nil, parent)
+    fade:SetFrameLevel(parent:GetFrameLevel() + 12)
+    fade:SetHeight(height or 16)
+
+    local texture = fade:CreateTexture(nil, "OVERLAY")
+    texture:SetAllPoints(fade)
+    texture:SetColorTexture(1, 1, 1, 1)
+
+    local r, g, b = Theme.Unpack(key or "panel")
+    local solid, clear = CreateColor(r, g, b, 0.95), CreateColor(r, g, b, 0)
+    local ok
+    if side == "TOP" then
+        ok = pcall(texture.SetGradient, texture, "VERTICAL", clear, solid)
+    else
+        ok = pcall(texture.SetGradient, texture, "VERTICAL", solid, clear)
+    end
+    if not ok then return nil end
+
+    fade:EnableMouse(false)
+    fade:Hide()
+    return fade
+end
+
+--------------------------------------------------------------------------------
+-- Line list
+--------------------------------------------------------------------------------
+
+--- A scrolling list of preformatted text lines.
+--
+-- Distinct from the tradeskills addon's CreateScrollList, which recycles rows
+-- of columns: results here are already formatted strings of varying shape --
+-- an item heading, a note, a source -- so a row is one label and the list only
+-- has to decide which lines are on screen.
+--------------------------------------------------------------------------------
+-- Row list
+--------------------------------------------------------------------------------
+
+--- The light a row wears under the mouse, built on `row` once: a lifted
+--- wash, a thin gold edge down its left so your place in a long list is easy
+--- to keep, and a soft gold light bleeding off that edge into the row.
+--- Unlit until Widgets.SetRowLight lights it.
+function Widgets.RowLight(row)
+    -- Filled at full strength and hidden with SetAlpha: a texture whose
+    -- colour is clear stays clear whatever alpha it is given later, which
+    -- is how the hover went missing.
+    row.highlight = Theme.Fill(row, "glassHover", nil, "BORDER")
+    row.highlight:SetAlpha(0)
+
+    row.edge = row:CreateTexture(nil, "OVERLAY")
+    row.edge:SetPoint("TOPLEFT")
+    row.edge:SetPoint("BOTTOMLEFT")
+    row.edge:SetWidth(2)
+    row.edge:SetColorTexture(Theme.Unpack("accentHi"))
+    row.edge:SetAlpha(0)
+
+    -- Titanforged: a soft gold wash fading across the row from its left, as
+    -- Tradeskills' rows light. Both gold lights hide at rest and are lit by
+    -- Theme.LightGradient: faded with SetAlpha alone they stayed on every
+    -- row in game.
+    row.lightWash = row:CreateTexture(nil, "BORDER", nil, 1)
+    row.lightWash:SetAllPoints(row)
+    row.lightWash:Hide()
+
+    row.bleed = row:CreateTexture(nil, "BORDER", nil, 1)
+    row.bleed:SetPoint("TOPLEFT", 2, 0)
+    row.bleed:SetPoint("BOTTOMLEFT", 2, 0)
+    row.bleed:SetWidth(18)
+    pcall(row.bleed.SetBlendMode, row.bleed, "ADD")
+    row.bleed:Hide()
+end
+
+--- How lit a row from Widgets.RowLight is: 0 at rest, 1 under the mouse.
+function Widgets.SetRowLight(row, value)
+    row.highlight:SetAlpha(value)
+    row.edge:SetAlpha(value)
+    Theme.LightGradient(row.bleed, "HORIZONTAL", "accent", 0.18, 0, value)
+    Theme.LightGradient(row.lightWash, "HORIZONTAL", "accent", 0.10, 0, value)
+end
+
+--- A scrolling list that recycles row frames.
+--
+-- Where CreateLineList draws one label per line, this gives each row a set of
+-- children the caller builds once and fills per row, which is what a table of
+-- columns needs. Only the rows on screen exist, so the length of the data does
+-- not change the cost of drawing it.
+--
+-- @param opts
+--   rowHeight  pixel height of one row
+--   createRow  function(row)            -- build the row's children once
+--   updateRow  function(row, data, i)   -- fill a row with data
+--   onClick    function(data, button)
+--   onEnter    function(row, data)      -- the mouse came onto a row
+--   onLeave    function(row)
+--   onRefresh  function(list, shown, visible)
+function Widgets.CreateRowList(parent, opts)
+    opts = opts or {}
+
+    local list = CreateFrame("Frame", nil, parent)
+    local rowHeight = opts.rowHeight or 20
+
+    list.data = {}
+    list.rows = {}
+    list.offset = 0
+
+    local scrollbar = CreateScrollbar(list, "metal")
+
+    list.scrollbar = scrollbar
+
+    -- The cut edges fade while there is more above or below.
+    local fadeTop = Widgets.CreateFade(list, "TOP", opts.fadeKey, 14)
+    local fadeBottom = fadeTop and Widgets.CreateFade(list, "BOTTOM", opts.fadeKey, 14)
+    if fadeBottom then
+        fadeTop:SetPoint("TOPLEFT", list, "TOPLEFT", 0, 0)
+        fadeTop:SetPoint("TOPRIGHT", scrollbar, "TOPLEFT", -6, 0)
+        fadeBottom:SetPoint("BOTTOMLEFT", list, "BOTTOMLEFT", 0, 0)
+        fadeBottom:SetPoint("BOTTOMRIGHT", scrollbar, "BOTTOMLEFT", -6, 0)
+        list.fadeTop, list.fadeBottom = fadeTop, fadeBottom
+    end
+
+    local function VisibleRowCount()
+        local height = list:GetHeight()
+        if not height or height <= 0 then return 0 end
+        return math.floor(height / rowHeight)
+    end
+
+    -- True while Refresh sets the scrollbar itself (see there).
+    local syncing = false
+
+    -- The row under the mouse, from its OnEnter to its OnLeave.
+    local hovered
+
+    --- How lit a row is: 0 at rest, 1 under the mouse.
+    local Lit = Widgets.SetRowLight
+
+    local function Unlight(row)
+        Motion:Stop(row, "hover")
+        Motion:SetValue(row, "hover", 0)
+        Lit(row, 0)
+    end
+
+    --- The mouse is on `row`: light it, and let the caller show its tooltip.
+    local function Enter(row)
+        hovered = row
+        if row.data and row.data.type ~= "spacer" then
+            Motion:Blend(row, "hover", 1, 0.08, function(value) Lit(row, value) end)
+        else
+            Unlight(row)
+        end
+        if row.data and opts.onEnter then opts.onEnter(row, row.data) end
+    end
+
+    local function AcquireRow(index)
+        local row = list.rows[index]
+        if row then return row end
+
+        row = CreateFrame("Button", nil, list)
+        row:SetHeight(rowHeight)
+        row:SetPoint("TOPLEFT", 0, -(index - 1) * rowHeight)
+        row:SetPoint("RIGHT", scrollbar, "LEFT", -6, 0)
+        row:RegisterForClicks("LeftButtonUp", "RightButtonUp")
+
+        -- Dark glass: every other row a shade apart, with a fine line under
+        -- each, so the rows read as separate.
+        row.stripe = Theme.Fill(row, "glass")
+        row.line = row:CreateTexture(nil, "BACKGROUND", nil, 1)
+        row.line:SetPoint("BOTTOMLEFT")
+        row.line:SetPoint("BOTTOMRIGHT")
+        row.line:SetHeight(1)
+        row.line:SetColorTexture(Theme.Unpack("border", 0.6))
+
+        -- The wash, the gold edge and the gold light that come up under the
+        -- mouse.
+        Widgets.RowLight(row)
+
+        if opts.createRow then
+            opts.createRow(row)
+        end
+
+        -- Callers hook hovering through opts rather than HookScript on the
+        -- row: SetScript here would replace a hook set in createRow.
+        row:SetScript("OnEnter", Enter)
+
+        row:SetScript("OnLeave", function(self)
+            if hovered == self then hovered = nil end
+            Motion:Blend(self, "hover", 0, 0.18, function(value) Lit(self, value) end)
+            if opts.onLeave then opts.onLeave(self) end
+        end)
+
+        row:SetScript("OnClick", function(self, button)
+            if self.data and opts.onClick then
+                opts.onClick(self.data, button)
+            end
+        end)
+
+        list.rows[index] = row
+        return row
+    end
+
+    function list:MaxOffset()
+        return math.max(0, #self.data - VisibleRowCount())
+    end
+
+    function list:Refresh()
+        local visible = VisibleRowCount()
+        local maxOffset = self:MaxOffset()
+
+        if self.offset > maxOffset then self.offset = maxOffset end
+        if self.offset < 0 then self.offset = 0 end
+
+        -- Asked before the rows change: one emptied below is hidden, and a
+        -- hidden row is under no mouse.
+        local stillOver = hovered and UnderMouse(hovered)
+
+        for index = 1, visible do
+            local row = AcquireRow(index)
+            local data = self.data[index + self.offset]
+
+            row.data = data
+            row.dataIndex = index + self.offset
+
+            -- A row handed new data starts unlit, except the one under the
+            -- mouse, which is lit again for its new data below.
+            if not (stillOver and row == hovered) then Unlight(row) end
+
+            if data then
+                -- Banding follows the row's place on screen rather than its
+                -- index in the data, so the stripes do not crawl as you scroll.
+                row.stripe:SetColorTexture(Theme.Unpack(index % 2 == 0 and "glassAlt" or "glass"))
+
+                if opts.updateRow then
+                    opts.updateRow(row, data, index + self.offset)
+                end
+
+                row:Show()
+            else
+                row:Hide()
+            end
+        end
+
+        for index = visible + 1, #self.rows do
+            self.rows[index]:Hide()
+        end
+
+        -- A scroll or a redraw hands the row under a still mouse new data,
+        -- and no OnEnter comes for that: it went dark, and its tooltip
+        -- still spoke of the last row. Leave and enter it again, as if the
+        -- mouse had just come onto what it shows now.
+        if hovered then
+            local row = hovered
+            hovered = nil
+            if stillOver and opts.onLeave then opts.onLeave(row) end
+            if stillOver and row.data and row:IsShown() then
+                Enter(row)
+            else
+                Unlight(row)
+            end
+        end
+
+        -- The client clamps the slider's value to a new range and reports
+        -- that as the player moving it. Taken as a move, a new list that was
+        -- shorter than the last one opened scrolled to its end.
+        syncing = true
+        scrollbar:SetMinMaxValues(0, maxOffset)
+        scrollbar:SetValue(self.offset)
+        syncing = false
+        scrollbar:SetShown(maxOffset > 0)
+        scrollbar:SizeThumb(visible, #(self.data or self.lines))
+
+        if fadeBottom then
+            fadeTop:SetShown(self.offset > 0)
+            fadeBottom:SetShown(self.offset < maxOffset)
+        end
+
+        if opts.onRefresh then
+            opts.onRefresh(self, #self.data, visible)
+        end
+    end
+
+    --- New rows. `keepPlace` keeps the list scrolled where it was (a redraw
+    --- of the same results after a kill, a heading folded); otherwise it
+    --- starts from the top.
+    function list:SetData(data, keepPlace)
+        self.data = data or {}
+        if not keepPlace then self.offset = 0 end
+        self:Refresh()
+    end
+
+    --- Bring the rows on screen in one after another, top down: a new set
+    --- of results arriving rather than appearing. Full effects only.
+    function list:Arrive()
+        if Motion.Level() ~= "full" then return end
+
+        local shown = 0
+        for _, row in ipairs(self.rows) do
+            if row:IsShown() and row.data then
+                shown = shown + 1
+                local delay = math.min(shown - 1, 14) * 0.02
+                Motion:Run(row, "arrive", 0.22, function(p) row:SetAlpha(p) end,
+                    { delay = delay })
+            end
+        end
+    end
+
+    function list:Scroll(delta)
+        self.offset = self.offset - (delta * 3)
+        self:Refresh()
+    end
+
+    scrollbar:SetScript("OnValueChanged", function(_, value)
+        if syncing then return end
+
+        local wanted = math.floor(value + 0.5)
+        if wanted ~= list.offset then
+            list.offset = wanted
+            list:Refresh()
+        end
+    end)
+
+    list:EnableMouseWheel(true)
+    list:SetScript("OnMouseWheel", function(_, delta)
+        list:Scroll(delta)
+    end)
+
+    return list
 end
