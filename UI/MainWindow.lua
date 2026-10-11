@@ -571,7 +571,7 @@ function UI:ShowMenu(data, stay)
     menu.decide:SetShown(choice ~= nil)
 
     local rows = 3 + (canMail and 1 or 0) + (choice ~= nil and 1 or 0)
-    menu:SetHeight(40 + rows * MENU_ROW)
+    menu:SetHeight(30 + rows * MENU_ROW)
     UI.FitMenu(menu, { menu.keep, menu.sell, menu.bank, menu.mail, menu.decide })
 
     if stay and menu:IsShown() then return end
@@ -647,7 +647,7 @@ function UI:ShowMailMenu()
         menu.back:SetPoint("TOPLEFT", 8, -26)
     end
     menu.back:Show()
-    menu:SetHeight(40 + (#names + 1) * MENU_ROW)
+    menu:SetHeight(30 + (#names + 1) * MENU_ROW)
     local buttons = { menu.back }
     for index = 1, #names do buttons[#buttons + 1] = menu.characters[index] end
     UI.FitMenu(menu, buttons)
