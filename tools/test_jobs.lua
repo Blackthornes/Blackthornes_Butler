@@ -161,6 +161,30 @@ suite.check("never comes up in combat", not foot:IsShown())
 env.Fire("PLAYER_REGEN_ENABLED")
 suite.check("comes up once the fight ends", foot:IsShown())
 
+-- Nothing here can be done yet and the next one can: it goes first.
+local STUCK = { name = "Ana Blackthorne", isCurrent = true, steps = {
+    { kind = "craft", recipeID = 13, itemID = 2582, name = "Reinforced Woolen Shoulders", count = 5,
+      forNames = {}, ready = false, missing = { { itemID = 2319, count = 10, from = "Blackthornes Wither" } } },
+} }
+plan = Fresh({ STUCK, CY, WITHER })
+suite.check("stuck here, the next one goes first", plan.goFirst == true)
+rows = Jobs:Lines()
+suite.check("its line heads the Jobs group", rows[1].type == "jobnext" and rows[1].isFirst
+    and rows[1].job.name == "Blackthornes Wither")
+suite.check("then the craft here", rows[2].type == "job" and rows[2].step.recipeID == 13)
+suite.check("then the rest, once each", #rows == 3 and rows[3].job.name == "Cy Waiting", #rows)
+title, detail = Jobs.StepText(rows[2].step)
+suite.check("the craft says who has what it needs",
+    detail:find("Blackthornes Wither has it", 1, true) ~= nil, detail)
+UI:FootRoom()
+suite.check("and the gold Log out points there", foot:IsShown()
+    and foot.label:GetText() == "Log out for Blackthornes Wither")
+plan = Fresh({ STUCK, CY })
+suite.check("nobody else can either, nothing jumps", not plan.goFirst and Jobs:Lines()[1].type == "job")
+local clean = Jobs.Clean({ { name = "Dee Tanner", steps = { { kind = "mail", to = "Blackthornes Wither",
+    forCraft = true, items = { { itemID = 2318, count = 40 } } } } } })
+suite.check("a mail for a craft keeps its mark", clean[1] and clean[1].steps[1].forCraft == true)
+
 -- 6. Done here.
 Fresh({ ANA, WITHER })
 env.chat = {}
