@@ -36,6 +36,7 @@ Logic\Selling.lua
 Logic\Disenchanting.lua
 Logic\Errands.lua
 Logic\Funds.lua
+Logic\Ammo.lua
 Logic\Learning.lua
 
 Probe\Probe.lua

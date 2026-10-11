@@ -271,6 +271,27 @@ worked out only while the window draws it, again only when the purse
 (debounced 0.2 s) or a setting moves. Tested in `tools/test_funds.lua`.
 Not yet seen in game.
 
+## Filling the quiver
+
+The owner asked (2026-10-11) for Butler to offer to fill a hunter's ammo
+pouch at a vendor that can, "with the best ammo you can use, for the
+weapon type you're using and pouch type you have on". `Logic/Ammo.lua`:
+on a hunter (`UnitClass`), the weapon in the ranged slot (or main hand) is
+a bow or crossbow (arrows) or gun (bullets), and the ammo bag is the bag
+whose family holds arrows (quiver, 1) or bullets (ammo pouch, 2). At a
+vendor, the window's first row is Ammo: the vendor's ammo of that kind the
+hunter can use (`isUsable`, its level), most damage first (the tooltip's
+"Adds X damage per second", else item level), and how many whole lots fit
+the bag's empty slots and the room left in its stacks of the same ammo.
+The row's Fill button buys them, one `BuyMerchantItem(index)` (one lot)
+every `Ammo.GAP`, each re-checked first; never below the gold fund's
+amount for the character (fewer lots, said so, or no button). A bag that
+doesn't match the weapon, or no ammo bag, gets a row that says so and no
+button; a full bag gets no row. `Ammo:Keeps` keeps the weapon's own ammo
+out of Sell (step 4b). No setting: it shows only where it can help. Not
+yet seen in game; `/bbutler probe` has an ammo line. Tested in
+`tools/test_ammo.lua`.
+
 ## Learning from the player
 
 The owner's goal (2026-10-11): the addons should work "almost like it's

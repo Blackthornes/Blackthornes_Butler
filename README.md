@@ -58,6 +58,11 @@ from vendor prices and the game's own quest marks.
   Balances are as last seen when each character played, and the row says
   how old. `/bbutler gold` lists everyone's. Needs Blackthornes
   Tradeskills; off until you set it.
+- **Ammo** (hunters): at a vendor that sells ammo for your bow, crossbow
+  or gun, Butler offers to fill your quiver or ammo pouch with the best
+  ammo there you can use, as many as fit, and the Fill button buys it. It
+  never spends below the gold your gold fund keeps, and says so when your
+  bag doesn't match your weapon. Your own ammo is never put under Sell.
 - **At a mailbox,** the window comes up in place of Tradeskills' mail panel
   (close it to get that back), with a **Fill mail** button when something
   is under Mail. Each click fills the game's Send Mail page for one
