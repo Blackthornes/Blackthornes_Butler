@@ -304,6 +304,13 @@ function SettingsUI:BuildPages()
     end, true)
     controls.openAtMailbox:SetPoint("TOPLEFT", CONTROL_X, -2)
 
+    local nextRow = pages:Row("selling", 1, "Fill the next mail",
+        "After you send a mail Butler filled, it fills the next one straight away, so you only press Send for each character. Also /bbutler fillnext.")
+    controls.fillNext = Widgets.CreateCheckbox(nextRow, "On", function(checked)
+        ns.db.fillNext = checked
+    end, true)
+    controls.fillNext:SetPoint("TOPLEFT", CONTROL_X, -2)
+
     local bankRow = pages:Row("selling", 1, "Open at the bank",
         "The Butler window comes up at the bank when there is something to move: Move to bank puts your Always bank items away, and Take from bank brings out what your craft queue needs. Also /bbutler bank.")
     controls.openAtBank = Widgets.CreateCheckbox(bankRow, "On", function(checked)
@@ -465,6 +472,7 @@ function SettingsUI:Refresh()
     controls.minimap:SetChecked(not ns.db.minimapHidden)
     controls.openAtVendor:SetChecked(ns.db.openAtVendor ~= false)
     controls.openAtMailbox:SetChecked(ns.db.openAtMailbox ~= false)
+    controls.fillNext:SetChecked(ns.db.fillNext ~= false)
     controls.openAtBank:SetChecked(ns.db.openAtBank ~= false)
     controls.freeSpace:SetChecked(ns.db.freeSpace ~= false)
     controls.learn:SetChecked(ns.db.learn ~= false)

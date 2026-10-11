@@ -215,6 +215,15 @@ Tradeskills' `UI/QueueMailPanel.lua` reads it.
   stays; with nothing to spare it is Keep. The Always keep list gives way
   to it the same way (`Verdicts:ForAltCraft`): the alt's share is a Mail
   row and the list keeps the rest. The Always bank list does not.
+- **Fill the next mail** (the owner's goal, 2026-10-11: do the work for
+  the player): once a mail Butler filled goes (`MAIL_SEND_SUCCESS`, with
+  `Errands.sending` set by `FillMail`), `Errands:Sent` waits
+  `Errands.NEXT_DELAY` for the bags, then fills the next character's, or
+  says that's all. Only while the window is up at the mailbox and out of
+  combat; a mail sent by hand fills nothing, and `MAIL_FAILED`
+  (`SendFailed`) offers the same character again. "Fill the next mail"
+  (`fillNext`, account wide, on unless unticked, never rename it;
+  `/bbutler fillnext`). The player still presses every Send.
 - **Always mail to** (the right-click menu, asked 2026-10-11) puts an item
   on the player's **Always mail** list for one of their characters
   (`alwaysMail`, `[itemID]` = the character's full name, account wide,
