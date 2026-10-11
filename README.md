@@ -77,6 +77,10 @@ from vendor prices and the game's own quest marks.
   it to see each character's bags, bank and mail, and how long ago that was
   seen. Your other characters come from Blackthornes Tradeskills, which
   remembers them as you play each one; without it you see your own bags.
+- **Butler's voice:** open the window and Karazhan's butler says "You
+  rang?"; close it and he picks up where he was. Never over a vendor or
+  other NPC, at most once every few minutes, and off with a tick box in
+  Settings.
 - **Sell at a vendor.** The window comes up by itself at every vendor, with
   a Sell button at its foot when there is something to sell. Nothing sells until
   you click it, and it only ever sells what is under Sell. Each click sells
