@@ -84,7 +84,7 @@ local function StillDisenchant(item)
     local entry = Bags.ReadSlot(item.bag, item.slot)
     if not entry then return false end
     entry.quest = Bags.ReadQuest(item.bag, item.slot, item.itemID)
-    return ns.Verdicts:Judge(entry) == "disenchant"
+    return ns.Verdicts:VerdictOf(entry) == "disenchant"
 end
 
 --- The next item to disenchant that the bags still hold, or nil.

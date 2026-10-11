@@ -109,7 +109,7 @@ local function SellOne(item)
     -- Judged again, in case a choice changed since the list was drawn.
     local entry = Bags.ReadSlot(item.bag, item.slot)
     entry.quest = Bags.ReadQuest(item.bag, item.slot, item.itemID)
-    if ns.Verdicts:Judge(entry) ~= "sell" then return false end
+    if ns.Verdicts:VerdictOf(entry) ~= "sell" then return false end
     local fn = Items.Resolve("C_Container.UseContainerItem")
     return fn ~= nil and pcall(fn, item.bag, item.slot)
 end

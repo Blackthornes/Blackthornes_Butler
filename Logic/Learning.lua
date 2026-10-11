@@ -228,7 +228,7 @@ function Learning:OnUse(bag, slot)
     if ns.Verdicts:Choice(itemID) or self:Get(itemID) then return end
     if not entry.quest then entry.quest = KnownSlot(bag, slot) and KnownSlot(bag, slot).quest end
     if entry.quest then return end
-    if ns.Verdicts:Judge(entry) == "sell" then return end
+    if ns.Verdicts:VerdictOf(entry) == "sell" then return end
 
     -- Counted once the game has taken it (the slot empties when the vendor
     -- pays), and once a visit, so a stack split in two is one sale.

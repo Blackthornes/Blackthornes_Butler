@@ -217,6 +217,18 @@ Tradeskills' `UI/QueueMailPanel.lua` reads it.
   stays; with nothing to spare it is Keep. The Always keep list gives way
   to it the same way (`Verdicts:ForAltCraft`): the alt's share is a Mail
   row and the list keeps the rest. The Always bank list does not.
+- **An alt's upgrade** (Equipment's `alt`, the owner asked 2026-10-11)
+  goes to them only as many as they wear: one, two for rings and trinkets
+  (`Verdicts.Wears`, from the item's equip slot). `Verdicts:Groups` hands
+  out copies in bag order, and a copy past that is judged again as if no
+  alt wanted it (`Judge(entry, true)`), so it lands under Sell, Auction or
+  wherever it belongs (a player found two pairs of pants in one mail).
+  Clicks that act on a slot ask `Verdicts:VerdictOf(entry)`, the verdict
+  the window shows, not `Judge`. Once a mail Butler filled goes, its alt
+  upgrades are kept in `upgradeMailed[itemID] = { to, count, at }`
+  (account wide, never rename it) and not offered again to that
+  character for 30 days (`Verdicts.MAILED_KEEP`, when unclaimed mail goes
+  back). Tested in `tools/test_altupgrade.lua`.
 - **Fill the next mail** (the owner's goal, 2026-10-11: do the work for
   the player): once a mail Butler filled goes (`MAIL_SEND_SUCCESS`, with
   `Errands.sending` set by `FillMail`), `Errands:Sent` waits
