@@ -293,12 +293,47 @@ function Errands:FillMail()
         return false, type(why) == "string" and ("Couldn't fill it: %s."):format(why) or "Couldn't fill it."
     end
     self.filled[recipient.to] = true
+    self.sending = recipient.to
     if recipient.money and ns.Funds then ns.Funds:Filled(recipient.to, recipient.money) end
     self:Update()
     -- The full name the mail went to, when Tradeskills says it: the short
     -- one ("Ana S.") read as a typo in chat.
     local to = type(fullName) == "string" and fullName ~= "" and fullName or recipient.to
     return true, ("Filled a mail to %s: check it, then press Send."):format(to)
+end
+
+--- The mail Butler filled went (MAIL_SEND_SUCCESS): fill the next one
+--- straight away, so a run of mail is one Send a character (the owner,
+--- 2026-10-11: the addons should do the work). Only while the window is up
+--- at the mailbox, out of combat, with "Fill the next mail" on; a mail the
+--- player sent by hand fills nothing. The player still presses each Send.
+function Errands:Sent()
+    local was = self.sending
+    self.sending = nil
+    if not was or not self.mailOpen or ns.db.fillNext == false then return end
+    if not (ns.UI and ns.UI:IsShown()) then return end
+    -- The bags say what left them a moment after the mail goes.
+    C_Timer.After(Errands.NEXT_DELAY, function()
+        if not Errands.mailOpen or InCombat() then return end
+        Bags:Fresh(function()
+            if not Errands.mailOpen or Errands.sending then return end
+            if not Errands:NextRecipient() then
+                ns.Print("Sent. That's all the mail for now.")
+                return
+            end
+            local ok, message = Errands:FillMail()
+            if message then ns.Print(ok and ("Sent. " .. message) or message) end
+        end)
+    end)
+end
+
+Errands.NEXT_DELAY = 0.5
+
+--- The mail did not go: it can be filled again.
+function Errands:SendFailed()
+    if self.sending then self.filled[self.sending] = nil end
+    self.sending = nil
+    self:Update()
 end
 
 --------------------------------------------------------------------------------
@@ -488,6 +523,7 @@ function Errands:Arrived(place)
     if place == "mail" then
         self.mailOpen = true
         self.filled = {}
+        self.sending = nil
     else
         self.bankOpen = true
     end
@@ -503,6 +539,7 @@ function Errands:Left(place)
     if place == "bank" and not self.bankOpen and not (ns.UI and ns.UI.openedFor == "bank") then return end
     if place == "mail" then
         self.mailOpen = false
+        self.sending = nil
     else
         self.bankOpen = false
     end
@@ -514,6 +551,8 @@ end
 function Errands:OnEnable()
     ns.RegisterEvent(self, "MAIL_SHOW", function() Errands:Arrived("mail") end)
     ns.RegisterEvent(self, "MAIL_CLOSED", function() Errands:Left("mail") end)
+    ns.RegisterEvent(self, "MAIL_SEND_SUCCESS", function() Errands:Sent() end)
+    ns.RegisterEvent(self, "MAIL_FAILED", function() Errands:SendFailed() end)
     ns.RegisterEvent(self, "BANKFRAME_OPENED", function() Errands:Arrived("bank") end)
     ns.RegisterEvent(self, "BANKFRAME_CLOSED", function() Errands:Left("bank") end)
     -- Walking away ends the game's interaction with the mailbox or banker;
@@ -543,6 +582,12 @@ ns.RegisterCommand("mailbox", "turn the Butler window coming up at a mailbox on 
     ns.db.openAtMailbox = not ns.db.openAtMailbox
     ns.Print(ns.db.openAtMailbox and "the Butler window comes up at every mailbox."
         or "the Butler window no longer comes up at a mailbox by itself.")
+end)
+
+ns.RegisterCommand("fillnext", "turn filling the next mail after each Send on or off", function()
+    ns.db.fillNext = ns.db.fillNext == false
+    ns.Print(ns.db.fillNext and "after each Send, Butler fills the next mail."
+        or "Butler fills a mail only when you click Fill mail.")
 end)
 
 ns.RegisterCommand("bank", "turn the Butler window coming up at the bank on or off", function()

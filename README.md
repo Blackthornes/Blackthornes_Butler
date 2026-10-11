@@ -61,7 +61,10 @@ from vendor prices and the game's own quest marks.
 - **At a mailbox,** the window comes up in place of Tradeskills' mail panel
   (close it to get that back), with a **Fill mail** button when something
   is under Mail. Each click fills the game's Send Mail page for one
-  character; you check it and press Send. Needs Blackthornes Tradeskills.
+  character; you check it and press Send. Once that mail goes, Butler fills
+  the next one straight away, so a run of mail is one Send a character
+  ("Fill the next mail" in Settings, or `/bbutler fillnext`). Needs
+  Blackthornes Tradeskills.
 - **At the bank,** **Move to bank** puts away everything on your Always bank
   list, and **Take from bank** brings out what your craft queue needs (with
   Tradeskills). Both move whole stacks.

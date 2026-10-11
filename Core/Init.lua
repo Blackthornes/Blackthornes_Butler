@@ -313,6 +313,10 @@ local DEFAULTS = {
     openAtMailbox = true,
     openAtBank = true,
 
+    -- After a mail Butler filled is sent, the next one is filled at once
+    -- (Errands:Sent, asked 2026-10-11).
+    fillNext = true,
+
     -- The free bag space number on the backpack button (UI/FreeSpace.lua,
     -- asked 2026-10-11).
     freeSpace = true,
