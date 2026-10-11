@@ -188,6 +188,11 @@ Tradeskills' `UI/QueueMailPanel.lua` reads it.
   entry, a `mailTo` or an `enchanter` naming it is kept instead.
   Tradeskills' `FillMail` refuses it too, and its third return, the full
   name filled in, is what the chat line says.
+  An item both this character's queue and an alt's want is a Mail row
+  (2026-10-11, the owner: Butler handles queued crafts made on another
+  character): `mailCount` is what Tradeskills spares once this
+  character's crafts are kept back, so Fill mail sends that and the rest
+  stays; with nothing to spare it is Keep.
 - **Always mail to** (the right-click menu, asked 2026-10-11) puts an item
   on the player's **Always mail** list for one of their characters
   (`alwaysMail`, `[itemID]` = the character's full name, account wide,

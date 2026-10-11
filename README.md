@@ -23,8 +23,8 @@ from vendor prices and the game's own quest marks.
     (marked down when they sell slowly).
   - **Disenchant**: items worth more as enchanting materials, when you can
     disenchant them.
-  - **Mail**: items an alt needs for their crafts, or that your enchanter
-    alt should disenchant.
+  - **Mail**: items an alt needs for their crafts (only what your own
+    crafts can spare), or that your enchanter alt should disenchant.
   - **Look at it**: everything Butler can't judge yet, with what a vendor
     pays. Soulbound green or better gear never goes under Sell.
   - **Keep**: quest items, upgrades and tools, what your Farmer goals and

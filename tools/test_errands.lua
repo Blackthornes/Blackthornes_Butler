@@ -54,6 +54,8 @@ _G.BlackthornesTS = { Butler = {
     Advise = function(_, id)
         if id == 401 then return { mailTo = "Bob", mailCount = 1, auction = 300 } end
         if id == 403 then return { mailTo = "Bob", mailCount = 5 } end
+        -- This character's queue wants 4 of the 10, and Bob's the other 6.
+        if id == 404 then return { need = 4, mailTo = "Bob", mailCount = 6 } end
         if id == 402 then return { auction = 25, disenchant = 500, canDisenchant = false, enchanter = "Ana" } end
     end,
     FillMail = function(_, name, items)
@@ -103,6 +105,15 @@ suite.check("a click fills Bob's mail", first and first.name == "Bob")
 local counts = {}
 for _, item in ipairs(first and first.items or {}) do counts[item.itemID] = item.count end
 suite.check("as many as the alt needs, no more", counts[401] == 1 and counts[403] == 5)
+suite.check("an alt's share goes even when this character's crafts want some",
+    counts[404] == 6, tostring(counts[404]))
+local ore = ns.Verdicts:Group("mail").rows
+local oreReason
+for _, row in ipairs(ore) do if row.itemID == 404 then oreReason = row.reason end end
+suite.check("and the row says what stays", oreReason == "Mail 6 to Bob for their crafts, keep 4 for yours",
+    tostring(oreReason))
+suite.check("own crafts alone still keep it", ns.Verdicts:Kept({ ts = { need = 4 } }) == "keep")
+suite.check("and nothing to spare keeps it", ns.Verdicts:Kept({ ts = { need = 4, mailTo = "Bob", mailCount = 0 } }) == "keep")
 suite.check("then the next character", UI.mailButton.label:GetText() == "Fill mail to Ana", UI.mailButton.label:GetText())
 UI.mailButton:GetScript("OnClick")(UI.mailButton)
 suite.check("the enchanter gets the whole item", filled[2] and filled[2].name == "Ana"
