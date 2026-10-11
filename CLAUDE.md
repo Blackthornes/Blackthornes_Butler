@@ -369,21 +369,22 @@ Fill mail at a mailbox, as before.
 
 The **Log out** button (`BlackthornesButlerLogout`) is a secure button
 running the game's own `/logout` as a macro (addon code may not log out by
-itself), in the header left of All characters, placed by screen position
-like the Sell button (`Jobs:UpdateLogout`, from `UI:FootRoom` and each new
-list), shown only while another character has work, hidden in combat, while
-the window moves and in All characters. Not yet seen in game; `/bbutler
-probe` has a jobs line (`Logout`, `SLASH_LOGOUT1`).
-Once nothing is left here (the owner liked it, 2026-10-11: send, then
-switch, in one more click), a big gold "Log out for NAME" button
-(`BlackthornesButlerLogoutFoot`, `Jobs:UpdateFoot`, from `UI:FootRoom`)
-takes Fill mail's place at the foot, only while no Sell or errand button
-sits there, and the small one in the header steps aside.
+itself). It sits on the next character's row ("First:" or "Next:"), where
+a craft's Craft button sits (the owner asked 2026-10-11: "the log out
+button should be next to the step that needs the logout"), placed by
+screen position over that row (`Jobs:UpdateLogout`, `Jobs.NextRow`, called
+from the list's `onRefresh` so it follows a scroll, and from
+`UI:FootRoom`). It shows only while that row is on screen, and hides in
+combat, while the window moves and in All characters. There is no other
+Log out button (the header and gold foot ones are gone); once nothing is
+left here the footer says "Everything here is done" (`Jobs:DoneHere`).
+Not yet seen in game; `/bbutler probe` has a jobs line (`Logout`,
+`SLASH_LOGOUT1`).
 When nothing here can be done yet and the next character can (the owner,
 2026-10-11: "a sub craft on another character needs to go to a top step
 if they already have the materials"), `Jobs:Plan`'s `goFirst` puts that
-character's line, "First: NAME", above this character's steps, and the
-gold Log out points there too. Tradeskills names who holds a missing
+character's line, "First: NAME", above this character's steps, and Log out
+sits on that line. Tradeskills names who holds a missing
 material (`missing[i].from`, "NAME has it.") and gives that character a
 mail step to the crafter (`forCraft`), the character playing too (an
 item's `bank` is how many to take out of the bank first, and the step

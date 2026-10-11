@@ -163,6 +163,8 @@ function UI:Build()
         onClick = function(data, button) UI:Clicked(data, button) end,
         onEnter = function(row, data) UI:Enter(row, data) end,
         onLeave = function() GameTooltip:Hide() end,
+        -- Log out follows the next character's row as the list scrolls.
+        onRefresh = function() if ns.Jobs then ns.Jobs:UpdateLogout() end end,
     })
     self.list:SetPoint("TOPLEFT", 6, -6)
     self.list:SetPoint("BOTTOMRIGHT", -6, 6)
@@ -609,7 +611,8 @@ function UI:Enter(row, data)
             local line = ns.Jobs.Short(step)
             GameTooltip:AddLine(line:sub(1, 1):upper() .. line:sub(2), 1, 1, 1, true)
         end
-        GameTooltip:AddLine("Log out at the top of the window to switch to them.", Theme.Unpack("muted"))
+        GameTooltip:AddLine(data.isNext and "Log out on this line to switch to them."
+            or "Do the steps above first.", Theme.Unpack("muted"))
         GameTooltip:Show()
         return
     end
@@ -895,7 +898,7 @@ function UI:Refresh(force)
         local first = self.drawnKey == nil
         self.drawnKey = key
         self.list:SetData(self:Lines(), not first)
-        -- The jobs may have moved: Log out comes, goes or changes place.
+        -- The jobs may have moved: the footer's words with them.
         if ns.Jobs then self:FootRoom() end
     end
 
@@ -972,7 +975,7 @@ function UI:UpdateFooter()
     local text = ""
     if self.errandText then
         text = self.errandText
-    elseif ns.Jobs and ns.Jobs.footShown then
+    elseif ns.Jobs and ns.Jobs:DoneHere() then
         text = "Everything here is done."
     elseif self.sellShown then
         text = "Sold items stay in the vendor's Buyback tab."
@@ -998,12 +1001,10 @@ end
 --- the version label gives way to them.
 function UI:FootRoom()
     local room = math.max(self.sellRoom or 0, self.errandRoom or 0)
-    -- Once everything here is done, Log out takes Fill mail's place.
-    if ns.Jobs then room = room + ns.Jobs:UpdateFoot(room) end
     -- The Disenchant button goes left of those.
     local disenchant = ns.Disenchanting and ns.Disenchanting:Update(room) or 0
     if disenchant > 0 then room = room + (room > 0 and 6 or 0) + disenchant end
-    -- The Log out button for the next character's job sits in the header.
+    -- The Log out button sits on the next character's row.
     if ns.Jobs then ns.Jobs:UpdateLogout() end
     self.versionLabel:SetShown(room == 0)
     self.footer:SetPoint("RIGHT", self.frame, "RIGHT", -(PADDING + (room > 0 and room + 12 or 90)), 0)
