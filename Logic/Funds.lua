@@ -146,7 +146,11 @@ function Funds:Characters()
     local seen = {}
     for _, entry in ipairs(list) do
         local name = type(entry) == "table" and (Text(entry.short) or Text(entry.name))
-        if name and not seen[name]
+        -- Another record of the character playing (an old one Tradeskills
+        -- still has) is not somebody to send gold to.
+        local other = type(entry) == "table" and entry.isCurrent ~= true
+            and (ns.Errands.Mine(entry) or ns.Errands:IsMe(name))
+        if name and not seen[name] and not other
             and (not realm or not Text(entry.realm) or Text(entry.realm) == realm)
             and (not faction or not Text(entry.faction) or Text(entry.faction) == faction) then
             seen[name] = true

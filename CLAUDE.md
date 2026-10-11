@@ -215,9 +215,11 @@ Tradeskills' `UI/QueueMailPanel.lua` reads it.
   sends, hooks or moves the mail frame. There are no mailbox Take buttons
   (the owner had them removed from Tradeskills; never add them unasked).
   Nothing is ever mailed to the character playing (a player found Fill
-  mail addressed to themselves, 2026-10-11): `Verdicts:Playing` is its
-  short name from `Holdings()` (`Errands:PlayingName`), and an Always mail
-  entry, a `mailTo` or an `enchanter` naming it is kept instead.
+  mail addressed to themselves, 2026-10-11): `Errands:IsMe` (through
+  `Verdicts:IsMe`) knows every name of it, from each `Holdings()` entry
+  marked `isCurrent` or `playing`, and an Always mail entry, a `mailTo`,
+  an `enchanter` or a gold top-up naming it is kept instead; Fill mail
+  asks it once more last.
   Tradeskills' `FillMail` refuses it too, and its third return, the full
   name filled in, is what the chat line says.
   An item both this character's queue and an alt's want is a Mail row
@@ -388,8 +390,8 @@ item's `bank` is how many to take out of the bank first, and the step
 says so); the next character is the one
 whose `forCraft` mail feeds a craft here, before any other ready one.
 The character playing is never one to log out for: a job named as
-`Errands:PlayingName` counts as here, whatever `isCurrent` says, and a
-mail step to the character doing it is dropped (`Jobs.Clean`). A player
+any name `Errands:IsMe` knows counts as here, whatever `isCurrent` says,
+and a mail step to the character doing it is dropped (`Jobs.Clean`). A player
 was told to log out for the character they were on, 2026-10-11.
 
 Logging in (`PLAYER_ENTERING_WORLD`'s initial login, `Jobs.LOGIN_DELAY`
@@ -628,6 +630,46 @@ the project's threads. This tool is also the same in all the repos.
 Changes to the Discord bots, the digest or the release posting tools
 (like this one) never go in a CHANGELOG, #announcements or #general
 section (the owner, 2026-10-10): they are not changes to the addon.
+
+## One key per character
+
+The owner asked (2026-10-11) that a character can never be mistaken for
+another again. Old records had sent errands to the character playing:
+Butler filled a mail to itself and told a player to mail Medium Leather to,
+and log out for, the character they were on (an old "Name-Realm" record of
+Tradeskills' beside the GUID one), and a reload wiped alts' saved gear in
+Equipment. The rule, in every addon:
+
+- **A character is its GUID** (`UnitGUID("player")`) in saved data and in
+  every call between the addons. Never a first name, "Name-Realm" or a
+  short name: Forever lets characters share a first name. Names are for
+  showing and for a mail's To line only, always first and last.
+- **A GUID the client won't read (a dungeon) means "not sure who's
+  playing":** write nothing under another key, and offer nothing for an
+  alt. Tradeskills remembers each character's GUID in its own file
+  (`BlackthornesTSCharDB.guid`) for that case.
+- **Old records stay readable and count as the same character; nothing is
+  deleted.** Tradeskills folds an old "Name-Realm" record into the GUID one
+  at login, once (`Config:AdoptLegacyCharacter`): it is kept whole in
+  `formerCharacters[old key]` with `retiredInto` (never rename either), what
+  the GUID record lacks is filled from it when it carries that GUID, and
+  the queue's references to the old key follow. Farmer reads a goal tagged
+  "Name-Realm" as the character's and tags it with the GUID once the
+  character gathers toward it or changes it.
+- **One test per addon answers "the same character?" and "the one
+  playing?"; never compare keys or names by hand.** Tradeskills:
+  `Characters:Same`, `:IsPlaying` and `:Canonical` (`Core/Characters.lua`),
+  and `playing` on each `Butler:Holdings()` entry. Butler:
+  `Errands:IsMe(name)` (full name, first name alone, any old record's name,
+  any case, with or without a realm). Farmer: `Goals:IsOwner`. Equipment:
+  `Alts.PlayerGUID()`.
+- **Every errand that targets a character asks that test right before it
+  acts and refuses the character playing:** a mail, a gold top-up, a Log
+  out, an alt's upgrade, a learned habit, the disenchanter.
+- Tested in Tradeskills' `tools/test_onecharacter.lua`, Butler's
+  `tools/test_notme.lua`, Farmer's `tools/test_goals.lua` and Equipment's
+  `tools/test_alts.lua`. This rule is in every addon's notes; keep them the
+  same.
 
 ## The owner's standing rules (all the addons)
 

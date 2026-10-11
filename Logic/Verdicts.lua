@@ -183,7 +183,7 @@ function Verdicts:Decide(entry, noAlt)
     if choice == "mail" then
         -- Soulbound can't go in the mail, whatever the list says, and the
         -- list is account wide, so it can name the character playing.
-        if mailTo == self:Playing() then
+        if self:IsMe(mailTo) then
             return "keep", ("On your Always mail list for %s, the character you're on"):format(mailTo), nil, true
         end
         if entry.bound then
@@ -237,7 +237,7 @@ function Verdicts:Decide(entry, noAlt)
 
     -- A habit of mailing it to one of the player's characters: soulbound
     -- can't go, and never to the character playing.
-    if learned == "mail" and not entry.bound and learnedTo ~= self:Playing() then
+    if learned == "mail" and not entry.bound and not self:IsMe(learnedTo) then
         return "mail", ns.Learning.Reason("mail", learnedTo), unit, unit ~= nil, { to = learnedTo }
     end
 
@@ -267,7 +267,7 @@ function Verdicts:ForAltCraft(entry)
     local ts = Sisters:Ask("ts", entry)
     local mailTo = Sisters.String(ts, "mailTo")
     local count = Sisters.Number(ts, "mailCount")
-    if not mailTo or mailTo == self:Playing() or not (count and count > 0) then return nil end
+    if not mailTo or self:IsMe(mailTo) or not (count and count > 0) then return nil end
     return "mail", ("Mail %d to %s for their crafts, keep the rest"):format(count, mailTo),
         { to = mailTo, count = count }
 end
@@ -277,6 +277,14 @@ end
 --- Verdicts.version (its last name can arrive after login). nil without
 --- Tradeskills. Nothing is ever mailed to it.
 local playing, playingVersion
+--- Is this name the character playing? Errands:IsMe, the one test: never
+--- a mail, an upgrade or a learned habit to it. No name is not.
+function Verdicts:IsMe(name)
+    if type(name) ~= "string" or name == "" then return false end
+    local errands = ns.Errands
+    return errands ~= nil and errands.IsMe ~= nil and errands:IsMe(name) == true
+end
+
 function Verdicts:Playing()
     if playingVersion ~= self.version then
         playingVersion = self.version
@@ -315,7 +323,7 @@ function Verdicts:Kept(said, entry, noAlt)
     local queued = Number(ts, "need")
     local mailTo = String(ts, "mailTo")
     -- An older Tradeskills could name the character playing.
-    if mailTo and mailTo == Verdicts:Playing() then mailTo = nil end
+    if mailTo and Verdicts:IsMe(mailTo) then mailTo = nil end
     if queued and queued > 0 then
         -- The alt's share goes in the mail too: Tradeskills' mailCount is
         -- what is left once this character's own crafts are kept back, so
@@ -344,7 +352,7 @@ function Verdicts:Kept(said, entry, noAlt)
     if type(alt) == "table" and not noAlt and not (entry and entry.bound) then
         local to = ns.Errands and ns.Errands.NameOf and ns.Errands:NameOf(alt.key)
         local wanted = to and Verdicts:UpgradeWanted(entry.itemID, to) or 0
-        if to and to ~= Verdicts:Playing() and wanted > 0 then
+        if to and not Verdicts:IsMe(to) and wanted > 0 then
             local gain = Number(alt, "gain")
             local level = Number(alt, "level")
             local reason = gain and ("An upgrade for %s (+%d%%)"):format(to, gain)
@@ -432,7 +440,7 @@ function Verdicts:Bought(entry, said)
     end
 
     local enchanter = not entry.bound and String(ts, "enchanter") or nil
-    if enchanter and enchanter == self:Playing() then enchanter = nil end
+    if enchanter and self:IsMe(enchanter) then enchanter = nil end
     if enchanter then
         return "mail", ("Bought to disenchant: mail to %s"):format(enchanter), value,
             { to = enchanter, bought = bought }
@@ -454,7 +462,7 @@ function Verdicts:ForDisenchanter(entry, said)
     local to = String(ts, "disenchanter")
     if not to then return nil end
     if ns.Errands and ns.Errands.FullName then to = ns.Errands:FullName(to) or to end
-    if to == self:Playing() then return nil end
+    if self:IsMe(to) then return nil end
 
     local value = Number(ts, "disenchant")
     local about = value and (", about %s"):format(Items.FormatMoney(value)) or ""
@@ -519,7 +527,7 @@ function Verdicts:Best(entry, unit, said)
     local disenchant = Number(ts, "disenchant")
     local canDisenchant = True(ts, "canDisenchant")
     local enchanter = not bound and String(ts, "enchanter") or nil
-    if enchanter and enchanter == self:Playing() then enchanter = nil end
+    if enchanter and self:IsMe(enchanter) then enchanter = nil end
     if disenchant and not canDisenchant and not enchanter then disenchant = nil end
 
     -- Step 11: worth less than the player's Sell below amount, judged on

@@ -58,11 +58,11 @@ suite.check("cloth is not touched", Find("Linen Cloth").verdict ~= "mail")
 
 -- 2. Never soulbound, never the character playing.
 suite.check("a soulbound copy is never mailed", Find("Dire Wand").verdict ~= "mail", Find("Dire Wand").verdict)
-local playing = Verdicts.Playing
-Verdicts.Playing = function() return "Dusty Anvil" end
+local isMe = ns.Errands.IsMe
+ns.Errands.IsMe = function(_, name) return name == "Dusty Anvil" end
 Verdicts:Changed(true)
 suite.check("never to the character playing", Find("Ridge Cleaver").verdict ~= "mail")
-Verdicts.Playing = playing
+ns.Errands.IsMe = isMe
 
 -- 3. Keeping wins.
 upgrade = true
