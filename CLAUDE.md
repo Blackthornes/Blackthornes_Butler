@@ -75,7 +75,10 @@ skipped, and a field of the wrong type counts as not given.
 _G.BlackthornesTS.Butler:Advise(itemID)
   -- { auction (net copper each after the cut and deposit; nil for greys
   --   and bind on pickup), fast (true, false, or nil for middling),
-  --   disenchant, canDisenchant, enchanter, need, mailTo, mailCount }
+  --   disenchant, canDisenchant, enchanter, need, mailTo, mailCount,
+  --   bought (how many the account bought to disenchant) }
+_G.BlackthornesTS.Butler:SetBoughtToDisenchant(itemID, on, count)
+  -- true, or false and why: the right-click menu's mark
 _G.BlackthornesEquipment.Butler:Advise(link, bag, slot)
   -- { upgrade = "now" | "later" | nil, gain, sell (its bag coin), tool }
   -- nil for anything that is not gear; bag and slot let it see soulbound
@@ -95,6 +98,28 @@ redraw. The verdicts they feed, in order, are at the top of
 `Logic/Verdicts.lua`. Soulbound green or better gear is never put under
 Sell: Disenchant, or Look at it. `/bbutler probe` says which sisters are
 loaded and which answer Butler.
+
+## Bought to disenchant
+
+The owner asked (2026-10-11) for items bought on the auction house to
+disenchant to be marked, easy to break, and followed by Butler.
+Tradeskills keeps the marks, account wide (its `Logic/DisenchantBuys.lua`:
+a buy after a search from its Disenchanting tab, or marked by hand), so
+mail and the bank keep them. Butler reads `bought` from Advise
+(`Verdicts:Bought`, step 8b, after the sisters' Keep): Disenchant whatever
+else it would fetch, Mail to the enchanter when this character can't, else
+Look at it. Bought rows head their group, their reason in violet; the
+right-click menu's "Bought to disenchant" marks or unmarks through
+`Sisters:MarkBought` (shown only with Tradeskills).
+
+The Disenchant button (`Logic/Disenchanting.lua`) is a secure button like
+Sell, outside the window and placed by screen position left of the Sell or
+errand buttons (`UI:FootRoom` calls `Disenchanting:Update(room)`). It shows
+on Your bags while the character knows Disenchant and something is under
+Disenchant, and casts once a click: its PreClick aims the spell at the next
+slot (bought first) through `target-bag`/`target-slot`, re-reading the slot
+and its verdict first, never a "/use" macro (that equips when the cast does
+not start). Hidden, its aim emptied, in combat. Not yet seen in game.
 
 ## All characters
 

@@ -32,6 +32,7 @@ UI\Settings.lua
 UI\MainWindow.lua
 
 Logic\Selling.lua
+Logic\Disenchanting.lua
 Logic\Errands.lua
 
 Probe\Probe.lua
