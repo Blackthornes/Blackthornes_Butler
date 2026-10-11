@@ -149,6 +149,15 @@ function Verdicts:Decide(entry)
     local choice, mailTo = self:Choice(itemID)
 
     if choice == "keep" then
+        -- An alt's queued craft still gets its share, and the list keeps
+        -- the rest (the owner, 2026-10-11, whose leather on the
+        -- Always keep list was never offered to the alt crafting with it).
+        local verdict, reason, extra = self:ForAltCraft(entry)
+        if verdict then
+            return verdict, reason, Items:SellPrice(itemID), true, extra
+        end
+    end
+    if choice == "keep" then
         return "keep", "On your Always keep list", nil, true
     end
     if choice == "bank" then
@@ -203,6 +212,19 @@ function Verdicts:Decide(entry)
 
     verdict, reason, worth, extra = self:Best(entry, unit, said)
     return verdict, reason, worth, true, extra
+end
+
+--- "mail", why and { to, count } when Tradeskills says an alt's queued
+--- crafts want some of an item on the Always keep list (only what
+--- this character's own crafts can spare); nil otherwise.
+function Verdicts:ForAltCraft(entry)
+    if entry.bound then return nil end
+    local ts = Sisters:Ask("ts", entry)
+    local mailTo = Sisters.String(ts, "mailTo")
+    local count = Sisters.Number(ts, "mailCount")
+    if not mailTo or mailTo == self:Playing() or not (count and count > 0) then return nil end
+    return "mail", ("Mail %d to %s for their crafts, keep the rest"):format(count, mailTo),
+        { to = mailTo, count = count }
 end
 
 --- The short name of the character playing, as Tradeskills gives it (the

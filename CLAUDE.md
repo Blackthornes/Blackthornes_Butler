@@ -192,7 +192,9 @@ Tradeskills' `UI/QueueMailPanel.lua` reads it.
   (2026-10-11, the owner: Butler handles queued crafts made on another
   character): `mailCount` is what Tradeskills spares once this
   character's crafts are kept back, so Fill mail sends that and the rest
-  stays; with nothing to spare it is Keep.
+  stays; with nothing to spare it is Keep. The Always keep list gives way
+  to it the same way (`Verdicts:ForAltCraft`): the alt's share is a Mail
+  row and the list keeps the rest. The Always bank list does not.
 - **Always mail to** (the right-click menu, asked 2026-10-11) puts an item
   on the player's **Always mail** list for one of their characters
   (`alwaysMail`, `[itemID]` = the character's full name, account wide,
