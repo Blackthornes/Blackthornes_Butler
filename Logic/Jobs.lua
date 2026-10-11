@@ -50,6 +50,9 @@ Jobs.version = 0
 
 local BUTTON_WIDTH = 90
 local BUTTON_HEIGHT = 20
+-- The gold one at the foot, in Fill mail's place.
+local FOOT_WIDTH = 180
+local FOOT_HEIGHT = 24
 
 local function InCombat()
     return type(InCombatLockdown) == "function" and InCombatLockdown() and true or false
@@ -339,13 +342,14 @@ end
 -- Log out
 --------------------------------------------------------------------------------
 
-function Jobs:CreateLogout()
-    if self.button then return self.button end
-    -- The game's own /logout, run by the player's click on a secure button
-    -- as a macro would: addon code may not log out by itself.
-    local button = ns.Widgets.CreateButton(UIParent, "Log out", nil, {
-        name = "BlackthornesButlerLogout", template = "SecureActionButtonTemplate",
-        width = BUTTON_WIDTH, height = BUTTON_HEIGHT,
+--- A Log out button: the game's own /logout, run by the player's click on
+--- a secure button as a macro would (addon code may not log out by
+--- itself). Two are made: the small one in the header and the big gold one
+--- at the foot.
+local function LogoutButton(name, label, opts)
+    local button = ns.Widgets.CreateButton(UIParent, label, nil, {
+        name = name, template = "SecureActionButtonTemplate",
+        width = opts.width, height = opts.height, primary = opts.primary,
     })
     button:Hide()
     button:SetFrameStrata("FULLSCREEN_DIALOG")
@@ -362,8 +366,59 @@ function Jobs:CreateLogout()
         end
     end)
     button:HookScript("OnLeave", function() GameTooltip:Hide() end)
-    self.button = button
     return button
+end
+
+function Jobs:CreateLogout()
+    if not self.button then
+        self.button = LogoutButton("BlackthornesButlerLogout", "Log out",
+            { width = BUTTON_WIDTH, height = BUTTON_HEIGHT })
+    end
+    return self.button
+end
+
+function Jobs:CreateFootLogout()
+    if not self.footButton then
+        self.footButton = LogoutButton("BlackthornesButlerLogoutFoot", "Log out",
+            { width = FOOT_WIDTH, height = FOOT_HEIGHT, primary = true })
+    end
+    return self.footButton
+end
+
+local function Tip(nextJob)
+    return ("Next: %s. %s\nLogs you out to the character list, where you pick %s. Addons can't pick a character for you."):format(
+        nextJob.name, Jobs.Summary(nextJob), nextJob.name)
+end
+
+--- Once everything here is done, the big gold Log out button takes the
+--- place Fill mail had at the window's foot (the owner liked it,
+--- 2026-10-11): fill, Send, then one more click in the same spot to
+--- switch. Only while nothing else sits at the foot (`room` is how wide
+--- the Sell or errand buttons are) and another character has work.
+-- @return how wide it is when shown, else 0
+function Jobs:UpdateFoot(room)
+    if self.fighting or InCombat() then return 0 end
+    local ui = ns.UI
+    local window = ui and ui.frame
+    local show = window and ui:IsShown() and not ui.dragging and ui.view ~= "all" and (room or 0) == 0
+    local plan = show and self:Plan()
+    local nextJob = plan and not plan.here and plan.nextJob
+    local right, bottom = window and window:GetRight(), window and window:GetBottom()
+    if not (nextJob and right and bottom) then
+        self.footShown = false
+        if self.footButton then self.footButton:Hide() end
+        return 0
+    end
+    local button = self:CreateFootLogout()
+    button:SetText(("Log out for %s"):format(nextJob.name))
+    button.tooltipText = Tip(nextJob)
+    local scale = (window:GetEffectiveScale() or 1) / (UIParent:GetEffectiveScale() or 1)
+    button:SetScale(scale)
+    button:ClearAllPoints()
+    button:SetPoint("BOTTOMRIGHT", UIParent, "BOTTOMLEFT", right - ui.SELL_INSET_X, bottom + ui.SELL_INSET_Y)
+    button:Show()
+    self.footShown = true
+    return button:GetWidth() or FOOT_WIDTH
 end
 
 --- Show the Log out button in the window's header, left of All characters,
@@ -376,7 +431,8 @@ function Jobs:UpdateLogout()
     local anchor = ui and ui.viewButton
     local show = anchor and ui:IsShown() and not ui.dragging and ui.view ~= "all"
     local plan = show and self:Plan()
-    local nextJob = plan and plan.nextJob
+    -- The gold one at the foot says it already.
+    local nextJob = plan and not self.footShown and plan.nextJob
     if not nextJob then
         if self.button then self.button:Hide() end
         return
@@ -388,8 +444,7 @@ function Jobs:UpdateLogout()
         button:Hide()
         return
     end
-    button.tooltipText = ("Next: %s. %s\nLogs you out to the character list, where you pick %s. Addons can't pick a character for you."):format(
-        nextJob.name, Jobs.Summary(nextJob), nextJob.name)
+    button.tooltipText = Tip(nextJob)
     local scale = (ui.frame:GetEffectiveScale() or 1) / (UIParent:GetEffectiveScale() or 1)
     button:SetScale(scale)
     button:ClearAllPoints()
@@ -407,7 +462,7 @@ function Jobs:Noticed()
     local plan = self:Plan()
     local hasHere = plan.here ~= nil
     if self.hadHere and not hasHere and plan.nextJob then
-        ns.Print(("that's everything here. Next: %s. %s Log out at the top of the Butler window to switch."):format(
+        ns.Print(("that's everything here. Next: %s. %s Log out at the foot of the Butler window to switch."):format(
             plan.nextJob.name, Jobs.Summary(plan.nextJob)))
     end
     self.hadHere = hasHere
@@ -471,10 +526,12 @@ function Jobs:OnEnable()
     ns.RegisterEvent(self, "PLAYER_REGEN_DISABLED", function()
         Jobs.fighting = true
         if Jobs.button then Jobs.button:Hide() end
+        if Jobs.footButton then Jobs.footButton:Hide() end
+        Jobs.footShown = false
     end)
     ns.RegisterEvent(self, "PLAYER_REGEN_ENABLED", function()
         Jobs.fighting = false
-        Jobs:UpdateLogout()
+        if ns.UI and ns.UI.frame then ns.UI:FootRoom() end
     end)
 end
 

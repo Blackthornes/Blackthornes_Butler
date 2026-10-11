@@ -895,7 +895,8 @@ function UI:Refresh(force)
         local first = self.drawnKey == nil
         self.drawnKey = key
         self.list:SetData(self:Lines(), not first)
-        if ns.Jobs then ns.Jobs:UpdateLogout() end
+        -- The jobs may have moved: Log out comes, goes or changes place.
+        if ns.Jobs then self:FootRoom() end
     end
 
     local total = 0
@@ -971,6 +972,8 @@ function UI:UpdateFooter()
     local text = ""
     if self.errandText then
         text = self.errandText
+    elseif ns.Jobs and ns.Jobs.footShown then
+        text = "Everything here is done."
     elseif self.sellShown then
         text = "Sold items stay in the vendor's Buyback tab."
     elseif sell and sell.count > 0 then
@@ -995,6 +998,8 @@ end
 --- the version label gives way to them.
 function UI:FootRoom()
     local room = math.max(self.sellRoom or 0, self.errandRoom or 0)
+    -- Once everything here is done, Log out takes Fill mail's place.
+    if ns.Jobs then room = room + ns.Jobs:UpdateFoot(room) end
     -- The Disenchant button goes left of those.
     local disenchant = ns.Disenchanting and ns.Disenchanting:Update(room) or 0
     if disenchant > 0 then room = room + (room > 0 and 6 or 0) + disenchant end

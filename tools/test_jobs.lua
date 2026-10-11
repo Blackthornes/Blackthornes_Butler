@@ -136,6 +136,31 @@ Jobs:UpdateLogout()
 suite.check("not in All characters", not button:IsShown())
 UI.view = "bags"
 
+-- Once everything here is done, the gold Log out takes Fill mail's place.
+UI.frame.GetRight = function() return 900 end
+UI.frame.GetBottom = function() return 200 end
+Fresh({ WITHER })
+UI:FootRoom()
+local foot = Jobs.footButton
+suite.check("done here, Log out sits at the foot", foot and foot:IsShown())
+suite.check("naming who is next", foot.label:GetText() == "Log out for Blackthornes Wither", foot.label:GetText())
+suite.check("it is the game's own /logout too", foot:GetAttribute("macrotext") == "/logout")
+suite.check("and the small one steps aside", not button:IsShown())
+UI.errandRoom = 180
+UI:FootRoom()
+suite.check("never over Fill mail", not foot:IsShown())
+suite.check("the small one is back then", button:IsShown())
+UI.errandRoom = nil
+Fresh({ ANA, WITHER })
+UI:FootRoom()
+suite.check("work left here keeps it off the foot", not foot:IsShown())
+env.Fire("PLAYER_REGEN_DISABLED")
+Fresh({ WITHER })
+UI:FootRoom()
+suite.check("never comes up in combat", not foot:IsShown())
+env.Fire("PLAYER_REGEN_ENABLED")
+suite.check("comes up once the fight ends", foot:IsShown())
+
 -- 6. Done here.
 Fresh({ ANA, WITHER })
 env.chat = {}
