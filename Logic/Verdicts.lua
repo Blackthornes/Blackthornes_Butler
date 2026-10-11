@@ -9,6 +9,7 @@
 --   2. A quest item, or one that starts one        Keep
 --   3. A vendor won't buy it                       Keep
 --   4. On the player's Always sell list            Sell
+--   4b. Ammo for the hunter's bow or gun           Keep
 --   5. Equipment: an upgrade now or later, a tool  Keep
 --   6. Farmer: a goal of this character needs it   Keep
 --   7. Tradeskills: the craft queue needs it here  Keep
@@ -210,6 +211,11 @@ function Verdicts:Decide(entry)
     if choice == "sell" then
         return "sell", "On your Always sell list", unit, unit ~= nil
     end
+
+    -- A vendor always pays most for arrows and bullets, so the hunter's
+    -- own ammo is kept (Logic/Ammo.lua).
+    local ammo = ns.Ammo and ns.Ammo:Keeps(itemID)
+    if ammo then return "keep", ammo, unit, unit ~= nil end
 
     local said = Sisters:AskAll(entry)
     local verdict, reason, worth, extra = self:Kept(said, entry)

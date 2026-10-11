@@ -33,3 +33,16 @@ Butler's own code and keeps whether the item left and gold came in
 `/bbutler selltest` sold a grey through `C_Container.UseContainerItem`
 called from Butler's own code, gold came in, and the Sell button then sold
 the Sell group up to 12 a click.
+
+## Buying ammo (built 2026-10-11, not yet seen in game)
+
+The Ammo row (Logic/Ammo.lua) reads the vendor with `GetMerchantNumItems`,
+`GetMerchantItemLink` and `C_MerchantFrame.GetItemInfo` (classic's
+`GetMerchantItemInfo` when that is missing), the ammo's damage from
+`C_TooltipInfo.GetMerchantItem`, the weapon from `GetInventoryItemID`
+(slot 18, then 16) and the ammo bag's family from
+`C_Container.GetContainerNumFreeSlots`. It buys with
+`BuyMerchantItem(index)` and no quantity, one lot a call, since classic
+and retail read the quantity differently. `/bbutler probe` lists which of
+these the client has and what weapon and ammo bag Butler sees; whether
+Forever keeps ammo and quivers at all is still to be seen.

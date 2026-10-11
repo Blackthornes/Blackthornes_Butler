@@ -34,6 +34,8 @@ local APIS = {
     "SendMail", "hooksecurefunc",
     "SetSendMailShowing", "ClickSendMailItemButton", "GetSendMailItem",
     "C_Bank.CanUseBank", "C_QuestLog.GetNumQuestLogEntries",
+    "GetMerchantNumItems", "GetMerchantItemLink", "C_MerchantFrame.GetItemInfo",
+    "GetMerchantItemInfo", "BuyMerchantItem", "GetInventoryItemID", "C_TooltipInfo.GetMerchantItem",
 }
 
 -- The other four, and the call each answers Butler through ("Butler:Advise",
@@ -183,6 +185,7 @@ function Probe:Run()
     Line("buyback", Read("GetNumBuybackItems"))
     if ns.Selling then Line("sell from Butler", ns.Selling:ProbeText()) end
     if ns.FreeSpace then Line("free bag space", ns.FreeSpace:ProbeText()) end
+    if ns.Ammo then Line("ammo", ns.Ammo:ProbeText()) end
 end
 
 ns.RegisterCommand("probe", "check what this client supports for bags, vendors and mail (reads only)", function()

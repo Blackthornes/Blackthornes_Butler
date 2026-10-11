@@ -312,6 +312,13 @@ function UI.CreateRow(row)
     row.reason:SetPoint("LEFT", row.name, "RIGHT", 8, 0)
     row.reason:SetPoint("RIGHT", row.worth, "LEFT", -8, 0)
     row.reason:SetWordWrap(true)
+
+    -- The Ammo row's Fill button sits where the worth goes (Logic/Ammo.lua).
+    row.action = Widgets.CreateButton(row, "Fill", function() ns.Ammo:Buy() end, {
+        primary = true, width = 80, height = 22,
+    })
+    row.action:SetPoint("RIGHT", -8, 0)
+    row.action:Hide()
 end
 
 local function Plural(count, one, many)
@@ -321,6 +328,8 @@ end
 function UI.UpdateRow(row, data)
     row.worth:SetTextColor(Theme.Unpack("text"))
     row.reason:SetTextColor(Theme.Unpack("muted"))
+    if row.action then row.action:Hide() end
+    if data.type == "ammo" then return UI.UpdateAmmoRow(row, data) end
     if data.type == "everyone" then return UI.UpdateItemRow(row, data) end
     if data.type == "holder" then return UI.UpdateHolderRow(row, data) end
     if data.type == "gold" then return UI.UpdateGoldRow(row, data) end
@@ -365,6 +374,24 @@ function UI.UpdateGoldRow(row, data)
     row.worth:SetText(Items.FormatMoney(entry.amount))
 end
 
+--- Filling the quiver or ammo pouch: the best ammo the vendor has, how
+--- many fit and what they cost, and the Fill button when it can buy.
+function UI.UpdateAmmoRow(row, data)
+    local offer = data.offer
+    row.fold:Hide()
+    row.icon:Show()
+    row.icon:SetTexture(offer.ammo.icon or [[Interface\Icons\INV_Ammo_Arrow_02]])
+    row.name:SetTextColor(Theme.Unpack("text"))
+    row.name:SetText(offer.ammo.name or "Ammo")
+    row.reason:SetText(ns.Ammo.Reason(offer))
+    if offer.state ~= "fill" then row.reason:SetTextColor(Theme.Unpack("accent")) end
+    row.worth:SetText("")
+    if offer.state == "fill" then
+        row.action:SetText(ns.Ammo.buying and "Buying..." or "Fill")
+        row.action:Show()
+    end
+end
+
 --- An item in All characters: its name, who has it and how many in all.
 function UI.UpdateItemRow(row, data)
     local item = data.item
@@ -402,6 +429,17 @@ end
 function UI:Lines()
     local lines = {}
     local folded = self:Folded()
+    -- At a vendor, filling a hunter's quiver or pouch comes first
+    -- (Logic/Ammo.lua).
+    local offer = ns.Ammo and ns.Ammo:Offer()
+    if offer then
+        local word = offer.bag and offer.bag.word or ns.Ammo.BAGS[offer.weapon.ammo].word
+        local group = { verdict = "ammo", label = "Ammo", count = 1, worth = offer.cost or 0,
+            one = word, many = word }
+        local isFolded = folded.ammo == true
+        lines[#lines + 1] = { type = "header", group = group, folded = isFolded }
+        if not isFolded then lines[#lines + 1] = { type = "ammo", offer = offer } end
+    end
     -- At a mailbox, the gold fund's top-ups come first (Logic/Funds.lua).
     if ns.Errands.mailOpen and ns.Funds then
         local plan = ns.Funds:Plan()
@@ -455,6 +493,7 @@ function UI:Clicked(data, button)
         self:Refresh(true)
         return
     end
+    if data.type == "ammo" then return end
     if button == "RightButton" and data.type ~= "gold" then
         self:ShowMenu(data)
     end
@@ -468,6 +507,18 @@ function UI:Enter(row, data)
     if data.type == "header" then
         GameTooltip:AddLine(data.group.label, Theme.Unpack("accent"))
         GameTooltip:AddLine(data.folded and "Click to show these" or "Click to fold these away", 1, 1, 1, true)
+        GameTooltip:Show()
+        return
+    end
+    if data.type == "ammo" then
+        local offer = data.offer
+        local shown = offer.ammo.index and pcall(GameTooltip.SetMerchantItem, GameTooltip, offer.ammo.index)
+        if not shown then GameTooltip:AddLine(offer.ammo.name or "Ammo", 1, 1, 1) end
+        GameTooltip:AddLine(" ")
+        GameTooltip:AddLine("Butler: Ammo", Theme.Unpack("accent"))
+        GameTooltip:AddLine(ns.Ammo.Reason(offer), 1, 1, 1, true)
+        GameTooltip:AddLine(("The best ammo this vendor has for your %s at your level."):format(offer.weapon.word),
+            Theme.Unpack("muted"))
         GameTooltip:Show()
         return
     end
@@ -745,8 +796,10 @@ function UI:Refresh(force)
     if not self:IsShown() then return end
     if self.view == "all" then return self:RefreshAll(force) end
 
-    local key = ("%d:%d:%d:%s"):format(ns.Bags.version, ns.Verdicts.version,
-        ns.Funds and ns.Funds.version or 0, tostring(ns.Errands.mailOpen))
+    if ns.Ammo then ns.Ammo:Offer() end
+    local key = ("%d:%d:%d:%s:%s:%s"):format(ns.Bags.version, ns.Verdicts.version,
+        ns.Funds and ns.Funds.version or 0, tostring(ns.Errands.mailOpen),
+        tostring(ns.Selling and ns.Selling.merchantOpen), tostring(ns.Ammo and ns.Ammo.offerKey))
     if force or key ~= self.drawnKey then
         local first = self.drawnKey == nil
         self.drawnKey = key
