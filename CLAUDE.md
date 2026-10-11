@@ -383,7 +383,12 @@ if they already have the materials"), `Jobs:Plan`'s `goFirst` puts that
 character's line, "First: NAME", above this character's steps, and the
 gold Log out points there too. Tradeskills names who holds a missing
 material (`missing[i].from`, "NAME has it.") and gives that character a
-mail step to the crafter (`forCraft`).
+mail step to the crafter (`forCraft`); the next character is the one
+whose `forCraft` mail feeds a craft here, before any other ready one.
+The character playing is never one to log out for: a job named as
+`Errands:PlayingName` counts as here, whatever `isCurrent` says, and a
+mail step to the character doing it is dropped (`Jobs.Clean`). A player
+was told to log out for the character they were on, 2026-10-11.
 
 Logging in (`PLAYER_ENTERING_WORLD`'s initial login, `Jobs.LOGIN_DELAY`
 later) on a character with a step brings the window up and says what it is

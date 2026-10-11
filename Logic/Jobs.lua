@@ -132,7 +132,11 @@ function Jobs.Clean(answer)
         if name then
             local steps = {}
             for _, step in ipairs(type(job.steps) == "table" and job.steps or {}) do
-                steps[#steps + 1] = CleanStep(step)
+                local clean = CleanStep(step)
+                -- Never a mail to the character doing it.
+                if clean and not (clean.kind == "mail" and clean.to == name) then
+                    steps[#steps + 1] = clean
+                end
             end
             if #steps > 0 then
                 list[#list + 1] = { name = name, isCurrent = job.isCurrent == true, steps = steps }
@@ -181,21 +185,35 @@ end
 --- top), so the window and the gold Log out send the player there first.
 function Jobs:Plan()
     local here, others = nil, {}
+    local errands = ns.Errands
+    local playing = errands and errands.PlayingName and errands:PlayingName()
     for _, job in ipairs(self:Read()) do
-        if job.isCurrent then
-            here = here or job
+        if job.isCurrent or job.name == playing then
+            -- The character playing, under any record of it, is never one
+            -- to log out for (a player was told to, 2026-10-11).
+            here = here or { name = job.name, isCurrent = true, steps = {} }
+            for _, step in ipairs(job.steps) do here.steps[#here.steps + 1] = step end
         else
             others[#others + 1] = job
         end
     end
-    local nextJob
-    for index, job in ipairs(others) do
-        if Jobs.Ready(job) then
-            nextJob = job
-            table.remove(others, index)
-            table.insert(others, 1, job)
-            break
+    -- Next: one that can get on with it, first one whose mail unblocks a
+    -- craft here.
+    local function Feeds(job)
+        for _, step in ipairs(job.steps) do
+            if step.kind == "mail" and step.forCraft and here and step.to == here.name then return true end
         end
+        return false
+    end
+    local nextJob, nextIndex
+    for index, job in ipairs(others) do
+        if Jobs.Ready(job) and (not nextJob or (Feeds(job) and not Feeds(nextJob))) then
+            nextJob, nextIndex = job, index
+        end
+    end
+    if nextJob then
+        table.remove(others, nextIndex)
+        table.insert(others, 1, nextJob)
     end
     local goFirst = here ~= nil and nextJob ~= nil and not Jobs.Ready(here)
     return { here = here, nextJob = nextJob or others[1], others = others, goFirst = goFirst }
