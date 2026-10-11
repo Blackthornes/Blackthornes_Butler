@@ -121,9 +121,54 @@ end
 
 --- The short name Tradeskills gives the character playing (as Always mail
 --- and mailTo name characters), or nil without Tradeskills.
+
+--- Every character's name on this realm and side, the one playing too,
+--- kept until Verdicts.version moves (the window opening, a choice made).
+local namesCache, namesVersion, myName
+local function AllNames()
+    local version = ns.Verdicts and ns.Verdicts.version
+    if namesCache and namesVersion == version then return namesCache, myName end
+    local names = {}
+    local list, me = Holdings()
+    myName = me and (Text(me.short) or Text(me.name)) or nil
+    local realm = me and Text(me.realm)
+    local faction = me and Text(me.faction)
+    for _, entry in ipairs(list or {}) do
+        local name = type(entry) == "table" and (Text(entry.short) or Text(entry.name))
+        if name and (not realm or not Text(entry.realm) or Text(entry.realm) == realm)
+            and (not faction or not Text(entry.faction) or Text(entry.faction) == faction) then
+            names[#names + 1] = name
+        end
+    end
+    namesCache, namesVersion = names, version
+    return names, myName
+end
+
+--- The name Tradeskills gives the character playing (as Always mail and
+--- mailTo name characters), or nil without Tradeskills. Read with the
+--- names above, once per Verdicts.version.
 function Errands:PlayingName()
-    local _, me = Holdings()
-    return me and (Text(me.short) or Text(me.name)) or nil
+    local _, name = AllNames()
+    return name
+end
+
+--- The full name for a character name saved in the old short form ("Ana
+--- S."): names are never shortened now (the owner's rule, 2026-10-11), but
+--- an Always mail choice made before keeps what was saved. The one
+--- character whose name starts "Ana S" answers; anything else is as given.
+function Errands:FullName(name)
+    if type(name) ~= "string" then return name end
+    local first, initial = name:match("^(%S+) (%S+)%.$")
+    if not first then return name end
+    local prefix = first .. " " .. initial
+    local found
+    for _, full in ipairs(AllNames()) do
+        if full ~= name and full:sub(1, #prefix) == prefix then
+            if found and found ~= full then return name end
+            found = full
+        end
+    end
+    return found or name
 end
 
 function Errands:Characters()

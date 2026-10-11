@@ -269,6 +269,38 @@ suite.check("the chat line has the full name", ok and why:find(" Smith: check it
 _G.BlackthornesTS.Butler.FillMail = fillMail
 env.Fire("MAIL_CLOSED")
 
+-- Names are never shortened (the owner's rule, 2026-10-11). A choice saved
+-- as "Bob S." before then is read as the full name, and the menu grows to
+-- fit a long one.
+local holdings = _G.BlackthornesTS.Butler.Holdings
+_G.BlackthornesTS.Butler.Holdings = function()
+    return {
+        { key = "me", short = "Me Myself", realm = "Here", faction = "Horde", isCurrent = true },
+        { key = "bob", short = "Bob Stonebreakerson", realm = "Here", faction = "Horde" },
+        { key = "bob2", short = "Bob Ashenmoor", realm = "Here", faction = "Horde" },
+    }
+end
+ns.Verdicts:Changed(true)
+ns.db.alwaysMail[404] = "Bob S."
+local _, savedTo = ns.Verdicts:Choice(404)
+suite.check("an old short name is read as the full one", savedTo == "Bob Stonebreakerson", savedTo)
+suite.check("and is left as saved", ns.db.alwaysMail[404] == "Bob S.")
+ns.db.alwaysMail[404] = "Me M."
+suite.check("an old short name for the character playing is kept, not mailed",
+    (ns.Verdicts:Decide({ itemID = 404, count = 1 })) == "keep")
+ns.db.alwaysMail[404] = "Bob S."
+UI:ShowMenu({ itemID = 404, name = "Copper Ore" })
+local menuWidth = UI.menu:GetWidth()
+suite.check("the menu is as wide as its longest button",
+    menuWidth >= UI.menu.mail:GetWidth() + 16 and UI.menu.keep:GetWidth() == UI.menu.mail:GetWidth(),
+    menuWidth)
+UI.menu.mail:GetScript("OnClick")(UI.menu.mail)
+suite.check("and the characters page too", UI.menu:GetWidth() >= UI.menu.characters[1]:GetWidth() + 16)
+UI:HideMenu()
+ns.db.alwaysMail[404] = nil
+_G.BlackthornesTS.Butler.Holdings = holdings
+ns.Verdicts:Changed(true)
+
 -- At a mailbox with nothing to mail, Butler still takes over.
 _G.BlackthornesTS.Butler.Advise = function() return nil end
 ns.Verdicts:Changed(true)

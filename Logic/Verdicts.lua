@@ -91,7 +91,11 @@ function Verdicts:Choice(itemID)
     if List("alwaysSell")[itemID] then return "sell" end
     if List("alwaysBank")[itemID] then return "bank" end
     local to = List("alwaysMail")[itemID]
-    if type(to) == "string" and to ~= "" then return "mail", to end
+    if type(to) == "string" and to ~= "" then
+        -- Saved before names were whole ("Ana S."): read as the full name.
+        if ns.Errands and ns.Errands.FullName then to = ns.Errands:FullName(to) end
+        return "mail", to
+    end
     return nil
 end
 
@@ -197,12 +201,11 @@ end
 
 --- The short name of the character playing, as Tradeskills gives it (the
 --- way Always mail and mail rows name characters), read once per
---- Verdicts.version until Tradeskills names it, then kept: the character
---- playing doesn't change without a reload. nil without Tradeskills.
---- Nothing is ever mailed to it.
+--- Verdicts.version (its last name can arrive after login). nil without
+--- Tradeskills. Nothing is ever mailed to it.
 local playing, playingVersion
 function Verdicts:Playing()
-    if not playing and playingVersion ~= self.version then
+    if playingVersion ~= self.version then
         playingVersion = self.version
         playing = ns.Errands and ns.Errands.PlayingName and ns.Errands:PlayingName() or nil
     end
