@@ -299,6 +299,34 @@ suite.check("and is left as saved", ns.db.alwaysMail[404] == "Bob S.")
 ns.db.alwaysMail[404] = "Me M."
 suite.check("an old short name for the character playing is kept, not mailed",
     (ns.Verdicts:Decide({ itemID = 404, count = 1 })) == "keep")
+-- A first name alone, saved before last names were read.
+ns.db.alwaysMail[404] = "Me"
+local _, bareTo = ns.Verdicts:Choice(404)
+suite.check("a first name alone is read as the full one", bareTo == "Me Myself", tostring(bareTo))
+suite.check("and the character playing keeps it, never mails it",
+    (ns.Verdicts:Decide({ itemID = 404, count = 1 })) == "keep")
+ns.db.alwaysMail[404] = "Bob"
+local _, twoBobs = ns.Verdicts:Choice(404)
+suite.check("a first name two characters share is left as saved", twoBobs == "Bob", tostring(twoBobs))
+_G.BlackthornesTS.Butler.Holdings = function()
+    return {
+        { key = "me", short = "Bob Myself", realm = "Here", faction = "Horde", isCurrent = true },
+        { key = "bob", short = "Bob Stonebreakerson", realm = "Here", faction = "Horde" },
+    }
+end
+ns.Verdicts:Changed(true)
+local _, sharedMine = ns.Verdicts:Choice(404)
+suite.check("one the character playing shares is read as the one playing", sharedMine == "Bob Myself",
+    tostring(sharedMine))
+suite.check("so it is kept, never mailed", (ns.Verdicts:Decide({ itemID = 404, count = 1 })) == "keep")
+_G.BlackthornesTS.Butler.Holdings = function()
+    return {
+        { key = "me", short = "Me Myself", realm = "Here", faction = "Horde", isCurrent = true },
+        { key = "bob", short = "Bob Stonebreakerson", realm = "Here", faction = "Horde" },
+        { key = "bob2", short = "Bob Ashenmoor", realm = "Here", faction = "Horde" },
+    }
+end
+ns.Verdicts:Changed(true)
 ns.db.alwaysMail[404] = "Bob S."
 UI:ShowMenu({ itemID = 404, name = "Copper Ore" })
 local menuWidth = UI.menu:GetWidth()
