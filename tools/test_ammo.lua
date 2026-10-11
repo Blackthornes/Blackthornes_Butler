@@ -195,4 +195,26 @@ suite.check("a full quiver: no offer", Fresh() == nil)
 env.Fire("MERCHANT_CLOSED")
 suite.check("the vendor gone: no offer", Fresh() == nil)
 
+-- A German client: the damage line is in German, written from the game's
+-- own format string, with a decimal comma.
+suite.check("English damage line read", Ammo.Damage(2, 2515) == 4.5, Ammo.Damage(2, 2515))
+_G.AMMO_DAMAGE_TEMPLATE = "Verursacht zusätzlich %s Schaden pro Sekunde (+%s)."
+Ammo.patterns = nil
+local germanTip = { lines = { { leftText = "Scharfer Pfeil" },
+    { leftText = "Verursacht zusätzlich 4,5 Schaden pro Sekunde (+1)." } } }
+local englishTip = _G.C_TooltipInfo.GetMerchantItem
+_G.C_TooltipInfo.GetMerchantItem = function() return germanTip end
+suite.check("the game's own words for it, decimal comma and all", Ammo.Damage(2, 2515) == 4.5,
+    Ammo.Damage(2, 2515))
+germanTip.lines[2].leftText = "Verursacht zusätzlich 7 Schaden pro Sekunde (+1)."
+suite.check("a whole number too", Ammo.Damage(2, 2515) == 7, Ammo.Damage(2, 2515))
+suite.check("magic characters in the game's words are matched as they are",
+    ("(+1)."):match(Ammo.PatternFrom("(+%d).")) == "1")
+_G.C_TooltipInfo.GetMerchantItem = englishTip
+suite.check("English lines still read with the German words first", Ammo.Damage(2, 2515) == 4.5)
+_G.AMMO_DAMAGE_TEMPLATE = nil
+Ammo.patterns = nil
+suite.check("numbers: 2.5, 2,5 and 1,234.5", Ammo.ReadNumber("2.5") == 2.5 and Ammo.ReadNumber("2,5") == 2.5
+    and Ammo.ReadNumber("1,234.5") == 1234.5 and Ammo.ReadNumber("3,5.") == 3.5)
+
 suite.done()
