@@ -277,7 +277,7 @@ end
 function Selling:Update()
     local button = self.button
     local show = self:MerchantOpen() and not InCombat()
-        and ns.UI and ns.UI:IsShown() and not ns.UI.dragging
+        and ns.UI and ns.UI:IsShown() and not ns.UI.dragging and ns.UI.view ~= "all"
 
     if not show then
         if button and not InCombat() then button:Hide() end

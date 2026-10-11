@@ -163,6 +163,7 @@ function Items:Loaded(itemID)
     self.loadPending = true
     C_Timer.After(0.2, function()
         Items.loadPending = false
+        if ns.Everyone then ns.Everyone:NamesArrived() end
         if ns.Verdicts then ns.Verdicts:Changed() end
     end)
 end
