@@ -119,6 +119,7 @@ function UI:Build()
         UI.openedFor = nil
         UI:HideMenu()
         if ns.Selling then ns.Selling:Update() end
+        if ns.Errands then ns.Errands:TellTradeskills(false) end
     end)
 
     -- Escape closes it, like the game's own windows.
@@ -455,10 +456,13 @@ end
 -- The right-click menu
 --
 -- A small window of Butler's own, never the game's dropdown menus: Always
--- keep, Always sell, and Let Butler decide once either is picked.
+-- keep, Always sell, Always bank, Always mail to (which turns the menu into
+-- a list of the player's characters), and Let Butler decide once one is
+-- picked.
 --------------------------------------------------------------------------------
 
 local MENU_WIDTH = 170
+local MENU_ROW = 24
 
 function UI:BuildMenu()
     if self.menu then return self.menu end
@@ -477,11 +481,12 @@ function UI:BuildMenu()
     menu.title:SetPoint("TOPLEFT", 8, -8)
     menu.title:SetPoint("TOPRIGHT", -8, -8)
 
-    local function Pick(choice)
+    local function Pick(choice, to)
         local data = UI.menu.data
         UI:HideMenu()
-        if data then ns.Verdicts:SetChoice(data.itemID, choice) end
+        if data then ns.Verdicts:SetChoice(data.itemID, choice, to) end
     end
+    menu.Pick = Pick
 
     menu.keep = Widgets.CreateButton(menu, "Always keep", function() Pick("keep") end,
         { width = MENU_WIDTH - 16, height = 20 })
@@ -492,9 +497,17 @@ function UI:BuildMenu()
     menu.bank = Widgets.CreateButton(menu, "Always bank", function() Pick("bank") end,
         { width = MENU_WIDTH - 16, height = 20 })
     menu.bank:SetPoint("TOPLEFT", menu.sell, "BOTTOMLEFT", 0, -4)
+    menu.mail = Widgets.CreateButton(menu, "Always mail to...", function() UI:ShowMailMenu() end,
+        { width = MENU_WIDTH - 16, height = 20 })
+    menu.mail:SetPoint("TOPLEFT", menu.bank, "BOTTOMLEFT", 0, -4)
     menu.decide = Widgets.CreateButton(menu, "Let Butler decide", function() Pick(nil) end,
         { width = MENU_WIDTH - 16, height = 20 })
-    menu.decide:SetPoint("TOPLEFT", menu.bank, "BOTTOMLEFT", 0, -4)
+
+    -- The characters page: one button a character, made as needed, and Back.
+    menu.characters = {}
+    menu.back = Widgets.CreateButton(menu, "Back", function()
+        if UI.menu.data then UI:ShowMenu(UI.menu.data, true) end
+    end, { width = MENU_WIDTH - 16, height = 20 })
 
     -- Gone once the mouse has been off it for a moment, as the game's menus
     -- go. Only runs while the menu is up.
@@ -513,19 +526,40 @@ function UI:BuildMenu()
     return menu
 end
 
-function UI:ShowMenu(data)
+--- Show the menu's main page for `data` (a row). `stay` keeps it where it
+--- is, coming back from the characters page.
+function UI:ShowMenu(data, stay)
     local menu = self:BuildMenu()
     menu.data = data
     menu.away = 0
     menu.title:SetText(data.name)
 
-    local choice = ns.Verdicts:Choice(data.itemID)
+    for _, button in ipairs(menu.characters) do button:Hide() end
+    menu.back:Hide()
+
+    local choice, mailTo = ns.Verdicts:Choice(data.itemID)
     menu.keep:SetText(choice == "keep" and "Always keep (now)" or "Always keep")
     menu.sell:SetText(choice == "sell" and "Always sell (now)" or "Always sell")
     menu.bank:SetText(choice == "bank" and "Always bank (now)" or "Always bank")
-    menu.decide:SetShown(choice ~= nil)
-    menu:SetHeight(choice ~= nil and 136 or 112)
+    menu.mail:SetText(choice == "mail" and ("Always mail to %s"):format(mailTo) or "Always mail to...")
+    menu.keep:Show()
+    menu.sell:Show()
+    menu.bank:Show()
 
+    -- Mail needs Tradeskills to know the player's characters, and gear
+    -- bound to this one can't be mailed at all.
+    local canMail = choice == "mail" or (not data.bound and #ns.Errands:Characters() > 0)
+    menu.mail:SetShown(canMail)
+
+    local last = canMail and menu.mail or menu.bank
+    menu.decide:ClearAllPoints()
+    menu.decide:SetPoint("TOPLEFT", last, "BOTTOMLEFT", 0, -4)
+    menu.decide:SetShown(choice ~= nil)
+
+    local rows = 3 + (canMail and 1 or 0) + (choice ~= nil and 1 or 0)
+    menu:SetHeight(40 + rows * MENU_ROW)
+
+    if stay and menu:IsShown() then return end
     local x, y = 0, 0
     if type(GetCursorPosition) == "function" then
         x, y = GetCursorPosition()
@@ -535,6 +569,55 @@ function UI:ShowMenu(data)
     menu:ClearAllPoints()
     menu:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT", x - 10, y + 10)
     menu:Show()
+end
+
+--- The characters page: pick who this item always goes to.
+function UI:ShowMailMenu()
+    local menu = self.menu
+    local data = menu and menu.data
+    if not data then return end
+    menu.away = 0
+
+    local choice, mailTo = ns.Verdicts:Choice(data.itemID)
+    local names = ns.Errands:Characters()
+    menu.title:SetText(("Always mail %s to"):format(data.name))
+
+    menu.keep:Hide()
+    menu.sell:Hide()
+    menu.bank:Hide()
+    menu.mail:Hide()
+    menu.decide:Hide()
+
+    local above
+    for index, name in ipairs(names) do
+        local button = menu.characters[index]
+        if not button then
+            button = Widgets.CreateButton(menu, name, function(self)
+                menu.Pick("mail", self.character)
+            end, { width = MENU_WIDTH - 16, height = 20 })
+            menu.characters[index] = button
+        end
+        button.character = name
+        button:SetText(choice == "mail" and mailTo == name and (name .. " (now)") or name)
+        button:ClearAllPoints()
+        if above then
+            button:SetPoint("TOPLEFT", above, "BOTTOMLEFT", 0, -4)
+        else
+            button:SetPoint("TOPLEFT", 8, -26)
+        end
+        button:Show()
+        above = button
+    end
+    for index = #names + 1, #menu.characters do menu.characters[index]:Hide() end
+
+    menu.back:ClearAllPoints()
+    if above then
+        menu.back:SetPoint("TOPLEFT", above, "BOTTOMLEFT", 0, -4)
+    else
+        menu.back:SetPoint("TOPLEFT", 8, -26)
+    end
+    menu.back:Show()
+    menu:SetHeight(40 + (#names + 1) * MENU_ROW)
 end
 
 function UI:HideMenu()
@@ -724,12 +807,18 @@ end
 --- A mailbox ("mail") or the bank ("bank") opened: come up on Your bags
 --- when the player wants that and there is something to do there.
 function UI:AtPlace(place)
-    if self:IsShown() then return self:UpdateErrands() end
+    if self:IsShown() then
+        ns.Errands:TellTradeskills()
+        return self:UpdateErrands()
+    end
     local setting = place == "mail" and "openAtMailbox" or "openAtBank"
     if not (ns.db and ns.db[setting]) then return end
-    if not ns.Errands:HasWork(place) then return end
+    -- At a mailbox Butler takes over from Tradeskills' mail panel, so it
+    -- comes up every time; at the bank only with something to move.
+    if place ~= "mail" and not ns.Errands:HasWork(place) then return end
     self:Show("bags")
     self.openedFor = place
+    ns.Errands:TellTradeskills()
 end
 
 --- The mailbox or bank closed: a window that came up for it goes with it.
@@ -786,6 +875,7 @@ function UI:Show(view)
         self:RestorePosition()
         self.frame:Show()
         ns.Motion:Open(self.frame)
+        if ns.Errands then ns.Errands:TellTradeskills() end
         -- A light runs round the portrait as it opens.
         if ns.Titanforged then ns.Titanforged:Opened(self.frame) end
         -- The window rises a few pixels as it opens: place the Sell button

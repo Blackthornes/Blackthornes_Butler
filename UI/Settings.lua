@@ -234,7 +234,7 @@ function SettingsUI:BuildPages()
     pages:Section("selling", 1, "MAIL AND BANK")
 
     local mailRow = pages:Row("selling", 1, "Open at a mailbox",
-        "The Butler window comes up at a mailbox when something is under Mail, with Fill mail at its foot. It fills the game's Send Mail page for one character a click; you press Send. Needs Blackthornes Tradeskills. Also /bbutler mailbox.")
+        "The Butler window comes up at every mailbox, in place of Tradeskills' mail panel (close it to get that back). Fill mail at its foot fills the game's Send Mail page for one character a click; you press Send. Needs Blackthornes Tradeskills. Also /bbutler mailbox.")
     controls.openAtMailbox = Widgets.CreateCheckbox(mailRow, "On", function(checked)
         ns.db.openAtMailbox = checked
     end, true)
@@ -249,8 +249,8 @@ function SettingsUI:BuildPages()
 
     pages:Section("selling", 2, "YOUR LISTS")
 
-    local _, listsButton = CommandRow(pages, "selling", 2, "Keep, sell, bank",
-        "Right-click an item in the Butler window to always keep it, always sell it or always bank it. This lists all three in chat. To empty them, type /bbutler reset confirm. Same as /bbutler lists.",
+    local _, listsButton = CommandRow(pages, "selling", 2, "Keep, sell, bank, mail",
+        "Right-click an item in the Butler window to always keep it, sell it, bank it or mail it to one of your characters. This lists all four in chat. To empty them, type /bbutler reset confirm. Same as /bbutler lists.",
         "List them", "lists")
     controls.lists = listsButton
 

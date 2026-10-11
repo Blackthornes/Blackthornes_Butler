@@ -27,7 +27,8 @@
 --
 -- The Always keep, Always sell and Always bank lists are the player's own
 -- choices, account wide, by item ID: BlackthornesButlerDB.alwaysKeep,
--- .alwaysSell and .alwaysBank ([itemID] = true). Never rename them.
+-- .alwaysSell and .alwaysBank ([itemID] = true), and .alwaysMail
+-- ([itemID] = the character's short name). Never rename them.
 --
 -- A Mail row also says who it goes to and how many (row.mailTo,
 -- row.mailCount), for the Fill mail button (Logic/Errands.lua).
@@ -74,22 +75,28 @@ local function List(name)
     return ns.db[name]
 end
 
---- "keep", "sell", "bank" or nil: what the player said about this item.
+--- "keep", "sell", "bank", "mail" or nil: what the player said about this
+--- item. For "mail", the second return is who it goes to.
 function Verdicts:Choice(itemID)
     if not itemID then return nil end
     if List("alwaysKeep")[itemID] then return "keep" end
     if List("alwaysSell")[itemID] then return "sell" end
     if List("alwaysBank")[itemID] then return "bank" end
+    local to = List("alwaysMail")[itemID]
+    if type(to) == "string" and to ~= "" then return "mail", to end
     return nil
 end
 
---- Put an item on the Always keep, Always sell or Always bank list, or take
---- it off all three (`choice` nil) so Butler decides again.
-function Verdicts:SetChoice(itemID, choice)
+--- Put an item on the Always keep, Always sell, Always bank or Always mail
+--- list (`to` the character, for "mail"), or take it off all four (`choice`
+--- nil) so Butler decides again.
+function Verdicts:SetChoice(itemID, choice, to)
     if not itemID then return end
+    if choice == "mail" and not (type(to) == "string" and to ~= "") then return end
     List("alwaysKeep")[itemID] = (choice == "keep") or nil
     List("alwaysSell")[itemID] = (choice == "sell") or nil
     List("alwaysBank")[itemID] = (choice == "bank") or nil
+    List("alwaysMail")[itemID] = (choice == "mail") and to or nil
     self:Changed(true)
 end
 
@@ -124,13 +131,21 @@ end
 --- Mail row goes to and how many ({ to, count }).
 function Verdicts:Decide(entry)
     local itemID = entry.itemID
-    local choice = self:Choice(itemID)
+    local choice, mailTo = self:Choice(itemID)
 
     if choice == "keep" then
         return "keep", "On your Always keep list", nil, true
     end
     if choice == "bank" then
         return "bank", "On your Always bank list", Items:SellPrice(itemID), true
+    end
+    if choice == "mail" then
+        -- Soulbound can't go in the mail, whatever the list says.
+        if entry.bound then
+            return "keep", ("Soulbound, so it can't be mailed to %s"):format(mailTo), nil, true
+        end
+        return "mail", ("On your Always mail list, to %s"):format(mailTo), Items:SellPrice(itemID), true,
+            { to = mailTo }
     end
 
     if entry.quest == "starts" then
@@ -395,16 +410,19 @@ local function PrintList(name, title)
     for _, itemID in ipairs(ids) do
         local itemName, link = Items.Call({ "C_Item.GetItemInfo", "GetItemInfo" }, itemID)
         if not itemName then Items:RequestLoad(itemID) end
-        names[#names + 1] = link or itemName or ("item " .. itemID)
+        local to = List(name)[itemID]
+        names[#names + 1] = (link or itemName or ("item " .. itemID))
+            .. (type(to) == "string" and (" to " .. to) or "")
     end
     ns.PrintRaw(("  |c%s%s (%d):|r %s"):format(ns.COLORS.muted, title, #ids, table.concat(names, ", ")))
 end
 
-ns.RegisterCommand("lists", "show your Always keep, Always sell and Always bank lists", function()
+ns.RegisterCommand("lists", "show your Always keep, Always sell, Always bank and Always mail lists", function()
     ns.Print("your lists (right-click a row in the Butler window to change them)")
     PrintList("alwaysKeep", "Always keep")
     PrintList("alwaysSell", "Always sell")
     PrintList("alwaysBank", "Always bank")
+    PrintList("alwaysMail", "Always mail")
 end)
 
 ns.RegisterCommand("vendor", "turn the Butler window coming up at a vendor on or off", function()
@@ -415,12 +433,12 @@ end)
 
 -- Deletes the player's choices, so typed only, with "confirm" (a house
 -- rule: no button deletes data).
-ns.RegisterCommand("reset", "empty your Always keep, Always sell and Always bank lists (type: reset confirm)", function(rest)
+ns.RegisterCommand("reset", "empty your Always keep, sell, bank and mail lists (type: reset confirm)", function(rest)
     if rest ~= "confirm" then
-        ns.Print("this empties your Always keep, Always sell and Always bank lists. To do it, type /bbutler reset confirm")
+        ns.Print("this empties your Always keep, Always sell, Always bank and Always mail lists. To do it, type /bbutler reset confirm")
         return
     end
-    ns.db.alwaysKeep, ns.db.alwaysSell, ns.db.alwaysBank = {}, {}, {}
+    ns.db.alwaysKeep, ns.db.alwaysSell, ns.db.alwaysBank, ns.db.alwaysMail = {}, {}, {}, {}
     Verdicts:Changed(true)
-    ns.Print("your Always keep, Always sell and Always bank lists are empty. Butler decides every item again.")
+    ns.Print("your Always keep, Always sell, Always bank and Always mail lists are empty. Butler decides every item again.")
 end)

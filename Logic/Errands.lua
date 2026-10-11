@@ -10,7 +10,16 @@
 -- The player presses Send. Nothing is ever sent from here, the mail frame
 -- is never hooked, moved, shown or hidden, and each click fills the next
 -- character's mail. The Mail group only exists with Tradeskills loaded,
--- since it is Tradeskills that says who needs what.
+-- since it is Tradeskills that says who needs what, and who the player's
+-- characters are for the Always mail list (Errands:Characters).
+--
+-- Butler takes over the mailbox (the owner picked it, 2026-10-11): it
+-- comes up at every mailbox, and while its window is up there Tradeskills'
+-- own mail panel steps aside, told through
+--
+--   _G.BlackthornesTS.Butler:Mailbox(covered)        -- true while Butler's window is up
+--
+-- Closing Butler's window brings Tradeskills' panel back.
 --
 -- At the bank, Move to bank puts the Bank group (the player's Always bank
 -- list) into the bank, and Take from bank brings out what this character's
@@ -88,6 +97,51 @@ function Errands:Recipients()
         return a.to < b.to
     end)
     return list
+end
+
+--- The player's other characters an item can be mailed to: short names,
+--- same realm and faction as the character playing, from Tradeskills'
+--- record of them. Empty without Tradeskills.
+function Errands:Characters()
+    local butler = Errands.Tradeskills("Holdings")
+    if not butler then return {} end
+    local ok, list = pcall(butler.Holdings, butler)
+    if not ok or type(list) ~= "table" then return {} end
+
+    local function Text(value)
+        return type(value) == "string" and value ~= "" and value or nil
+    end
+    local me
+    for _, entry in ipairs(list) do
+        if type(entry) == "table" and entry.isCurrent == true then me = entry end
+    end
+    local realm = me and Text(me.realm)
+    local faction = me and Text(me.faction)
+
+    local names, seen = {}, {}
+    for _, entry in ipairs(list) do
+        local short = type(entry) == "table" and (Text(entry.short) or Text(entry.name))
+        if short and entry.isCurrent ~= true and not seen[short]
+            and (not realm or not Text(entry.realm) or Text(entry.realm) == realm)
+            and (not faction or not Text(entry.faction) or Text(entry.faction) == faction) then
+            seen[short] = true
+            names[#names + 1] = short
+        end
+    end
+    table.sort(names)
+    return names
+end
+
+--- Tell Tradeskills whether Butler's window covers the mailbox now, so its
+--- mail panel steps aside or comes back. Only said when it changes.
+--- `shown` is the window's state when the caller knows it (its OnHide).
+function Errands:TellTradeskills(shown)
+    if shown == nil then shown = ns.UI ~= nil and ns.UI:IsShown() == true end
+    local covered = self.mailOpen == true and shown == true
+    if covered == self.covered then return end
+    self.covered = covered
+    local butler = Errands.Tradeskills("Mailbox")
+    if butler then pcall(butler.Mailbox, butler, covered) end
 end
 
 --- The next character to fill a mail for on this visit, or nil.
@@ -326,6 +380,7 @@ function Errands:Left(place)
         self.bankOpen = false
     end
     if ns.UI then ns.UI:LeftPlace(place) end
+    self:TellTradeskills()
     self:Update()
 end
 
@@ -342,7 +397,7 @@ end
 
 ns.RegisterCommand("mailbox", "turn the Butler window coming up at a mailbox on or off", function()
     ns.db.openAtMailbox = not ns.db.openAtMailbox
-    ns.Print(ns.db.openAtMailbox and "the Butler window comes up at a mailbox when there is something to mail."
+    ns.Print(ns.db.openAtMailbox and "the Butler window comes up at every mailbox."
         or "the Butler window no longer comes up at a mailbox by itself.")
 end)
 
