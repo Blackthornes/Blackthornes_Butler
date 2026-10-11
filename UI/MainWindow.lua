@@ -125,6 +125,13 @@ function UI:Build()
         if ns.Selling then ns.Selling:Update() end
     end)
     frame:SetScript("OnHide", function()
+        -- Closed by the player (close gem, Escape, /bbutler, the minimap
+        -- button), not by leaving the vendor, mailbox or bank it came up for.
+        if UI.closingByItself then
+            UI.closingByItself = false
+        else
+            UI:Say("close")
+        end
         UI.dragging = false
         UI.openedByVendor = false
         UI.openedFor = nil
@@ -1077,6 +1084,7 @@ end
 function UI:LeftPlace(place)
     if self.openedFor == place then
         self.openedFor = nil
+        self.closingByItself = true
         self:Hide()
     else
         self:UpdateErrands()
@@ -1087,6 +1095,7 @@ end
 function UI:LeftVendor()
     if self.openedByVendor then
         self.openedByVendor = false
+        self.closingByItself = true
         self:Hide()
     elseif ns.Selling then
         ns.Selling:Update()
@@ -1344,7 +1353,49 @@ function UI:Toggle()
         self:Hide()
     else
         self:Show()
+        self:Say("open")
     end
+end
+
+--------------------------------------------------------------------------------
+-- Butler's voice
+--
+-- The owner asked (2026-10-11) for Moroes, Karazhan's butler, to answer when
+-- the player opens Butler ("You rang?") and closes it ("Now, where was I?
+-- Oh, yes..."): the game's own files, played by ID, so no sound ships here.
+-- Never over an NPC: the client can't say when one is talking, so a line is
+-- never said while a vendor, mailbox, bank or any NPC window is open, nor
+-- when the window opens or closes by itself. Each line waits VOICE_GAP
+-- seconds before it is said again. "Butler's voice" in Settings (`voice`,
+-- account wide, on unless unticked).
+--------------------------------------------------------------------------------
+
+UI.VOICE = { open = 555818, close = 555814 }
+UI.VOICE_GAP = 180
+UI.voiceAt = {}
+
+--- Is the player at a vendor, mailbox, bank or talking to any NPC?
+function UI.AtAnNPC()
+    if ns.Selling and ns.Selling.merchantOpen then return true end
+    local errands = ns.Errands
+    if errands and (errands.mailOpen or errands.bankOpen) then return true end
+    if UI.openedByVendor or UI.openedFor then return true end
+    local ok, talking = pcall(function() return UnitExists("npc") and true or false end)
+    return ok and talking == true
+end
+
+--- Say Moroes's line for "open" or "close", when it may be said now.
+function UI:Say(which)
+    local id = self.VOICE[which]
+    if not id or not (ns.db and ns.db.voice ~= false) then return false end
+    if self.AtAnNPC() then return false end
+    local ok, now = pcall(GetTime)
+    if not (ok and type(now) == "number") then return false end
+    local last = self.voiceAt[which]
+    if last and now - last < self.VOICE_GAP then return false end
+    ok = pcall(PlaySoundFile, id, "Dialog")
+    if ok then self.voiceAt[which] = now end
+    return ok
 end
 
 ns.RegisterCommand("window", "open the Butler window (so does /bbutler on its own)", function()
@@ -1355,6 +1406,8 @@ ns.RegisterCommand("all", "every character's items in one list, with where each 
     if UI:IsShown() and UI.view == "all" then
         UI:Hide()
     else
+        local wasShown = UI:IsShown()
         UI:Show("all")
+        if not wasShown then UI:Say("open") end
     end
 end)

@@ -320,6 +320,9 @@ local DEFAULTS = {
     -- The free bag space number on the backpack button (UI/FreeSpace.lua,
     -- asked 2026-10-11).
     freeSpace = true,
+    -- Moroes's "You rang?" and "Now, where was I?" when the player opens and
+    -- closes the window (the owner asked 2026-10-11).
+    voice = true,
 
     -- Butler learns from what the player does: a buyback, hand sales, hand
     -- mail (Logic/Learning.lua, asked 2026-10-11). What it learned is kept

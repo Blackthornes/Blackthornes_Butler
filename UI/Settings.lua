@@ -428,6 +428,13 @@ function SettingsUI:BuildPages()
     end, true)
     controls.freeSpace:SetPoint("TOPLEFT", CONTROL_X, -2)
 
+    local voiceRow = pages:Row("general", 1, "Butler's voice",
+        "\"You rang?\" when you open the Butler window and \"Now, where was I?\" when you close it, in the voice of Karazhan's butler. Never at a vendor, mailbox, bank or other NPC, and at most once every few minutes. Uses your Dialog volume.")
+    controls.voice = Widgets.CreateCheckbox(voiceRow, "On", function(checked)
+        ns.db.voice = checked
+    end, true)
+    controls.voice:SetPoint("TOPLEFT", CONTROL_X, -2)
+
     local positionRow = pages:Row("general", 1, "Window position",
         "Moves this window back where it started, if it ends up off screen.")
 
@@ -488,6 +495,7 @@ function SettingsUI:Refresh()
     controls.jobsAtLogin:SetChecked(ns.db.jobsAtLogin ~= false)
     controls.openAtBank:SetChecked(ns.db.openAtBank ~= false)
     controls.freeSpace:SetChecked(ns.db.freeSpace ~= false)
+    controls.voice:SetChecked(ns.db.voice ~= false)
     controls.learn:SetChecked(ns.db.learn ~= false)
     controls.debug:SetChecked(ns.db.debug == true)
     controls.sellBelow:SetValue(ns.Verdicts:SellBelow() or 0)
