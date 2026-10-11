@@ -152,21 +152,37 @@ function Errands:PlayingName()
     return name
 end
 
---- The full name for a character name saved in the old short form ("Ana
---- S."): names are never shortened now (the owner's rule, 2026-10-11), but
---- an Always mail choice made before keeps what was saved. The one
---- character whose name starts "Ana S" answers; anything else is as given.
+--- The full name for a character name saved in an old short form: "Ana
+--- S." or the first name alone ("Ana", from before last names were read).
+--- Names are never shortened now (the owner's rule, 2026-10-11), but an
+--- Always mail choice made before keeps what was saved. The one character
+--- the short form fits answers. A first name alone that fits several
+--- answers the character playing when it is one of them, as Tradeskills
+--- reads it (its old name-realm records filed them all as one), so it is
+--- never mailed to itself (the owner found Fill mail aimed at the
+--- character he was on, 2026-10-11). Anything else is as given.
 function Errands:FullName(name)
     if type(name) ~= "string" then return name end
+    local prefix
     local first, initial = name:match("^(%S+) (%S+)%.$")
-    if not first then return name end
-    local prefix = first .. " " .. initial
-    local found
-    for _, full in ipairs(AllNames()) do
+    if first then
+        prefix = first .. " " .. initial
+    elseif name:match("^%S+$") then
+        prefix = name .. " "
+    else
+        return name
+    end
+    local names, me = AllNames()
+    local found, several, mine
+    for _, full in ipairs(names) do
         if full ~= name and full:sub(1, #prefix) == prefix then
-            if found and found ~= full then return name end
-            found = full
+            if found and found ~= full then several = true end
+            found = found or full
+            if full == me then mine = true end
         end
+    end
+    if several then
+        return (not first and mine) and me or name
     end
     return found or name
 end
