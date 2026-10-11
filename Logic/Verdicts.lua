@@ -359,8 +359,18 @@ function Verdicts:Best(entry, unit, said)
     -- house was asked and pays less, or Equipment found no use for it.
     local judged = auction ~= nil or (eq and True(eq, "sell"))
     if judged and not (bound and (entry.quality or 0) >= 2) then
-        local why = auction and "Vendor pays more than the auction house" or "Not an upgrade"
-        return "sell", ("%s: %s each"):format(why, Items.FormatMoney(unit)), unit
+        -- Say which: the auction house pays less once its cut and deposit
+        -- are taken, or it pays more but sells too slowly to wait for (a
+        -- player read "vendor pays more" under a higher auction price).
+        if auction and auction > unit then
+            return "sell", ("Sells slowly at auction (about %s after the cut), vendor pays %s each")
+                :format(Items.FormatMoney(auction), Items.FormatMoney(unit)), unit
+        end
+        if auction then
+            return "sell", ("Vendor pays more than the auction house after its cut (about %s): %s each")
+                :format(Items.FormatMoney(auction), Items.FormatMoney(unit)), unit
+        end
+        return "sell", ("Not an upgrade: %s each"):format(Items.FormatMoney(unit)), unit
     end
 
     if bound and (entry.quality or 0) >= 2 and eq and True(eq, "sell") then

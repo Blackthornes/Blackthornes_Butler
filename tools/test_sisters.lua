@@ -114,7 +114,15 @@ _G.BlackthornesTS.Butler.Advise = function(_, id)
 end
 ns.UI:Hide()
 ns.UI:Show()
-suite.check("vendor beats a cheap auction: sell", Find("Silk Cloth").verdict == "sell")
+local silkSold = Find("Silk Cloth")
+suite.check("vendor beats a cheap auction: sell", silkSold.verdict == "sell"
+    and silkSold.reason:find("Vendor pays more", 1, true))
+
+-- A slow sale the vendor beats only once marked down says it is slow,
+-- never that the vendor pays more (a player read that under a higher price).
+local _, slowWhy = Verdicts:Best({ quality = 2 }, 2696, { ts = { auction = 3200, fast = false } })
+suite.check("a slow sale lost to the vendor says it is slow",
+    slowWhy:find("Sells slowly", 1, true) and not slowWhy:find("Vendor pays more", 1, true), slowWhy)
 local bound = Find("Brutal Gauntlets")
 suite.check("soulbound green is never sold for the player", bound.verdict == "look"
     and bound.reason:find("Not an upgrade", 1, true))
