@@ -289,6 +289,13 @@ function SettingsUI:BuildPages()
     end, true)
     controls.minimap:SetPoint("TOPLEFT", CONTROL_X, -2)
 
+    local spaceRow = pages:Row("general", 1, "Free bag space",
+        "How many bag slots are free, as a number on the backpack button of your bag bar: white, amber at 8 or fewer, red at 3 or fewer. Hover the button for each bag. Profession and reagent bags are listed but not counted. Also /bbutler freespace.")
+    controls.freeSpace = Widgets.CreateCheckbox(spaceRow, "Show it", function(checked)
+        if ns.FreeSpace then ns.FreeSpace:SetEnabled(checked) end
+    end, true)
+    controls.freeSpace:SetPoint("TOPLEFT", CONTROL_X, -2)
+
     local positionRow = pages:Row("general", 1, "Window position",
         "Moves this window back where it started, if it ends up off screen.")
 
@@ -346,6 +353,7 @@ function SettingsUI:Refresh()
     controls.openAtVendor:SetChecked(ns.db.openAtVendor ~= false)
     controls.openAtMailbox:SetChecked(ns.db.openAtMailbox ~= false)
     controls.openAtBank:SetChecked(ns.db.openAtBank ~= false)
+    controls.freeSpace:SetChecked(ns.db.freeSpace ~= false)
     controls.debug:SetChecked(ns.db.debug == true)
     controls.sellBelow:SetValue(ns.Verdicts:SellBelow() or 0)
     controls.textSize:Sync()

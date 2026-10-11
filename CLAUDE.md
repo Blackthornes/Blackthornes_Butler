@@ -200,6 +200,34 @@ when Tradeskills gave no answer, since without an auction price junk and a
 good white item look the same. It only adds to Sell: nothing is deleted,
 and selling is still the Sell button. Tested in `tools/test_sellbelow.lua`.
 
+## Free bag space
+
+The owner asked (2026-10-11) for the free bag slots on the game's own bag,
+and picked the backpack button of the bag bar from a mockup
+(`mockups/butler-free-space-bag-button.png` in the project files).
+`UI/FreeSpace.lua` puts a number in the button's corner in the game's stack
+count font: white, amber at 8 free or fewer (`FreeSpace.AMBER`), red at 3
+or fewer (`FreeSpace.RED`). Only bags that take anything count; profession
+bags (a bag family other than 0) and the reagent bag are listed apart on
+the tooltip. Hovering the button adds each bag's free slots under the
+game's own lines. "Free bag space" on the General page (`freeSpace`,
+account wide, on unless unticked, never rename it) and `/bbutler
+freespace` turn it off and on. When the game shows its own count on the
+button (`MainMenuBarBackpackButtonCount`), Butler's stands down.
+
+How it sits on a game frame without touching it: the number is Butler's own
+frame, a child of `MainMenuBarBackpackButton` so it follows the button's
+showing, scale and Edit Mode place; it takes no mouse and nothing is
+written on the button, and the tooltip lines come through `HookScript`
+("OnEnter"), which runs after the game's own script. No Hide, Show or
+field writes. A bag addon that takes the bar away takes the number with
+it. Smooth play: `BAG_UPDATE_DELAYED` and `BAG_CONTAINER_UPDATE` only mark
+it stale, one read of a handful of calls follows 0.2 s later and only while
+the number is visible (its `OnShow` reads what it missed), and the text is
+set only when the number or its colour changed. `/bbutler probe` says
+whether the button was found. Tested in `tools/test_freespace.lua`. Not
+yet seen in game.
+
 ## How this repo was set up
 
 It copies Pets (itself Equipment's, itself Farmer's) on purpose, so check the

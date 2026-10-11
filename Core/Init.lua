@@ -313,6 +313,10 @@ local DEFAULTS = {
     openAtMailbox = true,
     openAtBank = true,
 
+    -- The free bag space number on the backpack button (UI/FreeSpace.lua,
+    -- asked 2026-10-11).
+    freeSpace = true,
+
     -- Also kept here, never renamed (made when first needed, so not given
     -- defaults): alwaysKeep, alwaysSell and alwaysBank ([itemID] = true, the player's
     -- right-click choices), alwaysMail ([itemID] = a character's short name)

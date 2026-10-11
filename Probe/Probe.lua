@@ -23,6 +23,7 @@ local Probe = ns.NewModule("Probe")
 -- vendor, the mail form, and the bank.
 local APIS = {
     "C_Container.GetContainerNumSlots", "C_Container.GetContainerItemInfo",
+    "C_Container.GetContainerNumFreeSlots", "C_Container.GetBagName",
     "C_Container.GetContainerItemLink", "C_Container.GetContainerItemQuestInfo",
     "C_Container.UseContainerItem", "C_Container.PickupContainerItem",
     "GetContainerNumSlots", "GetContainerItemInfo", "UseContainerItem",
@@ -180,6 +181,7 @@ function Probe:Run()
     Line("first item", FirstItem())
     Line("buyback", Read("GetNumBuybackItems"))
     if ns.Selling then Line("sell from Butler", ns.Selling:ProbeText()) end
+    if ns.FreeSpace then Line("free bag space", ns.FreeSpace:ProbeText()) end
 end
 
 ns.RegisterCommand("probe", "check what this client supports for bags, vendors and mail (reads only)", function()
