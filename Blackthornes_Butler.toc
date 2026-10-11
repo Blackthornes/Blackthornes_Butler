@@ -38,5 +38,6 @@ Logic\Errands.lua
 Logic\Funds.lua
 Logic\Ammo.lua
 Logic\Learning.lua
+Logic\Jobs.lua
 
 Probe\Probe.lua

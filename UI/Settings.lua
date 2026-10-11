@@ -311,6 +311,18 @@ function SettingsUI:BuildPages()
     end, true)
     controls.fillNext:SetPoint("TOPLEFT", CONTROL_X, -2)
 
+    -- Jobs for the craft queue on other characters (Logic/Jobs.lua, asked
+    -- 2026-10-11).
+    local jobRow = pages:Row("selling", 1, "Jobs at login",
+        "Logging in on a character with a job for Tradeskills' craft queue (craft this, mail that) brings the Butler window up on its steps. Also /bbutler joblogin.")
+    controls.jobsAtLogin = Widgets.CreateCheckbox(jobRow, "On", function(checked)
+        ns.db.jobsAtLogin = checked
+    end, true)
+    controls.jobsAtLogin:SetPoint("TOPLEFT", CONTROL_X, -2)
+
+    CommandRow(pages, "selling", 1, "Every character's jobs",
+        "Lists in chat what each of your characters has to craft or mail for Tradeskills' craft queue. Also /bbutler jobs.", "List", "jobs")
+
     local bankRow = pages:Row("selling", 1, "Open at the bank",
         "The Butler window comes up at the bank when there is something to move: Move to bank puts your Always bank items away, and Take from bank brings out what your craft queue needs. Also /bbutler bank.")
     controls.openAtBank = Widgets.CreateCheckbox(bankRow, "On", function(checked)
@@ -473,6 +485,7 @@ function SettingsUI:Refresh()
     controls.openAtVendor:SetChecked(ns.db.openAtVendor ~= false)
     controls.openAtMailbox:SetChecked(ns.db.openAtMailbox ~= false)
     controls.fillNext:SetChecked(ns.db.fillNext ~= false)
+    controls.jobsAtLogin:SetChecked(ns.db.jobsAtLogin ~= false)
     controls.openAtBank:SetChecked(ns.db.openAtBank ~= false)
     controls.freeSpace:SetChecked(ns.db.freeSpace ~= false)
     controls.learn:SetChecked(ns.db.learn ~= false)

@@ -186,6 +186,7 @@ function Probe:Run()
     if ns.Selling then Line("sell from Butler", ns.Selling:ProbeText()) end
     if ns.FreeSpace then Line("free bag space", ns.FreeSpace:ProbeText()) end
     if ns.Ammo then Line("ammo", ns.Ammo:ProbeText()) end
+    if ns.Jobs then Line("jobs", ns.Jobs:ProbeText()) end
 end
 
 ns.RegisterCommand("probe", "check what this client supports for bags, vendors and mail (reads only)", function()

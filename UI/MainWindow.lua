@@ -313,12 +313,23 @@ function UI.CreateRow(row)
     row.reason:SetPoint("RIGHT", row.worth, "LEFT", -8, 0)
     row.reason:SetWordWrap(true)
 
-    -- The Ammo row's Fill button sits where the worth goes (Logic/Ammo.lua).
-    row.action = Widgets.CreateButton(row, "Fill", function() ns.Ammo:Buy() end, {
+    -- The Ammo row's Fill button and a job's Craft button sit where the
+    -- worth goes (Logic/Ammo.lua, Logic/Jobs.lua).
+    row.action = Widgets.CreateButton(row, "Fill", function() UI.RowAction(row.data) end, {
         primary = true, width = 80, height = 22,
     })
     row.action:SetPoint("RIGHT", -8, 0)
     row.action:Hide()
+end
+
+--- The row's button: Fill on the Ammo row, Craft on a job.
+function UI.RowAction(data)
+    if not data then return end
+    if data.type == "ammo" then
+        ns.Ammo:Buy()
+    elseif data.type == "job" then
+        ns.Jobs:Craft(data.step)
+    end
 end
 
 local function Plural(count, one, many)
@@ -333,6 +344,8 @@ function UI.UpdateRow(row, data)
     if data.type == "everyone" then return UI.UpdateItemRow(row, data) end
     if data.type == "holder" then return UI.UpdateHolderRow(row, data) end
     if data.type == "gold" then return UI.UpdateGoldRow(row, data) end
+    if data.type == "job" then return UI.UpdateJobRow(row, data) end
+    if data.type == "jobnext" then return UI.UpdateNextRow(row, data) end
 
     if data.type == "header" then
         local group = data.group
@@ -372,6 +385,37 @@ function UI.UpdateGoldRow(row, data)
     row.name:SetText(entry.to)
     row.reason:SetText(ns.Funds.Reason(entry))
     row.worth:SetText(Items.FormatMoney(entry.amount))
+end
+
+--- A step for the character playing: what to craft or mail, and why, with
+--- a Craft button on a craft it has the materials for.
+function UI.UpdateJobRow(row, data)
+    local step = data.step
+    local title, detail = ns.Jobs.StepText(step)
+    row.fold:Hide()
+    row.icon:Show()
+    row.icon:SetTexture(ns.Jobs.Icon(step))
+    row.name:SetTextColor(Theme.Unpack("text"))
+    row.name:SetText(title)
+    row.reason:SetText(detail)
+    if step.kind == "craft" and not step.ready then row.reason:SetTextColor(Theme.Unpack("accent")) end
+    row.worth:SetText("")
+    if step.kind == "craft" and step.ready then
+        row.action:SetText("Craft")
+        row.action:Show()
+    end
+end
+
+--- Another character with work waiting: who, and what they have to do.
+function UI.UpdateNextRow(row, data)
+    local job = data.job
+    row.fold:Hide()
+    row.icon:Show()
+    row.icon:SetTexture([[Interface\Icons\Ability_Rogue_Disguise]])
+    row.name:SetTextColor(Theme.Unpack(data.isNext and "accent" or "text"))
+    row.name:SetText(("%s: %s"):format(data.isNext and "Next" or "Then", job.name))
+    row.reason:SetText(ns.Jobs.Summary(job))
+    row.worth:SetText("")
 end
 
 --- Filling the quiver or ammo pouch: the best ammo the vendor has, how
@@ -440,6 +484,18 @@ function UI:Lines()
         lines[#lines + 1] = { type = "header", group = group, folded = isFolded }
         if not isFolded then lines[#lines + 1] = { type = "ammo", offer = offer } end
     end
+    -- Jobs for the craft queue, here and on other characters
+    -- (Logic/Jobs.lua).
+    local jobRows = ns.Jobs and ns.Jobs:Lines() or {}
+    if #jobRows > 0 then
+        local group = { verdict = "jobs", label = "Jobs", count = #jobRows, worth = 0,
+            one = "step", many = "steps" }
+        local isFolded = folded.jobs == true
+        lines[#lines + 1] = { type = "header", group = group, folded = isFolded }
+        if not isFolded then
+            for _, row in ipairs(jobRows) do lines[#lines + 1] = row end
+        end
+    end
     -- At a mailbox, the gold fund's top-ups come first (Logic/Funds.lua).
     if ns.Errands.mailOpen and ns.Funds then
         local plan = ns.Funds:Plan()
@@ -493,7 +549,7 @@ function UI:Clicked(data, button)
         self:Refresh(true)
         return
     end
-    if data.type == "ammo" then return end
+    if data.type == "ammo" or data.type == "job" or data.type == "jobnext" then return end
     if button == "RightButton" and data.type ~= "gold" then
         self:ShowMenu(data)
     end
@@ -519,6 +575,29 @@ function UI:Enter(row, data)
         GameTooltip:AddLine(ns.Ammo.Reason(offer), 1, 1, 1, true)
         GameTooltip:AddLine(("The best ammo this vendor has for your %s at your level."):format(offer.weapon.word),
             Theme.Unpack("muted"))
+        GameTooltip:Show()
+        return
+    end
+    if data.type == "job" then
+        local step = data.step
+        local title, detail = ns.Jobs.StepText(step)
+        GameTooltip:AddLine(title, Theme.Unpack("accent"))
+        GameTooltip:AddLine(detail, 1, 1, 1, true)
+        if step.kind == "craft" then
+            GameTooltip:AddLine(step.ready and "Craft makes it with your profession open; Tradeskills opens it otherwise."
+                or "The Craft button comes once you have the materials.", Theme.Unpack("muted"))
+        end
+        GameTooltip:Show()
+        return
+    end
+    if data.type == "jobnext" then
+        local job = data.job
+        GameTooltip:AddLine(job.name, Theme.Unpack("accent"))
+        for _, step in ipairs(job.steps) do
+            local line = ns.Jobs.Short(step)
+            GameTooltip:AddLine(line:sub(1, 1):upper() .. line:sub(2), 1, 1, 1, true)
+        end
+        GameTooltip:AddLine("Log out at the top of the window to switch to them.", Theme.Unpack("muted"))
         GameTooltip:Show()
         return
     end
@@ -797,13 +876,14 @@ function UI:Refresh(force)
     if self.view == "all" then return self:RefreshAll(force) end
 
     if ns.Ammo then ns.Ammo:Offer() end
-    local key = ("%d:%d:%d:%s:%s:%s"):format(ns.Bags.version, ns.Verdicts.version,
-        ns.Funds and ns.Funds.version or 0, tostring(ns.Errands.mailOpen),
+    local key = ("%d:%d:%d:%d:%s:%s:%s"):format(ns.Bags.version, ns.Verdicts.version,
+        ns.Funds and ns.Funds.version or 0, ns.Jobs and ns.Jobs.version or 0, tostring(ns.Errands.mailOpen),
         tostring(ns.Selling and ns.Selling.merchantOpen), tostring(ns.Ammo and ns.Ammo.offerKey))
     if force or key ~= self.drawnKey then
         local first = self.drawnKey == nil
         self.drawnKey = key
         self.list:SetData(self:Lines(), not first)
+        if ns.Jobs then ns.Jobs:UpdateLogout() end
     end
 
     local total = 0
@@ -906,6 +986,8 @@ function UI:FootRoom()
     -- The Disenchant button goes left of those.
     local disenchant = ns.Disenchanting and ns.Disenchanting:Update(room) or 0
     if disenchant > 0 then room = room + (room > 0 and 6 or 0) + disenchant end
+    -- The Log out button for the next character's job sits in the header.
+    if ns.Jobs then ns.Jobs:UpdateLogout() end
     self.versionLabel:SetShown(room == 0)
     self.footer:SetPoint("RIGHT", self.frame, "RIGHT", -(PADDING + (room > 0 and room + 12 or 90)), 0)
 end
@@ -1231,6 +1313,7 @@ function UI:Show(view)
         -- met, a craft queued or a level gained since the last look.
         ns.Verdicts:Forget()
         ns.Everyone:Changed()
+        if ns.Jobs then ns.Jobs:Changed() end
         self:RestorePosition()
         self.frame:Show()
         ns.Motion:Open(self.frame)

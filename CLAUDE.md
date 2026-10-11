@@ -83,6 +83,11 @@ _G.BlackthornesTS.Butler:SetBoughtToDisenchant(itemID, on, count)
   -- true, or false and why: the right-click menu's mark
 _G.BlackthornesTS.Butler:FillMail(name, items, money)
   -- fills the Send Mail page; money (copper) is the gold fund's top-up
+_G.BlackthornesTS.Butler:Jobs()
+  -- each character's steps for the craft queue (see "Jobs on other
+  --   characters")
+_G.BlackthornesTS.Butler:Craft(recipeID)
+  -- true and "crafting" or "opened", or false and why
 _G.BlackthornesEquipment.Butler:Advise(link, bag, slot)
   -- { upgrade = "now" | "later" | nil, gain, sell (its bag coin), tool,
   --   alt = { key (a GUID), gain, level } when it is an upgrade for
@@ -336,6 +341,41 @@ what was learned (`Verdicts:SetChoice` calls `Learning:Forget`), the menu
 shows "Forget what Butler learned" for a learned item, `/bbutler lists`
 shows them and `reset confirm` forgets them. Tested in
 `tools/test_learning.lua`. Not yet seen in game.
+
+## Jobs on other characters
+
+The owner asked (2026-10-11) for a button per step that swaps to the
+character who has to do it ("go craft Medium Leather on another, then
+send back"). Addons don't run on the character list, so they can't pick a
+character; the owner said yes to a step list with a Log out button
+instead. `Logic/Jobs.lua` reads Tradeskills' `Butler:Jobs()` (one entry
+per character this one can mail, never another account's: `name` in full,
+`isCurrent`, `steps`; a step is a craft, `{ kind = "craft", recipeID,
+itemID, name, count, forNames, ready, missing }`, or a mail, `{ kind =
+"mail", to, items, crafts }`) and shows the Jobs group first on Your bags:
+this character's steps (a Craft button on a craft it has the materials
+for, which calls Tradeskills' `Butler:Craft(recipeID)`: it crafts with the
+profession open, else opens its Queue tab, whose Open button opens the
+profession), then "Next: NAME" for the other character that can get on
+with a step, then "Then: NAME" for the rest. Mail steps are done with
+Fill mail at a mailbox, as before.
+
+The **Log out** button (`BlackthornesButlerLogout`) is a secure button
+running the game's own `/logout` as a macro (addon code may not log out by
+itself), in the header left of All characters, placed by screen position
+like the Sell button (`Jobs:UpdateLogout`, from `UI:FootRoom` and each new
+list), shown only while another character has work, hidden in combat, while
+the window moves and in All characters. Not yet seen in game; `/bbutler
+probe` has a jobs line (`Logout`, `SLASH_LOGOUT1`).
+
+Logging in (`PLAYER_ENTERING_WORLD`'s initial login, `Jobs.LOGIN_DELAY`
+later) on a character with a step brings the window up and says what it is
+("Jobs at login", `jobsAtLogin`, account wide, on unless unticked, never
+rename it; `/bbutler joblogin`). Once the last step here is gone,
+`Jobs:Noticed` says who is next, once. `/bbutler jobs` lists everyone's.
+Smooth play: Tradeskills is asked only while the window draws the list,
+again only when `Bags.version` or `Jobs.version` (moved as the window
+opens) moves; no timer. Tested in `tools/test_jobs.lua`.
 
 ## Sell below
 
