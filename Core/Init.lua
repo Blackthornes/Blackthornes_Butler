@@ -307,14 +307,16 @@ local DEFAULTS = {
     -- vendor closes.
     openAtVendor = true,
 
-    -- And at a mailbox or the bank, when there is something to mail or
-    -- move there (Logic/Errands.lua), going when it closes.
+    -- And at every mailbox (where it takes over from Tradeskills' mail
+    -- panel), and at the bank when there is something to move there
+    -- (Logic/Errands.lua), going when it closes.
     openAtMailbox = true,
     openAtBank = true,
 
     -- Also kept here, never renamed (made when first needed, so not given
     -- defaults): alwaysKeep, alwaysSell and alwaysBank ([itemID] = true, the player's
-    -- right-click choices) and sellTest (what /bbutler selltest found).
+    -- right-click choices), alwaysMail ([itemID] = a character's short name)
+    -- and sellTest (what /bbutler selltest found).
 }
 
 -- Per character, because bags are: what one character carries is its own.

@@ -49,7 +49,7 @@ _G.C_Container.UseContainerItem = function(bag, slot)
     end
 end
 
-local filled = {}
+local filled, mailboxSaid = {}, {}
 _G.BlackthornesTS = { Butler = {
     Advise = function(_, id)
         if id == 401 then return { mailTo = "Bob", mailCount = 1, auction = 300 } end
@@ -61,6 +61,16 @@ _G.BlackthornesTS = { Butler = {
         return true
     end,
     FromBank = function() return { [501] = 10 } end,
+    Holdings = function()
+        return {
+            { key = "me", short = "Me", realm = "Here", faction = "Horde", isCurrent = true },
+            { key = "bob", short = "Bob", realm = "Here", faction = "Horde" },
+            { key = "ana", short = "Ana", realm = "Here", faction = "Horde" },
+            { key = "cy", short = "Cy", realm = "Here", faction = "Alliance" },
+            { key = "di", short = "Di", realm = "Elsewhere", faction = "Horde" },
+        }
+    end,
+    Mailbox = function(_, covered) mailboxSaid[#mailboxSaid + 1] = covered end,
 } }
 env.Enable(ns)
 
@@ -74,6 +84,18 @@ suite.check("with Fill mail for the character with the most", UI.mailButton:IsSh
     and UI.mailButton.label:GetText() == "Fill mail to Bob", UI.mailButton.label:GetText())
 suite.check("the footer says who presses Send", UI.footer:GetText():find("You press Send", 1, true) ~= nil)
 suite.check("no bank buttons at a mailbox", not UI.bankButton:IsShown() and not UI.takeButton:IsShown())
+suite.check("Tradeskills' mail panel is told to step aside", mailboxSaid[#mailboxSaid] == true)
+-- The test frames run no scripts on Hide, so its OnHide is run by hand.
+local function Close()
+    UI:Hide()
+    local onHide = UI.frame:GetScript("OnHide")
+    if onHide then onHide(UI.frame) end
+end
+Close()
+suite.check("closing Butler brings it back", mailboxSaid[#mailboxSaid] == false)
+UI:Show("bags")
+UI.openedFor = "mail"
+suite.check("and opening it again covers it", mailboxSaid[#mailboxSaid] == true)
 
 UI.mailButton:GetScript("OnClick")(UI.mailButton)
 local first = filled[1]
@@ -91,6 +113,7 @@ suite.check("and nothing more is filled", not ok and why == "Nothing left to mai
 
 env.Fire("MAIL_CLOSED")
 suite.check("leaving the mailbox closes the window it opened", not UI:IsShown())
+suite.check("and the cover comes off", mailboxSaid[#mailboxSaid] == false)
 
 -- A new visit starts again from the first character.
 env.Fire("MAIL_SHOW")
@@ -174,10 +197,49 @@ suite.check("and says so", UI.menu.bank.label:GetText() == "Always bank (now)" a
 UI.menu.decide:GetScript("OnClick")(UI.menu.decide)
 suite.check("Let Butler decide takes it off", ns.db.alwaysBank[401] == nil)
 
+-- Always mail to: the player's characters on this realm and side.
+local names = Errands:Characters()
+suite.check("characters to mail to: same realm and side, not this one",
+    table.concat(names, ",") == "Ana,Bob", table.concat(names, ","))
+UI:ShowMenu({ itemID = 404, name = "Copper Ore" })
+suite.check("the menu offers Always mail to", UI.menu.mail:IsShown())
+UI.menu.mail:GetScript("OnClick")(UI.menu.mail)
+suite.check("which lists them", UI.menu.characters[1]:IsShown()
+    and UI.menu.characters[1].label:GetText() == "Ana" and UI.menu.back:IsShown())
+UI.menu.characters[2]:GetScript("OnClick")(UI.menu.characters[2])
+local choice, to = ns.Verdicts:Choice(404)
+suite.check("a pick puts it on the Always mail list", choice == "mail" and to == "Bob"
+    and ns.db.alwaysMail[404] == "Bob" and not ns.db.alwaysBank[404])
+UI:ShowMenu({ itemID = 404, name = "Copper Ore" })
+suite.check("and the menu says who", UI.menu.mail.label:GetText() == "Always mail to Bob")
+UI:HideMenu()
+local verdict, reason, _, _, extra = ns.Verdicts:Decide({ itemID = 404, count = 1 })
+suite.check("it goes under Mail, to Bob", verdict == "mail" and extra and extra.to == "Bob", reason)
+suite.check("bound to this character it is kept instead",
+    (ns.Verdicts:Decide({ itemID = 404, count = 1, bound = true })) == "keep")
+UI:ShowMenu({ itemID = 405, name = "Bound thing", bound = true })
+suite.check("bound gear is not offered for mail", not UI.menu.mail:IsShown())
+UI:ShowMenu({ itemID = 404, name = "Copper Ore" })
+UI.menu.decide:GetScript("OnClick")(UI.menu.decide)
+suite.check("Let Butler decide takes it off the mail list", ns.db.alwaysMail[404] == nil)
+
+-- At a mailbox with nothing to mail, Butler still takes over.
+_G.BlackthornesTS.Butler.Advise = function() return nil end
+ns.Verdicts:Changed(true)
+ns.Bags:Changed()
+Close()
+env.Fire("MAIL_SHOW")
+suite.check("nothing to mail: the window still comes up", UI:IsShown() and UI.openedFor == "mail")
+suite.check("without a Fill mail button", not UI.mailButton:IsShown())
+env.Fire("MAIL_CLOSED")
+
 -- Typed toggles.
 ns.HandleSlash("bank")
 suite.check("/bbutler bank turns it off", ns.db.openAtBank == false)
 ns.HandleSlash("mailbox")
 suite.check("/bbutler mailbox turns it off", ns.db.openAtMailbox == false)
+
+-- The next suites run in this same Lua, without Tradeskills.
+_G.BlackthornesTS = nil
 
 suite.done()

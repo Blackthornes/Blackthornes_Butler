@@ -36,7 +36,8 @@ kept until `Bags.version` or `Verdicts.version` moves). `Logic/Selling.lua`
 is the Sell button (see the findings file for why it is secure).
 `UI/MainWindow.lua` draws the groups with `Widgets.CreateRowList` (Farmer's,
 with the dark glass rows) and Butler's own right-click menu. Saved and never
-renamed: `alwaysKeep`, `alwaysSell`, `alwaysBank` (`[itemID] = true`), `sellTest`,
+renamed: `alwaysKeep`, `alwaysSell`, `alwaysBank` (`[itemID] = true`),
+`alwaysMail` (`[itemID]` = a character's short name), `sellTest`,
 `openAtVendor`, `openAtMailbox`, `openAtBank` (account), `folded` (per character). Not yet seen in game.
 
 Rules from the plan that hold from the first feature on:
@@ -122,9 +123,21 @@ changes, change `Logic/Everyone.lua` too. Not yet seen in game.
 The plan's next phase (the owner said start, 2026-10-11).
 `Logic/Errands.lua` watches `MAIL_SHOW`/`MAIL_CLOSED` and
 `BANKFRAME_OPENED`/`BANKFRAME_CLOSED`, and the window comes up on Your bags
-when there is something to do there ("Open at a mailbox" `openAtMailbox`,
-"Open at the bank" `openAtBank`, account wide, on by default; `/bbutler
-mailbox` and `/bbutler bank` toggle them), going when it closes.
+at every mailbox, and at the bank when there is something to do there
+("Open at a mailbox" `openAtMailbox`, "Open at the bank" `openAtBank`,
+account wide, on by default; `/bbutler mailbox` and `/bbutler bank` toggle
+them), going when it closes.
+
+Butler takes over the mailbox from Tradeskills' mail panel (the owner
+picked it, 2026-10-11): while Butler's window is up at a mailbox,
+`Errands:TellTradeskills` calls, inside a pcall and only when it changes,
+
+```lua
+_G.BlackthornesTS.Butler:Mailbox(covered)   -- true: its mail panel steps aside; false: it comes back
+```
+
+so closing Butler's window brings Tradeskills' panel back. Keep it stable;
+Tradeskills' `UI/QueueMailPanel.lua` reads it.
 
 - **Fill mail** fills the game's Send Mail page with the Mail group for one
   character a click (most items first; `Errands.filled` per visit), through
@@ -133,6 +146,13 @@ mailbox` and `/bbutler bank` toggle them), going when it closes.
   (`Verdicts:Decide`'s fifth return). The player presses Send; Butler never
   sends, hooks or moves the mail frame. There are no mailbox Take buttons
   (the owner had them removed from Tradeskills; never add them unasked).
+- **Always mail to** (the right-click menu, asked 2026-10-11) puts an item
+  on the player's **Always mail** list for one of their characters
+  (`alwaysMail`, `[itemID]` = short name, account wide, never rename it):
+  it goes under Mail addressed to them, all of it. The characters are
+  Tradeskills' `Holdings()` on the same realm and side
+  (`Errands:Characters`), so the choice shows only with Tradeskills;
+  soulbound items are never offered and are kept if already listed.
 - **Move to bank** puts the Bank group away: a new verdict for the
   player's **Always bank** list (`alwaysBank`, `[itemID] = true`, account
   wide, never rename it; the right-click menu and `reset confirm` cover it).
