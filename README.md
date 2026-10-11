@@ -32,8 +32,14 @@ from vendor prices and the game's own quest marks.
 
   Click a group's heading to fold it; Keep starts folded. Without the other
   addons, Butler sorts by vendor price and the game's quest marks alone.
-- **Right-click** an item to always keep it, always sell it, or let Butler
-  decide again. The lists are account wide.
+- **Right-click** an item to always keep it, always sell it, always bank it,
+  or let Butler decide again. The lists are account wide.
+- **At a mailbox,** the window comes up when something is under Mail, with a
+  **Fill mail** button. Each click fills the game's Send Mail page for one
+  character; you check it and press Send. Needs Blackthornes Tradeskills.
+- **At the bank,** **Move to bank** puts away everything on your Always bank
+  list, and **Take from bank** brings out what your craft queue needs (with
+  Tradeskills). Both move whole stacks.
 - **All characters** lists every item on all your characters in one place,
   with a search box. Each line says who has it and how many in all; click
   it to see each character's bags, bank and mail, and how long ago that was
@@ -92,9 +98,11 @@ inside it. If they differ, the client ignores the folder and says nothing.
 /bbutler settings  open the settings window (so does right-clicking the minimap button)
 /bbutler minimap   show or hide the minimap button
 /bbutler vendor    turn the window coming up at a vendor on or off
+/bbutler mailbox   turn the window coming up at a mailbox on or off
+/bbutler bank      turn the window coming up at the bank on or off
 /bbutler selltest  at a vendor, sell your cheapest grey to test whether Butler may sell 12 a click
-/bbutler lists     show your Always keep and Always sell lists
-/bbutler reset confirm   empty both lists (typed only)
+/bbutler lists     show your Always keep, Always sell and Always bank lists
+/bbutler reset confirm   empty all three lists (typed only)
 ```
 
 The settings window is also under the game's Options > AddOns. Hover a

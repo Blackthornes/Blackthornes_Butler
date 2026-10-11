@@ -34,8 +34,8 @@ local TITLE = "Blackthornes Butler"
 -- The pages along the top (UI/SettingsPages.lua), as Tradeskills' Settings
 -- tab has them. Every setting kept its saved name; only its place moved.
 local PAGES = {
-    { key = "selling", text = "SELLING",
-      tip = "Selling at a vendor, and your Always keep and Always sell lists" },
+    { key = "selling", text = "ERRANDS",
+      tip = "Selling at a vendor, mail and the bank, and your Always keep, sell and bank lists" },
     { key = "general", text = "GENERAL",
       tip = "The minimap button, window position, text size and debug output" },
 }
@@ -231,10 +231,26 @@ function SettingsUI:BuildPages()
     controls.sellTest = testButton
     controls.sellTestRow = testRow
 
+    pages:Section("selling", 1, "MAIL AND BANK")
+
+    local mailRow = pages:Row("selling", 1, "Open at a mailbox",
+        "The Butler window comes up at a mailbox when something is under Mail, with Fill mail at its foot. It fills the game's Send Mail page for one character a click; you press Send. Needs Blackthornes Tradeskills. Also /bbutler mailbox.")
+    controls.openAtMailbox = Widgets.CreateCheckbox(mailRow, "On", function(checked)
+        ns.db.openAtMailbox = checked
+    end, true)
+    controls.openAtMailbox:SetPoint("TOPLEFT", CONTROL_X, -2)
+
+    local bankRow = pages:Row("selling", 1, "Open at the bank",
+        "The Butler window comes up at the bank when there is something to move: Move to bank puts your Always bank items away, and Take from bank brings out what your craft queue needs. Also /bbutler bank.")
+    controls.openAtBank = Widgets.CreateCheckbox(bankRow, "On", function(checked)
+        ns.db.openAtBank = checked
+    end, true)
+    controls.openAtBank:SetPoint("TOPLEFT", CONTROL_X, -2)
+
     pages:Section("selling", 2, "YOUR LISTS")
 
-    local _, listsButton = CommandRow(pages, "selling", 2, "Keep and sell",
-        "Right-click an item in the Butler window to always keep it or always sell it. This lists both in chat. To empty them, type /bbutler reset confirm. Same as /bbutler lists.",
+    local _, listsButton = CommandRow(pages, "selling", 2, "Keep, sell, bank",
+        "Right-click an item in the Butler window to always keep it, always sell it or always bank it. This lists all three in chat. To empty them, type /bbutler reset confirm. Same as /bbutler lists.",
         "List them", "lists")
     controls.lists = listsButton
 
@@ -317,6 +333,8 @@ function SettingsUI:Refresh()
     local controls = self.controls
     controls.minimap:SetChecked(not ns.db.minimapHidden)
     controls.openAtVendor:SetChecked(ns.db.openAtVendor ~= false)
+    controls.openAtMailbox:SetChecked(ns.db.openAtMailbox ~= false)
+    controls.openAtBank:SetChecked(ns.db.openAtBank ~= false)
     controls.debug:SetChecked(ns.db.debug == true)
     controls.textSize:Sync()
     controls.windowStyle:Sync()

@@ -36,8 +36,8 @@ kept until `Bags.version` or `Verdicts.version` moves). `Logic/Selling.lua`
 is the Sell button (see the findings file for why it is secure).
 `UI/MainWindow.lua` draws the groups with `Widgets.CreateRowList` (Farmer's,
 with the dark glass rows) and Butler's own right-click menu. Saved and never
-renamed: `alwaysKeep`, `alwaysSell` (`[itemID] = true`), `sellTest`,
-`openAtVendor` (account), `folded` (per character). Not yet seen in game.
+renamed: `alwaysKeep`, `alwaysSell`, `alwaysBank` (`[itemID] = true`), `sellTest`,
+`openAtVendor`, `openAtMailbox`, `openAtBank` (account), `folded` (per character). Not yet seen in game.
 
 Rules from the plan that hold from the first feature on:
 
@@ -116,6 +116,35 @@ burst. Search filters the built list. The Sell button stays off in this
 view, and a vendor opens the window on Your bags. Tradeskills'
 `CLAUDE.md` lists `Holdings` under "What Butler calls here"; if it
 changes, change `Logic/Everyone.lua` too. Not yet seen in game.
+
+## At the mailbox and the bank
+
+The plan's next phase (the owner said start, 2026-10-11).
+`Logic/Errands.lua` watches `MAIL_SHOW`/`MAIL_CLOSED` and
+`BANKFRAME_OPENED`/`BANKFRAME_CLOSED`, and the window comes up on Your bags
+when there is something to do there ("Open at a mailbox" `openAtMailbox`,
+"Open at the bank" `openAtBank`, account wide, on by default; `/bbutler
+mailbox` and `/bbutler bank` toggle them), going when it closes.
+
+- **Fill mail** fills the game's Send Mail page with the Mail group for one
+  character a click (most items first; `Errands.filled` per visit), through
+  `_G.BlackthornesTS.Butler:FillMail(name, items)` (Tradeskills'
+  `QueueMail:Fill`). Mail rows carry `mailTo` and `mailCount`
+  (`Verdicts:Decide`'s fifth return). The player presses Send; Butler never
+  sends, hooks or moves the mail frame. There are no mailbox Take buttons
+  (the owner had them removed from Tradeskills; never add them unasked).
+- **Move to bank** puts the Bank group away: a new verdict for the
+  player's **Always bank** list (`alwaysBank`, `[itemID] = true`, account
+  wide, never rename it; the right-click menu and `reset confirm` cover it).
+- **Take from bank** brings out what this character's own queued crafts
+  want, `_G.BlackthornesTS.Butler:FromBank()`, smallest stacks first until
+  each count is covered.
+
+Both bank moves use `C_Container.UseContainerItem` (the selling test found
+it works from addon code), one stack every `Errands.STEP`, each slot read
+again first; a stack that does not move means the other side is full, and
+the run stops and says so. Nothing in combat. The bank is read only for a
+click. Not yet seen in game.
 
 ## How this repo was set up
 

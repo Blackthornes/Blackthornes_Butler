@@ -143,7 +143,7 @@ suite.check("the command buttons run their commands",
 -- Every command has a button or a control here, apart from the one that
 -- deletes the player's lists, which stays typed (a house rule).
 local covered = { window = true, all = true, probe = true, help = true, selltest = true, lists = true,
-    vendor = true, minimap = true, settings = true, reset = true }
+    vendor = true, mailbox = true, bank = true, minimap = true, settings = true, reset = true }
 for _, name in ipairs(ns.commandOrder) do
     suite.check("/bbutler " .. name .. " has a place in Settings", covered[name] == true)
 end

@@ -4,6 +4,7 @@
 -- The first rule that applies wins, and keeping always beats selling:
 --
 --   1. On the player's Always keep list            Keep
+--      ... or Always bank list                     Bank
 --   2. A quest item, or one that starts one        Keep
 --   3. A vendor won't buy it                       Keep
 --   4. On the player's Always sell list            Sell
@@ -24,9 +25,12 @@
 -- player, and neither is soulbound green or better gear: it can only be
 -- disenchanted or looked at.
 --
--- The Always keep and Always sell lists are the player's own choices,
--- account wide, by item ID: BlackthornesButlerDB.alwaysKeep and .alwaysSell
--- ([itemID] = true). Never rename them.
+-- The Always keep, Always sell and Always bank lists are the player's own
+-- choices, account wide, by item ID: BlackthornesButlerDB.alwaysKeep,
+-- .alwaysSell and .alwaysBank ([itemID] = true). Never rename them.
+--
+-- A Mail row also says who it goes to and how many (row.mailTo,
+-- row.mailCount), for the Fill mail button (Logic/Errands.lua).
 
 local _, ns = ...
 
@@ -36,13 +40,14 @@ local Items = ns.Items
 local Sisters = ns.Sisters
 
 -- The order the groups show in: what to do first at the top.
-Verdicts.ORDER = { "sell", "auction", "disenchant", "mail", "look", "keep" }
+Verdicts.ORDER = { "sell", "auction", "disenchant", "mail", "bank", "look", "keep" }
 
 Verdicts.LABELS = {
     sell = "Sell",
     auction = "Auction",
     disenchant = "Disenchant",
     mail = "Mail",
+    bank = "Bank",
     look = "Look at it",
     keep = "Keep",
 }
@@ -56,7 +61,7 @@ Verdicts.SLOW = 0.75
 -- so kept answers and the drawn list are known to be stale.
 Verdicts.version = 0
 
--- [link] = { verdict, reason, unit }, for Verdicts.version.
+-- [link] = { verdict, reason, unit, extra }, for Verdicts.version.
 local memo, memoVersion = {}, 0
 
 --------------------------------------------------------------------------------
@@ -69,20 +74,22 @@ local function List(name)
     return ns.db[name]
 end
 
---- "keep", "sell" or nil: what the player said about this item.
+--- "keep", "sell", "bank" or nil: what the player said about this item.
 function Verdicts:Choice(itemID)
     if not itemID then return nil end
     if List("alwaysKeep")[itemID] then return "keep" end
     if List("alwaysSell")[itemID] then return "sell" end
+    if List("alwaysBank")[itemID] then return "bank" end
     return nil
 end
 
---- Put an item on the Always keep or Always sell list, or take it off both
---- (`choice` nil) so Butler decides again.
+--- Put an item on the Always keep, Always sell or Always bank list, or take
+--- it off all three (`choice` nil) so Butler decides again.
 function Verdicts:SetChoice(itemID, choice)
     if not itemID then return end
     List("alwaysKeep")[itemID] = (choice == "keep") or nil
     List("alwaysSell")[itemID] = (choice == "sell") or nil
+    List("alwaysBank")[itemID] = (choice == "bank") or nil
     self:Changed(true)
 end
 
@@ -95,30 +102,35 @@ local function Each(unit)
     return "Vendor " .. Items.FormatMoney(unit) .. " each"
 end
 
---- The verdict for one carried item, why, and what a vendor pays for one.
---- `entry` is a slot from Bags (itemID, link, quality, noValue, quest).
+--- The verdict for one carried item, why, what a vendor pays for one, and
+--- for Mail { to, count }. `entry` is a slot from Bags (itemID, link,
+--- quality, noValue, quest).
 function Verdicts:Judge(entry)
     if memoVersion ~= self.version then
         memo, memoVersion = {}, self.version
     end
     local key = entry.link or entry.itemID
     local known = memo[key]
-    if known then return known[1], known[2], known[3] end
+    if known then return known[1], known[2], known[3], known[4] end
 
-    local verdict, reason, unit, final = self:Decide(entry)
+    local verdict, reason, unit, final, extra = self:Decide(entry)
     -- An answer that waits on the client loading the item is asked again.
-    if final then memo[key] = { verdict, reason, unit } end
-    return verdict, reason, unit
+    if final then memo[key] = { verdict, reason, unit, extra } end
+    return verdict, reason, unit, extra
 end
 
 --- The rules above, in order. The fourth return says whether the answer
---- will hold (false while the price is still loading).
+--- will hold (false while the price is still loading); the fifth is who a
+--- Mail row goes to and how many ({ to, count }).
 function Verdicts:Decide(entry)
     local itemID = entry.itemID
     local choice = self:Choice(itemID)
 
     if choice == "keep" then
         return "keep", "On your Always keep list", nil, true
+    end
+    if choice == "bank" then
+        return "bank", "On your Always bank list", Items:SellPrice(itemID), true
     end
 
     if entry.quest == "starts" then
@@ -141,8 +153,8 @@ function Verdicts:Decide(entry)
     end
 
     local said = Sisters:AskAll(entry)
-    local verdict, reason, worth = self:Kept(said)
-    if verdict then return verdict, reason, worth or unit, unit ~= nil end
+    local verdict, reason, worth, extra = self:Kept(said)
+    if verdict then return verdict, reason, worth or unit, unit ~= nil, extra end
 
     if unit == nil then
         return "look", "Still loading from the game", nil, false
@@ -152,12 +164,13 @@ function Verdicts:Decide(entry)
         return "sell", "Grey, vendor only", unit, true
     end
 
-    verdict, reason, worth = self:Best(entry, unit, said)
-    return verdict, reason, worth, true
+    verdict, reason, worth, extra = self:Best(entry, unit, said)
+    return verdict, reason, worth, true, extra
 end
 
 --- Steps 5 to 8: a sister says to keep the item (or mail it to the alt who
---- needs it). Returns verdict, reason and what one is worth, or nil.
+--- needs it). Returns verdict, reason, what one is worth and, for Mail,
+--- { to, count }; or nil.
 function Verdicts:Kept(said)
     local Number, String, True = Sisters.Number, Sisters.String, Sisters.True
 
@@ -189,7 +202,7 @@ function Verdicts:Kept(said)
     if mailTo then
         local count = Number(ts, "mailCount")
         return "mail", count and ("Mail %d to %s for their crafts"):format(count, mailTo)
-            or ("Mail to %s for their crafts"):format(mailTo)
+            or ("Mail to %s for their crafts"):format(mailTo), nil, { to = mailTo, count = count }
     end
 
     local pets = said.pets
@@ -233,7 +246,7 @@ function Verdicts:Best(entry, unit, said)
             return "disenchant", ("Disenchant, about %s"):format(Items.FormatMoney(disenchant)), disenchant
         end
         return "mail", ("Mail to %s to disenchant, about %s"):format(enchanter, Items.FormatMoney(disenchant)),
-            disenchant
+            disenchant, { to = enchanter }
     end
 
     if best == "auction" then
@@ -285,7 +298,7 @@ function Verdicts:Groups()
     end
 
     for _, entry in pairs(ns.Bags.slots) do
-        local verdict, reason, unit = self:Judge(entry)
+        local verdict, reason, unit, extra = self:Judge(entry)
         local group = byVerdict[verdict]
         local key = verdict .. "|" .. tostring(entry.link or entry.itemID)
         local row = rowsByKey[key]
@@ -294,6 +307,7 @@ function Verdicts:Groups()
                 type = "item", verdict = verdict, reason = reason, unit = unit,
                 itemID = entry.itemID, link = entry.link, icon = entry.icon,
                 quality = entry.quality, bound = entry.bound,
+                mailTo = extra and extra.to, mailCount = extra and extra.count,
                 name = Items.NameFromLink(entry.link) or ("item " .. tostring(entry.itemID)),
                 count = 0, slots = {},
             }
@@ -386,10 +400,11 @@ local function PrintList(name, title)
     ns.PrintRaw(("  |c%s%s (%d):|r %s"):format(ns.COLORS.muted, title, #ids, table.concat(names, ", ")))
 end
 
-ns.RegisterCommand("lists", "show your Always keep and Always sell lists", function()
+ns.RegisterCommand("lists", "show your Always keep, Always sell and Always bank lists", function()
     ns.Print("your lists (right-click a row in the Butler window to change them)")
     PrintList("alwaysKeep", "Always keep")
     PrintList("alwaysSell", "Always sell")
+    PrintList("alwaysBank", "Always bank")
 end)
 
 ns.RegisterCommand("vendor", "turn the Butler window coming up at a vendor on or off", function()
@@ -400,12 +415,12 @@ end)
 
 -- Deletes the player's choices, so typed only, with "confirm" (a house
 -- rule: no button deletes data).
-ns.RegisterCommand("reset", "empty your Always keep and Always sell lists (type: reset confirm)", function(rest)
+ns.RegisterCommand("reset", "empty your Always keep, Always sell and Always bank lists (type: reset confirm)", function(rest)
     if rest ~= "confirm" then
-        ns.Print("this empties your Always keep and Always sell lists. To do it, type /bbutler reset confirm")
+        ns.Print("this empties your Always keep, Always sell and Always bank lists. To do it, type /bbutler reset confirm")
         return
     end
-    ns.db.alwaysKeep, ns.db.alwaysSell = {}, {}
+    ns.db.alwaysKeep, ns.db.alwaysSell, ns.db.alwaysBank = {}, {}, {}
     Verdicts:Changed(true)
-    ns.Print("your Always keep and Always sell lists are empty. Butler decides every item again.")
+    ns.Print("your Always keep, Always sell and Always bank lists are empty. Butler decides every item again.")
 end)
