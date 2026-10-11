@@ -284,8 +284,10 @@ hunter can use (`isUsable`, its level), most damage first (the tooltip's
 "Adds X damage per second", else item level), and how many whole lots fit
 the bag's empty slots and the room left in its stacks of the same ammo.
 The row's Fill button buys them, one `BuyMerchantItem(index)` (one lot)
-every `Ammo.GAP`, each re-checked first; never below the gold fund's
-amount for the character (fewer lots, said so, or no button). A bag that
+every `Ammo.GAP`, each re-checked first; fewer lots when the purse is
+short (said so), no button when it can't pay for one. The gold fund's
+amount is only for mailing gold, never for spending (the owner,
+2026-10-11), so Ammo and anything else that buys ignore it. A bag that
 doesn't match the weapon, or no ammo bag, gets a row that says so and no
 button; a full bag gets no row. `Ammo:Keeps` keeps the weapon's own ammo
 out of Sell (step 4b). No setting: it shows only where it can help. Not
