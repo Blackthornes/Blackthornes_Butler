@@ -115,6 +115,25 @@ env.Fire("MAIL_CLOSED")
 suite.check("leaving the mailbox closes the window it opened", not UI:IsShown())
 suite.check("and the cover comes off", mailboxSaid[#mailboxSaid] == false)
 
+-- Already open when the mailbox opens, it still goes when the player leaves.
+UI:Show("bags")
+env.Fire("MAIL_SHOW")
+suite.check("open before the mailbox: it takes the mailbox", UI.openedFor == "mail")
+env.Fire("MAIL_CLOSED")
+suite.check("and goes when the mailbox closes", not UI:IsShown())
+
+-- Walking away can end the interaction without MAIL_CLOSED.
+env.Fire("MAIL_SHOW")
+suite.check("the mailbox brings it up again", UI:IsShown())
+env.Fire("PLAYER_INTERACTION_MANAGER_FRAME_HIDE", 17)
+suite.check("walking away from the mailbox closes it", not UI:IsShown() and not Errands.mailOpen)
+env.Fire("MAIL_CLOSED")
+suite.check("and a MAIL_CLOSED after that changes nothing", not UI:IsShown())
+UI:Show("bags")
+env.Fire("PLAYER_INTERACTION_MANAGER_FRAME_HIDE", 5)
+suite.check("another interaction ending leaves it be", UI:IsShown())
+Close()
+
 -- A new visit starts again from the first character.
 env.Fire("MAIL_SHOW")
 suite.check("a new visit starts again", UI.mailButton.label:GetText() == "Fill mail to Bob")
@@ -222,6 +241,65 @@ suite.check("bound gear is not offered for mail", not UI.menu.mail:IsShown())
 UI:ShowMenu({ itemID = 404, name = "Copper Ore" })
 UI.menu.decide:GetScript("OnClick")(UI.menu.decide)
 suite.check("Let Butler decide takes it off the mail list", ns.db.alwaysMail[404] == nil)
+
+-- Never a mail to the character playing (a player found one, 2026-10-11):
+-- the Always mail list is account wide, so it can name this character, and
+-- an older Tradeskills could too.
+ns.Verdicts:SetChoice(404, "mail", "Me")
+verdict, reason = ns.Verdicts:Decide({ itemID = 404, count = 1 })
+suite.check("Always mail to the character you're on keeps it", verdict == "keep"
+    and reason:find("character you're on", 1, true) ~= nil, reason)
+ns.Verdicts:SetChoice(404, nil)
+local advise = _G.BlackthornesTS.Butler.Advise
+_G.BlackthornesTS.Butler.Advise = function(_, id)
+    if id == 401 then return { mailTo = "Me", mailCount = 1 } end
+    if id == 402 then return { disenchant = 500, canDisenchant = false, enchanter = "Me" } end
+end
+suite.check("a craft mail to the character you're on is no mail",
+    (ns.Verdicts:Decide({ itemID = 401, count = 1, link = "item:401" })) ~= "mail")
+suite.check("nor a disenchant mail", (ns.Verdicts:Decide({ itemID = 402, count = 1, link = "item:402" })) ~= "mail")
+_G.BlackthornesTS.Butler.Advise = advise
+
+-- The chat line names the full name Tradeskills filled in.
+_G.BlackthornesTS.Butler.FillMail = function(_, name) return true, nil, name .. " Smith" end
+ns.Verdicts:Changed(true)
+env.Fire("MAIL_SHOW")
+ok, why = Errands:FillMail()
+suite.check("the chat line has the full name", ok and why:find(" Smith: check it", 1, true) ~= nil, why)
+_G.BlackthornesTS.Butler.FillMail = fillMail
+env.Fire("MAIL_CLOSED")
+
+-- Names are never shortened (the owner's rule, 2026-10-11). A choice saved
+-- as "Bob S." before then is read as the full name, and the menu grows to
+-- fit a long one.
+local holdings = _G.BlackthornesTS.Butler.Holdings
+_G.BlackthornesTS.Butler.Holdings = function()
+    return {
+        { key = "me", short = "Me Myself", realm = "Here", faction = "Horde", isCurrent = true },
+        { key = "bob", short = "Bob Stonebreakerson", realm = "Here", faction = "Horde" },
+        { key = "bob2", short = "Bob Ashenmoor", realm = "Here", faction = "Horde" },
+    }
+end
+ns.Verdicts:Changed(true)
+ns.db.alwaysMail[404] = "Bob S."
+local _, savedTo = ns.Verdicts:Choice(404)
+suite.check("an old short name is read as the full one", savedTo == "Bob Stonebreakerson", savedTo)
+suite.check("and is left as saved", ns.db.alwaysMail[404] == "Bob S.")
+ns.db.alwaysMail[404] = "Me M."
+suite.check("an old short name for the character playing is kept, not mailed",
+    (ns.Verdicts:Decide({ itemID = 404, count = 1 })) == "keep")
+ns.db.alwaysMail[404] = "Bob S."
+UI:ShowMenu({ itemID = 404, name = "Copper Ore" })
+local menuWidth = UI.menu:GetWidth()
+suite.check("the menu is as wide as its longest button",
+    menuWidth >= UI.menu.mail:GetWidth() + 16 and UI.menu.keep:GetWidth() == UI.menu.mail:GetWidth(),
+    menuWidth)
+UI.menu.mail:GetScript("OnClick")(UI.menu.mail)
+suite.check("and the characters page too", UI.menu:GetWidth() >= UI.menu.characters[1]:GetWidth() + 16)
+UI:HideMenu()
+ns.db.alwaysMail[404] = nil
+_G.BlackthornesTS.Butler.Holdings = holdings
+ns.Verdicts:Changed(true)
 
 -- At a mailbox with nothing to mail, Butler still takes over.
 _G.BlackthornesTS.Butler.Advise = function() return nil end

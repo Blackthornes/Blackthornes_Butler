@@ -558,6 +558,7 @@ function UI:ShowMenu(data, stay)
 
     local rows = 3 + (canMail and 1 or 0) + (choice ~= nil and 1 or 0)
     menu:SetHeight(40 + rows * MENU_ROW)
+    UI.FitMenu(menu, { menu.keep, menu.sell, menu.bank, menu.mail, menu.decide })
 
     if stay and menu:IsShown() then return end
     local x, y = 0, 0
@@ -569,6 +570,21 @@ function UI:ShowMenu(data, stay)
     menu:ClearAllPoints()
     menu:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT", x - 10, y + 10)
     menu:Show()
+end
+
+--- The menu as wide as its widest button or title, so a long name (never
+--- shortened) stays inside it; every shown button takes that width.
+function UI.FitMenu(menu, buttons)
+    local width = MENU_WIDTH - 16
+    local title = menu.title and menu.title:GetText()
+    if type(title) == "string" then width = math.max(width, Theme.TextWidth("small", title) or 0) end
+    for _, button in ipairs(buttons) do
+        if button:IsShown() then width = math.max(width, button:GetWidth() or 0) end
+    end
+    for _, button in ipairs(buttons) do
+        if button:IsShown() then button:SetWidth(width) end
+    end
+    menu:SetWidth(width + 16)
 end
 
 --- The characters page: pick who this item always goes to.
@@ -618,6 +634,9 @@ function UI:ShowMailMenu()
     end
     menu.back:Show()
     menu:SetHeight(40 + (#names + 1) * MENU_ROW)
+    local buttons = { menu.back }
+    for index = 1, #names do buttons[#buttons + 1] = menu.characters[index] end
+    UI.FitMenu(menu, buttons)
 end
 
 function UI:HideMenu()
@@ -808,6 +827,11 @@ end
 --- when the player wants that and there is something to do there.
 function UI:AtPlace(place)
     if self:IsShown() then
+        -- Already up at a mailbox: Butler is the mailbox's window now, so it
+        -- goes when the mailbox does (a player found it left up, 2026-10-11).
+        if place == "mail" and not self.openedFor and not self.openedByVendor then
+            self.openedFor = place
+        end
         ns.Errands:TellTradeskills()
         return self:UpdateErrands()
     end

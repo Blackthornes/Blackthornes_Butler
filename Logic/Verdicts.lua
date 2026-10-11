@@ -91,7 +91,11 @@ function Verdicts:Choice(itemID)
     if List("alwaysSell")[itemID] then return "sell" end
     if List("alwaysBank")[itemID] then return "bank" end
     local to = List("alwaysMail")[itemID]
-    if type(to) == "string" and to ~= "" then return "mail", to end
+    if type(to) == "string" and to ~= "" then
+        -- Saved before names were whole ("Ana S."): read as the full name.
+        if ns.Errands and ns.Errands.FullName then to = ns.Errands:FullName(to) end
+        return "mail", to
+    end
     return nil
 end
 
@@ -148,7 +152,11 @@ function Verdicts:Decide(entry)
         return "bank", "On your Always bank list", Items:SellPrice(itemID), true
     end
     if choice == "mail" then
-        -- Soulbound can't go in the mail, whatever the list says.
+        -- Soulbound can't go in the mail, whatever the list says, and the
+        -- list is account wide, so it can name the character playing.
+        if mailTo == self:Playing() then
+            return "keep", ("On your Always mail list for %s, the character you're on"):format(mailTo), nil, true
+        end
         if entry.bound then
             return "keep", ("Soulbound, so it can't be mailed to %s"):format(mailTo), nil, true
         end
@@ -191,6 +199,19 @@ function Verdicts:Decide(entry)
     return verdict, reason, worth, true, extra
 end
 
+--- The short name of the character playing, as Tradeskills gives it (the
+--- way Always mail and mail rows name characters), read once per
+--- Verdicts.version (its last name can arrive after login). nil without
+--- Tradeskills. Nothing is ever mailed to it.
+local playing, playingVersion
+function Verdicts:Playing()
+    if playingVersion ~= self.version then
+        playingVersion = self.version
+        playing = ns.Errands and ns.Errands.PlayingName and ns.Errands:PlayingName() or nil
+    end
+    return playing
+end
+
 --- Steps 5 to 8: a sister says to keep the item (or mail it to the alt who
 --- needs it). Returns verdict, reason, what one is worth and, for Mail,
 --- { to, count }; or nil.
@@ -222,6 +243,8 @@ function Verdicts:Kept(said)
         return "keep", ("Your craft queue needs %d"):format(queued)
     end
     local mailTo = String(ts, "mailTo")
+    -- An older Tradeskills could name the character playing.
+    if mailTo and mailTo == Verdicts:Playing() then mailTo = nil end
     if mailTo then
         local count = Number(ts, "mailCount")
         return "mail", count and ("Mail %d to %s for their crafts"):format(count, mailTo)
@@ -299,6 +322,7 @@ function Verdicts:Best(entry, unit, said)
     local disenchant = Number(ts, "disenchant")
     local canDisenchant = True(ts, "canDisenchant")
     local enchanter = not bound and String(ts, "enchanter") or nil
+    if enchanter and enchanter == self:Playing() then enchanter = nil end
     if disenchant and not canDisenchant and not enchanter then disenchant = nil end
 
     -- Step 11: worth less than the player's Sell below amount, judged on

@@ -127,7 +127,11 @@ The plan's next phase (the owner said start, 2026-10-11).
 at every mailbox, and at the bank when there is something to do there
 ("Open at a mailbox" `openAtMailbox`, "Open at the bank" `openAtBank`,
 account wide, on by default; `/bbutler mailbox` and `/bbutler bank` toggle
-them), going when it closes.
+them), going when it closes. A window already up when a mailbox opens
+belongs to the mailbox too, and walking away is also heard as
+`PLAYER_INTERACTION_MANAGER_FRAME_HIDE` (mail or banker), in case the
+client says that without `MAIL_CLOSED` (a player found the window left up,
+2026-10-11).
 
 Butler takes over the mailbox from Tradeskills' mail panel (the owner
 picked it, 2026-10-11): while Butler's window is up at a mailbox,
@@ -147,9 +151,17 @@ Tradeskills' `UI/QueueMailPanel.lua` reads it.
   (`Verdicts:Decide`'s fifth return). The player presses Send; Butler never
   sends, hooks or moves the mail frame. There are no mailbox Take buttons
   (the owner had them removed from Tradeskills; never add them unasked).
+  Nothing is ever mailed to the character playing (a player found Fill
+  mail addressed to themselves, 2026-10-11): `Verdicts:Playing` is its
+  short name from `Holdings()` (`Errands:PlayingName`), and an Always mail
+  entry, a `mailTo` or an `enchanter` naming it is kept instead.
+  Tradeskills' `FillMail` refuses it too, and its third return, the full
+  name filled in, is what the chat line says.
 - **Always mail to** (the right-click menu, asked 2026-10-11) puts an item
   on the player's **Always mail** list for one of their characters
-  (`alwaysMail`, `[itemID]` = short name, account wide, never rename it):
+  (`alwaysMail`, `[itemID]` = the character's full name, account wide,
+  never rename it; one saved as "Ana S." before names were whole is read
+  as the full name by `Errands:FullName`, and left as saved):
   it goes under Mail addressed to them, all of it. The characters are
   Tradeskills' `Holdings()` on the same realm and side
   (`Errands:Characters`), so the choice shows only with Tradeskills;
@@ -380,6 +392,12 @@ section (the owner, 2026-10-10): they are not changes to the addon.
   adds saved variables, a WTF folder, `keys.txt` or a `.env` file. It is
   the same in every repo (the owner asked 2026-10-10); a fix to it belongs
   in all of them.
+- **Never shorten a character's last name** (the owner, 2026-10-11:
+  "they must be included in WoW Forever"). Forever names are first and
+  last together, so every place a character is named (menus, buttons,
+  chat lines, lists, the mail's To line) shows the whole name, made to fit
+  by growing or wrapping, never "Bob B." or the first name alone.
+  Tradeskills' `Recipes:GetShortCharacterName` returns the full name now.
 - **Forever is not retail for classes either.** The owner: "keep in mind this is
   WoW: Forever." Hunters have classic-style talent trees, held on Forever in
   one trait tree per class (see Equipment's findings). Never assume a retail
