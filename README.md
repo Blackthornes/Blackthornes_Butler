@@ -37,6 +37,12 @@ from vendor prices and the game's own quest marks.
 - **Right-click** an item to always keep it, always sell it, always bank it,
   always mail it to one of your characters, or let Butler decide again. The
   lists are account wide.
+- **It learns from you.** Buy back something Butler sold and it keeps it
+  from then on. Sell an item yourself at a vendor on two visits and it goes
+  under Sell. Mail an item to the same one of your characters twice and it
+  goes under Mail to them. Your own right-click choices always win, and
+  right-click can forget what it learned. "Learn from what you do" in
+  Settings turns it off.
 - **Sell below** (Settings, or `/bbutler sellbelow 50s`): set an amount
   and anything worth less than it, at the most it could fetch from a
   vendor, the auction house or a disenchant, goes under Sell. Quest items,

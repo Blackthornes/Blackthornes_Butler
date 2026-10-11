@@ -30,7 +30,8 @@ local APIS = {
     "C_Item.GetItemInfo", "GetItemInfo", "C_Item.GetItemInfoInstant", "GetItemInfoInstant",
     "C_Item.RequestLoadItemDataByID", "C_Item.IsBound", "C_TooltipInfo.GetBagItem",
     "C_MerchantFrame.IsSellAllJunkEnabled", "C_MerchantFrame.SellAllJunkItems",
-    "GetNumBuybackItems", "GetBuybackItemInfo", "BuybackItem",
+    "GetNumBuybackItems", "GetBuybackItemInfo", "GetBuybackItemLink", "BuybackItem",
+    "SendMail", "hooksecurefunc",
     "SetSendMailShowing", "ClickSendMailItemButton", "GetSendMailItem",
     "C_Bank.CanUseBank", "C_QuestLog.GetNumQuestLogEntries",
 }

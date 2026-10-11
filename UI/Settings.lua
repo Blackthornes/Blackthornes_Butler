@@ -324,8 +324,16 @@ function SettingsUI:BuildPages()
 
     pages:Section("selling", 2, "YOUR LISTS")
 
+    local learnRow = pages:Row("selling", 2, "Learn from what you do",
+        "Butler watches what you do anyway and remembers it: buy back something it sold and it keeps it from then on; sell an item yourself at a vendor on two visits and it goes under Sell; mail an item to the same one of your characters twice and it goes under Mail to them. Your own right-click choices always win, and right-click shows Forget what Butler learned. Nothing is sold or sent without your click.")
+    controls.learn = Widgets.CreateCheckbox(learnRow, "On", function(checked)
+        ns.db.learn = checked
+        ns.Verdicts:Changed(true)
+    end)
+    controls.learn:SetPoint("TOPLEFT", CONTROL_X, -2)
+
     local _, listsButton = CommandRow(pages, "selling", 2, "Keep, sell, bank, mail",
-        "Right-click an item in the Butler window to always keep it, sell it, bank it or mail it to one of your characters. This lists all four in chat. To empty them, type /bbutler reset confirm. Same as /bbutler lists.",
+        "Right-click an item in the Butler window to always keep it, sell it, bank it or mail it to one of your characters. This lists all four in chat, and what Butler learned from you. To empty them, type /bbutler reset confirm. Same as /bbutler lists.",
         "List them", "lists")
     controls.lists = listsButton
 
@@ -459,6 +467,7 @@ function SettingsUI:Refresh()
     controls.openAtMailbox:SetChecked(ns.db.openAtMailbox ~= false)
     controls.openAtBank:SetChecked(ns.db.openAtBank ~= false)
     controls.freeSpace:SetChecked(ns.db.freeSpace ~= false)
+    controls.learn:SetChecked(ns.db.learn ~= false)
     controls.debug:SetChecked(ns.db.debug == true)
     controls.sellBelow:SetValue(ns.Verdicts:SellBelow() or 0)
     controls.goldMinimum:SetValue(ns.Funds:Minimum() or 0)
