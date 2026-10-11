@@ -307,8 +307,13 @@ local DEFAULTS = {
     -- vendor closes.
     openAtVendor = true,
 
+    -- And at a mailbox or the bank, when there is something to mail or
+    -- move there (Logic/Errands.lua), going when it closes.
+    openAtMailbox = true,
+    openAtBank = true,
+
     -- Also kept here, never renamed (made when first needed, so not given
-    -- defaults): alwaysKeep and alwaysSell ([itemID] = true, the player's
+    -- defaults): alwaysKeep, alwaysSell and alwaysBank ([itemID] = true, the player's
     -- right-click choices) and sellTest (what /bbutler selltest found).
 }
 

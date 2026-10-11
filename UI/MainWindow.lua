@@ -48,6 +48,10 @@ local FOOT = 40
 UI.SELL_INSET_X = PADDING
 UI.SELL_INSET_Y = 9
 
+-- The mailbox and bank buttons' widths; Fill mail carries a name.
+local ERRAND_WIDTH = 140
+local MAIL_WIDTH = 180
+
 -- The game's item quality colours.
 local QUALITY = {
     [0] = { 0.616, 0.616, 0.616 },
@@ -112,6 +116,7 @@ function UI:Build()
     frame:SetScript("OnHide", function()
         UI.dragging = false
         UI.openedByVendor = false
+        UI.openedFor = nil
         UI:HideMenu()
         if ns.Selling then ns.Selling:Update() end
     end)
@@ -161,6 +166,31 @@ function UI:Build()
     footer:SetPoint("BOTTOMLEFT", PADDING, 14)
     footer:SetPoint("RIGHT", frame, "RIGHT", -(PADDING + 90), 0)
     self.footer = footer
+
+    -- At a mailbox or the bank (Logic/Errands.lua): plain buttons in the
+    -- Sell button's place, which only shows at a vendor.
+    local function Run(fn)
+        return function()
+            local _, message = fn(ns.Errands)
+            if message then ns.Print(message) end
+        end
+    end
+    self.mailButton = Widgets.CreateButton(frame, "Fill mail", Run(ns.Errands.FillMail),
+        { width = MAIL_WIDTH, height = 24, primary = true })
+    self.mailButton:SetPoint("BOTTOMRIGHT", -UI.SELL_INSET_X, UI.SELL_INSET_Y)
+    self.mailButton.tooltipText = "Fills the game's Send Mail page. Check it, then press Send."
+    self.mailButton:Hide()
+
+    self.bankButton = Widgets.CreateButton(frame, "Move to bank", Run(ns.Errands.MoveToBank),
+        { width = ERRAND_WIDTH, height = 24, primary = true })
+    self.bankButton:SetPoint("BOTTOMRIGHT", -UI.SELL_INSET_X, UI.SELL_INSET_Y)
+    self.bankButton.tooltipText = "Puts your Always bank items in the bank, a stack at a time"
+    self.bankButton:Hide()
+
+    self.takeButton = Widgets.CreateButton(frame, "Take from bank", Run(ns.Errands.TakeFromBank),
+        { width = ERRAND_WIDTH, height = 24 })
+    self.takeButton.tooltipText = "Takes out what your craft queue still needs, in whole stacks"
+    self.takeButton:Hide()
 
     frame:Hide()
     return frame
@@ -234,6 +264,7 @@ function UI:SetView(view)
         GameTooltip:Hide()
         if all then ns.Everyone:Changed() end
         if ns.Selling then ns.Selling:Update() end
+        self:UpdateErrands()
         self:Refresh(true)
     end
 end
@@ -400,7 +431,7 @@ function UI:Enter(row, data)
     if data.reason and data.reason ~= "" then
         GameTooltip:AddLine(data.reason, 1, 1, 1, true)
     end
-    GameTooltip:AddLine("Right-click to always keep or always sell it", Theme.Unpack("muted"))
+    GameTooltip:AddLine("Right-click to always keep, sell or bank it", Theme.Unpack("muted"))
     GameTooltip:Show()
 end
 
@@ -458,9 +489,12 @@ function UI:BuildMenu()
     menu.sell = Widgets.CreateButton(menu, "Always sell", function() Pick("sell") end,
         { width = MENU_WIDTH - 16, height = 20 })
     menu.sell:SetPoint("TOPLEFT", menu.keep, "BOTTOMLEFT", 0, -4)
+    menu.bank = Widgets.CreateButton(menu, "Always bank", function() Pick("bank") end,
+        { width = MENU_WIDTH - 16, height = 20 })
+    menu.bank:SetPoint("TOPLEFT", menu.sell, "BOTTOMLEFT", 0, -4)
     menu.decide = Widgets.CreateButton(menu, "Let Butler decide", function() Pick(nil) end,
         { width = MENU_WIDTH - 16, height = 20 })
-    menu.decide:SetPoint("TOPLEFT", menu.sell, "BOTTOMLEFT", 0, -4)
+    menu.decide:SetPoint("TOPLEFT", menu.bank, "BOTTOMLEFT", 0, -4)
 
     -- Gone once the mouse has been off it for a moment, as the game's menus
     -- go. Only runs while the menu is up.
@@ -488,8 +522,9 @@ function UI:ShowMenu(data)
     local choice = ns.Verdicts:Choice(data.itemID)
     menu.keep:SetText(choice == "keep" and "Always keep (now)" or "Always keep")
     menu.sell:SetText(choice == "sell" and "Always sell (now)" or "Always sell")
+    menu.bank:SetText(choice == "bank" and "Always bank (now)" or "Always bank")
     menu.decide:SetShown(choice ~= nil)
-    menu:SetHeight(choice ~= nil and 112 or 88)
+    menu:SetHeight(choice ~= nil and 136 or 112)
 
     local x, y = 0, 0
     if type(GetCursorPosition) == "function" then
@@ -539,7 +574,11 @@ function UI:Refresh(force)
     end
     self.emptyLabel:SetShown(self.emptyLabel:GetText() ~= "")
 
-    self:UpdateFooter()
+    if ns.Errands.mailOpen or ns.Errands.bankOpen then
+        self:UpdateErrands()
+    else
+        self:UpdateFooter()
+    end
 end
 
 --- All characters: built again when the bags moved (once Butler's own read
@@ -593,7 +632,9 @@ function UI:UpdateFooter()
     end
     local sell = ns.Verdicts:Group("sell")
     local text = ""
-    if self.sellShown then
+    if self.errandText then
+        text = self.errandText
+    elseif self.sellShown then
         text = "Sold items stay in the vendor's Buyback tab."
     elseif sell and sell.count > 0 then
         text = ("To sell: %s, %s. Open a vendor to sell them."):format(
@@ -608,10 +649,54 @@ end
 function UI:SellShown(shown, width)
     if not self.frame then return end
     self.sellShown = shown and true or false
-    self.versionLabel:SetShown(not shown)
-    -- The footer's words stop short of the button, however wide its label.
-    local room = shown and (width or 150) + 12 or 90
-    self.footer:SetPoint("RIGHT", self.frame, "RIGHT", -(PADDING + room), 0)
+    self.sellRoom = shown and (width or 150) or nil
+    self:FootRoom()
+    if self:IsShown() then self:UpdateFooter() end
+end
+
+--- The footer's words stop short of whatever buttons sit at the foot, and
+--- the version label gives way to them.
+function UI:FootRoom()
+    local room = math.max(self.sellRoom or 0, self.errandRoom or 0)
+    self.versionLabel:SetShown(room == 0)
+    self.footer:SetPoint("RIGHT", self.frame, "RIGHT", -(PADDING + (room > 0 and room + 12 or 90)), 0)
+end
+
+--- The mailbox and bank buttons, from what Errands offers now. Only on
+--- Your bags.
+function UI:UpdateErrands()
+    if not self.frame then return end
+    local offers = (self:IsShown() and self.view ~= "all") and ns.Errands:Offers() or { toBank = 0, fromBank = 0 }
+
+    local mail = offers.mail
+    self.mailButton:SetShown(mail ~= nil)
+    if mail then self.mailButton:SetText(("Fill mail to %s"):format(mail.to)) end
+
+    self.bankButton:SetShown(offers.toBank > 0)
+    self.bankButton:SetText(("Move %d to bank"):format(offers.toBank))
+    self.takeButton:SetShown(offers.fromBank > 0)
+    self.takeButton:SetText("Take from bank")
+    self.takeButton:ClearAllPoints()
+    if offers.toBank > 0 then
+        self.takeButton:SetPoint("RIGHT", self.bankButton, "LEFT", -6, 0)
+    else
+        self.takeButton:SetPoint("BOTTOMRIGHT", -UI.SELL_INSET_X, UI.SELL_INSET_Y)
+    end
+
+    local count = (mail and 1 or 0) + (offers.toBank > 0 and 1 or 0) + (offers.fromBank > 0 and 1 or 0)
+    -- A button grows to fit a long label, so measure what is shown.
+    local room = mail and (self.mailButton:GetWidth() or MAIL_WIDTH) or 0
+    if offers.toBank > 0 then room = room + (self.bankButton:GetWidth() or ERRAND_WIDTH) end
+    if offers.fromBank > 0 then room = room + (room > 0 and 6 or 0) + (self.takeButton:GetWidth() or ERRAND_WIDTH) end
+    self.errandRoom = count > 0 and room or nil
+    if mail then
+        self.errandText = "Fills the Send Mail page. You press Send."
+    elseif count > 0 then
+        self.errandText = "Moves whole stacks, one at a time."
+    else
+        self.errandText = nil
+    end
+    self:FootRoom()
     if self:IsShown() then self:UpdateFooter() end
 end
 
@@ -634,6 +719,27 @@ function UI:AtVendor()
     end
     self:Show("bags")
     self.openedByVendor = true
+end
+
+--- A mailbox ("mail") or the bank ("bank") opened: come up on Your bags
+--- when the player wants that and there is something to do there.
+function UI:AtPlace(place)
+    if self:IsShown() then return self:UpdateErrands() end
+    local setting = place == "mail" and "openAtMailbox" or "openAtBank"
+    if not (ns.db and ns.db[setting]) then return end
+    if not ns.Errands:HasWork(place) then return end
+    self:Show("bags")
+    self.openedFor = place
+end
+
+--- The mailbox or bank closed: a window that came up for it goes with it.
+function UI:LeftPlace(place)
+    if self.openedFor == place then
+        self.openedFor = nil
+        self:Hide()
+    else
+        self:UpdateErrands()
+    end
 end
 
 --- The vendor closed: a window that came up for it goes with it.

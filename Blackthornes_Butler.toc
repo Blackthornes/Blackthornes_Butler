@@ -32,5 +32,6 @@ UI\Settings.lua
 UI\MainWindow.lua
 
 Logic\Selling.lua
+Logic\Errands.lua
 
 Probe\Probe.lua
