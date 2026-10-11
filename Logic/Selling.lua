@@ -267,10 +267,13 @@ function Selling:Place()
     if not (button and window) or InCombat() then return false end
     local right, bottom = window:GetRight(), window:GetBottom()
     if not (right and bottom) then return false end
+    -- Drawn at the window's size (its grip makes it bigger or smaller), so
+    -- the button's own units are the window's.
     local scale = (window:GetEffectiveScale() or 1) / (UIParent:GetEffectiveScale() or 1)
+    button:SetScale(scale)
     button:ClearAllPoints()
     button:SetPoint("BOTTOMRIGHT", UIParent, "BOTTOMLEFT",
-        right * scale - ns.UI.SELL_INSET_X, bottom * scale + ns.UI.SELL_INSET_Y)
+        right - ns.UI.SELL_INSET_X, bottom + ns.UI.SELL_INSET_Y)
     return true
 end
 
