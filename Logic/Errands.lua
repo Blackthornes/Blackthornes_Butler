@@ -391,6 +391,9 @@ function Errands:Arrived(place)
 end
 
 function Errands:Left(place)
+    -- Leaving can be said twice (MAIL_CLOSED and the interaction ending).
+    if place == "mail" and not self.mailOpen and not (ns.UI and ns.UI.openedFor == "mail") then return end
+    if place == "bank" and not self.bankOpen and not (ns.UI and ns.UI.openedFor == "bank") then return end
     if place == "mail" then
         self.mailOpen = false
     else
@@ -406,6 +409,23 @@ function Errands:OnEnable()
     ns.RegisterEvent(self, "MAIL_CLOSED", function() Errands:Left("mail") end)
     ns.RegisterEvent(self, "BANKFRAME_OPENED", function() Errands:Arrived("bank") end)
     ns.RegisterEvent(self, "BANKFRAME_CLOSED", function() Errands:Left("bank") end)
+    -- Walking away ends the game's interaction with the mailbox or banker;
+    -- heard as well in case the client says that and not MAIL_CLOSED (a
+    -- player found the window left up after walking off, 2026-10-11).
+    ns.RegisterEvent(self, "PLAYER_INTERACTION_MANAGER_FRAME_HIDE", function(_, _, kind)
+        local place = Errands.InteractionPlace(kind)
+        if place then Errands:Left(place) end
+    end)
+end
+
+--- "mail" or "bank" for the game's interaction types, else nil.
+function Errands.InteractionPlace(kind)
+    local types = rawget(_G, "Enum") and rawget(Enum, "PlayerInteractionType")
+    local mail = type(types) == "table" and rawget(types, "MailInfo") or 17
+    local bank = type(types) == "table" and rawget(types, "Banker") or 8
+    if kind == mail then return "mail" end
+    if kind == bank then return "bank" end
+    return nil
 end
 
 --------------------------------------------------------------------------------

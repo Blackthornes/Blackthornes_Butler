@@ -115,6 +115,25 @@ env.Fire("MAIL_CLOSED")
 suite.check("leaving the mailbox closes the window it opened", not UI:IsShown())
 suite.check("and the cover comes off", mailboxSaid[#mailboxSaid] == false)
 
+-- Already open when the mailbox opens, it still goes when the player leaves.
+UI:Show("bags")
+env.Fire("MAIL_SHOW")
+suite.check("open before the mailbox: it takes the mailbox", UI.openedFor == "mail")
+env.Fire("MAIL_CLOSED")
+suite.check("and goes when the mailbox closes", not UI:IsShown())
+
+-- Walking away can end the interaction without MAIL_CLOSED.
+env.Fire("MAIL_SHOW")
+suite.check("the mailbox brings it up again", UI:IsShown())
+env.Fire("PLAYER_INTERACTION_MANAGER_FRAME_HIDE", 17)
+suite.check("walking away from the mailbox closes it", not UI:IsShown() and not Errands.mailOpen)
+env.Fire("MAIL_CLOSED")
+suite.check("and a MAIL_CLOSED after that changes nothing", not UI:IsShown())
+UI:Show("bags")
+env.Fire("PLAYER_INTERACTION_MANAGER_FRAME_HIDE", 5)
+suite.check("another interaction ending leaves it be", UI:IsShown())
+Close()
+
 -- A new visit starts again from the first character.
 env.Fire("MAIL_SHOW")
 suite.check("a new visit starts again", UI.mailButton.label:GetText() == "Fill mail to Bob")

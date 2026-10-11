@@ -808,6 +808,11 @@ end
 --- when the player wants that and there is something to do there.
 function UI:AtPlace(place)
     if self:IsShown() then
+        -- Already up at a mailbox: Butler is the mailbox's window now, so it
+        -- goes when the mailbox does (a player found it left up, 2026-10-11).
+        if place == "mail" and not self.openedFor and not self.openedByVendor then
+            self.openedFor = place
+        end
         ns.Errands:TellTradeskills()
         return self:UpdateErrands()
     end

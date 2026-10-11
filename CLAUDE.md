@@ -127,7 +127,11 @@ The plan's next phase (the owner said start, 2026-10-11).
 at every mailbox, and at the bank when there is something to do there
 ("Open at a mailbox" `openAtMailbox`, "Open at the bank" `openAtBank`,
 account wide, on by default; `/bbutler mailbox` and `/bbutler bank` toggle
-them), going when it closes.
+them), going when it closes. A window already up when a mailbox opens
+belongs to the mailbox too, and walking away is also heard as
+`PLAYER_INTERACTION_MANAGER_FRAME_HIDE` (mail or banker), in case the
+client says that without `MAIL_CLOSED` (a player found the window left up,
+2026-10-11).
 
 Butler takes over the mailbox from Tradeskills' mail panel (the owner
 picked it, 2026-10-11): while Butler's window is up at a mailbox,
