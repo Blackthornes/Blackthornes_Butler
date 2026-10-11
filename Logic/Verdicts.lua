@@ -245,12 +245,21 @@ function Verdicts:Kept(said)
 
     local ts = said.ts
     local queued = Number(ts, "need")
-    if queued and queued > 0 then
-        return "keep", ("Your craft queue needs %d"):format(queued)
-    end
     local mailTo = String(ts, "mailTo")
     -- An older Tradeskills could name the character playing.
     if mailTo and mailTo == Verdicts:Playing() then mailTo = nil end
+    if queued and queued > 0 then
+        -- The alt's share goes in the mail too: Tradeskills' mailCount is
+        -- what is left once this character's own crafts are kept back, so
+        -- Fill mail sends that many and the rest stays (a player's leather
+        -- was all kept while an alt's craft waited on it, 2026-10-11).
+        local count = Number(ts, "mailCount")
+        if mailTo and count and count > 0 then
+            return "mail", ("Mail %d to %s for their crafts, keep %d for yours"):format(count, mailTo, queued),
+                nil, { to = mailTo, count = count }
+        end
+        return "keep", ("Your craft queue needs %d"):format(queued)
+    end
     if mailTo then
         local count = Number(ts, "mailCount")
         return "mail", count and ("Mail %d to %s for their crafts"):format(count, mailTo)
