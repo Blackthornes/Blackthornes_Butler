@@ -125,6 +125,14 @@ local function CleanStep(step)
     return nil
 end
 
+--- Do two names name the same character? Without regard to case or
+--- spacing; a mail step to the character doing it is never kept.
+function Jobs.SameName(a, b)
+    if type(a) ~= "string" or type(b) ~= "string" then return false end
+    local function Fold(text) return (text:gsub("%s+", " "):gsub("^ ", ""):gsub(" $", ""):lower()) end
+    return Fold(a) == Fold(b)
+end
+
 --- Tradeskills' list with anything of the wrong shape left out.
 function Jobs.Clean(answer)
     local list = {}
@@ -135,7 +143,7 @@ function Jobs.Clean(answer)
             for _, step in ipairs(type(job.steps) == "table" and job.steps or {}) do
                 local clean = CleanStep(step)
                 -- Never a mail to the character doing it.
-                if clean and not (clean.kind == "mail" and clean.to == name) then
+                if clean and not (clean.kind == "mail" and Jobs.SameName(clean.to, name)) then
                     steps[#steps + 1] = clean
                 end
             end
@@ -187,9 +195,8 @@ end
 function Jobs:Plan()
     local here, others = nil, {}
     local errands = ns.Errands
-    local playing = errands and errands.PlayingName and errands:PlayingName()
     for _, job in ipairs(self:Read()) do
-        if job.isCurrent or job.name == playing then
+        if job.isCurrent or (errands and errands.IsMe and errands:IsMe(job.name)) then
             -- The character playing, under any record of it, is never one
             -- to log out for (a player was told to, 2026-10-11).
             here = here or { name = job.name, isCurrent = true, steps = {} }

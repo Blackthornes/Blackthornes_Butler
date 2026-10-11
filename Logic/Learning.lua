@@ -294,7 +294,7 @@ function Learning:OnSendMail(recipient, subject)
     local okSubject, said = pcall(function() return (subject or "") .. "" end)
     if okSubject and self.ADDON_SUBJECTS[said] then return end
     local to = self:Recipient(recipient)
-    if not to or to == (ns.Verdicts and ns.Verdicts:Playing()) then return end
+    if not to or (ns.Verdicts and ns.Verdicts:IsMe(to)) then return end
     local ids = self.Attachments()
     if #ids == 0 then return end
     self.pending = { to = to, ids = ids }

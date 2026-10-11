@@ -193,8 +193,8 @@ suite.check("a mail for a craft keeps its mark", clean[1] and clean[1].steps[1].
 
 -- The character playing under another record is never one to log out for,
 -- and never mails itself; the one whose mail unblocks a craft here is next.
-local errandsName = ns.Errands.PlayingName
-ns.Errands.PlayingName = function() return "Blackthornes Wither" end
+local errandsIsMe = ns.Errands.IsMe
+ns.Errands.IsMe = function(_, name) return name == "Blackthornes Wither" end
 local OLD_ME = { name = "Blackthornes Wither", steps = {
     { kind = "mail", to = "Blackthornes Wither", items = { { itemID = 2319, count = 8 } } },
     { kind = "craft", recipeID = 14, itemID = 2319, name = "Medium Leather", count = 10, forNames = {},
@@ -213,7 +213,7 @@ suite.check("its mail to itself is dropped", #plan.here.steps == 1 and plan.here
     #plan.here.steps)
 suite.check("the one sending what the craft needs goes first", plan.goFirst
     and plan.nextJob.name == "Blackthornes Farmer", plan.nextJob.name)
-ns.Errands.PlayingName = errandsName
+ns.Errands.IsMe = errandsIsMe
 
 -- 6. Done here.
 Fresh({ ANA, WITHER })

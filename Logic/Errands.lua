@@ -73,7 +73,7 @@ function Errands:Recipients()
     local group = ns.Verdicts:Group("mail")
     for _, row in ipairs(group and group.rows or {}) do
         local to = row.mailTo
-        if type(to) == "string" and to ~= "" then
+        if type(to) == "string" and to ~= "" and not self:IsMe(to) then
             local recipient = byName[to]
             if not recipient then
                 recipient = { to = to, items = {}, byID = {}, count = 0, upgrades = {} }
@@ -104,13 +104,15 @@ function Errands:Recipients()
     -- items, or goes as a mail of its own.
     if ns.Funds and self.mailOpen then
         for _, entry in ipairs((ns.Funds:Plan())) do
-            local recipient = byName[entry.to]
-            if not recipient then
-                recipient = { to = entry.to, items = {}, byID = {}, count = 0 }
-                byName[entry.to] = recipient
-                list[#list + 1] = recipient
+            if not self:IsMe(entry.to) then
+                local recipient = byName[entry.to]
+                if not recipient then
+                    recipient = { to = entry.to, items = {}, byID = {}, count = 0 }
+                    byName[entry.to] = recipient
+                    list[#list + 1] = recipient
+                end
+                recipient.money = entry.amount
             end
-            recipient.money = entry.amount
         end
     end
     table.sort(list, function(a, b)
@@ -127,7 +129,16 @@ local function Text(value)
     return type(value) == "string" and value ~= "" and value or nil
 end
 
+--- Is a Holdings entry the character playing, under any of its records?
+--- Tradeskills marks its own (`isCurrent`) and any old record of it
+--- (`playing`, its Characters:IsPlaying).
+local function Mine(entry)
+    return type(entry) == "table" and (entry.isCurrent == true or entry.playing == true)
+end
+Errands.Mine = Mine
+
 --- Tradeskills' Holdings and the entry for the character playing, or nil.
+--- The entry is the first `isCurrent` one (Tradeskills lists it first).
 local function Holdings()
     local butler = Errands.Tradeskills("Holdings")
     if not butler then return nil end
@@ -135,7 +146,7 @@ local function Holdings()
     if not ok or type(list) ~= "table" then return nil end
     local me
     for _, entry in ipairs(list) do
-        if type(entry) == "table" and entry.isCurrent == true then me = entry end
+        if not me and type(entry) == "table" and entry.isCurrent == true then me = entry end
     end
     return list, me
 end
@@ -148,13 +159,45 @@ end
 
 --- Every character's name on this realm and side, the one playing too,
 --- kept until Verdicts.version moves (the window opening, a choice made).
-local namesCache, namesVersion, myName
+local namesCache, namesVersion, myName, myNames
+
+local function Fold(text)
+    if type(text) ~= "string" then return nil end
+    text = text:gsub("^%s+", ""):gsub("%s+$", ""):gsub("%s+", " ")
+    if text == "" then return nil end
+    return text:lower()
+end
+
+--- Every way the character playing is named, folded: each name and short
+--- name of every record of it, and its first name alone, which can't tell
+--- it from another of that first name, so is never mailed. The game's own
+--- first name too, so the guard holds without Tradeskills.
+local function MyNames(list)
+    local names = {}
+    local function Add(text)
+        local folded = Fold(text)
+        if not folded then return end
+        names[folded] = true
+        names[folded:match("^(%S+)")] = true
+    end
+    for _, entry in ipairs(list or {}) do
+        if Mine(entry) then
+            Add(Text(entry.short))
+            Add(Text(entry.name))
+        end
+    end
+    local ok, first = pcall(Items.Call, { "UnitName" }, "player")
+    if ok then pcall(Add, first) end
+    return names
+end
+
 local function AllNames()
     local version = ns.Verdicts and ns.Verdicts.version
-    if namesCache and namesVersion == version then return namesCache, myName end
+    if namesCache and namesVersion == version then return namesCache, myName, myNames end
     local names = {}
     local list, me = Holdings()
     myName = me and (Text(me.short) or Text(me.name)) or nil
+    myNames = MyNames(list)
     local realm = me and Text(me.realm)
     local faction = me and Text(me.faction)
     for _, entry in ipairs(list or {}) do
@@ -165,7 +208,7 @@ local function AllNames()
         end
     end
     namesCache, namesVersion = names, version
-    return names, myName
+    return names, myName, myNames
 end
 
 --- The full name Tradeskills gives a character, by its key (the GUID
@@ -184,7 +227,7 @@ function Errands:NameOf(key)
         for _, entry in ipairs(list or {}) do
             local name = type(entry) == "table" and (Text(entry.short) or Text(entry.name))
             local entryKey = type(entry) == "table" and Text(entry.key)
-            if name and entryKey and entry.isCurrent ~= true
+            if name and entryKey and not Mine(entry)
                 and (not realm or not Text(entry.realm) or Text(entry.realm) == realm)
                 and (not faction or not Text(entry.faction) or Text(entry.faction) == faction) then
                 byKeyCache[entryKey] = name
@@ -200,6 +243,20 @@ end
 function Errands:PlayingName()
     local _, name = AllNames()
     return name
+end
+
+--- Is this name the character playing? The one test every mail, gold
+--- top-up, learned habit and Log out asks (2026-10-11: a player was told to
+--- mail to, and log out for, the character they were on). Its full name,
+--- the name of any old record of it, or its first name alone, without
+--- regard to case or spacing; "Name-Realm" counts by its name. nil and
+--- anything that is not a name are not.
+function Errands:IsMe(name)
+    if type(name) ~= "string" then return false end
+    local folded = Fold(name:match("^(.-)%-[^%-%s]+$") or name)
+    if not folded then return false end
+    local _, _, mine = AllNames()
+    return (mine or {})[folded] == true
 end
 
 --- The full name for a character name saved in an old short form: "Ana
@@ -246,7 +303,7 @@ function Errands:Characters()
     local names, seen = {}, {}
     for _, entry in ipairs(list) do
         local short = type(entry) == "table" and (Text(entry.short) or Text(entry.name))
-        if short and entry.isCurrent ~= true and not seen[short]
+        if short and not Mine(entry) and not self:IsMe(short) and not seen[short]
             and (not realm or not Text(entry.realm) or Text(entry.realm) == realm)
             and (not faction or not Text(entry.faction) or Text(entry.faction) == faction) then
             seen[short] = true
@@ -291,6 +348,9 @@ function Errands:FillMail()
     ns.Verdicts:Changed(true)
     local recipient = self:NextRecipient()
     if not recipient then return false, "Nothing left to mail." end
+
+    -- The last guard before the mail is filled: never the character playing.
+    if self:IsMe(recipient.to) then return false, "That's the character you're on." end
 
     local items = {}
     for _, item in ipairs(recipient.items) do items[#items + 1] = { itemID = item.itemID, count = item.count } end
