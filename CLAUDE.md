@@ -227,8 +227,8 @@ sisters before inventing a convention:
   in plain words, then a short "How" naming the functions and tests touched,
   that the checks pass, and whether `/reload` is enough. Release PRs are
   `release/X.Y.Z` branches titled "Changelog for X.Y.Z".
-- **CurseForge:** no project yet. When the owner creates one, its ID goes on
-  the TOC's `X-Curse-Project-ID` line (commented out until then), and the
+- **CurseForge:** project **1739020** (the owner created it 2026-10-11),
+  on the TOC's `X-Curse-Project-ID` line. The first release is 0.1.0. The
   repo needs the `CF_API_KEY`, `DISCORD_WEBHOOK_URL` and
   `DISCORD_GENERAL_WEBHOOK_URL` secrets, which he sets himself. The logo
   follows the house style: a dark 512 px tile, the gold satchel, grey

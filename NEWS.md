@@ -11,3 +11,13 @@ under a line with the addon's name and version that points players to
 is the only report that names players. A version with no section here posts
 nothing in #general.
 This file does not ship in the addon.
+
+## 0.1.0
+
+- Meet Butler! It looks at every item in your bags and tells you what to do with it: sell it, post it, disenchant it, mail it to an alt, bank it or keep it.
+- Open it at any vendor and press Sell to clear out the junk. Nothing gets sold unless you click.
+- Pick an amount, and anything worth less goes on the sell list.
+- See every item on all your characters in one list.
+- At the mailbox, it fills in a letter with what your alts need.
+
+Thanks Ezmode and Voldar for the ideas!
