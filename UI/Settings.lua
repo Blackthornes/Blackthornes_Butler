@@ -247,6 +247,17 @@ function SettingsUI:BuildPages()
     end, true)
     controls.openAtBank:SetPoint("TOPLEFT", CONTROL_X, -2)
 
+    -- Asked 2026-10-11: anything worth less than this joins Sell. It only
+    -- ever adds to Sell; nothing sells until the player clicks.
+    pages:Section("selling", 2, "JUNK")
+
+    local belowRow = pages:Row("selling", 2, "Sell below",
+        "Anything worth less than this goes under Sell, judged on the most it could fetch from a vendor, the auction house or a disenchant. Quest items, upgrades, goal and craft materials, pet food, soulbound green or better gear and your Always keep, bank and mail items are never included, and nothing sells until you click Sell. Needs Blackthornes Tradeskills for auction prices. Leave it at 0 for off. Also /bbutler sellbelow 50s.")
+    controls.sellBelow = Widgets.CreateMoneyBox(belowRow, function(copper)
+        ns.Verdicts:SetSellBelow(copper)
+    end)
+    controls.sellBelow:SetPoint("TOPLEFT", CONTROL_X, 0)
+
     pages:Section("selling", 2, "YOUR LISTS")
 
     local _, listsButton = CommandRow(pages, "selling", 2, "Keep, sell, bank, mail",
@@ -336,6 +347,7 @@ function SettingsUI:Refresh()
     controls.openAtMailbox:SetChecked(ns.db.openAtMailbox ~= false)
     controls.openAtBank:SetChecked(ns.db.openAtBank ~= false)
     controls.debug:SetChecked(ns.db.debug == true)
+    controls.sellBelow:SetValue(ns.Verdicts:SellBelow() or 0)
     controls.textSize:Sync()
     controls.windowStyle:Sync()
     self.pages:Refresh()

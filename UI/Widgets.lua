@@ -745,6 +745,82 @@ function Widgets.CreateSearchBox(parent, placeholder, onChange, onAccept, opts)
 end
 
 --------------------------------------------------------------------------------
+-- Money box
+--------------------------------------------------------------------------------
+
+-- The coin colours FormatMoney uses, so the boxes read as gold, silver and
+-- copper at a glance.
+local COINS = {
+    { key = "gold", letter = "g", per = 10000, width = 46, letters = 5, color = { 1, 0.84, 0 } },
+    { key = "silver", letter = "s", per = 100, width = 32, letters = 2, color = { 0.78, 0.78, 0.81 } },
+    { key = "copper", letter = "c", per = 1, width = 32, letters = 2, color = { 0.93, 0.65, 0.37 } },
+}
+
+--- Three small boxes for an amount of money, gold, silver and copper, each
+--- with its coin letter after it. `onChange(copper)` runs when the player
+--- presses Enter or leaves a box, never on each key, so nothing is judged
+--- again while they type. :SetValue(copper) and :GetValue() as copper.
+function Widgets.CreateMoneyBox(parent, onChange)
+    local holder = CreateFrame("Frame", nil, parent)
+    holder:SetHeight(24)
+    holder.boxes = {}
+
+    local function Read()
+        local total = 0
+        for _, coin in ipairs(COINS) do
+            local amount = tonumber(holder.boxes[coin.key]:GetText()) or 0
+            total = total + math.max(0, math.floor(amount)) * coin.per
+        end
+        return total
+    end
+
+    local function Commit()
+        local value = Read()
+        if value == holder.value then return end
+        holder.value = value
+        if onChange then onChange(value) end
+    end
+
+    local x = 0
+    for _, coin in ipairs(COINS) do
+        local box = Widgets.CreateSearchBox(holder, "0", nil, Commit, { plain = true })
+        box:SetWidth(coin.width)
+        box:SetPoint("LEFT", x, 0)
+        local edit = box.editBox
+        edit:SetMaxLetters(coin.letters)
+        edit:SetJustifyH("RIGHT")
+        if edit.SetNumeric then edit:SetNumeric(true) end
+        edit:HookScript("OnEditFocusLost", Commit)
+        holder.boxes[coin.key] = box
+
+        local letter = Theme.CreateLabel(holder, "normal", "text")
+        letter:SetPoint("LEFT", box, "RIGHT", 3, 0)
+        letter:SetText(coin.letter)
+        letter:SetTextColor(coin.color[1], coin.color[2], coin.color[3])
+        x = x + coin.width + 14
+    end
+    holder:SetWidth(x)
+
+    function holder:SetValue(copper)
+        copper = math.max(0, math.floor(tonumber(copper) or 0))
+        self.value = copper
+        for _, coin in ipairs(COINS) do
+            local amount = math.floor(copper / coin.per)
+            copper = copper - amount * coin.per
+            -- Empty rather than 0, so the dim 0 hint shows.
+            self.boxes[coin.key]:SetText(amount > 0 and tostring(amount) or "")
+        end
+    end
+
+    function holder:GetValue()
+        return Read()
+    end
+
+    holder:SetValue(0)
+    return holder
+end
+
+--------------------------------------------------------------------------------
 -- Scrollbar
 --------------------------------------------------------------------------------
 

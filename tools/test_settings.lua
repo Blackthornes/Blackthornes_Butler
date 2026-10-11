@@ -129,6 +129,24 @@ controls.textSize.minus:GetScript("OnClick")(controls.textSize.minus)
 suite.check("back to Normal needs no reload", ns.db.textSize == "normal"
     and not controls.textSize.reload:IsShown())
 
+-- Sell below: gold, silver and copper boxes, saved when the player leaves
+-- a box or presses Enter, not on every key.
+local money = controls.sellBelow
+pages:Show("selling")
+suite.check("Sell below starts empty (off)", money:GetValue() == 0 and ns.db.sellBelow == nil)
+money.boxes.silver.editBox:SetText("50")
+suite.check("typing alone saves nothing", ns.db.sellBelow == nil)
+money.boxes.silver.editBox:GetScript("OnEnterPressed")(money.boxes.silver.editBox)
+suite.check("Enter saves it in copper", ns.db.sellBelow == 5000, tostring(ns.db.sellBelow))
+money.boxes.gold.editBox:SetText("1")
+money.boxes.gold.editBox:GetScript("OnEditFocusLost")(money.boxes.gold.editBox)
+suite.check("leaving a box saves it too", ns.db.sellBelow == 15000)
+ns.HandleSlash("sellbelow 2s 5c")
+suite.check("/bbutler sellbelow fills the boxes", money.boxes.gold:GetText() == ""
+    and money.boxes.silver:GetText() == "2" and money.boxes.copper:GetText() == "5")
+ns.HandleSlash("sellbelow off")
+suite.check("and off empties them", money:GetValue() == 0 and ns.db.sellBelow == nil)
+
 -- Every /bbutler command has a button here.
 local ran = {}
 local realSlash = ns.HandleSlash
@@ -143,7 +161,8 @@ suite.check("the command buttons run their commands",
 -- Every command has a button or a control here, apart from the one that
 -- deletes the player's lists, which stays typed (a house rule).
 local covered = { window = true, all = true, probe = true, help = true, selltest = true, lists = true,
-    vendor = true, mailbox = true, bank = true, minimap = true, settings = true, reset = true }
+    vendor = true, mailbox = true, bank = true, minimap = true, settings = true, reset = true,
+    sellbelow = true }
 for _, name in ipairs(ns.commandOrder) do
     suite.check("/bbutler " .. name .. " has a place in Settings", covered[name] == true)
 end

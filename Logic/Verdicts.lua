@@ -15,12 +15,14 @@
 --   8. Pets: the pet eats it                       Keep
 --   9. Its price has not loaded yet                Look at it
 --  10. Grey (worth vendor only)                    Sell
---  11. The best of vendor, auction (marked down when it sells slowly)
+--  11. Worth less than the player's Sell below amount (vendor, auction
+--      and disenchant, whichever is most)          Sell
+--  12. The best of vendor, auction (marked down when it sells slowly)
 --      and disenchant                              Sell, Auction,
 --                                                  Disenchant or Mail
---  12. Anything else                               Look at it
+--  13. Anything else                               Look at it
 --
--- Steps 5 to 8 and 11 ask the other four addons (Logic/Sisters.lua); a
+-- Steps 5 to 8, 11 and 12 ask the other four addons (Logic/Sisters.lua); a
 -- sister that is not loaded is skipped. "Look at it" is never sold for the
 -- player, and neither is soulbound green or better gear: it can only be
 -- disenchanted or looked at.
@@ -29,6 +31,12 @@
 -- choices, account wide, by item ID: BlackthornesButlerDB.alwaysKeep,
 -- .alwaysSell and .alwaysBank ([itemID] = true), and .alwaysMail
 -- ([itemID] = the character's short name). Never rename them.
+--
+-- Sell below (a player asked, the owner agreed 2026-10-11) is
+-- BlackthornesButlerDB.sellBelow, copper, account wide, nil when off (never
+-- rename it). It only ever adds to Sell, never deletes, and only once
+-- Tradeskills has said what the auction house pays: without it Butler can't
+-- tell junk from a white item that sells well, so the step is skipped.
 --
 -- A Mail row also says who it goes to and how many (row.mailTo,
 -- row.mailCount), for the Fill mail button (Logic/Errands.lua).
@@ -233,7 +241,48 @@ function Verdicts:Kept(said)
     end
 end
 
---- Step 11: the best of what a vendor pays, the auction house (after the
+--------------------------------------------------------------------------------
+-- Sell below
+--------------------------------------------------------------------------------
+
+--- The Sell below amount in copper, or nil when it is off.
+function Verdicts:SellBelow()
+    local amount = ns.db and ns.db.sellBelow
+    if type(amount) == "number" and amount >= 1 then return math.floor(amount) end
+    return nil
+end
+
+--- Save the Sell below amount (copper; nil or 0 turns it off) and judge
+--- every item again.
+function Verdicts:SetSellBelow(copper)
+    if not ns.db then return end
+    copper = tonumber(copper)
+    if copper then copper = math.floor(copper) end
+    if copper and copper < 1 then copper = nil end
+    if copper == ns.db.sellBelow then return end
+    ns.db.sellBelow = copper
+    self:Changed(true)
+end
+
+--- Copper from "1g 50s", "75s", "30c" or "2g5s"; 0 for "off", "0" or
+--- nothing. nil when it can't be read. A plain number counts as gold.
+function Verdicts.ParseMoney(text)
+    text = tostring(text or ""):lower():gsub("%s+", "")
+    if text == "" or text == "off" or text == "0" then return 0 end
+    if text:match("^%d+$") then return tonumber(text) * 10000 end
+    local total, rest = 0, text
+    for _, unit in ipairs({ { "g", 10000 }, { "s", 100 }, { "c", 1 } }) do
+        local amount, after = rest:match("^(%d+)" .. unit[1] .. "(.*)$")
+        if amount then
+            total = total + tonumber(amount) * unit[2]
+            rest = after
+        end
+    end
+    if rest ~= "" then return nil end
+    return total
+end
+
+--- Step 12: the best of what a vendor pays, the auction house (after the
 --- cut) and disenchanting. Returns verdict, reason and one's worth.
 function Verdicts:Best(entry, unit, said)
     local Number, String, True = Sisters.Number, Sisters.String, Sisters.True
@@ -251,6 +300,18 @@ function Verdicts:Best(entry, unit, said)
     local canDisenchant = True(ts, "canDisenchant")
     local enchanter = not bound and String(ts, "enchanter") or nil
     if disenchant and not canDisenchant and not enchanter then disenchant = nil end
+
+    -- Step 11: worth less than the player's Sell below amount, judged on
+    -- the most it could fetch. Only once Tradeskills has priced it, and
+    -- never soulbound green or better, which always gets a second look.
+    local below = self:SellBelow()
+    if below and ts and not (bound and (entry.quality or 0) >= 2) then
+        local most = math.max(unit, auction or 0, disenchant or 0)
+        if most < below then
+            return "sell", ("Worth less than %s: %s each"):format(Items.FormatMoney(below),
+                Items.FormatMoney(unit)), unit
+        end
+    end
 
     local best, value = "sell", unit
     if auctionWorth and auctionWorth > value then best, value = "auction", auctionWorth end
@@ -441,4 +502,25 @@ ns.RegisterCommand("reset", "empty your Always keep, sell, bank and mail lists (
     ns.db.alwaysKeep, ns.db.alwaysSell, ns.db.alwaysBank, ns.db.alwaysMail = {}, {}, {}, {}
     Verdicts:Changed(true)
     ns.Print("your Always keep, Always sell, Always bank and Always mail lists are empty. Butler decides every item again.")
+end)
+
+-- Asked 2026-10-11: anything worth less than an amount the player sets
+-- joins Sell. It never deletes or sells by itself; Sell is still a click.
+ns.RegisterCommand("sellbelow", "sell anything worth less than an amount, e.g. sellbelow 50s (sellbelow off to stop)", function(rest)
+    rest = rest or ""
+    if rest:match("^%s*$") then
+        local below = Verdicts:SellBelow()
+        ns.Print(below and ("items worth less than %s go under Sell. Type /bbutler sellbelow off to stop."):format(Items.FormatMoney(below))
+            or "Sell below is off. Type an amount to turn it on, e.g. /bbutler sellbelow 50s or /bbutler sellbelow 1g 20s")
+        return
+    end
+    local copper = Verdicts.ParseMoney(rest)
+    if not copper then
+        ns.Print("type an amount like 50s, 1g 20s or 75c, or off.")
+        return
+    end
+    Verdicts:SetSellBelow(copper)
+    local below = Verdicts:SellBelow()
+    ns.Print(below and ("items worth less than %s now go under Sell. Nothing sells until you click Sell."):format(Items.FormatMoney(below))
+        or "Sell below is off.")
 end)

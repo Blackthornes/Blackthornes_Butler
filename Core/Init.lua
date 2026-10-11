@@ -316,7 +316,8 @@ local DEFAULTS = {
     -- Also kept here, never renamed (made when first needed, so not given
     -- defaults): alwaysKeep, alwaysSell and alwaysBank ([itemID] = true, the player's
     -- right-click choices), alwaysMail ([itemID] = a character's short name)
-    -- and sellTest (what /bbutler selltest found).
+    -- sellTest (what /bbutler selltest found) and sellBelow (copper, the
+    -- player's Sell below amount; nil is off).
 }
 
 -- Per character, because bags are: what one character carries is its own.

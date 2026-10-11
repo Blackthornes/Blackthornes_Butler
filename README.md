@@ -16,8 +16,9 @@ from vendor prices and the game's own quest marks.
 
 - **The Butler window** lists every item in your bags in groups, each
   with its count and what it is worth:
-  - **Sell**: grey items, your Always sell list, and items a vendor pays
-    more for than the auction house.
+  - **Sell**: grey items, your Always sell list, items a vendor pays
+    more for than the auction house, and, if you set an amount, anything
+    worth less than it.
   - **Auction**: items worth more on the auction house, after the cut
     (marked down when they sell slowly).
   - **Disenchant**: items worth more as enchanting materials, when you can
@@ -35,6 +36,13 @@ from vendor prices and the game's own quest marks.
 - **Right-click** an item to always keep it, always sell it, always bank it,
   always mail it to one of your characters, or let Butler decide again. The
   lists are account wide.
+- **Sell below** (Settings, or `/bbutler sellbelow 50s`): set an amount
+  and anything worth less than it, at the most it could fetch from a
+  vendor, the auction house or a disenchant, goes under Sell. Quest items,
+  upgrades, goal and craft materials, pet food, soulbound green or better
+  gear and your Always keep, bank and mail items are never included, and
+  nothing sells until you click Sell. It needs Blackthornes Tradeskills for
+  auction prices; off until you set it.
 - **At a mailbox,** the window comes up in place of Tradeskills' mail panel
   (close it to get that back), with a **Fill mail** button when something
   is under Mail. Each click fills the game's Send Mail page for one

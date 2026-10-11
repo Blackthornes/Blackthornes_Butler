@@ -38,6 +38,7 @@ is the Sell button (see the findings file for why it is secure).
 with the dark glass rows) and Butler's own right-click menu. Saved and never
 renamed: `alwaysKeep`, `alwaysSell`, `alwaysBank` (`[itemID] = true`),
 `alwaysMail` (`[itemID]` = a character's short name), `sellTest`,
+`sellBelow` (copper, nil when off),
 `openAtVendor`, `openAtMailbox`, `openAtBank` (account), `folded` (per character). Not yet seen in game.
 
 Rules from the plan that hold from the first feature on:
@@ -165,6 +166,21 @@ it works from addon code), one stack every `Errands.STEP`, each slot read
 again first; a stack that does not move means the other side is full, and
 the run stops and says so. Nothing in combat. The bank is read only for a
 click. Not yet seen in game.
+
+## Sell below
+
+A player asked for anything looted below a value they set to be marked
+junk, and the owner said add it to Butler (2026-10-11). "Sell below" on
+the Errands page (`Widgets.CreateMoneyBox`: gold, silver and copper boxes,
+saved on Enter or leaving a box) and `/bbutler sellbelow 50s` (`off` to
+stop) save `sellBelow`, copper, account wide, nil when off. It is step 11
+in `Verdicts:Best`: after the player's lists, quest items, no vendor value
+and every sister's Keep, an item whose most (vendor, Tradeskills' auction,
+a usable disenchant) is under the amount goes under Sell, "Worth less than
+X". Soulbound green or better is never included, and the step is skipped
+when Tradeskills gave no answer, since without an auction price junk and a
+good white item look the same. It only adds to Sell: nothing is deleted,
+and selling is still the Sell button. Tested in `tools/test_sellbelow.lua`.
 
 ## How this repo was set up
 
