@@ -139,7 +139,9 @@ on pickup or an upgrade for the character playing). `Verdicts:ForDisenchanter`, 
 after the sisters' Keep and Bought to disenchant, puts it under Mail to
 that character, whatever the auction house or a vendor pays; a soulbound
 copy and the character playing never get it. With nobody typed there,
-nothing changes. Tested in `tools/test_disenchantermail.lua`.
+Tradeskills picks the alt with the most Enchanting (more than the
+character playing; its "Pick one for me", 2026-10-11), so Advise names
+that one; with that unticked too, nothing changes. Tested in `tools/test_disenchantermail.lua`.
 
 ## All characters
 
