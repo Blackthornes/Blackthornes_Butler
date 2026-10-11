@@ -172,6 +172,19 @@ function Bags:Scan(done)
     Step()
 end
 
+--- How many of an item the bags hold, by the last read. Totted up once per
+--- Bags.version, so asking for every item in a burst costs one pass.
+function Bags:Carried(itemID)
+    if self.carriedVersion ~= self.version then
+        local totals = {}
+        for _, entry in pairs(self.slots) do
+            if entry.itemID then totals[entry.itemID] = (totals[entry.itemID] or 0) + (entry.count or 1) end
+        end
+        self.carried, self.carriedVersion = totals, self.version
+    end
+    return self.carried[itemID] or 0
+end
+
 --- Read the bags now if they changed since the last read, then run `done`.
 function Bags:Fresh(done)
     if self.stale or self.scanning then

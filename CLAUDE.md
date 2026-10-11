@@ -106,7 +106,12 @@ If one changes, change `Logic/Sisters.lua` and `Logic/Verdicts.lua` here
 in the same breath. `Verdicts:Judge` keeps each item's verdict until
 `Verdicts.version` moves, and `UI:Show` moves it (`Verdicts:Forget`), so the
 sisters are asked once per item each time the window opens, never on a
-redraw. The verdicts they feed, in order, are at the top of
+redraw. How many of the item the bags hold (`Bags:Carried`) is part of the
+kept key, since the sisters' answers move with it (an alt's `mailCount`, a
+goal's `have`): only an item whose own count changed is asked again (eight
+Medium Leather crafted one at a time were mailed as one, 2026-10-11). Fill
+mail calls `Verdicts:Changed(true)` first, so the click sends what the alt's
+queue wants then (`tools/test_mailcount.lua`). The verdicts they feed, in order, are at the top of
 `Logic/Verdicts.lua`. Soulbound green or better gear is never put under
 Sell: Disenchant, or Look at it. `/bbutler probe` says which sisters are
 loaded and which answer Butler.
