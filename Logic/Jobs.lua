@@ -8,8 +8,8 @@
 -- Butler does the rest. The window's first group, Jobs, lists what the
 -- character playing has to do for the queue (craft this, mail that to
 -- whom), each craft with a Craft button, and one line for each other
--- character with work waiting, the next one first. A Log out button in
--- the window's header takes the player to the character list to switch.
+-- character with work waiting, the next one first. A Log out button on
+-- the next one's line takes the player to the character list to switch.
 -- Logging in on a character with a job brings the window up on its steps,
 -- and once the last one here is done Butler says who is next.
 --
@@ -50,9 +50,6 @@ Jobs.version = 0
 
 local BUTTON_WIDTH = 90
 local BUTTON_HEIGHT = 20
--- The gold one at the foot, in Fill mail's place.
-local FOOT_WIDTH = 180
-local FOOT_HEIGHT = 24
 
 local function InCombat()
     return type(InCombatLockdown) == "function" and InCombatLockdown() and true or false
@@ -393,14 +390,16 @@ end
 -- Log out
 --------------------------------------------------------------------------------
 
---- A Log out button: the game's own /logout, run by the player's click on
---- a secure button as a macro would (addon code may not log out by
---- itself). Two are made: the small one in the header and the big gold one
---- at the foot.
-local function LogoutButton(name, label, opts)
-    local button = ns.Widgets.CreateButton(UIParent, label, nil, {
-        name = name, template = "SecureActionButtonTemplate",
-        width = opts.width, height = opts.height, primary = opts.primary,
+--- The Log out button: the game's own /logout, run by the player's click
+--- on a secure button as a macro would (addon code may not log out by
+--- itself). It sits on the row of the character to switch to, where a
+--- craft's Craft button sits (the owner asked 2026-10-11: "the log out
+--- button should be next to the step that needs the logout").
+function Jobs:CreateLogout()
+    if self.button then return self.button end
+    local button = ns.Widgets.CreateButton(UIParent, "Log out", nil, {
+        name = "BlackthornesButlerLogout", template = "SecureActionButtonTemplate",
+        width = BUTTON_WIDTH, height = BUTTON_HEIGHT, primary = true,
     })
     button:Hide()
     button:SetFrameStrata("FULLSCREEN_DIALOG")
@@ -417,90 +416,53 @@ local function LogoutButton(name, label, opts)
         end
     end)
     button:HookScript("OnLeave", function() GameTooltip:Hide() end)
+    self.button = button
     return button
 end
 
-function Jobs:CreateLogout()
-    if not self.button then
-        self.button = LogoutButton("BlackthornesButlerLogout", "Log out",
-            { width = BUTTON_WIDTH, height = BUTTON_HEIGHT })
-    end
-    return self.button
-end
-
-function Jobs:CreateFootLogout()
-    if not self.footButton then
-        self.footButton = LogoutButton("BlackthornesButlerLogoutFoot", "Log out",
-            { width = FOOT_WIDTH, height = FOOT_HEIGHT, primary = true })
-    end
-    return self.footButton
-end
-
 local function Tip(nextJob)
-    return ("Next: %s. %s\nLogs you out to the character list, where you pick %s. Addons can't pick a character for you."):format(
+    return ("Log out for %s. %s\nLogs you out to the character list, where you pick %s. Addons can't pick a character for you."):format(
         nextJob.name, Jobs.Summary(nextJob), nextJob.name)
 end
 
---- Once everything here is done (or nothing here can be done until the
---- next character has done its part), the big gold Log out button takes the
---- place Fill mail had at the window's foot (the owner liked it,
---- 2026-10-11): fill, Send, then one more click in the same spot to
---- switch. Only while nothing else sits at the foot (`room` is how wide
---- the Sell or errand buttons are) and another character has work.
--- @return how wide it is when shown, else 0
-function Jobs:UpdateFoot(room)
-    if self.fighting or InCombat() then return 0 end
-    local ui = ns.UI
-    local window = ui and ui.frame
-    local show = window and ui:IsShown() and not ui.dragging and ui.view ~= "all" and (room or 0) == 0
-    local plan = show and self:Plan()
-    local nextJob = plan and (not plan.here or plan.goFirst) and plan.nextJob
-    local right, bottom = window and window:GetRight(), window and window:GetBottom()
-    if not (nextJob and right and bottom) then
-        self.footShown = false
-        if self.footButton then self.footButton:Hide() end
-        return 0
-    end
-    local button = self:CreateFootLogout()
-    button:SetText(("Log out for %s"):format(nextJob.name))
-    button.tooltipText = Tip(nextJob)
-    local scale = (window:GetEffectiveScale() or 1) / (UIParent:GetEffectiveScale() or 1)
-    button:SetScale(scale)
-    button:ClearAllPoints()
-    button:SetPoint("BOTTOMRIGHT", UIParent, "BOTTOMLEFT", right - ui.SELL_INSET_X, bottom + ui.SELL_INSET_Y)
-    button:Show()
-    self.footShown = true
-    return button:GetWidth() or FOOT_WIDTH
+--- Everything here is done, or can't be until the next character has done
+--- its part: the footer says so.
+function Jobs:DoneHere()
+    local plan = self:Plan()
+    return plan.nextJob ~= nil and (plan.here == nil or plan.goFirst == true)
 end
 
---- Show the Log out button in the window's header, left of All characters,
---- while another character has work waiting. Placed by screen position,
---- as the Sell button is, so the window stays free to move and close in
---- combat; hidden in combat, while the window moves and in All characters.
+--- The list row showing the next character ("First:" or "Next:"), when it
+--- is on screen.
+function Jobs.NextRow(list)
+    for _, row in ipairs((list and list.rows) or {}) do
+        local data = row.data
+        if row:IsShown() and data and data.type == "jobnext" and data.isNext then return row end
+    end
+end
+
+--- Put the Log out button on the next character's row, while it is on
+--- screen. Placed by screen position, as the Sell button is, so the window
+--- stays free to move and close in combat; hidden in combat, while the
+--- window moves and in All characters. Called each time the list is drawn
+--- or scrolled, so it follows its row.
 function Jobs:UpdateLogout()
     if self.fighting or InCombat() then return end
     local ui = ns.UI
-    local anchor = ui and ui.viewButton
-    local show = anchor and ui:IsShown() and not ui.dragging and ui.view ~= "all"
-    local plan = show and self:Plan()
-    -- The gold one at the foot says it already.
-    local nextJob = plan and not self.footShown and plan.nextJob
-    if not nextJob then
+    local list = ui and ui.list
+    local show = list and ui:IsShown() and not ui.dragging and ui.view ~= "all"
+    local row = show and Jobs.NextRow(list)
+    local right, top, bottom = row and row:GetRight(), row and row:GetTop(), row and row:GetBottom()
+    if not (right and top and bottom) then
         if self.button then self.button:Hide() end
         return
     end
-
     local button = self:CreateLogout()
-    local left, bottom = anchor:GetLeft(), anchor:GetBottom()
-    if not (left and bottom) then
-        button:Hide()
-        return
-    end
-    button.tooltipText = Tip(nextJob)
-    local scale = (ui.frame:GetEffectiveScale() or 1) / (UIParent:GetEffectiveScale() or 1)
+    button.tooltipText = Tip(row.data.job)
+    local scale = (row:GetEffectiveScale() or 1) / (UIParent:GetEffectiveScale() or 1)
     button:SetScale(scale)
     button:ClearAllPoints()
-    button:SetPoint("BOTTOMRIGHT", UIParent, "BOTTOMLEFT", left - 6, bottom)
+    button:SetPoint("RIGHT", UIParent, "BOTTOMLEFT", right - 8, (top + bottom) / 2)
     button:Show()
 end
 
@@ -514,7 +476,7 @@ function Jobs:Noticed()
     local plan = self:Plan()
     local hasHere = plan.here ~= nil
     if self.hadHere and not hasHere and plan.nextJob then
-        ns.Print(("that's everything here. Next: %s. %s Log out at the foot of the Butler window to switch."):format(
+        ns.Print(("that's everything here. Next: %s. %s Log out on their line in the Butler window to switch."):format(
             plan.nextJob.name, Jobs.Summary(plan.nextJob)))
     end
     self.hadHere = hasHere
@@ -578,8 +540,6 @@ function Jobs:OnEnable()
     ns.RegisterEvent(self, "PLAYER_REGEN_DISABLED", function()
         Jobs.fighting = true
         if Jobs.button then Jobs.button:Hide() end
-        if Jobs.footButton then Jobs.footButton:Hide() end
-        Jobs.footShown = false
     end)
     ns.RegisterEvent(self, "PLAYER_REGEN_ENABLED", function()
         Jobs.fighting = false

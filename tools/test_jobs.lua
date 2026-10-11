@@ -9,8 +9,9 @@
 --   3. Names are whole, first and last.
 --   4. Craft asks Tradeskills to start it, and says what to do when the
 --      profession is closed.
---   5. The Log out button is a secure /logout, shown only while another
---      character has work, never in combat or in All characters.
+--   5. The Log out button is a secure /logout on the next character's
+--      row, shown only while that row is on screen, never in combat, while
+--      the window moves or in All characters.
 --   6. Once the last step here is done, Butler says who is next.
 --   7. Logging in on a character with a job brings the window up, unless
 --      that is turned off.
@@ -119,20 +120,44 @@ Jobs:Craft(plan.here.steps[1])
 suite.check("never in combat", #crafted == before)
 _G.InCombatLockdown = nil
 
--- 5. Log out.
-UI.viewButton._left = 400
-UI.viewButton.GetBottom = function() return 600 end
+-- 5. Log out, on the next character's row (the owner asked 2026-10-11:
+-- "the log out button should be next to the step that needs the logout").
+local realRows = UI.list.rows
+local function Row(data, shown)
+    return { data = data, IsShown = function() return shown ~= false end,
+        GetRight = function() return 700 end, GetTop = function() return 500 end,
+        GetBottom = function() return 470 end, GetEffectiveScale = function() return 1 end }
+end
+local function ShowRows(list)
+    local rows = {}
+    for index, data in ipairs(list) do rows[index] = Row(data) end
+    UI.list.rows = rows
+    return rows
+end
 Fresh({ ANA, WITHER })
+local shown = ShowRows(Jobs:Lines())
 Jobs:UpdateLogout()
 local button = Jobs.button
 suite.check("the Log out button shows with someone next", button and button:IsShown())
 suite.check("it is the game's own /logout", button:GetAttribute("type") == "macro"
     and button:GetAttribute("macrotext") == "/logout")
 suite.check("its tooltip names who to pick", button.tooltipText:find("Blackthornes Wither", 1, true) ~= nil)
+suite.check("it sits on that character's row", Jobs.NextRow(UI.list).data.job.name == "Blackthornes Wither")
+local point = button._point
+suite.check("at the row's right end, level with it", point[1] == "RIGHT" and point[4] == 692 and point[5] == 485,
+    tostring(point[4]) .. "," .. tostring(point[5]))
+suite.check("work here, the footer doesn't say it's all done", not Jobs:DoneHere())
+UI.list.rows = { Row(shown[1]), Row(shown[2]) }
+Jobs:UpdateLogout()
+suite.check("its row scrolled out of sight, no button", not button:IsShown())
+ShowRows(Jobs:Lines())
 Fresh({ ANA })
+ShowRows(Jobs:Lines())
 Jobs:UpdateLogout()
 suite.check("nobody next, no button", not button:IsShown())
 Fresh({ ANA, WITHER })
+ShowRows(Jobs:Lines())
+Jobs:UpdateLogout()
 env.Fire("PLAYER_REGEN_DISABLED")
 suite.check("combat hides it", not button:IsShown())
 env.Fire("PLAYER_REGEN_ENABLED")
@@ -141,31 +166,16 @@ UI.view = "all"
 Jobs:UpdateLogout()
 suite.check("not in All characters", not button:IsShown())
 UI.view = "bags"
-
--- Once everything here is done, the gold Log out takes Fill mail's place.
-UI.frame.GetRight = function() return 900 end
-UI.frame.GetBottom = function() return 200 end
+UI.dragging = true
+Jobs:UpdateLogout()
+suite.check("not while the window moves", not button:IsShown())
+UI.dragging = false
 Fresh({ WITHER })
-UI:FootRoom()
-local foot = Jobs.footButton
-suite.check("done here, Log out sits at the foot", foot and foot:IsShown())
-suite.check("naming who is next", foot.label:GetText() == "Log out for Blackthornes Wither", foot.label:GetText())
-suite.check("it is the game's own /logout too", foot:GetAttribute("macrotext") == "/logout")
-suite.check("and the small one steps aside", not button:IsShown())
-UI.errandRoom = 180
-UI:FootRoom()
-suite.check("never over Fill mail", not foot:IsShown())
-suite.check("the small one is back then", button:IsShown())
-UI.errandRoom = nil
-Fresh({ ANA, WITHER })
-UI:FootRoom()
-suite.check("work left here keeps it off the foot", not foot:IsShown())
-env.Fire("PLAYER_REGEN_DISABLED")
-Fresh({ WITHER })
-UI:FootRoom()
-suite.check("never comes up in combat", not foot:IsShown())
-env.Fire("PLAYER_REGEN_ENABLED")
-suite.check("comes up once the fight ends", foot:IsShown())
+ShowRows(Jobs:Lines())
+Jobs:UpdateLogout()
+suite.check("done here, it is on the next one's row", button:IsShown())
+suite.check("and the footer says everything here is done", Jobs:DoneHere())
+suite.check("never a second button at the foot", Jobs.footButton == nil)
 
 -- Nothing here can be done yet and the next one can: it goes first.
 local STUCK = { name = "Ana Blackthorne", isCurrent = true, steps = {
@@ -182,9 +192,11 @@ suite.check("then the rest, once each", #rows == 3 and rows[3].job.name == "Cy W
 title, detail = Jobs.StepText(rows[2].step)
 suite.check("the craft says who has what it needs",
     detail:find("Blackthornes Wither has it", 1, true) ~= nil, detail)
-UI:FootRoom()
-suite.check("and the gold Log out points there", foot:IsShown()
-    and foot.label:GetText() == "Log out for Blackthornes Wither")
+ShowRows(rows)
+Jobs:UpdateLogout()
+suite.check("and Log out sits on its line", button:IsShown()
+    and Jobs.NextRow(UI.list) and Jobs.NextRow(UI.list).data.isFirst == true)
+UI.list.rows = realRows
 plan = Fresh({ STUCK, CY })
 suite.check("nobody else can either, nothing jumps", not plan.goFirst and Jobs:Lines()[1].type == "job")
 local clean = Jobs.Clean({ { name = "Dee Tanner", steps = { { kind = "mail", to = "Blackthornes Wither",
