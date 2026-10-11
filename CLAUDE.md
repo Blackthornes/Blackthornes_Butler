@@ -80,7 +80,10 @@ _G.BlackthornesTS.Butler:Advise(itemID)
 _G.BlackthornesTS.Butler:SetBoughtToDisenchant(itemID, on, count)
   -- true, or false and why: the right-click menu's mark
 _G.BlackthornesEquipment.Butler:Advise(link, bag, slot)
-  -- { upgrade = "now" | "later" | nil, gain, sell (its bag coin), tool }
+  -- { upgrade = "now" | "later" | nil, gain, sell (its bag coin), tool,
+  --   alt = { key (a GUID), gain, level } when it is an upgrade for
+  --   another character instead: a Mail row to the name
+  --   Errands:NameOf(key) reads from Tradeskills' Holdings }
   -- nil for anything that is not gear; bag and slot let it see soulbound
 _G.BlackthornesFarmer.Butler:Advise(itemID)
   -- { goal, have, target, need }: the character playing's own goals

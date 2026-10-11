@@ -144,6 +144,32 @@ local function AllNames()
     return names, myName
 end
 
+--- The full name Tradeskills gives a character, by its key (the GUID
+--- Equipment names it by), when it is on this realm and side and is not
+--- the character playing; nil otherwise. Read with the names above, once
+--- per Verdicts.version.
+local byKeyCache, byKeyVersion
+function Errands:NameOf(key)
+    if type(key) ~= "string" or key == "" then return nil end
+    local version = ns.Verdicts and ns.Verdicts.version
+    if not byKeyCache or byKeyVersion ~= version then
+        byKeyCache, byKeyVersion = {}, version
+        local list, me = Holdings()
+        local realm = me and Text(me.realm)
+        local faction = me and Text(me.faction)
+        for _, entry in ipairs(list or {}) do
+            local name = type(entry) == "table" and (Text(entry.short) or Text(entry.name))
+            local entryKey = type(entry) == "table" and Text(entry.key)
+            if name and entryKey and entry.isCurrent ~= true
+                and (not realm or not Text(entry.realm) or Text(entry.realm) == realm)
+                and (not faction or not Text(entry.faction) or Text(entry.faction) == faction) then
+                byKeyCache[entryKey] = name
+            end
+        end
+    end
+    return byKeyCache[key]
+end
+
 --- The name Tradeskills gives the character playing (as Always mail and
 --- mailTo name characters), or nil without Tradeskills. Read with the
 --- names above, once per Verdicts.version.
