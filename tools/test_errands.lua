@@ -328,6 +328,23 @@ suite.check("/bbutler bank turns it off", ns.db.openAtBank == false)
 ns.HandleSlash("mailbox")
 suite.check("/bbutler mailbox turns it off", ns.db.openAtMailbox == false)
 
+-- An alt's queued craft beats the Always keep list for its share; the
+-- list keeps the rest.
+_G.BlackthornesTS.Butler.Advise = advise
+ns.Verdicts:Forget()
+ns.db.alwaysKeep = ns.db.alwaysKeep or {}
+ns.db.alwaysKeep[403] = true
+local verdict, reason, _, _, extra = ns.Verdicts:Decide({ itemID = 403, count = 20, quality = 1 })
+suite.check("Always keep still mails an alt's craft share", verdict == "mail" and extra and extra.to == "Bob"
+    and extra.count == 5 and reason == "Mail 5 to Bob for their crafts, keep the rest", tostring(reason))
+verdict = ns.Verdicts:Decide({ itemID = 403, count = 20, quality = 1, bound = true })
+suite.check("but soulbound stays kept", verdict == "keep")
+ns.db.alwaysKeep[403] = nil
+ns.db.alwaysKeep[402] = true
+verdict = ns.Verdicts:Decide({ itemID = 402, count = 1, quality = 1 })
+suite.check("and with no alt craft the list keeps it", verdict == "keep")
+ns.db.alwaysKeep[402] = nil
+
 -- The next suites run in this same Lua, without Tradeskills.
 _G.BlackthornesTS = nil
 
