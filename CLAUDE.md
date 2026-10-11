@@ -367,6 +367,11 @@ like the Sell button (`Jobs:UpdateLogout`, from `UI:FootRoom` and each new
 list), shown only while another character has work, hidden in combat, while
 the window moves and in All characters. Not yet seen in game; `/bbutler
 probe` has a jobs line (`Logout`, `SLASH_LOGOUT1`).
+Once nothing is left here (the owner liked it, 2026-10-11: send, then
+switch, in one more click), a big gold "Log out for NAME" button
+(`BlackthornesButlerLogoutFoot`, `Jobs:UpdateFoot`, from `UI:FootRoom`)
+takes Fill mail's place at the foot, only while no Sell or errand button
+sits there, and the small one in the header steps aside.
 
 Logging in (`PLAYER_ENTERING_WORLD`'s initial login, `Jobs.LOGIN_DELAY`
 later) on a character with a step brings the window up and says what it is
