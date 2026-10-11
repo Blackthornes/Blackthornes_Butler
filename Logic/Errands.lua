@@ -286,6 +286,9 @@ function Errands:FillMail()
     if InCombat() then return false, "Not in combat." end
     local butler = Errands.Tradeskills("FillMail")
     if not butler then return false, "Filling mail needs Blackthornes Tradeskills." end
+    -- Ask the other addons afresh: an alt's queue may have changed since
+    -- the window last asked, and the click must send what it wants now.
+    ns.Verdicts:Changed(true)
     local recipient = self:NextRecipient()
     if not recipient then return false, "Nothing left to mail." end
 

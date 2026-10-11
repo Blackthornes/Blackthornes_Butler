@@ -142,7 +142,13 @@ function Verdicts:Judge(entry, noAlt)
     if memoVersion ~= self.version then
         memo, memoVersion = {}, self.version
     end
-    local key = (noAlt and "x|" or "") .. tostring(entry.link or entry.itemID)
+    -- How many are carried is part of the key: what the sisters say (how
+    -- many an alt's queue still wants mailed, a goal's count, pet food)
+    -- moves with it, so an item is asked again only when its own count
+    -- changed (eight Medium Leather crafted one at a time were mailed as
+    -- one, 2026-10-11).
+    local carried = entry.itemID and ns.Bags.Carried and ns.Bags:Carried(entry.itemID) or 0
+    local key = (noAlt and "x|" or "") .. tostring(entry.link or entry.itemID) .. "#" .. carried
     local known = memo[key]
     if known then return known[1], known[2], known[3], known[4] end
 
