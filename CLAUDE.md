@@ -35,7 +35,13 @@ else Look at it) and groups them Sell, Look at it, Keep (`Verdicts:Groups`,
 kept until `Bags.version` or `Verdicts.version` moves). `Logic/Selling.lua`
 is the Sell button (see the findings file for why it is secure).
 `UI/MainWindow.lua` draws the groups with `Widgets.CreateRowList` (Farmer's,
-with the dark glass rows) and Butler's own right-click menu. Saved and never
+with the dark glass rows) and Butler's own right-click menu. Rows are two lines tall so a long reason or name wraps rather than
+ending in "..." (the owner's rule). The window has the house size grip
+below its bottom right corner (Tradeskills' window and Equipment's upgrade
+quest panel have the same; asked 2026-10-11): drag to scale it 60% to 150%,
+right-click for the normal size, saved as `windowScale` (account wide,
+never rename it). The Sell button, a secure button outside the window, is
+drawn at the window's scale. Saved and never
 renamed: `alwaysKeep`, `alwaysSell`, `alwaysBank` (`[itemID] = true`),
 `alwaysMail` (`[itemID]` = a character's short name), `sellTest`,
 `sellBelow` (copper, nil when off),

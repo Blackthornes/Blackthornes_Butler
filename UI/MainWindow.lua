@@ -37,9 +37,11 @@ local HEADER = 44
 -- The metal rim sits on the window's edge and reaches this far inward, with
 -- room to spare (UI/Titanforged.lua).
 local EDGE_PAD = 11
-local WIDTH = 560
-local HEIGHT = 440
-local ROW_HEIGHT = 22
+local WIDTH = 620
+local HEIGHT = 500
+-- Tall enough for a reason or a name on two lines: words wrap, never cut
+-- short with "..." (a player found a sell reason cut off, 2026-10-11).
+local ROW_HEIGHT = 30
 -- From the well's foot to the window's.
 local FOOT = 40
 
@@ -51,6 +53,13 @@ UI.SELL_INSET_Y = 9
 -- The mailbox and bank buttons' widths; Fill mail carries a name.
 local ERRAND_WIDTH = 140
 local MAIL_WIDTH = 180
+
+-- The window's size, dragged at the grip below its bottom right corner as
+-- in Tradeskills' window and Equipment's upgrade quest panel. Saved as
+-- `windowScale`, account wide.
+local SCALE_MIN = 0.6
+local SCALE_MAX = 1.5
+local GRIP_SIZE = 20
 
 -- The game's item quality colours.
 local QUALITY = {
@@ -71,6 +80,7 @@ function UI:Build()
 
     local frame = CreateFrame("Frame", "BlackthornesButlerWindow", UIParent)
     frame:SetSize(WIDTH, HEIGHT)
+    frame:SetScale(self:GetWindowScale())
     frame:SetFrameStrata("DIALOG")
     frame:SetToplevel(true)
     frame:SetClampedToScreen(true)
@@ -193,6 +203,8 @@ function UI:Build()
     self.takeButton.tooltipText = "Takes out what your craft queue still needs, in whole stacks"
     self.takeButton:Hide()
 
+    self:BuildSizeGrip()
+
     frame:Hide()
     return frame
 end
@@ -287,8 +299,9 @@ function UI.CreateRow(row)
     row.fold:SetWidth(16)
 
     row.name = Theme.CreateLabel(row, "small", "text")
-    row.name:SetPoint("LEFT", 28, 0)
-    row.name:SetWidth(190)
+    row.name:SetPoint("LEFT", 34, 0)
+    row.name:SetWidth(184)
+    row.name:SetWordWrap(true)
 
     row.worth = Theme.CreateLabel(row, "small", "text", "RIGHT")
     row.worth:SetPoint("RIGHT", -6, 0)
@@ -297,6 +310,7 @@ function UI.CreateRow(row)
     row.reason = Theme.CreateLabel(row, "small", "muted")
     row.reason:SetPoint("LEFT", row.name, "RIGHT", 8, 0)
     row.reason:SetPoint("RIGHT", row.worth, "LEFT", -8, 0)
+    row.reason:SetWordWrap(true)
 end
 
 local function Plural(count, one, many)
@@ -863,6 +877,195 @@ function UI:LeftVendor()
     elseif ns.Selling then
         ns.Selling:Update()
     end
+end
+
+--------------------------------------------------------------------------------
+-- Size
+--------------------------------------------------------------------------------
+
+function UI.ClampScale(value)
+    value = tonumber(value)
+    if not value or value ~= value then return 1 end
+    value = math.max(SCALE_MIN, math.min(SCALE_MAX, value))
+    return math.floor(value * 100 + 0.5) / 100
+end
+
+--- The largest size at which the whole window, portrait and corner gems
+--- included, still fits on the screen.
+function UI.FitScale()
+    local ok, width, height = pcall(function()
+        return UIParent:GetWidth(), UIParent:GetHeight()
+    end)
+    if not ok or type(width) ~= "number" or type(height) ~= "number"
+        or width <= 0 or height <= 0 then
+        return SCALE_MAX
+    end
+    local fit = math.min(width / (WIDTH + 40), height / (HEIGHT + 60))
+    return math.max(SCALE_MIN, math.min(SCALE_MAX, math.floor(fit * 100) / 100))
+end
+
+--- The size the window is drawn at: the saved one, kept on the screen.
+function UI:GetWindowScale()
+    return math.min(UI.ClampScale(ns.db and ns.db.windowScale or 1), UI.FitScale())
+end
+
+function UI.ScaleText(scale)
+    return ("%d%%"):format(math.floor((tonumber(scale) or 1) * 100 + 0.5))
+end
+
+--- Draw the window at `scale` with its top left corner where it was, so it
+--- grows and shrinks toward the bottom right, as it does from the grip.
+function UI:ApplyScale(scale)
+    local frame = self.frame
+    if not frame then return end
+    scale = math.min(UI.ClampScale(scale), UI.FitScale())
+    local old = frame:GetScale()
+    if type(old) ~= "number" or old <= 0 then old = 1 end
+    if math.abs(old - scale) < 0.001 then return end
+
+    if ns.Motion and ns.Motion.Stop then pcall(ns.Motion.Stop, ns.Motion, frame, "open", true) end
+    local left, top = frame:GetLeft(), frame:GetTop()
+    frame:SetScale(scale)
+    if type(left) == "number" and type(top) == "number" then
+        frame:ClearAllPoints()
+        frame:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT", left * old / scale, top * old / scale)
+        self:SavePosition()
+    end
+    if ns.Selling then ns.Selling:Update() end
+end
+
+--- Save a size and draw the window at it.
+function UI:SetWindowScale(value)
+    local scale = UI.ClampScale(value)
+    if ns.db then ns.db.windowScale = scale end
+    self:ApplyScale(scale)
+end
+
+--- The grip below the bottom right corner: drag it to make the window
+--- bigger or smaller, right-click it for the normal size. Only the
+--- window's scale changes while dragging; the list is not filled again.
+function UI:BuildSizeGrip()
+    local frame = self.frame
+    local below = 3
+    if self.trim and ns.Titanforged and ns.Titanforged.Reach then
+        local _, _, _, bottom = ns.Titanforged.Reach(self.trim)
+        if type(bottom) == "number" then below = bottom + 3 end
+    end
+
+    local grip = Theme.CreatePanel(frame, "panel", "borderLit")
+    grip:SetSize(GRIP_SIZE, GRIP_SIZE)
+    grip:SetPoint("TOPRIGHT", frame, "BOTTOMRIGHT", -6, -below)
+    grip:SetFrameLevel((frame:GetFrameLevel() or 0) + 20)
+    grip:EnableMouse(true)
+    if Theme.TopSheen then Theme.TopSheen(grip) end
+    self.sizeGrip = grip
+
+    -- Six gold dots in a stair down to the bottom right corner, the shape
+    -- every resizable window in the game wears.
+    local dots = {}
+    for row = 0, 2 do
+        for column = 2 - row, 2 do
+            local dot = grip:CreateTexture(nil, "ARTWORK")
+            dot:SetSize(3, 3)
+            dot:SetPoint("BOTTOMRIGHT", grip, "BOTTOMRIGHT", -3 - (2 - column) * 5, 3 + (2 - row) * 5)
+            dot:SetColorTexture(Theme.Unpack("accent"))
+            dots[#dots + 1] = dot
+        end
+    end
+
+    local function Light(on)
+        Theme.SetBorderColor(grip, on and "accent" or "borderLit")
+        for _, dot in ipairs(dots) do
+            dot:SetColorTexture(Theme.Unpack(on and "accentHi" or "accent"))
+        end
+    end
+
+    local function Track(self)
+        local cx, cy = GetCursorPosition()
+        local uiScale = UIParent:GetEffectiveScale()
+        if not (cx and cy and type(uiScale) == "number" and uiScale > 0) then return end
+        cx, cy = cx / uiScale, cy / uiScale
+
+        -- The size that keeps the cursor where it took hold of the grip:
+        -- the width's and the height's answers averaged, so a drag off the
+        -- diagonal still feels right.
+        local width = cx - self.grabX - self.anchorLeft
+        local height = self.anchorTop - (cy + self.grabY)
+        local scale = UI.ClampScale((width / WIDTH + height / HEIGHT) / 2)
+        scale = math.min(scale, self.fit)
+        if math.abs(scale - (frame:GetScale() or 1)) < 0.005 then return end
+
+        frame:SetScale(scale)
+        frame:ClearAllPoints()
+        frame:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT", self.anchorLeft / scale, self.anchorTop / scale)
+
+        if GameTooltip:IsOwned(self) then
+            GameTooltip:SetText(UI.ScaleText(scale), Theme.Unpack("accentHi"))
+            GameTooltip:Show()
+        end
+    end
+
+    local function StopSizing(self)
+        if not self.sizing then return end
+        self.sizing = false
+        self:SetScript("OnUpdate", nil)
+        UI.dragging = false
+        if ns.db then ns.db.windowScale = UI.ClampScale(frame:GetScale()) end
+        UI:SavePosition()
+        if ns.Selling then ns.Selling:Update() end
+    end
+
+    grip:SetScript("OnMouseDown", function(self, button)
+        if button == "RightButton" then
+            UI:SetWindowScale(1)
+            return
+        end
+        if button ~= "LeftButton" then return end
+
+        if ns.Motion and ns.Motion.Stop then pcall(ns.Motion.Stop, ns.Motion, frame, "open", true) end
+        local scale = frame:GetScale() or 1
+        local left, top = frame:GetLeft(), frame:GetTop()
+        local cx, cy = GetCursorPosition()
+        local uiScale = UIParent:GetEffectiveScale()
+        if not (type(left) == "number" and type(top) == "number" and cx and cy
+            and type(uiScale) == "number" and uiScale > 0) then
+            return
+        end
+
+        -- All in the screen's units, which do not change with the window's.
+        self.anchorLeft, self.anchorTop = left * scale, top * scale
+        self.grabX = cx / uiScale - (self.anchorLeft + WIDTH * scale)
+        self.grabY = (self.anchorTop - HEIGHT * scale) - cy / uiScale
+        self.fit = UI.FitScale()
+
+        frame:ClearAllPoints()
+        frame:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT", left, top)
+
+        -- The Sell button and the menu sit outside the window: out of the
+        -- way until the drag ends, as when the window is moved.
+        UI.dragging = true
+        UI:HideMenu()
+        if ns.Selling then ns.Selling:Update() end
+
+        self.sizing = true
+        self:SetScript("OnUpdate", Track)
+    end)
+    grip:SetScript("OnMouseUp", StopSizing)
+    grip:SetScript("OnHide", StopSizing)
+
+    grip:SetScript("OnEnter", function(self)
+        Light(true)
+        GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+        GameTooltip:SetText(UI.ScaleText(frame:GetScale()), Theme.Unpack("accentHi"))
+        GameTooltip:AddLine("Drag to make the window bigger or smaller.", 1, 1, 1, true)
+        GameTooltip:AddLine("Right-click: back to the normal size.", 1, 1, 1, true)
+        GameTooltip:Show()
+    end)
+    grip:SetScript("OnLeave", function()
+        Light(false)
+        GameTooltip:Hide()
+    end)
+    return grip
 end
 
 --------------------------------------------------------------------------------
