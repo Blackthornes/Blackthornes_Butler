@@ -307,7 +307,9 @@ a bow or crossbow (arrows) or gun (bullets), and the ammo bag is the bag
 whose family holds arrows (quiver, 1) or bullets (ammo pouch, 2). At a
 vendor, the window's first row is Ammo: the vendor's ammo of that kind the
 hunter can use (`isUsable`, its level), most damage first (the tooltip's
-"Adds X damage per second", else item level), and how many whole lots fit
+"Adds X damage per second", read through the game's own
+`AMMO_DAMAGE_TEMPLATE` so another language's line and decimal comma count,
+the English words kept as a fallback; else item level), and how many whole lots fit
 the bag's empty slots and the room left in its stacks of the same ammo.
 The row's Fill button buys them, one `BuyMerchantItem(index)` (one lot)
 every `Ammo.GAP`, each re-checked first; fewer lots when the purse is

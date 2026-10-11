@@ -202,7 +202,56 @@ function Ammo.MerchantItem(index)
     }
 end
 
+-- The English lines, kept after the game's own (below) as a fallback.
 local DPS_PATTERNS = { "Adds ([%d%.]+) damage per second", "([%d%.]+) damage per second" }
+
+-- A number as the client writes it: "2.5", or "2,5" on a German client.
+local NUMBER = "([%d%.,]+)"
+
+--- A Lua pattern that reads the number out of a line the game writes from
+--- a format string ("Adds %s damage per second"), or nil. Every other
+--- character is matched as it is.
+function Ammo.PatternFrom(template)
+    if type(template) ~= "string" or template == "" then return nil end
+    local parts, pos, found = {}, 1, false
+    while true do
+        local from, to = template:find("%%[%d%$%.%-]*[sgfd]", pos)
+        if not from then break end
+        parts[#parts + 1] = template:sub(pos, from - 1):gsub("[%^%$%(%)%%%.%[%]%*%+%-%?]", "%%%0")
+        parts[#parts + 1] = NUMBER
+        found = true
+        pos = to + 1
+    end
+    if not found then return nil end
+    parts[#parts + 1] = template:sub(pos):gsub("[%^%$%(%)%%%.%[%]%*%+%-%?]", "%%%0")
+    return table.concat(parts)
+end
+
+--- The patterns tried on each tooltip line: the game's own words for the
+--- ammo line first (AMMO_DAMAGE_TEMPLATE, in the client's language), then
+--- the English ones. Built once.
+function Ammo.DamagePatterns()
+    if Ammo.patterns then return Ammo.patterns end
+    local list = {}
+    local ok, template = pcall(rawget, _G, "AMMO_DAMAGE_TEMPLATE")
+    local own = ok and Ammo.PatternFrom(template) or nil
+    if own then list[1] = own end
+    for _, pattern in ipairs(DPS_PATTERNS) do list[#list + 1] = pattern end
+    Ammo.patterns = list
+    return list
+end
+
+--- "2.5" or "2,5" as 2.5, or nil.
+function Ammo.ReadNumber(text)
+    if type(text) ~= "string" then return nil end
+    text = text:gsub("[%.,]+$", "")
+    if text:find(",", 1, true) and not text:find(".", 1, true) then
+        text = text:gsub(",", ".")
+    else
+        text = text:gsub(",", "")
+    end
+    return tonumber(text)
+end
 
 --- The damage a second the ammo adds, from the vendor item's tooltip (or
 --- the item's), or nil when the client doesn't say.
@@ -214,8 +263,8 @@ function Ammo.Damage(index, itemID)
         for _, line in ipairs(data.lines or {}) do
             local text = line.leftText
             if type(text) == "string" then
-                for _, pattern in ipairs(DPS_PATTERNS) do
-                    local value = tonumber(text:match(pattern))
+                for _, pattern in ipairs(Ammo.DamagePatterns()) do
+                    local value = Ammo.ReadNumber(text:match(pattern))
                     if value then return value end
                 end
             end
