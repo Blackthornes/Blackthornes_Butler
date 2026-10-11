@@ -132,8 +132,8 @@ The owner asked (2026-10-11) for Butler to follow Tradeskills' disenchanter
 setting (its Settings, Mail page: "Disenchanter" and "Mail gear up to").
 Advise's `disenchanter` names that character when Tradeskills' own Mail
 page would send the item there (its `QueueMail:GoesToDisenchanter`: green
-up to the quality picked, can be disenchanted, never bind on pickup or an
-upgrade for the character playing). `Verdicts:ForDisenchanter`, step 8c
+up to the quality picked, can be disenchanted, never crafted gear, bind
+on pickup or an upgrade for the character playing). `Verdicts:ForDisenchanter`, step 8c
 after the sisters' Keep and Bought to disenchant, puts it under Mail to
 that character, whatever the auction house or a vendor pays; a soulbound
 copy and the character playing never get it. With nobody typed there,

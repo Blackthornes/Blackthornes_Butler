@@ -353,8 +353,8 @@ end
 
 --- Step 8c: Tradeskills' disenchanter (the owner asked 2026-10-11: Butler
 --- follows that setting). Gear its Mail page would send there (green up
---- to the quality picked, can be disenchanted, never bind on pickup or an
---- upgrade for this character) is mailed there, whatever else it would
+--- to the quality picked, can be disenchanted, never crafted, bind on
+--- pickup or an upgrade for this character) is mailed there, whatever else it would
 --- fetch. Never a soulbound copy, never the character playing. Returns
 --- verdict, reason, worth and { to }; or nil.
 function Verdicts:ForDisenchanter(entry, said)
