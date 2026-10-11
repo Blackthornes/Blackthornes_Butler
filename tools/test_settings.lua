@@ -147,22 +147,32 @@ suite.check("/bbutler sellbelow fills the boxes", money.boxes.gold:GetText() == 
 ns.HandleSlash("sellbelow off")
 suite.check("and off empties them", money:GetValue() == 0 and ns.db.sellBelow == nil)
 
+-- The gold fund's usual amount: the money box and /bbutler goldmin agree.
+local goldBox = controls.goldMinimum
+goldBox.boxes.gold.editBox:SetText("50")
+goldBox.boxes.gold.editBox:GetScript("OnEditFocusLost")(goldBox.boxes.gold.editBox)
+suite.check("Keep at least saves in copper", ns.db.goldMinimum == 500000, tostring(ns.db.goldMinimum))
+ns.HandleSlash("goldmin 20g")
+suite.check("/bbutler goldmin fills the box", goldBox.boxes.gold:GetText() == "20")
+ns.HandleSlash("goldmin off")
+suite.check("and off turns it off", ns.db.goldMinimum == nil and goldBox:GetValue() == 0)
+
 -- Every /bbutler command has a button here.
 local ran = {}
 local realSlash = ns.HandleSlash
 ns.HandleSlash = function(text) ran[#ran + 1] = text end
-for _, key in ipairs({ "openWindow", "all", "probe", "help", "sellTest", "lists" }) do
+for _, key in ipairs({ "openWindow", "all", "probe", "help", "sellTest", "lists", "goldReport" }) do
     controls[key]:GetScript("OnClick")(controls[key])
 end
 ns.HandleSlash = realSlash
 suite.check("the command buttons run their commands",
-    table.concat(ran, ",") == "window,all,probe,help,selltest,lists", table.concat(ran, ","))
+    table.concat(ran, ",") == "window,all,probe,help,selltest,lists,gold", table.concat(ran, ","))
 
 -- Every command has a button or a control here, apart from the one that
 -- deletes the player's lists, which stays typed (a house rule).
 local covered = { window = true, all = true, probe = true, help = true, selltest = true, lists = true,
     vendor = true, mailbox = true, bank = true, minimap = true, settings = true, reset = true,
-    sellbelow = true, freespace = true }
+    sellbelow = true, freespace = true, gold = true, goldmin = true }
 for _, name in ipairs(ns.commandOrder) do
     suite.check("/bbutler " .. name .. " has a place in Settings", covered[name] == true)
 end

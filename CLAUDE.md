@@ -81,6 +81,8 @@ _G.BlackthornesTS.Butler:Advise(itemID)
   --   this gear there) }
 _G.BlackthornesTS.Butler:SetBoughtToDisenchant(itemID, on, count)
   -- true, or false and why: the right-click menu's mark
+_G.BlackthornesTS.Butler:FillMail(name, items, money)
+  -- fills the Send Mail page; money (copper) is the gold fund's top-up
 _G.BlackthornesEquipment.Butler:Advise(link, bag, slot)
   -- { upgrade = "now" | "later" | nil, gain, sell (its bag coin), tool,
   --   alt = { key (a GUID), gain, level } when it is an upgrade for
@@ -234,6 +236,31 @@ it works from addon code), one stack every `Errands.STEP`, each slot read
 again first; a stack that does not move means the other side is full, and
 the run stops and says so. Nothing in combat. The bank is read only for a
 click. Not yet seen in game.
+
+## The gold fund
+
+The owner asked (2026-10-11) for a minimum gold balance on his characters,
+topped up by mail from a character with more. `Logic/Funds.lua`:
+"Keep at least" on the Gold page of Settings (`goldMinimum`, copper,
+account wide, nil when off; `/bbutler goldmin 50g`) and one character's
+own amount (`goldMinimumFor[full name]`, 0 meaning it keeps nothing
+back; the page's character picker, "They keep" and "Use the usual").
+Never rename either. `Funds:Plan` reads Tradeskills' `Holdings()` (its
+`gold` and `goldAt`, as last seen; live for the character playing) and,
+for each character on this realm and side below its amount, biggest need
+first, offers what the purse can spare above the sender's own amount, less
+30 copper postage a mail. At a mailbox those are the Gold rows at the top
+of the window (with how old each balance is), and `Errands:Recipients`
+gives each its `money`, which Fill mail passes to Tradeskills'
+`FillMail(name, items, money)`: with that character's items, or gold
+alone. The player presses Send. Gold Butler filled and then saw leave the
+purse (`Funds:Filled`, `PLAYER_MONEY`) is kept in `goldSent[full name]`
+(never rename it) and counted toward that character until its own record
+shows it took it, or 30 days pass (unclaimed mail goes back), so it is
+never sent twice. `/bbutler gold` lists everyone. Smooth play: the plan is
+worked out only while the window draws it, again only when the purse
+(debounced 0.2 s) or a setting moves. Tested in `tools/test_funds.lua`.
+Not yet seen in game.
 
 ## Sell below
 

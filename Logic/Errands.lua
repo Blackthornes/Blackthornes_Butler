@@ -5,7 +5,10 @@
 -- Mail group for one character, through Tradeskills (its QueueMail:Fill,
 -- which its Mail panel uses too):
 --
---   _G.BlackthornesTS.Butler:FillMail(name, items)   -- true, or false and why
+--   _G.BlackthornesTS.Butler:FillMail(name, items, money)   -- true, or false and why
+--
+-- `money` is the gold fund's top-up for that character (Logic/Funds.lua),
+-- put in the mail's gold boxes; gold alone is a mail too.
 --
 -- The player presses Send. Nothing is ever sent from here, the mail frame
 -- is never hooked, moved, shown or hidden, and each click fills the next
@@ -92,6 +95,19 @@ function Errands:Recipients()
             recipient.count = recipient.count + count
         end
     end
+    -- Gold from the fund (Logic/Funds.lua) rides with that character's
+    -- items, or goes as a mail of its own.
+    if ns.Funds and self.mailOpen then
+        for _, entry in ipairs((ns.Funds:Plan())) do
+            local recipient = byName[entry.to]
+            if not recipient then
+                recipient = { to = entry.to, items = {}, byID = {}, count = 0 }
+                byName[entry.to] = recipient
+                list[#list + 1] = recipient
+            end
+            recipient.money = entry.amount
+        end
+    end
     table.sort(list, function(a, b)
         if #a.items ~= #b.items then return #a.items > #b.items end
         return a.to < b.to
@@ -119,8 +135,11 @@ local function Holdings()
     return list, me
 end
 
---- The short name Tradeskills gives the character playing (as Always mail
---- and mailTo name characters), or nil without Tradeskills.
+--- Tradeskills' Holdings and the character playing's entry (the gold fund
+--- reads it), or nil without Tradeskills.
+function Errands:Holdings()
+    return Holdings()
+end
 
 --- Every character's name on this realm and side, the one playing too,
 --- kept until Verdicts.version moves (the window opening, a choice made).
@@ -268,12 +287,13 @@ function Errands:FillMail()
     local items = {}
     for _, item in ipairs(recipient.items) do items[#items + 1] = { itemID = item.itemID, count = item.count } end
 
-    local ok, started, why, fullName = pcall(butler.FillMail, butler, recipient.to, items)
+    local ok, started, why, fullName = pcall(butler.FillMail, butler, recipient.to, items, recipient.money)
     if not ok then return false, "Tradeskills could not fill the mail." end
     if started ~= true then
         return false, type(why) == "string" and ("Couldn't fill it: %s."):format(why) or "Couldn't fill it."
     end
     self.filled[recipient.to] = true
+    if recipient.money and ns.Funds then ns.Funds:Filled(recipient.to, recipient.money) end
     self:Update()
     -- The full name the mail went to, when Tradeskills says it: the short
     -- one ("Ana S.") read as a typo in chat.

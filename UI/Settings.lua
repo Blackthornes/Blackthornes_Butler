@@ -36,6 +36,8 @@ local TITLE = "Blackthornes Butler"
 local PAGES = {
     { key = "selling", text = "ERRANDS",
       tip = "Selling at a vendor, mail and the bank, and your Always keep, sell and bank lists" },
+    { key = "gold", text = "GOLD",
+      tip = "A gold fund: how much each of your characters keeps, topped up by mail" },
     { key = "general", text = "GENERAL",
       tip = "The minimap button, window position, text size and debug output" },
 }
@@ -211,6 +213,68 @@ function SettingsUI.WindowStyleControl(row, x)
     return stepper
 end
 
+--- Steps through the player's characters on this realm and side, by full
+--- name, wrapped rather than cut short. :SetNames(list), :GetName().
+function SettingsUI.CharacterPicker(row, x, onChange)
+    local picker = CreateFrame("Frame", nil, row)
+    picker:SetSize(180, 24)
+    picker:SetPoint("TOPLEFT", x, 0)
+    picker.names, picker.index = {}, 1
+
+    local text = Theme.CreateLabel(picker, "small", "text", "CENTER")
+    text:SetPoint("LEFT", 26, 0)
+    text:SetPoint("RIGHT", -26, 0)
+    text:SetWordWrap(true)
+
+    local function Show()
+        local count = #picker.names
+        picker.index = math.max(1, math.min(picker.index, math.max(1, count)))
+        text:SetText(picker.names[picker.index] or "No characters yet")
+        picker.prev:SetLabelColor(picker.index <= 1 and "dim" or nil)
+        picker.next:SetLabelColor(picker.index >= count and "dim" or nil)
+    end
+
+    local function Step(direction)
+        local wanted = picker.index + direction
+        if wanted < 1 or wanted > #picker.names then return end
+        picker.index = wanted
+        Show()
+        if onChange then onChange() end
+    end
+
+    picker.prev = Widgets.CreateButton(picker, "<", function() Step(-1) end, { width = 22, height = 20 })
+    picker.prev:SetPoint("LEFT", 0, 0)
+    picker.next = Widgets.CreateButton(picker, ">", function() Step(1) end, { width = 22, height = 20 })
+    picker.next:SetPoint("RIGHT", 0, 0)
+
+    function picker:SetNames(names)
+        local current = self.names[self.index]
+        self.names = names
+        self.index = 1
+        for index, name in ipairs(names) do
+            if name == current then self.index = index end
+        end
+        Show()
+    end
+
+    function picker:GetName()
+        return self.names[self.index]
+    end
+
+    Show()
+    return picker
+end
+
+--- The picked character's own amount (or the usual) in its money box.
+function SettingsUI:SyncGoldFor()
+    local controls = self.controls
+    if not (controls and controls.goldPick) then return end
+    local name = controls.goldPick:GetName()
+    local own = name and ns.Funds:Override(name)
+    controls.goldFor:SetValue(own or (name and ns.Funds:MinimumFor(name)) or 0)
+    controls.goldUsual:SetShown(own ~= nil)
+end
+
 function SettingsUI:BuildPages()
     local controls = self.controls
     local pages = self.pages
@@ -264,6 +328,47 @@ function SettingsUI:BuildPages()
         "Right-click an item in the Butler window to always keep it, sell it, bank it or mail it to one of your characters. This lists all four in chat. To empty them, type /bbutler reset confirm. Same as /bbutler lists.",
         "List them", "lists")
     controls.lists = listsButton
+
+    -- Gold: the gold fund (the owner asked 2026-10-11). The usual amount on
+    -- the left, one character's own on the right. Logic/Funds.lua.
+    pages:Section("gold", 1, "GOLD FUND")
+
+    local minRow = pages:Row("gold", 1, "Keep at least",
+        "Every character keeps this much gold. At a mailbox, a character with more is offered a gold mail to each of your characters below it (Fill mail fills it, you press Send), never going below its own amount. Needs Blackthornes Tradeskills, which keeps your characters' gold as last seen. Leave it at 0 for off. Also /bbutler goldmin 50g.")
+    controls.goldMinimum = Widgets.CreateMoneyBox(minRow, function(copper)
+        ns.Funds:SetMinimum(copper)
+    end)
+    controls.goldMinimum:SetPoint("TOPLEFT", CONTROL_X, 0)
+
+    local _, goldButton = CommandRow(pages, "gold", 1, "Everyone's gold",
+        "Lists in chat each character's gold as last seen, what it keeps and what the fund would send it. Same as /bbutler gold.",
+        "List it", "gold")
+    controls.goldReport = goldButton
+
+    pages:Section("gold", 2, "ONE CHARACTER")
+
+    local pickRow = pages:Row("gold", 2, "Character",
+        "Pick one of your characters to give it an amount of its own.")
+    controls.goldPick = SettingsUI.CharacterPicker(pickRow, CONTROL_X, function()
+        SettingsUI:SyncGoldFor()
+    end)
+
+    local ownRow = pages:Row("gold", 2, "They keep",
+        "This character's own amount, in place of the usual. 0 means it keeps nothing back, so it can give all it has.")
+    controls.goldFor = Widgets.CreateMoneyBox(ownRow, function(copper)
+        local name = controls.goldPick:GetName()
+        if name then ns.Funds:SetMinimumFor(name, copper) end
+    end)
+    controls.goldFor:SetPoint("TOPLEFT", CONTROL_X, 0)
+
+    local usualRow = pages:Row("gold", 2, "Back to the usual",
+        "This character keeps the usual amount again.")
+    controls.goldUsual = Widgets.CreateButton(usualRow, "Use the usual", function()
+        local name = controls.goldPick:GetName()
+        if name then ns.Funds:SetMinimumFor(name, nil) end
+        SettingsUI:SyncGoldFor()
+    end, { width = 100, height = 20 })
+    controls.goldUsual:SetPoint("TOPLEFT", CONTROL_X, 0)
 
     -- General: windows and text on the left, debug on the right.
     pages:Section("general", 1, "WINDOWS")
@@ -356,6 +461,12 @@ function SettingsUI:Refresh()
     controls.freeSpace:SetChecked(ns.db.freeSpace ~= false)
     controls.debug:SetChecked(ns.db.debug == true)
     controls.sellBelow:SetValue(ns.Verdicts:SellBelow() or 0)
+    controls.goldMinimum:SetValue(ns.Funds:Minimum() or 0)
+    local names = {}
+    for _, character in ipairs((ns.Funds:Characters())) do names[#names + 1] = character.name end
+    table.sort(names)
+    controls.goldPick:SetNames(names)
+    self:SyncGoldFor()
     controls.textSize:Sync()
     controls.windowStyle:Sync()
     self.pages:Refresh()
