@@ -87,7 +87,9 @@ local function ItemList(list)
     for _, item in ipairs(type(list) == "table" and list or {}) do
         local itemID = type(item) == "table" and Count(item.itemID)
         local count = type(item) == "table" and Count(item.count)
-        if itemID and count then items[#items + 1] = { itemID = itemID, count = count } end
+        if itemID and count then
+            items[#items + 1] = { itemID = itemID, count = count, from = Text(item.from) }
+        end
     end
     return items
 end
@@ -116,7 +118,8 @@ local function CleanStep(step)
         local to = Text(step.to)
         local items = ItemList(step.items)
         if not to or #items == 0 then return nil end
-        return { kind = "mail", to = to, items = items, crafts = step.crafts == true }
+        return { kind = "mail", to = to, items = items, crafts = step.crafts == true,
+            forCraft = step.forCraft == true }
     end
     return nil
 end
@@ -173,6 +176,9 @@ end
 --- The character playing's jobs (`here`), the character to switch to next
 --- (`nextJob`: the first other one that can get on with a step, else the
 --- first), and every other one with work (`others`, next first).
+--- `goFirst` when nothing here can be done yet and the next one can (the
+--- owner, 2026-10-11: a sub-craft whose materials are on hand goes to the
+--- top), so the window and the gold Log out send the player there first.
 function Jobs:Plan()
     local here, others = nil, {}
     for _, job in ipairs(self:Read()) do
@@ -191,7 +197,8 @@ function Jobs:Plan()
             break
         end
     end
-    return { here = here, nextJob = nextJob or others[1], others = others }
+    local goFirst = here ~= nil and nextJob ~= nil and not Jobs.Ready(here)
+    return { here = here, nextJob = nextJob or others[1], others = others, goFirst = goFirst }
 end
 
 --------------------------------------------------------------------------------
@@ -252,6 +259,8 @@ function Jobs.StepText(step)
     local detail
     if not step.ready and step.missing[1] then
         detail = ("Still needs %s first."):format(Jobs.ItemsText(step.missing))
+        local from = step.missing[1].from
+        if from then detail = ("%s %s has it."):format(detail, from) end
     elseif #step.forNames > 0 then
         detail = ("For %s. Mail it over once it's made."):format(JoinNames(step.forNames))
     else
@@ -298,11 +307,17 @@ end
 function Jobs:Lines()
     local plan = self:Plan()
     local rows = {}
+    -- Nothing here can be done yet: the one who can goes first.
+    if plan.goFirst then
+        rows[1] = { type = "jobnext", job = plan.nextJob, isNext = true, isFirst = true }
+    end
     for _, step in ipairs(plan.here and plan.here.steps or {}) do
         rows[#rows + 1] = { type = "job", step = step }
     end
     for index, job in ipairs(plan.others) do
-        rows[#rows + 1] = { type = "jobnext", job = job, isNext = index == 1 }
+        if not (plan.goFirst and index == 1) then
+            rows[#rows + 1] = { type = "jobnext", job = job, isNext = index == 1 }
+        end
     end
     return rows
 end
@@ -390,7 +405,8 @@ local function Tip(nextJob)
         nextJob.name, Jobs.Summary(nextJob), nextJob.name)
 end
 
---- Once everything here is done, the big gold Log out button takes the
+--- Once everything here is done (or nothing here can be done until the
+--- next character has done its part), the big gold Log out button takes the
 --- place Fill mail had at the window's foot (the owner liked it,
 --- 2026-10-11): fill, Send, then one more click in the same spot to
 --- switch. Only while nothing else sits at the foot (`room` is how wide
@@ -402,7 +418,7 @@ function Jobs:UpdateFoot(room)
     local window = ui and ui.frame
     local show = window and ui:IsShown() and not ui.dragging and ui.view ~= "all" and (room or 0) == 0
     local plan = show and self:Plan()
-    local nextJob = plan and not plan.here and plan.nextJob
+    local nextJob = plan and (not plan.here or plan.goFirst) and plan.nextJob
     local right, bottom = window and window:GetRight(), window and window:GetBottom()
     if not (nextJob and right and bottom) then
         self.footShown = false

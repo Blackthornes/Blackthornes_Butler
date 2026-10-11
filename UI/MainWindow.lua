@@ -425,7 +425,7 @@ function UI.UpdateNextRow(row, data)
     row.icon:Show()
     row.icon:SetTexture([[Interface\Icons\Ability_Rogue_Disguise]])
     row.name:SetTextColor(Theme.Unpack(data.isNext and "accent" or "text"))
-    row.name:SetText(("%s: %s"):format(data.isNext and "Next" or "Then", job.name))
+    row.name:SetText(("%s: %s"):format(data.isFirst and "First" or data.isNext and "Next" or "Then", job.name))
     row.reason:SetText(ns.Jobs.Summary(job))
     row.worth:SetText("")
 end

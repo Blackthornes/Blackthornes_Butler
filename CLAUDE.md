@@ -377,6 +377,13 @@ switch, in one more click), a big gold "Log out for NAME" button
 (`BlackthornesButlerLogoutFoot`, `Jobs:UpdateFoot`, from `UI:FootRoom`)
 takes Fill mail's place at the foot, only while no Sell or errand button
 sits there, and the small one in the header steps aside.
+When nothing here can be done yet and the next character can (the owner,
+2026-10-11: "a sub craft on another character needs to go to a top step
+if they already have the materials"), `Jobs:Plan`'s `goFirst` puts that
+character's line, "First: NAME", above this character's steps, and the
+gold Log out points there too. Tradeskills names who holds a missing
+material (`missing[i].from`, "NAME has it.") and gives that character a
+mail step to the crafter (`forCraft`).
 
 Logging in (`PLAYER_ENTERING_WORLD`'s initial login, `Jobs.LOGIN_DELAY`
 later) on a character with a step brings the window up and says what it is
