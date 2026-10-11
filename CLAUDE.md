@@ -425,6 +425,23 @@ set only when the number or its colour changed. `/bbutler probe` says
 whether the button was found. Tested in `tools/test_freespace.lua`. Not
 yet seen in game.
 
+## Butler's voice
+
+The owner asked (2026-10-11) for Moroes, Karazhan's butler, to answer when
+the player opens Butler ("You rang?", file 555818) and closes it ("Now,
+where was I? Oh, yes...", 555814); he tested both IDs in game. `UI:Say`
+plays the game's own file by ID (`PlaySoundFile(id, "Dialog")`), so no
+Blizzard audio ships in this public repo. It must never speak over an
+NPC, and the client can't say when one is talking, so a line is said only
+when the player opens the window (`UI:Toggle`, `/bbutler all`) or closes
+it (its OnHide, unless `LeftVendor`/`LeftPlace` closed it:
+`closingByItself`), and never while a vendor, mailbox, bank or any NPC
+(`UnitExists("npc")`) is open (`UI.AtAnNPC`). A window that comes up by
+itself (`UI:Show`: vendor, mailbox, bank, Jobs at login) says nothing.
+Each line waits `UI.VOICE_GAP` (180 s). "Butler's voice" on the General
+page (`voice`, account wide, on unless unticked; never rename it). Tested
+in `tools/test_voice.lua`. Not yet seen in game.
+
 ## How this repo was set up
 
 It copies Pets (itself Equipment's, itself Farmer's) on purpose, so check the
