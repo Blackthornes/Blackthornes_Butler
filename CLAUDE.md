@@ -147,6 +147,12 @@ Tradeskills' `UI/QueueMailPanel.lua` reads it.
   (`Verdicts:Decide`'s fifth return). The player presses Send; Butler never
   sends, hooks or moves the mail frame. There are no mailbox Take buttons
   (the owner had them removed from Tradeskills; never add them unasked).
+  Nothing is ever mailed to the character playing (a player found Fill
+  mail addressed to themselves, 2026-10-11): `Verdicts:Playing` is its
+  short name from `Holdings()` (`Errands:PlayingName`), and an Always mail
+  entry, a `mailTo` or an `enchanter` naming it is kept instead.
+  Tradeskills' `FillMail` refuses it too, and its third return, the full
+  name filled in, is what the chat line says.
 - **Always mail to** (the right-click menu, asked 2026-10-11) puts an item
   on the player's **Always mail** list for one of their characters
   (`alwaysMail`, `[itemID]` = short name, account wide, never rename it):

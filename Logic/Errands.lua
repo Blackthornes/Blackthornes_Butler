@@ -102,19 +102,33 @@ end
 --- The player's other characters an item can be mailed to: short names,
 --- same realm and faction as the character playing, from Tradeskills'
 --- record of them. Empty without Tradeskills.
-function Errands:Characters()
-    local butler = Errands.Tradeskills("Holdings")
-    if not butler then return {} end
-    local ok, list = pcall(butler.Holdings, butler)
-    if not ok or type(list) ~= "table" then return {} end
+local function Text(value)
+    return type(value) == "string" and value ~= "" and value or nil
+end
 
-    local function Text(value)
-        return type(value) == "string" and value ~= "" and value or nil
-    end
+--- Tradeskills' Holdings and the entry for the character playing, or nil.
+local function Holdings()
+    local butler = Errands.Tradeskills("Holdings")
+    if not butler then return nil end
+    local ok, list = pcall(butler.Holdings, butler)
+    if not ok or type(list) ~= "table" then return nil end
     local me
     for _, entry in ipairs(list) do
         if type(entry) == "table" and entry.isCurrent == true then me = entry end
     end
+    return list, me
+end
+
+--- The short name Tradeskills gives the character playing (as Always mail
+--- and mailTo name characters), or nil without Tradeskills.
+function Errands:PlayingName()
+    local _, me = Holdings()
+    return me and (Text(me.short) or Text(me.name)) or nil
+end
+
+function Errands:Characters()
+    local list, me = Holdings()
+    if not list then return {} end
     local realm = me and Text(me.realm)
     local faction = me and Text(me.faction)
 
@@ -167,14 +181,17 @@ function Errands:FillMail()
     local items = {}
     for _, item in ipairs(recipient.items) do items[#items + 1] = { itemID = item.itemID, count = item.count } end
 
-    local ok, started, why = pcall(butler.FillMail, butler, recipient.to, items)
+    local ok, started, why, fullName = pcall(butler.FillMail, butler, recipient.to, items)
     if not ok then return false, "Tradeskills could not fill the mail." end
     if started ~= true then
         return false, type(why) == "string" and ("Couldn't fill it: %s."):format(why) or "Couldn't fill it."
     end
     self.filled[recipient.to] = true
     self:Update()
-    return true, ("Filled a mail to %s. Check it, then press Send."):format(recipient.to)
+    -- The full name the mail went to, when Tradeskills says it: the short
+    -- one ("Ana S.") read as a typo in chat.
+    local to = type(fullName) == "string" and fullName ~= "" and fullName or recipient.to
+    return true, ("Filled a mail to %s: check it, then press Send."):format(to)
 end
 
 --------------------------------------------------------------------------------

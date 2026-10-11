@@ -223,6 +223,33 @@ UI:ShowMenu({ itemID = 404, name = "Copper Ore" })
 UI.menu.decide:GetScript("OnClick")(UI.menu.decide)
 suite.check("Let Butler decide takes it off the mail list", ns.db.alwaysMail[404] == nil)
 
+-- Never a mail to the character playing (a player found one, 2026-10-11):
+-- the Always mail list is account wide, so it can name this character, and
+-- an older Tradeskills could too.
+ns.Verdicts:SetChoice(404, "mail", "Me")
+verdict, reason = ns.Verdicts:Decide({ itemID = 404, count = 1 })
+suite.check("Always mail to the character you're on keeps it", verdict == "keep"
+    and reason:find("character you're on", 1, true) ~= nil, reason)
+ns.Verdicts:SetChoice(404, nil)
+local advise = _G.BlackthornesTS.Butler.Advise
+_G.BlackthornesTS.Butler.Advise = function(_, id)
+    if id == 401 then return { mailTo = "Me", mailCount = 1 } end
+    if id == 402 then return { disenchant = 500, canDisenchant = false, enchanter = "Me" } end
+end
+suite.check("a craft mail to the character you're on is no mail",
+    (ns.Verdicts:Decide({ itemID = 401, count = 1, link = "item:401" })) ~= "mail")
+suite.check("nor a disenchant mail", (ns.Verdicts:Decide({ itemID = 402, count = 1, link = "item:402" })) ~= "mail")
+_G.BlackthornesTS.Butler.Advise = advise
+
+-- The chat line names the full name Tradeskills filled in.
+_G.BlackthornesTS.Butler.FillMail = function(_, name) return true, nil, name .. " Smith" end
+ns.Verdicts:Changed(true)
+env.Fire("MAIL_SHOW")
+ok, why = Errands:FillMail()
+suite.check("the chat line has the full name", ok and why:find(" Smith: check it", 1, true) ~= nil, why)
+_G.BlackthornesTS.Butler.FillMail = fillMail
+env.Fire("MAIL_CLOSED")
+
 -- At a mailbox with nothing to mail, Butler still takes over.
 _G.BlackthornesTS.Butler.Advise = function() return nil end
 ns.Verdicts:Changed(true)
