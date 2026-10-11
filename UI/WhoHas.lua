@@ -1,8 +1,7 @@
 -- Blackthornes Butler -- UI/WhoHas.lua
 -- Who has this: a few lines on every item's tooltip saying which of the
 -- player's characters hold it and where, "Ana Stone   12 (4 bags, 8 bank)"
--- (the owner said build it, 2026-10-11, after comparing Butler with a bag
--- data addon that shows the same).
+-- (the owner said build it, 2026-10-11).
 --
 -- Butler keeps no record of other characters. It reads Blackthornes
 -- Tradeskills' Butler:Holdings() (each character's bags, bank and mail, as

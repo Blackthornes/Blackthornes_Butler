@@ -448,9 +448,7 @@ yet seen in game.
 
 ## Who has it
 
-The owner said build it (2026-10-11), after comparing Butler with a bag
-data addon (all rights reserved, so nothing of it was copied; the idea was
-built from scratch). `UI/WhoHas.lua` adds lines to every item's tooltip
+The owner said build it (2026-10-11). `UI/WhoHas.lua` adds lines to every item's tooltip
 saying which characters hold it and where: "Your characters have 33", then
 "Bob Wither   21 (20 bags, 1 mail)", most first, six names at most, the
 character playing marked "(you)" and left off when only its own bags hold
