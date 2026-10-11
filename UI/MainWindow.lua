@@ -213,7 +213,12 @@ function UI:Build()
 
     self:BuildSizeGrip()
 
+    -- A new frame starts shown, so this Hide runs OnHide: it is no close by
+    -- the player, and must not say Moroes's closing line (both lines played
+    -- on the first open, 2026-10-11).
+    self.closingByItself = true
     frame:Hide()
+    self.closingByItself = false
     return frame
 end
 
