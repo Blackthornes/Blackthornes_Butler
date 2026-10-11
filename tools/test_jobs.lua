@@ -86,6 +86,12 @@ suite.check("and says what goes", detail:find("30 Light Leather", 1, true) ~= ni
 title, detail = Jobs.StepText(rows[2].step)
 suite.check("a craft of one has no number", title == "Craft Linen Bag", title)
 suite.check("short of materials says so", detail:find("Still needs", 1, true) == 1, detail)
+local banked = Jobs.Clean({ { name = "Ana Blackthorne", isCurrent = true, steps = { { kind = "mail",
+    to = "Blackthornes Wither", forCraft = true, items = { { itemID = 2318, count = 40, bank = 20 } } } } } })
+title, detail = Jobs.StepText(banked[1].steps[1])
+suite.check("a mail with some in the bank says to take it out first",
+    detail:find("Take 20 Light Leather out of the bank first", 1, true) ~= nil, detail)
+suite.check("and still says how many go", detail:find("40 Light Leather", 1, true) == 1, detail)
 local summary = Jobs.Summary(WITHER)
 suite.check("the next character's job in one line",
     summary == "Craft 20 Medium Leather, then mail it to Ana Blackthorne.", summary)

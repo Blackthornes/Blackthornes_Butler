@@ -88,7 +88,8 @@ local function ItemList(list)
         local itemID = type(item) == "table" and Count(item.itemID)
         local count = type(item) == "table" and Count(item.count)
         if itemID and count then
-            items[#items + 1] = { itemID = itemID, count = count, from = Text(item.from) }
+            items[#items + 1] = { itemID = itemID, count = count, from = Text(item.from),
+                bank = Count(item.bank) }
         end
     end
     return items
@@ -270,6 +271,16 @@ end
 function Jobs.StepText(step)
     if step.kind == "mail" then
         local what = Jobs.ItemsText(step.items)
+        -- What is in the bank has to come out before Fill mail can see it.
+        local banked = {}
+        for _, item in ipairs(step.items) do
+            if item.bank then banked[#banked + 1] = { itemID = item.itemID, count = math.min(item.bank, item.count) } end
+        end
+        if #banked > 0 then
+            return ("Mail to %s"):format(step.to),
+                ("%s. Take %s out of the bank first, then Fill mail at a mailbox puts it in for you.")
+                    :format(what, Jobs.ItemsText(banked))
+        end
         return ("Mail to %s"):format(step.to),
             ("%s. At a mailbox, Fill mail puts it in for you."):format(what)
     end
