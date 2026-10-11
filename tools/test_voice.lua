@@ -14,24 +14,34 @@ local suite = env.NewSuite("voice")
 local ns = env.Load()
 local UI = ns.UI
 
+-- As in the game: a new frame starts shown, and Hide on a shown frame runs
+-- its OnHide (a player heard both lines on the first open, 2026-10-11).
+local createFrame = _G.CreateFrame
+_G.CreateFrame = function(...)
+    local frame = createFrame(...)
+    frame._shown = true
+    function frame:Hide()
+        local was = self._shown
+        self._shown = false
+        local onHide = self._scripts and self._scripts.OnHide
+        if was and onHide then onHide(self) end
+    end
+    return frame
+end
+
 local played, now, npc = {}, 1000, false
 _G.PlaySoundFile = function(id, channel) played[#played + 1] = { id = id, channel = channel } end
 _G.GetTime = function() return now end
 _G.UnitExists = function(unit) return unit == "npc" and npc end
 
--- The test frames run no OnHide on Hide, so close as the game would.
-local function Close()
-    UI.frame:Hide()
-    UI.frame:GetScript("OnHide")(UI.frame)
-end
+local function Close() UI.frame:Hide() end
 local function Last() return played[#played] end
 
 -- 1.
 UI:Toggle()
-suite.check("opening it says \"You rang?\"", #played == 1 and Last().id == 555818 and Last().channel == "Dialog",
+suite.check("opening it says \"You rang?\" and only that", #played == 1 and Last().id == 555818 and Last().channel == "Dialog",
     #played)
 UI:Toggle()
-UI.frame:GetScript("OnHide")(UI.frame)
 suite.check("closing it says \"Now, where was I?\"", #played == 2 and Last().id == 555814)
 
 -- 3.
@@ -53,7 +63,6 @@ suite.check("the window came up at the vendor", UI:IsShown())
 suite.check("but said nothing over the vendor", #played == 4)
 ns.Selling.merchantOpen = false
 UI:LeftVendor()
-UI.frame:GetScript("OnHide")(UI.frame)
 suite.check("nor when it closed by itself", #played == 4)
 
 -- Opened by hand at a vendor, or while talking to any NPC: nothing.
@@ -83,4 +92,5 @@ suite.check("the setting turns it off", #played == 5)
 ns.db.voice = true
 
 _G.PlaySoundFile, _G.GetTime, _G.UnitExists = nil, nil, nil
+_G.CreateFrame = createFrame
 suite.done()
