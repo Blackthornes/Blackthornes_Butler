@@ -3,7 +3,9 @@
 --
 -- The rules from the plan:
 --   * Nothing leaves the bags without the player's click. No auto-sell.
---   * Only rows judged Sell are sold (greys and the Always sell list).
+--   * Only rows judged Sell are sold (greys, the Always sell list, items
+--     worth less than the player's Sell below amount, and what a vendor pays
+--     most for).
 --     Keep and Look at it rows never are.
 --   * Every slot is read again just before its sale: it must still hold the
 --     same item, unlocked, or it is left alone.
