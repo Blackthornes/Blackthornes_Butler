@@ -185,6 +185,7 @@ function Probe:Run()
     Line("buyback", Read("GetNumBuybackItems"))
     if ns.Selling then Line("sell from Butler", ns.Selling:ProbeText()) end
     if ns.FreeSpace then Line("free bag space", ns.FreeSpace:ProbeText()) end
+    if ns.WhoHas then Line("who has it", ns.WhoHas:ProbeText()) end
     if ns.Ammo then Line("ammo", ns.Ammo:ProbeText()) end
     if ns.Jobs then Line("jobs", ns.Jobs:ProbeText()) end
 end

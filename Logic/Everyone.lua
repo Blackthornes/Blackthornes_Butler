@@ -10,7 +10,8 @@
 --
 --   _G.BlackthornesTS.Butler:Holdings()   -- a list, or nil
 --
--- (see CLAUDE.md, "How Butler talks to the other four"). The bags of the
+-- (see CLAUDE.md, "How Butler talks to the other four"; UI/WhoHas.lua
+-- reads the same call for its tooltip lines). The bags of the
 -- character playing come from Butler's own read (Logic/Bags.lua), which is
 -- the freshest there is. Without Tradeskills the list shows only those.
 --

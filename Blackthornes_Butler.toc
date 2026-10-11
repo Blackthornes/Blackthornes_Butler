@@ -31,6 +31,7 @@ UI\Minimap.lua
 UI\Settings.lua
 UI\MainWindow.lua
 UI\FreeSpace.lua
+UI\WhoHas.lua
 
 Logic\Selling.lua
 Logic\Disenchanting.lua

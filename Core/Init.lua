@@ -320,6 +320,9 @@ local DEFAULTS = {
     -- The free bag space number on the backpack button (UI/FreeSpace.lua,
     -- asked 2026-10-11).
     freeSpace = true,
+    -- Which of the player's characters hold an item, on its tooltip
+    -- (UI/WhoHas.lua, the owner said build it 2026-10-11). Never rename it.
+    whoHas = true,
     -- Moroes's "You rang?" and "Now, where was I?" when the player opens and
     -- closes the window (the owner asked 2026-10-11).
     voice = true,
