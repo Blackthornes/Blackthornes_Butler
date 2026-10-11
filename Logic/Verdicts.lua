@@ -136,15 +136,17 @@ end
 --- The verdict for one carried item, why, what a vendor pays for one, and
 --- for Mail { to, count }. `entry` is a slot from Bags (itemID, link,
 --- quality, noValue, quest).
-function Verdicts:Judge(entry)
+--- `noAlt` judges a copy past what an alt's upgrade needs (Verdicts:Groups):
+--- as if no alt wanted it.
+function Verdicts:Judge(entry, noAlt)
     if memoVersion ~= self.version then
         memo, memoVersion = {}, self.version
     end
-    local key = entry.link or entry.itemID
+    local key = (noAlt and "x|" or "") .. tostring(entry.link or entry.itemID)
     local known = memo[key]
     if known then return known[1], known[2], known[3], known[4] end
 
-    local verdict, reason, unit, final, extra = self:Decide(entry)
+    local verdict, reason, unit, final, extra = self:Decide(entry, noAlt)
     -- An answer that waits on the client loading the item is asked again.
     if final then memo[key] = { verdict, reason, unit, extra } end
     return verdict, reason, unit, extra
@@ -153,7 +155,7 @@ end
 --- The rules above, in order. The fourth return says whether the answer
 --- will hold (false while the price is still loading); the fifth is who a
 --- Mail row goes to and how many ({ to, count }).
-function Verdicts:Decide(entry)
+function Verdicts:Decide(entry, noAlt)
     local itemID = entry.itemID
     local choice, mailTo = self:Choice(itemID)
 
@@ -218,7 +220,7 @@ function Verdicts:Decide(entry)
     if ammo then return "keep", ammo, unit, unit ~= nil end
 
     local said = Sisters:AskAll(entry)
-    local verdict, reason, worth, extra = self:Kept(said, entry)
+    local verdict, reason, worth, extra = self:Kept(said, entry, noAlt)
     if verdict then return verdict, reason, worth or unit, unit ~= nil, extra end
 
     verdict, reason, worth, extra = self:Bought(entry, said)
@@ -281,7 +283,7 @@ end
 --- needs it). Returns verdict, reason, what one is worth and, for Mail,
 --- { to, count }; or nil. `entry` (the bag slot) says whether it is
 --- soulbound, which can't be mailed.
-function Verdicts:Kept(said, entry)
+function Verdicts:Kept(said, entry, noAlt)
     local Number, String, True = Sisters.Number, Sisters.String, Sisters.True
 
     local eq = said.equipment
@@ -329,16 +331,20 @@ function Verdicts:Kept(said, entry)
     -- No use here, but an upgrade for another of the player's characters
     -- (the owner asked 2026-10-11): mail it to them. Equipment says which
     -- by GUID, and Tradeskills' record names it.
+    -- An alt needs one (two rings or trinkets): `count` says how many go,
+    -- less any already mailed to them, and Groups judges the rest as if no
+    -- alt wanted them (a pair too many went in the mail, 2026-10-11).
     local alt = eq and eq.alt
-    if type(alt) == "table" and not (entry and entry.bound) then
+    if type(alt) == "table" and not noAlt and not (entry and entry.bound) then
         local to = ns.Errands and ns.Errands.NameOf and ns.Errands:NameOf(alt.key)
-        if to and to ~= Verdicts:Playing() then
+        local wanted = to and Verdicts:UpgradeWanted(entry.itemID, to) or 0
+        if to and to ~= Verdicts:Playing() and wanted > 0 then
             local gain = Number(alt, "gain")
             local level = Number(alt, "level")
             local reason = gain and ("An upgrade for %s (+%d%%)"):format(to, gain)
                 or ("An upgrade for %s (an empty slot)"):format(to)
             if level then reason = ("%s at level %d"):format(reason, level) end
-            return "mail", reason, nil, { to = to }
+            return "mail", reason, nil, { to = to, count = wanted, upgrade = true }
         end
     end
 
@@ -353,6 +359,52 @@ function Verdicts:Kept(said, entry)
         end
         return "keep", what
     end
+end
+
+-- Rings and trinkets: a character wears two.
+local PAIRS = { INVTYPE_FINGER = true, INVTYPE_TRINKET = true }
+
+--- How many of an item an alt wears at once: 2 for rings and trinkets.
+function Verdicts.Wears(itemID)
+    local _, _, _, equipLoc = Items.Call({ "C_Item.GetItemInfoInstant", "GetItemInfoInstant" }, itemID)
+    return PAIRS[equipLoc] and 2 or 1
+end
+
+-- An alt's upgrade mailed is counted for 30 days, when unclaimed mail
+-- goes back; by then the alt has worn it or Equipment stops calling it one.
+Verdicts.MAILED_KEEP = 30 * 24 * 60 * 60
+
+local function Mailed()
+    if not ns.db then return {} end
+    if type(ns.db.upgradeMailed) ~= "table" then ns.db.upgradeMailed = {} end
+    return ns.db.upgradeMailed
+end
+
+--- How many more of `itemID` the alt `to` wants as an upgrade: what it
+--- wears at once, less what Butler saw mailed to it.
+function Verdicts:UpgradeWanted(itemID, to)
+    local wants = self.Wears(itemID)
+    local sent = Mailed()[itemID]
+    if type(sent) == "table" and sent.to == to and type(sent.at) == "number"
+        and (time() - sent.at) < self.MAILED_KEEP then
+        wants = wants - (tonumber(sent.count) or 0)
+    end
+    return math.max(0, wants)
+end
+
+--- A mail Butler filled went: write down the alt upgrades in it
+--- (`upgradeMailed[itemID] = { to, count, at }`, account wide), so a copy
+--- left in the bags isn't offered again.
+function Verdicts:UpgradesMailed(to, items)
+    if type(to) ~= "string" or type(items) ~= "table" or #items == 0 then return end
+    local mailed = Mailed()
+    for _, item in ipairs(items) do
+        local sent = mailed[item.itemID]
+        local count = item.count
+        if type(sent) == "table" and sent.to == to then count = count + (tonumber(sent.count) or 0) end
+        mailed[item.itemID] = { to = to, count = count, at = time() }
+    end
+    self:Changed()
 end
 
 --- Step 8b: bought on the auction house to disenchant (Tradeskills' mark,
@@ -546,8 +598,27 @@ function Verdicts:Groups()
         byVerdict[verdict] = { verdict = verdict, label = self.LABELS[verdict], rows = {}, count = 0, worth = 0 }
     end
 
-    for _, entry in pairs(ns.Bags.slots) do
+    local entries = {}
+    for _, entry in pairs(ns.Bags.slots) do entries[#entries + 1] = entry end
+    table.sort(entries, function(a, b)
+        if a.bag ~= b.bag then return a.bag < b.bag end
+        return a.slot < b.slot
+    end)
+
+    -- How many of each item have gone to an alt's upgrade so far: past
+    -- what it wants, a copy gets its own verdict.
+    local allotted, slotVerdicts = {}, {}
+    for _, entry in ipairs(entries) do
         local verdict, reason, unit, extra = self:Judge(entry)
+        if extra and extra.upgrade then
+            local id = entry.itemID
+            if (allotted[id] or 0) >= (extra.count or 1) then
+                verdict, reason, unit, extra = self:Judge(entry, true)
+            else
+                allotted[id] = (allotted[id] or 0) + entry.count
+            end
+        end
+        slotVerdicts[entry.bag .. ":" .. entry.slot] = { key = entry.key, verdict = verdict }
         local group = byVerdict[verdict]
         local key = verdict .. "|" .. tostring(entry.link or entry.itemID)
         local row = rowsByKey[key]
@@ -557,6 +628,7 @@ function Verdicts:Groups()
                 itemID = entry.itemID, link = entry.link, icon = entry.icon,
                 quality = entry.quality, bound = entry.bound,
                 mailTo = extra and extra.to, mailCount = extra and extra.count,
+                upgrade = extra and extra.upgrade or nil,
                 bought = extra and extra.bought,
                 name = Items.NameFromLink(entry.link) or ("item " .. tostring(entry.itemID)),
                 count = 0, slots = {},
@@ -592,8 +664,19 @@ function Verdicts:Groups()
         groups[#groups + 1] = group
     end
 
-    self.groupCache = { bags = bagsVersion, verdicts = self.version, groups = groups }
+    self.groupCache = { bags = bagsVersion, verdicts = self.version, groups = groups,
+        slots = slotVerdicts }
     return groups
+end
+
+--- The verdict a slot shows in the window: a copy past an alt's upgrade
+--- has its own (Groups). Asked again before a click acts on a slot.
+function Verdicts:VerdictOf(entry)
+    self:Groups()
+    local cache = self.groupCache
+    local known = cache and cache.slots and cache.slots[entry.bag .. ":" .. entry.slot]
+    if known and known.key == entry.key then return known.verdict end
+    return (self:Judge(entry))
 end
 
 --- One group by its verdict.

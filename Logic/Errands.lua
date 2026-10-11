@@ -76,7 +76,7 @@ function Errands:Recipients()
         if type(to) == "string" and to ~= "" then
             local recipient = byName[to]
             if not recipient then
-                recipient = { to = to, items = {}, byID = {}, count = 0 }
+                recipient = { to = to, items = {}, byID = {}, count = 0, upgrades = {} }
                 byName[to] = recipient
                 list[#list + 1] = recipient
             end
@@ -93,6 +93,11 @@ function Errands:Recipients()
                 recipient.items[#recipient.items + 1] = item
             end
             recipient.count = recipient.count + count
+            -- An alt's upgrade is written down once the mail goes, so a
+            -- copy left behind isn't offered again (Verdicts:UpgradesMailed).
+            if row.upgrade then
+                recipient.upgrades[#recipient.upgrades + 1] = { itemID = row.itemID, count = count }
+            end
         end
     end
     -- Gold from the fund (Logic/Funds.lua) rides with that character's
@@ -294,6 +299,7 @@ function Errands:FillMail()
     end
     self.filled[recipient.to] = true
     self.sending = recipient.to
+    self.sendingUpgrades = recipient.upgrades
     if recipient.money and ns.Funds then ns.Funds:Filled(recipient.to, recipient.money) end
     self:Update()
     -- The full name the mail went to, when Tradeskills says it: the short
@@ -310,6 +316,9 @@ end
 function Errands:Sent()
     local was = self.sending
     self.sending = nil
+    local upgrades = self.sendingUpgrades
+    self.sendingUpgrades = nil
+    if was and upgrades then ns.Verdicts:UpgradesMailed(was, upgrades) end
     if not was or not self.mailOpen or ns.db.fillNext == false then return end
     if not (ns.UI and ns.UI:IsShown()) then return end
     -- The bags say what left them a moment after the mail goes.
@@ -333,6 +342,7 @@ Errands.NEXT_DELAY = 0.5
 function Errands:SendFailed()
     if self.sending then self.filled[self.sending] = nil end
     self.sending = nil
+    self.sendingUpgrades = nil
     self:Update()
 end
 
