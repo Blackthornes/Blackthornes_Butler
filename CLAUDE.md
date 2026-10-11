@@ -76,7 +76,9 @@ _G.BlackthornesTS.Butler:Advise(itemID)
   -- { auction (net copper each after the cut and deposit; nil for greys
   --   and bind on pickup), fast (true, false, or nil for middling),
   --   disenchant, canDisenchant, enchanter, need, mailTo, mailCount,
-  --   bought (how many the account bought to disenchant) }
+  --   bought (how many the account bought to disenchant), disenchanter
+  --   (the disenchanter typed in its Settings, when its Mail page sends
+  --   this gear there) }
 _G.BlackthornesTS.Butler:SetBoughtToDisenchant(itemID, on, count)
   -- true, or false and why: the right-click menu's mark
 _G.BlackthornesEquipment.Butler:Advise(link, bag, slot)
@@ -123,6 +125,19 @@ Disenchant, and casts once a click: its PreClick aims the spell at the next
 slot (bought first) through `target-bag`/`target-slot`, re-reading the slot
 and its verdict first, never a "/use" macro (that equips when the cast does
 not start). Hidden, its aim emptied, in combat. Not yet seen in game.
+
+## Tradeskills' disenchanter
+
+The owner asked (2026-10-11) for Butler to follow Tradeskills' disenchanter
+setting (its Settings, Mail page: "Disenchanter" and "Mail gear up to").
+Advise's `disenchanter` names that character when Tradeskills' own Mail
+page would send the item there (its `QueueMail:GoesToDisenchanter`: green
+up to the quality picked, can be disenchanted, never bind on pickup or an
+upgrade for the character playing). `Verdicts:ForDisenchanter`, step 8c
+after the sisters' Keep and Bought to disenchant, puts it under Mail to
+that character, whatever the auction house or a vendor pays; a soulbound
+copy and the character playing never get it. With nobody typed there,
+nothing changes. Tested in `tools/test_disenchantermail.lua`.
 
 ## All characters
 
