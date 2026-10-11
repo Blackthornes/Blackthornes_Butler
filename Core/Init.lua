@@ -326,6 +326,10 @@ local DEFAULTS = {
     -- in learned and learnTally, made when first needed; never rename them.
     learn = true,
 
+    -- Logging in on a character with a job for the craft queue brings the
+    -- window up on its steps (Logic/Jobs.lua, asked 2026-10-11).
+    jobsAtLogin = true,
+
     -- Also kept here, never renamed (made when first needed, so not given
     -- defaults): alwaysKeep, alwaysSell and alwaysBank ([itemID] = true, the player's
     -- right-click choices), alwaysMail ([itemID] = a character's short name)
