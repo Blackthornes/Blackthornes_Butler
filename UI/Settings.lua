@@ -473,6 +473,16 @@ function SettingsUI:BuildPages()
     end, false)
     controls.debug:SetPoint("TOPLEFT", CONTROL_X, -2)
 
+    -- Core/SisterNote.lua: one chat line, once, naming the Blackthornes
+    -- addons the player does not have. Off here is off in all of them.
+    local sistersRow = pages:Row("general", 2, "Sister addons",
+        "Once, a few seconds after login, says in chat which Blackthornes addons you don't have "
+        .. "and what each adds. Turning it off here turns it off in all of them. Same as /bbutler sisters.")
+    controls.sisters = Widgets.CreateCheckbox(sistersRow, "Mention them", function(checked)
+        ns.SisterNote:SetOn(checked)
+    end, true)
+    controls.sisters:SetPoint("TOPLEFT", CONTROL_X, -2)
+
     local _, probeButton = CommandRow(pages, "general", 2, "Client check",
         "Lists in chat which bag, vendor and mail calls this client has, and which Blackthornes addons are loaded. It only reads. Same as /bbutler probe.",
         "Check", "probe")
@@ -506,6 +516,7 @@ function SettingsUI:Refresh()
     controls.voice:SetChecked(ns.db.voice ~= false)
     controls.learn:SetChecked(ns.db.learn ~= false)
     controls.debug:SetChecked(ns.db.debug == true)
+    controls.sisters:SetChecked(ns.SisterNote:IsOn())
     controls.sellBelow:SetValue(ns.Verdicts:SellBelow() or 0)
     controls.goldMinimum:SetValue(ns.Funds:Minimum() or 0)
     local names = {}
