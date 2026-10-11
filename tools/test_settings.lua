@@ -65,6 +65,13 @@ suite.check("/bbutler minimap ticks it again", minimapBox:GetChecked())
 controls.debug:GetScript("OnClick")(controls.debug)
 suite.check("the debug box sets debug", ns.db.debug == true)
 
+-- The sister note (Core/SisterNote.lua).
+suite.check("the sister addons box starts ticked", controls.sisters:GetChecked())
+controls.sisters:GetScript("OnClick")(controls.sisters)
+suite.check("unticking it turns the note off", ns.db.sisterNote == false)
+ns.HandleSlash("sisters")
+suite.check("/bbutler sisters turns it back on", ns.db.sisterNote == true and controls.sisters:GetChecked())
+
 -- The pages along the top, as Tradeskills' Settings tab has them: Selling,
 -- then General. The plan's others come with the features they hold.
 local pages = SettingsUI.pages
@@ -170,7 +177,7 @@ suite.check("the command buttons run their commands",
 
 -- Every command has a button or a control here, apart from the one that
 -- deletes the player's lists, which stays typed (a house rule).
-local covered = { window = true, all = true, probe = true, help = true, selltest = true, lists = true,
+local covered = { sisters = true, window = true, all = true, probe = true, help = true, selltest = true, lists = true,
     vendor = true, mailbox = true, bank = true, minimap = true, settings = true, reset = true,
     sellbelow = true, freespace = true, whohas = true, gold = true, goldmin = true, fillnext = true,
     jobs = true, joblogin = true }

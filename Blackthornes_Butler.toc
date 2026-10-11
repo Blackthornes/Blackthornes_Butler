@@ -15,6 +15,7 @@
 # X-WoWI-ID: 
 
 Core\Init.lua
+Core\SisterNote.lua
 
 Logic\Items.lua
 Logic\Bags.lua
