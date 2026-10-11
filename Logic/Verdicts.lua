@@ -16,6 +16,8 @@
 --   8b. Tradeskills: bought on the auction house
 --      to disenchant                              Disenchant, or Mail to
 --                                                  the enchanter
+--   8c. Tradeskills: gear its Mail page sends to
+--      the disenchanter typed in its Settings      Mail to the disenchanter
 --   9. Its price has not loaded yet                Look at it
 --  10. Grey (worth vendor only)                    Sell
 --  11. Worth less than the player's Sell below amount (vendor, auction
@@ -202,6 +204,9 @@ function Verdicts:Decide(entry)
     verdict, reason, worth, extra = self:Bought(entry, said)
     if verdict then return verdict, reason, worth or unit, unit ~= nil, extra end
 
+    verdict, reason, worth, extra = self:ForDisenchanter(entry, said)
+    if verdict then return verdict, reason, worth or unit, unit ~= nil, extra end
+
     if unit == nil then
         return "look", "Still loading from the game", nil, false
     end
@@ -344,6 +349,26 @@ function Verdicts:Bought(entry, said)
     end
 
     return "look", "Bought to disenchant, but none of your characters can yet", value, { bought = bought }
+end
+
+--- Step 8c: Tradeskills' disenchanter (the owner asked 2026-10-11: Butler
+--- follows that setting). Gear its Mail page would send there (green up
+--- to the quality picked, can be disenchanted, never crafted, bind on
+--- pickup or an upgrade for this character) is mailed there, whatever else it would
+--- fetch. Never a soulbound copy, never the character playing. Returns
+--- verdict, reason, worth and { to }; or nil.
+function Verdicts:ForDisenchanter(entry, said)
+    if entry.bound then return nil end
+    local Number, String = Sisters.Number, Sisters.String
+    local ts = said.ts
+    local to = String(ts, "disenchanter")
+    if not to then return nil end
+    if ns.Errands and ns.Errands.FullName then to = ns.Errands:FullName(to) or to end
+    if to == self:Playing() then return nil end
+
+    local value = Number(ts, "disenchant")
+    local about = value and (", about %s"):format(Items.FormatMoney(value)) or ""
+    return "mail", ("For your disenchanter: mail to %s%s"):format(to, about), value, { to = to }
 end
 
 --------------------------------------------------------------------------------
