@@ -185,6 +185,30 @@ local clean = Jobs.Clean({ { name = "Dee Tanner", steps = { { kind = "mail", to 
     forCraft = true, items = { { itemID = 2318, count = 40 } } } } } })
 suite.check("a mail for a craft keeps its mark", clean[1] and clean[1].steps[1].forCraft == true)
 
+-- The character playing under another record is never one to log out for,
+-- and never mails itself; the one whose mail unblocks a craft here is next.
+local errandsName = ns.Errands.PlayingName
+ns.Errands.PlayingName = function() return "Blackthornes Wither" end
+local OLD_ME = { name = "Blackthornes Wither", steps = {
+    { kind = "mail", to = "Blackthornes Wither", items = { { itemID = 2319, count = 8 } } },
+    { kind = "craft", recipeID = 14, itemID = 2319, name = "Medium Leather", count = 10, forNames = {},
+      ready = false, missing = { { itemID = 2318, count = 40, from = "Blackthornes Farmer" } } },
+} }
+local FARMER = { name = "Blackthornes Farmer", steps = {
+    { kind = "mail", to = "Blackthornes Wither", forCraft = true, items = { { itemID = 2318, count = 40 } } },
+} }
+local ANA_MAIL = { name = "Ana Blackthorne", steps = {
+    { kind = "mail", to = "Cy Waiting", items = { { itemID = 2319, count = 8 } } },
+} }
+plan = Fresh({ OLD_ME, ANA_MAIL, FARMER })
+suite.check("the character playing is here under any record", plan.here and plan.here.name == "Blackthornes Wither")
+suite.check("and not someone to log out for", plan.nextJob and plan.nextJob.name ~= "Blackthornes Wither")
+suite.check("its mail to itself is dropped", #plan.here.steps == 1 and plan.here.steps[1].kind == "craft",
+    #plan.here.steps)
+suite.check("the one sending what the craft needs goes first", plan.goFirst
+    and plan.nextJob.name == "Blackthornes Farmer", plan.nextJob.name)
+ns.Errands.PlayingName = errandsName
+
 -- 6. Done here.
 Fresh({ ANA, WITHER })
 env.chat = {}
