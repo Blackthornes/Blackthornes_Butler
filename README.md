@@ -44,6 +44,14 @@ from vendor prices and the game's own quest marks.
   gear and your Always keep, bank and mail items are never included, and
   nothing sells until you click Sell. It needs Blackthornes Tradeskills for
   auction prices; off until you set it.
+- **Gold fund** (Settings, Gold, or `/bbutler goldmin 50g`): set how much
+  gold every character keeps, and a different amount for any one of them
+  if you like. At a mailbox, a character with more is offered a gold mail
+  to each of your characters below theirs (the Gold rows), never going
+  below its own amount; Fill mail puts the gold in and you press Send.
+  Balances are as last seen when each character played, and the row says
+  how old. `/bbutler gold` lists everyone's. Needs Blackthornes
+  Tradeskills; off until you set it.
 - **At a mailbox,** the window comes up in place of Tradeskills' mail panel
   (close it to get that back), with a **Fill mail** button when something
   is under Mail. Each click fills the game's Send Mail page for one

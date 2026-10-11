@@ -323,6 +323,7 @@ function UI.UpdateRow(row, data)
     row.reason:SetTextColor(Theme.Unpack("muted"))
     if data.type == "everyone" then return UI.UpdateItemRow(row, data) end
     if data.type == "holder" then return UI.UpdateHolderRow(row, data) end
+    if data.type == "gold" then return UI.UpdateGoldRow(row, data) end
 
     if data.type == "header" then
         local group = data.group
@@ -331,7 +332,7 @@ function UI.UpdateRow(row, data)
         row.fold:SetText(data.folded and "+" or "-")
         row.name:SetTextColor(Theme.Unpack("accent"))
         row.name:SetText(group.label:upper())
-        row.reason:SetText(Plural(group.count, "item", "items"))
+        row.reason:SetText(Plural(group.count, group.one or "item", group.many or "items"))
         row.worth:SetText(group.worth > 0 and Items.FormatMoney(group.worth) or "")
         return
     end
@@ -350,6 +351,18 @@ function UI.UpdateRow(row, data)
         row.reason:SetTextColor(Theme.Unpack("muted"))
     end
     row.worth:SetText((data.worth or 0) > 0 and Items.FormatMoney(data.worth) or "")
+end
+
+--- A gold top-up: who it goes to, what they have and keep, and how much.
+function UI.UpdateGoldRow(row, data)
+    local entry = data.entry
+    row.fold:Hide()
+    row.icon:Show()
+    row.icon:SetTexture([[Interface\Icons\INV_Misc_Coin_01]])
+    row.name:SetTextColor(Theme.Unpack("text"))
+    row.name:SetText(entry.to)
+    row.reason:SetText(ns.Funds.Reason(entry))
+    row.worth:SetText(Items.FormatMoney(entry.amount))
 end
 
 --- An item in All characters: its name, who has it and how many in all.
@@ -389,6 +402,21 @@ end
 function UI:Lines()
     local lines = {}
     local folded = self:Folded()
+    -- At a mailbox, the gold fund's top-ups come first (Logic/Funds.lua).
+    if ns.Errands.mailOpen and ns.Funds then
+        local plan = ns.Funds:Plan()
+        if #plan > 0 then
+            local worth = 0
+            for _, entry in ipairs(plan) do worth = worth + entry.amount end
+            local group = { verdict = "gold", label = "Gold", count = #plan, worth = worth,
+                one = "character", many = "characters" }
+            local isFolded = folded.gold == true
+            lines[#lines + 1] = { type = "header", group = group, folded = isFolded }
+            if not isFolded then
+                for _, entry in ipairs(plan) do lines[#lines + 1] = { type = "gold", entry = entry } end
+            end
+        end
+    end
     for _, group in ipairs(ns.Verdicts:Groups()) do
         if group.count > 0 then
             local isFolded = folded[group.verdict] == true
@@ -427,7 +455,7 @@ function UI:Clicked(data, button)
         self:Refresh(true)
         return
     end
-    if button == "RightButton" then
+    if button == "RightButton" and data.type ~= "gold" then
         self:ShowMenu(data)
     end
 end
@@ -439,7 +467,17 @@ function UI:Enter(row, data)
     end
     if data.type == "header" then
         GameTooltip:AddLine(data.group.label, Theme.Unpack("accent"))
-        GameTooltip:AddLine(data.folded and "Click to show these items" or "Click to fold these away", 1, 1, 1, true)
+        GameTooltip:AddLine(data.folded and "Click to show these" or "Click to fold these away", 1, 1, 1, true)
+        GameTooltip:Show()
+        return
+    end
+    if data.type == "gold" then
+        local entry = data.entry
+        GameTooltip:AddLine(("Gold for %s"):format(entry.to), Theme.Unpack("accent"))
+        GameTooltip:AddLine(ns.Funds.Reason(entry), 1, 1, 1, true)
+        GameTooltip:AddLine(("Fill mail sends %s. You press Send."):format(Items.FormatMoney(entry.amount)), 1, 1, 1, true)
+        GameTooltip:AddLine("Gold is as last seen when they played. Set the amounts in Settings, Gold.",
+            Theme.Unpack("muted"))
         GameTooltip:Show()
         return
     end
@@ -702,7 +740,8 @@ function UI:Refresh(force)
     if not self:IsShown() then return end
     if self.view == "all" then return self:RefreshAll(force) end
 
-    local key = ("%d:%d"):format(ns.Bags.version, ns.Verdicts.version)
+    local key = ("%d:%d:%d:%s"):format(ns.Bags.version, ns.Verdicts.version,
+        ns.Funds and ns.Funds.version or 0, tostring(ns.Errands.mailOpen))
     if force or key ~= self.drawnKey then
         local first = self.drawnKey == nil
         self.drawnKey = key
