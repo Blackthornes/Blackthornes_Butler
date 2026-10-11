@@ -5,6 +5,7 @@
 --
 --   1. On the player's Always keep list            Keep
 --      ... or Always bank list                     Bank
+--      ... or learned: bought back after Butler sold it   Keep
 --   2. A quest item, or one that starts one        Keep
 --   3. A vendor won't buy it                       Keep
 --   4. On the player's Always sell list            Sell
@@ -18,7 +19,10 @@
 --                                                  the enchanter
 --   8c. Tradeskills: gear its Mail page sends to
 --      the disenchanter typed in its Settings      Mail to the disenchanter
+--   8d. Learned: the player mails it to one of
+--      their characters by hand                    Mail
 --   9. Its price has not loaded yet                Look at it
+--   9b. Learned: the player sells it by hand       Sell
 --  10. Grey (worth vendor only)                    Sell
 --  11. Worth less than the player's Sell below amount (vendor, auction
 --      and disenchant, whichever is most)          Sell
@@ -114,6 +118,8 @@ function Verdicts:SetChoice(itemID, choice, to)
     List("alwaysSell")[itemID] = (choice == "sell") or nil
     List("alwaysBank")[itemID] = (choice == "bank") or nil
     List("alwaysMail")[itemID] = (choice == "mail") and to or nil
+    -- The player's own pick (or Let Butler decide) replaces what was learned.
+    if ns.Learning then ns.Learning:Forget(itemID) end
     self:Changed(true)
 end
 
@@ -178,6 +184,14 @@ function Verdicts:Decide(entry)
             { to = mailTo }
     end
 
+    -- What Butler learned from the player (Logic/Learning.lua): a buyback
+    -- keeps, here; a habit of selling or mailing waits for the sisters.
+    local learned, learnedTo
+    if not choice and ns.Learning then learned, learnedTo = ns.Learning:Get(itemID) end
+    if learned == "keep" then
+        return "keep", ns.Learning.Reason("keep"), nil, true
+    end
+
     if entry.quest == "starts" then
         return "keep", "Starts a quest", nil, true
     elseif entry.quest == "item" then
@@ -207,8 +221,20 @@ function Verdicts:Decide(entry)
     verdict, reason, worth, extra = self:ForDisenchanter(entry, said)
     if verdict then return verdict, reason, worth or unit, unit ~= nil, extra end
 
+    -- A habit of mailing it to one of the player's characters: soulbound
+    -- can't go, and never to the character playing.
+    if learned == "mail" and not entry.bound and learnedTo ~= self:Playing() then
+        return "mail", ns.Learning.Reason("mail", learnedTo), unit, unit ~= nil, { to = learnedTo }
+    end
+
     if unit == nil then
         return "look", "Still loading from the game", nil, false
+    end
+
+    -- A habit of selling it by hand. Soulbound green or better is never
+    -- sold for the player, habit or not.
+    if learned == "sell" and not (entry.bound and (entry.quality or 0) >= 2) then
+        return "sell", ("%s: %s each"):format(ns.Learning.Reason("sell"), Items.FormatMoney(unit)), unit, true
     end
 
     if entry.quality == 0 then
@@ -627,6 +653,7 @@ ns.RegisterCommand("lists", "show your Always keep, Always sell, Always bank and
     PrintList("alwaysSell", "Always sell")
     PrintList("alwaysBank", "Always bank")
     PrintList("alwaysMail", "Always mail")
+    if ns.Learning then ns.Learning:PrintLearned() end
 end)
 
 ns.RegisterCommand("vendor", "turn the Butler window coming up at a vendor on or off", function()
@@ -637,14 +664,15 @@ end)
 
 -- Deletes the player's choices, so typed only, with "confirm" (a house
 -- rule: no button deletes data).
-ns.RegisterCommand("reset", "empty your Always keep, sell, bank and mail lists (type: reset confirm)", function(rest)
+ns.RegisterCommand("reset", "empty your Always keep, sell, bank and mail lists and what Butler learned (type: reset confirm)", function(rest)
     if rest ~= "confirm" then
-        ns.Print("this empties your Always keep, Always sell, Always bank and Always mail lists. To do it, type /bbutler reset confirm")
+        ns.Print("this empties your Always keep, Always sell, Always bank and Always mail lists, and forgets what Butler learned from you. To do it, type /bbutler reset confirm")
         return
     end
     ns.db.alwaysKeep, ns.db.alwaysSell, ns.db.alwaysBank, ns.db.alwaysMail = {}, {}, {}, {}
+    if ns.Learning then ns.Learning:ForgetAll() end
     Verdicts:Changed(true)
-    ns.Print("your Always keep, Always sell, Always bank and Always mail lists are empty. Butler decides every item again.")
+    ns.Print("your Always keep, Always sell, Always bank and Always mail lists are empty, and Butler has forgotten what it learned from you. Butler decides every item again.")
 end)
 
 -- Asked 2026-10-11: anything worth less than an amount the player sets

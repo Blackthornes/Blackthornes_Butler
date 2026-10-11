@@ -317,6 +317,11 @@ local DEFAULTS = {
     -- asked 2026-10-11).
     freeSpace = true,
 
+    -- Butler learns from what the player does: a buyback, hand sales, hand
+    -- mail (Logic/Learning.lua, asked 2026-10-11). What it learned is kept
+    -- in learned and learnTally, made when first needed; never rename them.
+    learn = true,
+
     -- Also kept here, never renamed (made when first needed, so not given
     -- defaults): alwaysKeep, alwaysSell and alwaysBank ([itemID] = true, the player's
     -- right-click choices), alwaysMail ([itemID] = a character's short name)

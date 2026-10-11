@@ -262,6 +262,35 @@ worked out only while the window draws it, again only when the purse
 (debounced 0.2 s) or a setting moves. Tested in `tools/test_funds.lua`.
 Not yet seen in game.
 
+## Learning from the player
+
+The owner's goal (2026-10-11): the addons should work "almost like it's
+magic", learning from what the player does. `Logic/Learning.lua` watches
+three things the player does anyway, through post-hooks on single calls
+(`hooksecurefunc` on `BuybackItem`, `C_Container.UseContainerItem` and
+`SendMail`; no frame is touched) and one event each:
+
+- a buyback of something Butler's Sell button sold this visit
+  (`Selling.soldIDs`) is kept from then on;
+- an item sold by hand at a vendor (not by Butler's button, a grey, quest,
+  soulbound green or better, or already Sell) on `Learning.SELLS` (2)
+  visits goes under Sell;
+- an item mailed by hand to the same one of the player's characters
+  (`Errands:Characters`, never the one playing, never mail an addon filled,
+  `Learning.ADDON_SUBJECTS`) `Learning.MAILS` (2) times goes under Mail to
+  them, so Fill mail sends it.
+
+Saved, account wide, never renamed: `learned[itemID] = { verdict, to, at }`
+and `learnTally = { sells, mails }`; "Learn from what you do" (`learn`, on
+unless unticked) on the Errands page. A learned keep sits right after the
+player's lists in `Verdicts:Decide`; a learned mail or sell only after the
+sisters' Keep (steps 8d and 9b), so a habit never sells or mails an
+upgrade, a goal or craft material or pet food. Any right-click pick clears
+what was learned (`Verdicts:SetChoice` calls `Learning:Forget`), the menu
+shows "Forget what Butler learned" for a learned item, `/bbutler lists`
+shows them and `reset confirm` forgets them. Tested in
+`tools/test_learning.lua`. Not yet seen in game.
+
 ## Sell below
 
 A player asked for anything looted below a value they set to be marked

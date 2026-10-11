@@ -36,6 +36,10 @@ Selling.BATCH = 12
 -- The pause between sales when one click sells several.
 Selling.GAP = 0.3
 
+-- What Butler's button sold this visit, [itemID] = true: a buyback of one
+-- teaches Butler to keep it (Logic/Learning.lua).
+Selling.soldIDs = {}
+
 local BUTTON_WIDTH = 150
 local BUTTON_HEIGHT = 24
 
@@ -130,6 +134,7 @@ function Selling:SellBatch()
             return
         end
         if SellOne(item) then
+            Selling.soldIDs[item.itemID] = true
             Selling.sold = (Selling.sold or 0) + 1
             Selling.soldWorth = (Selling.soldWorth or 0) + (item.unit or 0) * (item.count or 1)
         end
@@ -214,6 +219,7 @@ function Selling:Create()
             frame:SetAttribute("macrotext", nil)
         end
         if item then
+            Selling.soldIDs[item.itemID] = true
             Selling.sold = (Selling.sold or 0) + 1
             Selling.soldWorth = (Selling.soldWorth or 0) + (item.unit or 0) * (item.count or 1)
         end
@@ -346,7 +352,9 @@ function Selling:Test()
         local before = type(GetMoney) == "function" and GetMoney() or 0
         ns.Print(("trying to sell %s (%s) from addon code..."):format(grey.link or "a grey item",
             Items.FormatMoney(grey.worth)))
+        Selling.testing = true
         local called, err = pcall(use, grey.bag, grey.slot)
+        Selling.testing = false
 
         C_Timer.After(1, function()
             local still = Bags.ReadSlot(grey.bag, grey.slot)
@@ -384,6 +392,7 @@ function Selling:OnEnable()
     ns.RegisterEvent(self, "MERCHANT_SHOW", function()
         Selling.merchantOpen = true
         Selling.sold, Selling.soldWorth = 0, 0
+        Selling.soldIDs = {}
         Bags:Fresh(function()
             if ns.UI then ns.UI:AtVendor() end
             Selling:Update()

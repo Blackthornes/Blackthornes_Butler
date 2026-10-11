@@ -637,9 +637,14 @@ function UI:ShowMenu(data, stay)
     local last = canMail and menu.mail or (canMark and menu.bought or menu.bank)
     menu.decide:ClearAllPoints()
     menu.decide:SetPoint("TOPLEFT", last, "BOTTOMLEFT", 0, -4)
-    menu.decide:SetShown(choice ~= nil)
+    -- Also there for what Butler learned from the player (a buyback, a
+    -- habit), which it forgets.
+    local learned = choice == nil and ns.Learning and ns.Learning:Get(data.itemID) or nil
+    local decides = choice ~= nil or learned ~= nil
+    menu.decide:SetShown(decides)
+    menu.decide:SetText(learned and "Forget what Butler learned" or "Let Butler decide")
 
-    local rows = 3 + (canMark and 1 or 0) + (canMail and 1 or 0) + (choice ~= nil and 1 or 0)
+    local rows = 3 + (canMark and 1 or 0) + (canMail and 1 or 0) + (decides and 1 or 0)
     menu:SetHeight(30 + rows * MENU_ROW)
     UI.FitMenu(menu, { menu.keep, menu.sell, menu.bank, menu.bought, menu.mail, menu.decide })
 
