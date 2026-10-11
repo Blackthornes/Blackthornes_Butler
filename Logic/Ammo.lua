@@ -17,8 +17,10 @@
 --   * Buy more than the quiver or pouch holds: only whole lots the vendor
 --     sells that fit its empty slots and the room left in stacks of the
 --     same ammo.
---   * Spend below the gold the character keeps (Logic/Funds.lua): with less
---     to spare it buys what that allows, and says so.
+--   * Spend gold the character doesn't have: with less it buys what the
+--     purse allows, and says so. The gold fund's amount (Logic/Funds.lua)
+--     is only for mailing gold to alts, never for spending (the owner,
+--     2026-10-11), so it plays no part here.
 --
 -- Ammo for the weapon the hunter has on is also kept out of Sell
 -- (Verdicts:Decide asks Ammo:Keeps), since a vendor would always "pay
@@ -268,25 +270,16 @@ end
 -- The offer
 --------------------------------------------------------------------------------
 
---- What the character keeps (the gold fund), and the purse above it.
-local function Spare(purse)
-    local funds = ns.Funds
-    if not funds then return purse end
-    local _, me = funds:Characters()
-    return purse - funds:MinimumFor(me and me.name), funds:MinimumFor(me and me.name)
-end
-
 --- What to offer at this vendor, or nil: { state, ammo (the vendor item),
---- weapon, bag, count, lots, cost, keep, short }. `state` is "fill" (the
+--- weapon, bag, count, lots, cost, short }. `state` is "fill" (the
 --- Fill button), "nobag" (no quiver or pouch on), "mismatch" (the bag on
---- doesn't hold this ammo) or "poor" (it would spend gold the character
---- keeps). Nil when it isn't a hunter, no vendor is open, the vendor sells
+--- doesn't hold this ammo) or "poor" (the purse can't pay for one lot). Nil when it isn't a hunter, no vendor is open, the vendor sells
 --- no ammo the hunter can use, or the bag is full.
 function Ammo:Offer()
     if not (ns.Selling and ns.Selling:MerchantOpen()) then return nil end
     local purse = Purse()
-    local key = ("%d:%d:%d:%s:%d"):format(self.version, ns.Bags.version, ns.Verdicts.version,
-        tostring(purse), ns.Funds and ns.Funds.version or 0)
+    local key = ("%d:%d:%d:%s"):format(self.version, ns.Bags.version, ns.Verdicts.version,
+        tostring(purse))
     if self.offerKey == key then return self.offer end
     self.offerKey = key
     self.offer = self:Work(purse)
@@ -316,10 +309,8 @@ function Ammo:Work(purse)
     if best.available > 0 then lots = math.min(lots, math.floor(best.available)) end
     if lots < 1 then return nil end
 
-    local spare, keep = Spare(purse or 0)
-    offer.keep = keep
     if best.price > 0 then
-        local afford = math.max(0, math.floor(spare / best.price))
+        local afford = math.max(0, math.floor((purse or 0) / best.price))
         if afford < lots then
             offer.short = true
             offer.full = lots * best.perBuy
@@ -364,12 +355,12 @@ function Ammo.Reason(offer)
         return ("Your %s fires %s, but your %s can't hold them. Put on %s to fill it here"):format(
             weapon.word, word, bag.word, A(Ammo.BAGS[weapon.ammo].word))
     elseif offer.state == "poor" then
-        return ("Your %s has room for %s (%s), but that dips below the %s you keep"):format(
-            bag.word, Thousands(offer.full), Items.FormatMoney(offer.fullCost), Items.FormatMoney(offer.keep))
+        return ("Your %s has room for %s (%s), but you can't pay for one lot yet"):format(
+            bag.word, Thousands(offer.full), Items.FormatMoney(offer.fullCost))
     end
     local text = ("Fills your %s: %s for %s"):format(bag.word, Thousands(offer.count), Items.FormatMoney(offer.cost))
     if offer.short then
-        text = ("%s, all you can spare above the %s you keep"):format(text, Items.FormatMoney(offer.keep))
+        text = ("%s, all you can pay for now"):format(text)
     end
     return text
 end
@@ -380,13 +371,12 @@ end
 
 --- Fill the quiver or pouch: one lot every Ammo.GAP seconds, each checked
 --- again first (the vendor still open, the same item at that place, and
---- gold to spare). Only on the player's click.
+--- gold to pay). Only on the player's click.
 function Ammo:Buy()
     if self.buying then return end
     local offer = self:Offer()
     if not (offer and offer.state == "fill") then return end
     local ammo = offer.ammo
-    local keep = offer.keep or 0
     self.buying = true
     if ns.UI and ns.UI.Refresh then ns.UI:Refresh(true) end
     local bought, spent = 0, 0
@@ -407,7 +397,7 @@ function Ammo:Buy()
         if bought >= offer.lots or not ns.Selling:MerchantOpen(true) or InCombat() then return Done() end
         if IDFromLink(Call({ "GetMerchantItemLink" }, ammo.index)) ~= ammo.itemID then return Done() end
         local purse = Purse()
-        if not purse or purse - ammo.price < keep then return Done() end
+        if not purse or purse < ammo.price then return Done() end
         local fn = Items.Resolve("BuyMerchantItem")
         if not (fn and pcall(fn, ammo.index)) then return Done() end
         bought = bought + 1

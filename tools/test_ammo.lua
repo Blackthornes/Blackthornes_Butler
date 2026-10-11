@@ -8,7 +8,7 @@
 --   3. As many as fill the quiver: whole lots that fit its empty slots and
 --      the room left in its stacks of the same ammo.
 --   4. Nothing is bought without the Fill click; then one lot at a time.
---   5. Never below the gold the character keeps.
+--   5. Never more than the purse holds; the gold fund is for mail only.
 --   6. A gun with a quiver on (or no ammo bag) says so and buys nothing.
 --   7. The hunter's own ammo is kept out of Sell.
 
@@ -135,20 +135,26 @@ Ammo:Buy()
 suite.check("the click buys 3 lots", #bought == 3 and bought[1].index == 2 and bought[1].quantity == nil, #bought)
 suite.check("and says so", env.ChatText():find("bought 600 Sharp Arrow", 1, true) ~= nil)
 
--- 5. The gold fund: keep 4g 99s 00c of 4g 99s 00c+... spare is one lot.
+-- 5. The gold fund is only for mailing gold, never for spending (the
+-- owner, 2026-10-11): a purse below it still buys.
 fake.money = 50000
 bought = {}
-ns.Funds:SetMinimum(50000 - 150)
+ns.Funds:SetMinimum(100000)
 offer = Fresh()
-suite.check("only what is above the gold kept", offer.state == "fill" and offer.lots == 1 and offer.short)
-suite.check("saying why", Ammo.Reason(offer):find("all you can spare above", 1, true) ~= nil, Ammo.Reason(offer))
-ns.Funds:SetMinimum(50000 - 50)
+suite.check("the gold kept for mail plays no part", offer.state == "fill" and offer.lots == 3 and not offer.short,
+    offer and offer.state)
+ns.Funds:SetMinimum(nil)
+fake.money = 150
 offer = Fresh()
-suite.check("not enough to spare: no button", offer.state == "poor"
-    and Ammo.Reason(offer):find("dips below", 1, true) ~= nil, Ammo.Reason(offer))
+suite.check("only what the purse can pay for", offer.state == "fill" and offer.lots == 1 and offer.short)
+suite.check("saying why", Ammo.Reason(offer):find("all you can pay for now", 1, true) ~= nil, Ammo.Reason(offer))
+fake.money = 50
+offer = Fresh()
+suite.check("not enough for one lot: no button", offer.state == "poor"
+    and Ammo.Reason(offer):find("can't pay for one lot", 1, true) ~= nil, Ammo.Reason(offer))
 Ammo:Buy()
 suite.check("and nothing bought", #bought == 0)
-ns.Funds:SetMinimum(nil)
+fake.money = 50000
 
 -- 6. A gun with a quiver on: bullets can't go in it.
 ranged = 2508
