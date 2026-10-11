@@ -5,7 +5,8 @@
 -- It is what a click on the minimap button and a bare /bbutler open, and it
 -- comes up by itself at every vendor and goes when the vendor closes (the
 -- "Open at a vendor" setting). The Sell button (Logic/Selling.lua) sits over
--- its foot while a vendor is open.
+-- its foot while a vendor is open, and the Disenchant button
+-- (Logic/Disenchanting.lua) left of it while there is something to break.
 --
 -- It has a second view, All characters (Logic/Everyone.lua; /bbutler all,
 -- the header's All characters button): every character's items in one
@@ -319,6 +320,7 @@ end
 
 function UI.UpdateRow(row, data)
     row.worth:SetTextColor(Theme.Unpack("text"))
+    row.reason:SetTextColor(Theme.Unpack("muted"))
     if data.type == "everyone" then return UI.UpdateItemRow(row, data) end
     if data.type == "holder" then return UI.UpdateHolderRow(row, data) end
 
@@ -341,6 +343,12 @@ function UI.UpdateRow(row, data)
     row.name:SetTextColor(color[1], color[2], color[3])
     row.name:SetText(data.count > 1 and ("%s x%d"):format(data.name, data.count) or data.name)
     row.reason:SetText(data.reason or "")
+    -- Bought to disenchant reads in the tag's violet, as on Tradeskills' tab.
+    if data.bought then
+        row.reason:SetTextColor(0.73, 0.55, 1)
+    else
+        row.reason:SetTextColor(Theme.Unpack("muted"))
+    end
     row.worth:SetText((data.worth or 0) > 0 and Items.FormatMoney(data.worth) or "")
 end
 
@@ -446,6 +454,9 @@ function UI:Enter(row, data)
     if data.reason and data.reason ~= "" then
         GameTooltip:AddLine(data.reason, 1, 1, 1, true)
     end
+    if data.bought then
+        GameTooltip:AddLine(("%d bought on the auction house to disenchant"):format(data.bought), 0.73, 0.55, 1)
+    end
     GameTooltip:AddLine("Right-click to always keep, sell or bank it", Theme.Unpack("muted"))
     GameTooltip:Show()
 end
@@ -511,6 +522,19 @@ function UI:BuildMenu()
     menu.bank = Widgets.CreateButton(menu, "Always bank", function() Pick("bank") end,
         { width = MENU_WIDTH - 16, height = 20 })
     menu.bank:SetPoint("TOPLEFT", menu.sell, "BOTTOMLEFT", 0, -4)
+    -- Bought to disenchant: Tradeskills keeps the mark, for the whole account.
+    menu.bought = Widgets.CreateButton(menu, "Bought to disenchant", function()
+        local data = UI.menu.data
+        UI:HideMenu()
+        if not data then return end
+        local done, why = ns.Sisters:MarkBought(data.itemID, not data.bought, data.count)
+        if not done then
+            if why then ns.Print(why) end
+            return
+        end
+        ns.Verdicts:Changed(true)
+    end, { width = MENU_WIDTH - 16, height = 20 })
+    menu.bought:SetPoint("TOPLEFT", menu.bank, "BOTTOMLEFT", 0, -4)
     menu.mail = Widgets.CreateButton(menu, "Always mail to...", function() UI:ShowMailMenu() end,
         { width = MENU_WIDTH - 16, height = 20 })
     menu.mail:SetPoint("TOPLEFT", menu.bank, "BOTTOMLEFT", 0, -4)
@@ -565,14 +589,21 @@ function UI:ShowMenu(data, stay)
     local canMail = choice == "mail" or (not data.bound and #ns.Errands:Characters() > 0)
     menu.mail:SetShown(canMail)
 
-    local last = canMail and menu.mail or menu.bank
+    -- Marked or unmarked through Tradeskills, so only with it loaded.
+    local canMark = ns.Sisters.CanMarkBought()
+    menu.bought:SetShown(canMark)
+    menu.bought:SetText(data.bought and "Bought to disenchant (now)" or "Bought to disenchant")
+    menu.mail:ClearAllPoints()
+    menu.mail:SetPoint("TOPLEFT", canMark and menu.bought or menu.bank, "BOTTOMLEFT", 0, -4)
+
+    local last = canMail and menu.mail or (canMark and menu.bought or menu.bank)
     menu.decide:ClearAllPoints()
     menu.decide:SetPoint("TOPLEFT", last, "BOTTOMLEFT", 0, -4)
     menu.decide:SetShown(choice ~= nil)
 
-    local rows = 3 + (canMail and 1 or 0) + (choice ~= nil and 1 or 0)
+    local rows = 3 + (canMark and 1 or 0) + (canMail and 1 or 0) + (choice ~= nil and 1 or 0)
     menu:SetHeight(30 + rows * MENU_ROW)
-    UI.FitMenu(menu, { menu.keep, menu.sell, menu.bank, menu.mail, menu.decide })
+    UI.FitMenu(menu, { menu.keep, menu.sell, menu.bank, menu.bought, menu.mail, menu.decide })
 
     if stay and menu:IsShown() then return end
     local x, y = 0, 0
@@ -616,6 +647,7 @@ function UI:ShowMailMenu()
     menu.sell:Hide()
     menu.bank:Hide()
     menu.mail:Hide()
+    menu.bought:Hide()
     menu.decide:Hide()
 
     local above
@@ -774,6 +806,9 @@ end
 --- the version label gives way to them.
 function UI:FootRoom()
     local room = math.max(self.sellRoom or 0, self.errandRoom or 0)
+    -- The Disenchant button goes left of those.
+    local disenchant = ns.Disenchanting and ns.Disenchanting:Update(room) or 0
+    if disenchant > 0 then room = room + (room > 0 and 6 or 0) + disenchant end
     self.versionLabel:SetShown(room == 0)
     self.footer:SetPoint("RIGHT", self.frame, "RIGHT", -(PADDING + (room > 0 and room + 12 or 90)), 0)
 end

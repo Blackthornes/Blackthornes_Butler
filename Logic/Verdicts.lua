@@ -13,6 +13,9 @@
 --   7. Tradeskills: the craft queue needs it here  Keep
 --      ... or an alt needs it for theirs           Mail
 --   8. Pets: the pet eats it                       Keep
+--   8b. Tradeskills: bought on the auction house
+--      to disenchant                              Disenchant, or Mail to
+--                                                  the enchanter
 --   9. Its price has not loaded yet                Look at it
 --  10. Grey (worth vendor only)                    Sell
 --  11. Worth less than the player's Sell below amount (vendor, auction
@@ -187,6 +190,9 @@ function Verdicts:Decide(entry)
     local verdict, reason, worth, extra = self:Kept(said)
     if verdict then return verdict, reason, worth or unit, unit ~= nil, extra end
 
+    verdict, reason, worth, extra = self:Bought(entry, said)
+    if verdict then return verdict, reason, worth or unit, unit ~= nil, extra end
+
     if unit == nil then
         return "look", "Still loading from the game", nil, false
     end
@@ -262,6 +268,34 @@ function Verdicts:Kept(said)
         end
         return "keep", what
     end
+end
+
+--- Step 8b: bought on the auction house to disenchant (Tradeskills' mark,
+--- a player's purchase after a search from its Disenchanting tab, or marked
+--- by hand). Disenchant it whatever else it would fetch; mail it to the
+--- enchanter when this character can't. Returns verdict, reason, worth and
+--- { bought, to }; or nil when it was not bought to disenchant.
+function Verdicts:Bought(entry, said)
+    local Number, String, True = Sisters.Number, Sisters.String, Sisters.True
+    local ts = said.ts
+    local bought = Number(ts, "bought")
+    if not bought or bought <= 0 then return nil end
+
+    local value = Number(ts, "disenchant")
+    local about = value and (", about %s"):format(Items.FormatMoney(value)) or ""
+
+    if True(ts, "canDisenchant") then
+        return "disenchant", "Bought to disenchant" .. about, value, { bought = bought }
+    end
+
+    local enchanter = not entry.bound and String(ts, "enchanter") or nil
+    if enchanter and enchanter == self:Playing() then enchanter = nil end
+    if enchanter then
+        return "mail", ("Bought to disenchant: mail to %s"):format(enchanter), value,
+            { to = enchanter, bought = bought }
+    end
+
+    return "look", "Bought to disenchant, but none of your characters can yet", value, { bought = bought }
 end
 
 --------------------------------------------------------------------------------
@@ -418,6 +452,7 @@ function Verdicts:Groups()
                 itemID = entry.itemID, link = entry.link, icon = entry.icon,
                 quality = entry.quality, bound = entry.bound,
                 mailTo = extra and extra.to, mailCount = extra and extra.count,
+                bought = extra and extra.bought,
                 name = Items.NameFromLink(entry.link) or ("item " .. tostring(entry.itemID)),
                 count = 0, slots = {},
             }
@@ -442,8 +477,9 @@ function Verdicts:Groups()
                 return a.slot < b.slot
             end)
         end
-        -- Most valuable first, then by name.
+        -- Bought to disenchant first, then most valuable, then by name.
         table.sort(group.rows, function(a, b)
+            if (a.bought ~= nil) ~= (b.bought ~= nil) then return a.bought ~= nil end
             if a.worth ~= b.worth then return a.worth > b.worth end
             return a.name < b.name
         end)

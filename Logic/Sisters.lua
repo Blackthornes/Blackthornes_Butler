@@ -68,6 +68,26 @@ function Sisters:AskAll(entry)
 end
 
 --------------------------------------------------------------------------------
+-- Bought to disenchant (Tradeskills keeps the marks, 2026-10-11)
+--------------------------------------------------------------------------------
+
+--- Can Tradeskills mark an item bought to disenchant?
+function Sisters.CanMarkBought()
+    local butler = Sisters.Butler("ts")
+    return butler ~= nil and type(butler.SetBoughtToDisenchant) == "function"
+end
+
+--- Mark `count` of an item bought to disenchant, or take the mark off.
+-- @return true, or false and why
+function Sisters:MarkBought(itemID, on, count)
+    if not Sisters.CanMarkBought() then return false, "Blackthornes Tradeskills isn't loaded." end
+    local butler = Sisters.Butler("ts")
+    local ok, done, why = pcall(butler.SetBoughtToDisenchant, butler, itemID, on and true or false, count)
+    if not ok then return false, "Tradeskills couldn't mark it." end
+    return done == true, why
+end
+
+--------------------------------------------------------------------------------
 -- Reading answers safely: a field of the wrong type counts as not given.
 --------------------------------------------------------------------------------
 
