@@ -196,7 +196,7 @@ function Verdicts:Decide(entry)
     end
 
     local said = Sisters:AskAll(entry)
-    local verdict, reason, worth, extra = self:Kept(said)
+    local verdict, reason, worth, extra = self:Kept(said, entry)
     if verdict then return verdict, reason, worth or unit, unit ~= nil, extra end
 
     verdict, reason, worth, extra = self:Bought(entry, said)
@@ -242,8 +242,9 @@ end
 
 --- Steps 5 to 8: a sister says to keep the item (or mail it to the alt who
 --- needs it). Returns verdict, reason, what one is worth and, for Mail,
---- { to, count }; or nil.
-function Verdicts:Kept(said)
+--- { to, count }; or nil. `entry` (the bag slot) says whether it is
+--- soulbound, which can't be mailed.
+function Verdicts:Kept(said, entry)
     local Number, String, True = Sisters.Number, Sisters.String, Sisters.True
 
     local eq = said.equipment
@@ -286,6 +287,22 @@ function Verdicts:Kept(said)
         local count = Number(ts, "mailCount")
         return "mail", count and ("Mail %d to %s for their crafts"):format(count, mailTo)
             or ("Mail to %s for their crafts"):format(mailTo), nil, { to = mailTo, count = count }
+    end
+
+    -- No use here, but an upgrade for another of the player's characters
+    -- (the owner asked 2026-10-11): mail it to them. Equipment says which
+    -- by GUID, and Tradeskills' record names it.
+    local alt = eq and eq.alt
+    if type(alt) == "table" and not (entry and entry.bound) then
+        local to = ns.Errands and ns.Errands.NameOf and ns.Errands:NameOf(alt.key)
+        if to and to ~= Verdicts:Playing() then
+            local gain = Number(alt, "gain")
+            local level = Number(alt, "level")
+            local reason = gain and ("An upgrade for %s (+%d%%)"):format(to, gain)
+                or ("An upgrade for %s (an empty slot)"):format(to)
+            if level then reason = ("%s at level %d"):format(reason, level) end
+            return "mail", reason, nil, { to = to }
+        end
     end
 
     local pets = said.pets

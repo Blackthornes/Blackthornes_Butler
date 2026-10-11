@@ -373,6 +373,35 @@ verdict = ns.Verdicts:Decide({ itemID = 402, count = 1, quality = 1 })
 suite.check("and with no alt craft the list keeps it", verdict == "keep")
 ns.db.alwaysKeep[402] = nil
 
+-- Gear that is no use here but an upgrade for another character goes in
+-- the mail to them, named by Tradeskills from Equipment's GUID.
+local altSays = { alt = { key = "bob", gain = 12 } }
+_G.BlackthornesEquipment = { Butler = { Advise = function() return altSays end } }
+ns.Verdicts:Forget()
+local gear = { itemID = 405, count = 1, quality = 2, link = "item:405" }
+verdict, reason, _, _, extra = ns.Verdicts:Decide(gear)
+suite.check("an upgrade for an alt is mailed to them", verdict == "mail" and extra and extra.to == "Bob",
+    tostring(verdict))
+suite.check("saying by how much", reason == "An upgrade for Bob (+12%)", tostring(reason))
+altSays = { alt = { key = "bob", level = 25 } }
+ns.Verdicts:Forget()
+_, reason = ns.Verdicts:Decide(gear)
+suite.check("an empty slot and a level to wait for", reason == "An upgrade for Bob (an empty slot) at level 25",
+    tostring(reason))
+gear.bound = true
+suite.check("soulbound gear is never mailed", (ns.Verdicts:Decide(gear)) ~= "mail")
+gear.bound = nil
+altSays = { alt = { key = "cy", gain = 5 } }
+ns.Verdicts:Forget()
+suite.check("nor to the other side", (ns.Verdicts:Decide(gear)) ~= "mail")
+altSays = { alt = { key = "me", gain = 5 } }
+ns.Verdicts:Forget()
+suite.check("nor to the character playing", (ns.Verdicts:Decide(gear)) ~= "mail")
+altSays = { upgrade = "now", alt = { key = "bob", gain = 5 } }
+ns.Verdicts:Forget()
+suite.check("an upgrade here is kept to wear", (ns.Verdicts:Decide(gear)) == "keep")
+_G.BlackthornesEquipment = nil
+
 -- The next suites run in this same Lua, without Tradeskills.
 _G.BlackthornesTS = nil
 
