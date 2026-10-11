@@ -447,6 +447,25 @@ set only when the number or its colour changed. `/bbutler probe` says
 whether the button was found. Tested in `tools/test_freespace.lua`. Not
 yet seen in game.
 
+## Who has it
+
+The owner said build it (2026-10-11). `UI/WhoHas.lua` adds lines to every item's tooltip
+saying which characters hold it and where: "Your characters have 33", then
+"Bob Wither   21 (20 bags, 1 mail)", most first, six names at most, the
+character playing marked "(you)" and left off when only its own bags hold
+it. It reads Tradeskills' `Butler:Holdings()` (the same call as All
+characters), so without Tradeskills there are no lines; an old name-realm
+record of the character playing (`playing` without `isCurrent`) is not
+counted again. Only GameTooltip and ItemRefTooltip get lines (never the
+compare tooltips), added through `TooltipDataProcessor`'s post call, or
+`OnTooltipSetItem` by HookScript on a client without it; nothing is
+written on the tooltip. Smooth play: a hover only looks its item up in a
+lookup by item ID; bag, bank and mail events only mark it stale, and the
+next hover builds it again at most once every `WhoHas.REBUILD_GAP` (1 s).
+"Who has it" on the General page (`whoHas`, account wide, on unless
+unticked, never rename it) and `/bbutler whohas`. Tested in
+`tools/test_whohas.lua`. Not yet seen in game.
+
 ## Butler's voice
 
 The owner asked (2026-10-11) for Moroes, Karazhan's butler, to answer when
