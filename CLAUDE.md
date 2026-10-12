@@ -34,6 +34,17 @@ quest starter, no vendor value, Always sell, price still loading, grey,
 else Look at it) and groups them Sell, Look at it, Keep (`Verdicts:Groups`,
 kept until `Bags.version` or `Verdicts.version` moves). `Logic/Selling.lua`
 is the Sell button (see the findings file for why it is secure).
+Every button sits by the line it acts on (the owner, 2026-10-12: "the
+buttons in Butler should go by the action that they need take"): Sell on
+the Sell group's heading, Disenchant on Disenchant's, Move to bank on
+Bank's, Take from bank on the Jobs heading, Fill mail on each character's
+mail line, Log out on the next character's line, Craft and Fill on their
+rows. A heading's button ends `UI.LINE_BUTTON_RIGHT` in from the right, so
+the group's worth stays in sight; the secure ones (Sell, Disenchant) are
+placed over it by screen position (`UI.PlaceOnLine`), the others anchored
+to it (`UI:PlaceErrands`), all again whenever the list draws or scrolls
+(`UI:PlaceButtons`). One whose line is out of sight waits at the window's
+foot. A new button goes by its line too.
 `UI/MainWindow.lua` draws the groups with `Widgets.CreateRowList` (Farmer's,
 with the dark glass rows) and Butler's own right-click menu. Rows are two lines tall so a long reason or name wraps rather than
 ending in "..." (the owner's rule). The window has the house size grip
@@ -130,8 +141,9 @@ right-click menu's "Bought to disenchant" marks or unmarks through
 `Sisters:MarkBought` (shown only with Tradeskills).
 
 The Disenchant button (`Logic/Disenchanting.lua`) is a secure button like
-Sell, outside the window and placed by screen position left of the Sell or
-errand buttons (`UI:FootRoom` calls `Disenchanting:Update(room)`). It shows
+Sell, outside the window and placed by screen position on the Disenchant
+heading, or at the foot left of the Sell or errand buttons when that is out
+of sight (`UI:FootRoom` calls `Disenchanting:Update(room)`). It shows
 on Your bags while the character knows Disenchant and something is under
 Disenchant, and casts once a click: its PreClick aims the spell at the next
 slot (bought first) through `target-bag`/`target-slot`, re-reading the slot
