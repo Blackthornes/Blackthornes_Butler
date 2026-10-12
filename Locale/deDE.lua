@@ -200,6 +200,7 @@ L["item tooltips no longer say which of your characters have it."] =
 L["Fill mail"] = "Post füllen"
 L["Fills the game's Send Mail page. Check it, then press Send."] = "Füllt die Seite „Brief verschicken“ des Spiels. Sieh sie dir an und klicke dann auf Senden."
 L["Fills the game's Send Mail page for %s. Check it, then press Send."] = "Füllt die Seite „Brief verschicken“ des Spiels für %s. Sieh sie dir an und klicke dann auf Senden."
+L["What it's worth: %s"] = "Das ist es wert: %s"
 L["Move to bank"] = "In die Bank"
 L["Puts your Always bank items in the bank, a stack at a time"] = "Bringt deine Gegenstände von „Immer in die Bank“ in die Bank, einen Stapel nach dem anderen"
 L["Take from bank"] = "Aus der Bank holen"

@@ -371,16 +371,18 @@ function UI.UpdateRow(row, data)
     if row.action then row.action.tooltipText = nil end
     UI.DrawRow(row, data)
     local to = row.action and UI.fillRows[data]
-    -- What the line is worth stays in sight, left of the button.
-    row.worth:ClearAllPoints()
     if to then
-        row.worth:SetPoint("RIGHT", row.action, "LEFT", -6, 0)
-    else
-        row.worth:SetPoint("RIGHT", -6, 0)
-    end
-    if to then
+        -- The button takes the worth column's place, so the note keeps the
+        -- width every other row gives it and wraps in two lines, never
+        -- squeezed into lines that run over the row (seen in game
+        -- 2026-10-12). The worth is still on the row's tooltip.
+        row.worth:SetText("")
         row.action:SetText(L["Fill mail"])
         row.action.tooltipText = L.Format("Fills the game's Send Mail page for %s. Check it, then press Send.", to)
+        if (data.worth or 0) > 0 then
+            row.action.tooltipText = row.action.tooltipText .. "\n"
+                .. L.Format("What it's worth: %s", Items.FormatMoney(data.worth))
+        end
         row.action:Show()
     end
 end

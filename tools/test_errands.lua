@@ -105,6 +105,15 @@ suite.check("once each", (function()
     return n == 2
 end)())
 suite.check("so the foot has no Fill mail", not UI.mailButton:IsShown())
+-- The button takes the worth column's place, so the note keeps its width
+-- (notes ran over the row when the worth moved left of it, 2026-10-12).
+local fillRow
+for _, row in ipairs(UI.list.rows) do
+    if row.data and UI.fillRows[row.data] then fillRow = row end
+end
+suite.check("a row with Fill mail shows the button", fillRow and fillRow.action:IsShown())
+suite.check("in the worth column, with the worth on its tooltip", fillRow and fillRow.worth:GetText() == ""
+    and fillRow.worth._point[1] == "RIGHT" and fillRow.worth._point[2] == -6)
 suite.check("the footer says who presses Send", UI.footer:GetText():find("You press Send", 1, true) ~= nil)
 suite.check("no bank buttons at a mailbox", not UI.bankButton:IsShown() and not UI.takeButton:IsShown())
 suite.check("Tradeskills' mail panel is told to step aside", mailboxSaid[#mailboxSaid] == true)
