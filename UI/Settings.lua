@@ -530,6 +530,27 @@ function SettingsUI:BuildPages()
     end, true)
     controls.sisters:SetPoint("TOPLEFT", CONTROL_X, -2)
 
+    -- UI/WhatsNew.lua: one window after an update for every Blackthornes
+    -- addon. Off here is off in all of them, as the sister note is.
+    local _, whatsNewButton = CommandRow(pages, "general", 2, L["What's New"],
+        L["Opens the What's New window: what changed in each of your Blackthornes addons. Same as /bbutler whatsnew."],
+        L["Show it"], "whatsnew")
+    controls.whatsnew = whatsNewButton
+
+    local whatsNewRow = pages:Row("general", 2, L["After an update"],
+        L["Brings up the What's New window the first time you play after a Blackthornes addon updates. Turning it off here turns it off in all of them."])
+    controls.whatsNewPopup = Widgets.CreateCheckbox(whatsNewRow, L["Show What's New"], function(checked)
+        ns.WhatsNew:SetOn(checked)
+    end, true)
+    controls.whatsNewPopup:SetPoint("TOPLEFT", CONTROL_X, -2)
+
+    local whatsNewMotionRow = pages:Row("general", 2, L["What's New motion"],
+        L["The What's New window rises in, and its news slides up and glows. Turning it off here turns it off in all of them."])
+    controls.whatsNewMotion = Widgets.CreateCheckbox(whatsNewMotionRow, L["Motion"], function(checked)
+        ns.WhatsNew:SetMotionOn(checked)
+    end, true)
+    controls.whatsNewMotion:SetPoint("TOPLEFT", CONTROL_X, -2)
+
     local _, probeButton = CommandRow(pages, "general", 2, L["Client check"],
         L["Lists in chat which bag, vendor and mail calls this client has, and which Blackthornes addons are loaded. It only reads. Same as /bbutler probe."],
         L["Check"], "probe")
@@ -564,6 +585,8 @@ function SettingsUI:Refresh()
     controls.learn:SetChecked(ns.db.learn ~= false)
     controls.debug:SetChecked(ns.db.debug == true)
     controls.sisters:SetChecked(ns.SisterNote:IsOn())
+    controls.whatsNewPopup:SetChecked(ns.WhatsNew:IsOn())
+    controls.whatsNewMotion:SetChecked(ns.WhatsNew:IsMotionOn())
     controls.sellBelow:SetValue(ns.Verdicts:SellBelow() or 0)
     controls.goldMinimum:SetValue(ns.Funds:Minimum() or 0)
     local names = {}
