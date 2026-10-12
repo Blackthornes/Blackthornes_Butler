@@ -131,4 +131,27 @@ suite.check("reset without confirm keeps the lists", ns.db.alwaysKeep[102] == tr
 ns.HandleSlash("reset confirm")
 suite.check("reset confirm empties them", next(ns.db.alwaysKeep) == nil and next(ns.db.alwaysSell) == nil)
 
+-- The bags change while a read is under way: the read goes again, and the
+-- window is redrawn even when the second pass finds nothing new (what the
+-- first found was left undrawn before).
+do
+    local queued = {}
+    local realAfter = C_Timer.After
+    C_Timer.After = function(_, fn) queued[#queued + 1] = fn end
+    local realBudget = Bags.BUDGET
+    Bags.BUDGET = 4
+    local redraws = 0
+    local realChanged = Verdicts.BagsChanged
+    Verdicts.BagsChanged = function(self, ...) redraws = redraws + 1 return realChanged(self, ...) end
+    Bags:Scan()
+    fake.Put({ bag = 0, slot = 14, id = 140, name = "Late Loot", quality = 0, price = 7 })
+    Bags:Scan()
+    while #queued > 0 do table.remove(queued, 1)() end
+    suite.check("a read that goes again still redraws once", redraws == 1, redraws)
+    suite.check("and has the new item", Bags.slots["0:14"] ~= nil)
+    Verdicts.BagsChanged = realChanged
+    Bags.BUDGET = realBudget
+    C_Timer.After = realAfter
+end
+
 suite.done()

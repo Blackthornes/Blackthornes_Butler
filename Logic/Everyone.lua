@@ -115,7 +115,11 @@ function Everyone:Read()
 
     local characters = {}
     for _, entry in ipairs(list) do
-        if type(entry) == "table" and Text(entry.key) then
+        -- An old record of the character playing (beside its GUID one) is
+        -- the same character with an older count: only the live one
+        -- counts, as on the tooltip (UI/WhoHas.lua).
+        local oldSelf = type(entry) == "table" and entry.playing == true and entry.isCurrent ~= true
+        if type(entry) == "table" and Text(entry.key) and not oldSelf then
             characters[#characters + 1] = {
                 key = entry.key,
                 name = Text(entry.name) or entry.key,

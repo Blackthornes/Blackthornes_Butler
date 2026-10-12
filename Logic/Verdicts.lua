@@ -149,7 +149,10 @@ function Verdicts:Judge(entry, noAlt)
     -- changed (eight Medium Leather crafted one at a time were mailed as
     -- one, 2026-10-11).
     local carried = entry.itemID and ns.Bags.Carried and ns.Bags:Carried(entry.itemID) or 0
-    local key = (noAlt and "x|" or "") .. tostring(entry.link or entry.itemID) .. "#" .. carried
+    -- Soulbound too: a link doesn't say it, and a bound copy of gear can't
+    -- be mailed or auctioned as an unbound one beside it can.
+    local key = (noAlt and "x|" or "") .. (entry.bound and "b|" or "")
+        .. tostring(entry.link or entry.itemID) .. "#" .. carried
     local known = memo[key]
     if known then return known[1], known[2], known[3], known[4] end
 
@@ -722,7 +725,7 @@ function Verdicts:Groups()
         end
         slotVerdicts[entry.bag .. ":" .. entry.slot] = { key = entry.key, verdict = verdict }
         local group = byVerdict[verdict]
-        local key = verdict .. "|" .. tostring(entry.link or entry.itemID)
+        local key = verdict .. "|" .. (entry.bound and "b|" or "") .. tostring(entry.link or entry.itemID)
         local row = rowsByKey[key]
         if not row then
             row = {

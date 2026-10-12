@@ -96,6 +96,17 @@ ns.db.upgradeMailed[405].at = time() - Verdicts.MAILED_KEEP - 1
 Verdicts:Changed(true)
 suite.check("after 30 days it is offered again", Rows("mail")[405] ~= nil)
 
+-- A soulbound copy (worn once) beside an unbound one of the same gear: the
+-- link doesn't tell them apart, but only the unbound one can go.
+fake.Put({ bag = 0, slot = 6, id = 407, name = "Dusty Boots", quality = 2, price = 80, bound = true })
+fake.Put({ bag = 0, slot = 7, id = 407, name = "Dusty Boots", quality = 2, price = 80 })
+ns.Bags:Scan()
+Verdicts:Changed(true)
+suite.check("the unbound copy goes to the alt", Verdicts:VerdictOf(ns.Bags.ReadSlot(0, 7)) == "mail",
+    Verdicts:VerdictOf(ns.Bags.ReadSlot(0, 7)))
+suite.check("the soulbound copy is not mailed", Verdicts:VerdictOf(ns.Bags.ReadSlot(0, 6)) ~= "mail",
+    Verdicts:VerdictOf(ns.Bags.ReadSlot(0, 6)))
+
 _G.BlackthornesEquipment = nil
 _G.BlackthornesTS = nil
 suite.done()

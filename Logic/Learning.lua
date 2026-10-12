@@ -217,6 +217,10 @@ function Learning:OnUse(bag, slot)
     if not (ns.Selling and ns.Selling:MerchantOpen(true)) then return end
     if type(bag) ~= "number" or type(slot) ~= "number" then return end
     if ButlerSelling(bag, slot) then return end
+    -- A spell aimed at the item (Butler's Disenchant button aims through
+    -- this same call) is no sale.
+    local okAim, aiming = pcall(function() return SpellIsTargeting and SpellIsTargeting() end)
+    if okAim and aiming then return end
 
     local entry = Bags.ReadSlot(bag, slot) or KnownSlot(bag, slot)
     if not (entry and entry.itemID) then return end
@@ -230,8 +234,10 @@ function Learning:OnUse(bag, slot)
 
     -- Counted once the game has taken it (the slot empties when the vendor
     -- pays), and once a visit, so a stack split in two is one sale.
+    -- Still there, even locked (a cast on it under way), is no sale.
     C_Timer.After(1, function()
-        if Bags.Holds(bag, slot, itemID) then return end
+        local still = Bags.ReadSlot(bag, slot)
+        if still and still.itemID == itemID then return end
         Learning:CountSale(itemID)
     end)
 end
