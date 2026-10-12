@@ -276,6 +276,38 @@ suite.check("an item's says to use it", itemDetail:find("bags", 1, true) ~= nil,
 suite.check("a cooldown without a name is left out",
     #Jobs.Clean({ { name = "X", steps = { { kind = "cooldown", recipeID = 1 } } } }) == 0)
 
+-- 9. At a mailbox, Fill mail sits on the Jobs line that mails the
+-- character (the owner asked 2026-10-12), not on the Mail row below it.
+local filledTo
+_G.BlackthornesTS.Butler.Jobs = function() return jobs end
+_G.BlackthornesTS.Butler.Advise = function(_, id)
+    if id == 2318 then return { mailTo = "Blackthornes Wither", mailCount = 30 } end
+end
+_G.BlackthornesTS.Butler.FillMail = function(_, name) filledTo = name return true end
+Fresh({ ANA, WITHER })
+ns.Verdicts:Changed(true)
+UI:Show("bags")
+env.Fire("MAIL_SHOW")
+UI:Refresh(true)
+local fillLine, mailRow
+for _, line in ipairs(UI.list.data) do
+    if UI.fillRows[line] then fillLine = fillLine or line end
+    if line.type == "item" and line.mailTo then mailRow = line end
+end
+suite.check("the Mail row is there too", mailRow ~= nil)
+suite.check("Fill mail sits on the Jobs mail line", fillLine and fillLine.type == "job"
+    and fillLine.step.to == "Blackthornes Wither", fillLine and fillLine.type)
+suite.check("and only there", UI.fillRows[mailRow] == nil and not UI.mailButton:IsShown())
+suite.check("the foot still says who presses Send", UI.footer:GetText():find("You press Send", 1, true) ~= nil)
+UI.RowAction(fillLine)
+suite.check("a click fills that character's mail", filledTo == "Blackthornes Wither")
+env.Fire("MAIL_CLOSED")
+UI:Show("bags")
+UI:Refresh(true)
+suite.check("away from the mailbox the button goes", next(UI.fillRows) == nil)
+UI:Hide()
+_G.BlackthornesTS.Butler.Advise = function() return nil end
+
 -- 8. Wrong shapes and errors.
 local clean = Jobs.Clean({ { name = "X", steps = { { kind = "craft" }, { kind = "mail", to = "Y", items = {} },
     "junk", { kind = "dance" } } }, "junk", { steps = {} } })

@@ -311,7 +311,7 @@ function SettingsUI:BuildPages()
     pages:Section("selling", 1, L["MAIL AND BANK"])
 
     local mailRow = pages:Row("selling", 1, L["Open at a mailbox"],
-        L["The Butler window comes up at every mailbox, in place of Tradeskills' mail panel (close it to get that back). Fill mail at its foot fills the game's Send Mail page for one character a click; you press Send. Needs Blackthornes Tradeskills. Also /bbutler mailbox."])
+        L["The Butler window comes up at every mailbox, in place of Tradeskills' mail panel (close it to get that back). Fill mail, on the line of each character there is mail for, fills the game's Send Mail page for one character a click; you press Send. Needs Blackthornes Tradeskills. Also /bbutler mailbox."])
     controls.openAtMailbox = Widgets.CreateCheckbox(mailRow, L["On"], function(checked)
         ns.db.openAtMailbox = checked
     end, true)

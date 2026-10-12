@@ -197,7 +197,10 @@ function UI:Build()
             if message then ns.Print(message) end
         end
     end
-    self.mailButton = Widgets.CreateButton(frame, L["Fill mail"], Run(ns.Errands.FillMail),
+    self.mailButton = Widgets.CreateButton(frame, L["Fill mail"], function()
+            local _, message = ns.Errands:FillMail(UI.footMail)
+            if message then ns.Print(message) end
+        end,
         { width = MAIL_WIDTH, height = 24, primary = true })
     self.mailButton:SetPoint("BOTTOMRIGHT", -UI.SELL_INSET_X, UI.SELL_INSET_Y)
     self.mailButton.tooltipText = L["Fills the game's Send Mail page. Check it, then press Send."]
@@ -337,10 +340,15 @@ function UI.CreateRow(row)
     row.action:Hide()
 end
 
---- The row's button: Fill on the Ammo row, Craft on a job.
+--- The row's button: Fill on the Ammo row, Craft on a job, Fill mail on
+--- the line that mails a character.
 function UI.RowAction(data)
     if not data then return end
-    if data.type == "ammo" then
+    local to = UI.fillRows[data]
+    if to then
+        local _, message = ns.Errands:FillMail(to)
+        if message then ns.Print(message) end
+    elseif data.type == "ammo" then
         ns.Ammo:Buy()
     elseif data.type == "job" then
         ns.Jobs:Craft(data.step)
@@ -351,7 +359,32 @@ local function Plural(count, one, many)
     return L.Format("%d %s", count, count == 1 and one or many)
 end
 
+-- Fill mail sits on the first line that mails each character (a Jobs
+-- step, a gold top-up or a Mail row), the way Log out sits on the next
+-- character's line (the owner asked 2026-10-12). Set by UI:PlaceMail each
+-- time the lines are built: { [line] = name }, and which names have one.
+UI.fillRows = setmetatable({}, { __mode = "k" })
+UI.mailOnRows = {}
+
 function UI.UpdateRow(row, data)
+    if row.action then row.action.tooltipText = nil end
+    UI.DrawRow(row, data)
+    local to = row.action and UI.fillRows[data]
+    -- What the line is worth stays in sight, left of the button.
+    row.worth:ClearAllPoints()
+    if to then
+        row.worth:SetPoint("RIGHT", row.action, "LEFT", -6, 0)
+    else
+        row.worth:SetPoint("RIGHT", -6, 0)
+    end
+    if to then
+        row.action:SetText(L["Fill mail"])
+        row.action.tooltipText = L.Format("Fills the game's Send Mail page for %s. Check it, then press Send.", to)
+        row.action:Show()
+    end
+end
+
+function UI.DrawRow(row, data)
     row.worth:SetTextColor(Theme.Unpack("text"))
     row.reason:SetTextColor(Theme.Unpack("muted"))
     if row.action then row.action:Hide() end
@@ -536,7 +569,40 @@ function UI:Lines()
             end
         end
     end
+    self:PlaceMail(lines)
     return lines
+end
+
+--- Who a line mails to, when it does: a Jobs mail step, a gold top-up or
+--- a row under Mail.
+local function MailsTo(line)
+    if line.type == "job" then return line.step and line.step.kind == "mail" and line.step.to or nil end
+    if line.type == "gold" then return line.entry and line.entry.to end
+    if line.type == "item" and line.verdict == "mail" then return line.mailTo end
+    return nil
+end
+
+--- At a mailbox, give each character's mail a Fill mail button on the
+--- first line that mails them. A character whose lines are all folded
+--- away keeps the button at the window's foot (UI:UpdateErrands).
+function UI:PlaceMail(lines)
+    UI.fillRows = setmetatable({}, { __mode = "k" })
+    UI.mailOnRows = {}
+    if not ns.Errands.mailOpen then return end
+    local recipients = ns.Errands:Recipients()
+    if #recipients == 0 then return end
+    for _, line in ipairs(lines) do
+        local to = MailsTo(line)
+        if type(to) == "string" then
+            for _, recipient in ipairs(recipients) do
+                if not UI.mailOnRows[recipient.to] and ns.Errands.SameName(recipient.to, to) then
+                    UI.mailOnRows[recipient.to] = true
+                    UI.fillRows[line] = recipient.to
+                    break
+                end
+            end
+        end
+    end
 end
 
 --- Which groups are folded, per character: Keep starts folded, since there
@@ -1053,8 +1119,21 @@ function UI:UpdateErrands()
     if not self.frame then return end
     local offers = (self:IsShown() and self.view ~= "all") and ns.Errands:Offers() or { toBank = 0, fromBank = 0 }
 
-    local mail = offers.mail
+    -- Fill mail sits on each character's line; the foot keeps it only for
+    -- one whose lines are folded away.
+    local mail
+    local onRows = false
+    if offers.mail then
+        for _, recipient in ipairs(ns.Errands:Recipients()) do
+            if UI.mailOnRows[recipient.to] then
+                onRows = true
+            elseif not mail and not ns.Errands.filled[recipient.to] then
+                mail = recipient
+            end
+        end
+    end
     self.mailButton:SetShown(mail ~= nil)
+    self.footMail = mail and mail.to
     if mail then self.mailButton:SetText(L.Format("Fill mail to %s", mail.to)) end
 
     self.bankButton:SetShown(offers.toBank > 0)
@@ -1074,7 +1153,7 @@ function UI:UpdateErrands()
     if offers.toBank > 0 then room = room + (self.bankButton:GetWidth() or ERRAND_WIDTH) end
     if offers.fromBank > 0 then room = room + (room > 0 and 6 or 0) + (self.takeButton:GetWidth() or ERRAND_WIDTH) end
     self.errandRoom = count > 0 and room or nil
-    if mail then
+    if mail or onRows then
         self.errandText = L["Fills the Send Mail page. You press Send."]
     elseif count > 0 then
         self.errandText = L["Moves whole stacks, one at a time."]
