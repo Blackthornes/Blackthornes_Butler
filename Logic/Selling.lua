@@ -25,6 +25,7 @@
 -- nothing is sold anyway.
 
 local _, ns = ...
+local L = ns.L
 
 local Selling = ns.NewModule("Selling")
 
@@ -154,7 +155,7 @@ function Selling:Create()
     -- The main action, so a gold face with dark ink lettering (the game's
     -- red in the Blizzard style), built on the game's secure template and
     -- given no OnClick of its own: the template's is what sells.
-    local button = ns.Widgets.CreateButton(UIParent, "Sell", nil, {
+    local button = ns.Widgets.CreateButton(UIParent, L["Sell"], nil, {
         name = "BlackthornesButlerSell", template = "SecureActionButtonTemplate",
         primary = true, width = BUTTON_WIDTH, height = BUTTON_HEIGHT,
     })
@@ -240,29 +241,30 @@ function Selling:Words()
 
     local text
     if self.selling then
-        text = "Selling..."
+        text = L["Selling..."]
     elseif count == 0 then
-        text = "Nothing to sell"
+        text = L["Nothing to sell"]
     elseif self:CanSellBatch() then
         local n = math.min(count, self.BATCH)
-        text = (self.sold or 0) > 0 and ("Sell next %d"):format(n) or ("Sell %d"):format(n)
+        text = (self.sold or 0) > 0 and L.Format("Sell next %d", n) or L.Format("Sell %d", n)
     else
         local item = queue[1]
-        text = ("Sell %s"):format(item.name)
-        if (item.count or 1) > 1 then text = ("%s x%d"):format(text, item.count) end
+        text = L.Format("Sell %s", item.name)
+        if (item.count or 1) > 1 then text = L.Format("%s x%d", text, item.count) end
     end
 
     local lines = {}
-    lines[#lines + 1] = ("Sells what Butler put under Sell: %d stack%s, %s in all."):format(
-        count, count == 1 and "" or "s", Items.FormatMoney(worth))
+    lines[#lines + 1] = count == 1
+        and L.Format("Sells what Butler put under Sell: %d stack, %s in all.", count, Items.FormatMoney(worth))
+        or L.Format("Sells what Butler put under Sell: %d stacks, %s in all.", count, Items.FormatMoney(worth))
     if self:CanSellBatch() then
-        lines[#lines + 1] = "Each click sells up to 12. The vendor's Buyback tab keeps the last 12, so every sale of a click can be bought back."
+        lines[#lines + 1] = L["Each click sells up to 12. The vendor's Buyback tab keeps the last 12, so every sale of a click can be bought back."]
     else
-        lines[#lines + 1] = "Each click sells one stack. The vendor's Buyback tab keeps the last 12 you sold."
+        lines[#lines + 1] = L["Each click sells one stack. The vendor's Buyback tab keeps the last 12 you sold."]
     end
-    lines[#lines + 1] = "Never sells anything under Keep or Look at it."
+    lines[#lines + 1] = L["Never sells anything under Keep or Look at it."]
     if (self.sold or 0) > 0 then
-        lines[#lines + 1] = ("Sold here so far: %d, %s."):format(self.sold, Items.FormatMoney(self.soldWorth or 0))
+        lines[#lines + 1] = L.Format("Sold here so far: %d, %s.", self.sold, Items.FormatMoney(self.soldWorth or 0))
     end
     return text, table.concat(lines, "\n"), count, group
 end
@@ -333,24 +335,24 @@ end
 --- Sell the cheapest grey from addon code and keep whether the game let it.
 function Selling:Test()
     if not self:MerchantOpen(true) then
-        ns.Print("open a vendor first, then run this again. It sells your cheapest grey item to see whether the game lets Butler sell.")
+        ns.Print(L["open a vendor first, then run this again. It sells your cheapest grey item to see whether the game lets Butler sell."])
         return
     end
     local use = Items.Resolve("C_Container.UseContainerItem")
     if not use then
-        ns.Print("this version of the game has no C_Container.UseContainerItem.")
+        ns.Print(L["this version of the game has no C_Container.UseContainerItem."])
         return
     end
 
     Bags:Fresh(function()
         local grey = CheapestGrey()
         if not grey then
-            ns.Print("no grey item in your bags to test with. Carry one and try again.")
+            ns.Print(L["no grey item in your bags to test with. Carry one and try again."])
             return
         end
 
         local before = type(GetMoney) == "function" and GetMoney() or 0
-        ns.Print(("trying to sell %s (%s) from addon code..."):format(grey.link or "a grey item",
+        ns.Print(L.Format("trying to sell %s (%s) from addon code...", grey.link or L["a grey item"],
             Items.FormatMoney(grey.worth)))
         Selling.testing = true
         local called, err = pcall(use, grey.bag, grey.slot)
@@ -366,10 +368,10 @@ function Selling:Test()
                 error = (not called and err) and tostring(err):sub(1, 120) or nil }
 
             if works then
-                ns.Print("|cff4fd18bselling from Butler works|r: the Sell button now sells up to 12 a click.")
+                ns.Print(L["|cff4fd18bselling from Butler works|r: the Sell button now sells up to 12 a click."])
             else
-                ns.Print(("|cffe5604fselling from Butler is blocked|r (%s). The Sell button stays at one stack a click."):format(
-                    not called and "the game refused the call" or not gone and "the item stayed" or "no gold came in"))
+                ns.Print(L.Format("|cffe5604fselling from Butler is blocked|r (%s). The Sell button stays at one stack a click.",
+                    not called and L["the game refused the call"] or not gone and L["the item stayed"] or L["no gold came in"]))
             end
             Selling:Update()
         end)
@@ -420,5 +422,5 @@ function Selling:OnEnable()
     ns.RegisterEvent(self, "PLAYER_REGEN_ENABLED", function() Selling:Update() end)
 end
 
-ns.RegisterCommand("selltest", "at a vendor, sell your cheapest grey item to test whether Butler may sell up to 12 a click",
+ns.RegisterCommand("selltest", L["at a vendor, sell your cheapest grey item to test whether Butler may sell up to 12 a click"],
     function() Selling:Test() end)

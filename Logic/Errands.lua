@@ -39,6 +39,7 @@
 -- a click; the bags are Butler's own coalesced read (Logic/Bags.lua).
 
 local _, ns = ...
+local L = ns.L
 
 local Errands = ns.NewModule("Errands")
 
@@ -339,26 +340,26 @@ Errands.filled = {}
 --- Fill the Send Mail page for the next character. Returns true when it
 --- started, or false and why.
 function Errands:FillMail()
-    if not self.mailOpen then return false, "Open a mailbox first." end
-    if InCombat() then return false, "Not in combat." end
+    if not self.mailOpen then return false, L["Open a mailbox first."] end
+    if InCombat() then return false, L["Not in combat."] end
     local butler = Errands.Tradeskills("FillMail")
-    if not butler then return false, "Filling mail needs Blackthornes Tradeskills." end
+    if not butler then return false, L["Filling mail needs Blackthornes Tradeskills."] end
     -- Ask the other addons afresh: an alt's queue may have changed since
     -- the window last asked, and the click must send what it wants now.
     ns.Verdicts:Changed(true)
     local recipient = self:NextRecipient()
-    if not recipient then return false, "Nothing left to mail." end
+    if not recipient then return false, L["Nothing left to mail."] end
 
     -- The last guard before the mail is filled: never the character playing.
-    if self:IsMe(recipient.to) then return false, "That's the character you're on." end
+    if self:IsMe(recipient.to) then return false, L["That's the character you're on."] end
 
     local items = {}
     for _, item in ipairs(recipient.items) do items[#items + 1] = { itemID = item.itemID, count = item.count } end
 
     local ok, started, why, fullName = pcall(butler.FillMail, butler, recipient.to, items, recipient.money)
-    if not ok then return false, "Tradeskills could not fill the mail." end
+    if not ok then return false, L["Tradeskills could not fill the mail."] end
     if started ~= true then
-        return false, type(why) == "string" and ("Couldn't fill it: %s."):format(why) or "Couldn't fill it."
+        return false, type(why) == "string" and L.Format("Couldn't fill it: %s.", why) or L["Couldn't fill it."]
     end
     self.filled[recipient.to] = true
     self.sending = recipient.to
@@ -368,7 +369,7 @@ function Errands:FillMail()
     -- The full name the mail went to, when Tradeskills says it: the short
     -- one ("Ana S.") read as a typo in chat.
     local to = type(fullName) == "string" and fullName ~= "" and fullName or recipient.to
-    return true, ("Filled a mail to %s: check it, then press Send."):format(to)
+    return true, L.Format("Filled a mail to %s: check it, then press Send.", to)
 end
 
 --- The mail Butler filled went (MAIL_SEND_SUCCESS): fill the next one
@@ -390,11 +391,11 @@ function Errands:Sent()
         Bags:Fresh(function()
             if not Errands.mailOpen or Errands.sending then return end
             if not Errands:NextRecipient() then
-                ns.Print("Sent. That's all the mail for now.")
+                ns.Print(L["Sent. That's all the mail for now."])
                 return
             end
             local ok, message = Errands:FillMail()
-            if message then ns.Print(ok and ("Sent. " .. message) or message) end
+            if message then ns.Print(ok and L.Format("Sent. %s", message) or message) end
         end)
     end)
 end
@@ -513,11 +514,11 @@ end
 --- Move `slots` one at a time with UseContainerItem while the bank stays
 --- open. `full` is said when a stack does not move.
 function Errands:Move(slots, done, full)
-    if self.moving then return false, "Still moving the last ones." end
-    if not self.bankOpen then return false, "Open your bank first." end
-    if InCombat() then return false, "Not in combat." end
-    if #slots == 0 then return false, "Nothing to move." end
-    if not Items.Resolve("C_Container.UseContainerItem") then return false, "This game can't move items for Butler." end
+    if self.moving then return false, L["Still moving the last ones."] end
+    if not self.bankOpen then return false, L["Open your bank first."] end
+    if InCombat() then return false, L["Not in combat."] end
+    if #slots == 0 then return false, L["Nothing to move."] end
+    if not Items.Resolve("C_Container.UseContainerItem") then return false, L["This game can't move items for Butler."] end
 
     self.moving = true
     local index, moved = 0, 0
@@ -534,7 +535,7 @@ function Errands:Move(slots, done, full)
         if not Errands.bankOpen or InCombat() then return Finish() end
         index = index + 1
         local step = slots[index]
-        if not step then return Finish(("moved %d %s."):format(moved, moved == 1 and "stack" or "stacks")) end
+        if not step then return Finish(moved == 1 and L.Format("moved %d stack.", moved) or L.Format("moved %d stacks.", moved)) end
 
         if not Bags.Holds(step.bag, step.slot, step.itemID) then return Next() end
         Items.Call({ "C_Container.UseContainerItem" }, step.bag, step.slot)
@@ -542,7 +543,7 @@ function Errands:Move(slots, done, full)
         C_Timer.After(Errands.STEP, function()
             -- Still there, unlocked: nowhere for it to go.
             if Bags.Holds(step.bag, step.slot, step.itemID) then
-                return Finish(("moved %d, then %s"):format(moved, full))
+                return Finish(full(moved))
             end
             moved = moved + 1
             Next()
@@ -554,11 +555,11 @@ function Errands:Move(slots, done, full)
 end
 
 function Errands:MoveToBank()
-    return self:Move(self:ToBank(), nil, "the bank is full.")
+    return self:Move(self:ToBank(), nil, function(moved) return L.Format("moved %d, then the bank is full.", moved) end)
 end
 
 function Errands:TakeFromBank()
-    return self:Move(self:FromBankSlots(), nil, "your bags are full.")
+    return self:Move(self:FromBankSlots(), nil, function(moved) return L.Format("moved %d, then your bags are full.", moved) end)
 end
 
 --------------------------------------------------------------------------------
@@ -651,20 +652,20 @@ end
 -- Commands
 --------------------------------------------------------------------------------
 
-ns.RegisterCommand("mailbox", "turn the Butler window coming up at a mailbox on or off", function()
+ns.RegisterCommand("mailbox", L["turn the Butler window coming up at a mailbox on or off"], function()
     ns.db.openAtMailbox = not ns.db.openAtMailbox
-    ns.Print(ns.db.openAtMailbox and "the Butler window comes up at every mailbox."
-        or "the Butler window no longer comes up at a mailbox by itself.")
+    ns.Print(ns.db.openAtMailbox and L["the Butler window comes up at every mailbox."]
+        or L["the Butler window no longer comes up at a mailbox by itself."])
 end)
 
-ns.RegisterCommand("fillnext", "turn filling the next mail after each Send on or off", function()
+ns.RegisterCommand("fillnext", L["turn filling the next mail after each Send on or off"], function()
     ns.db.fillNext = ns.db.fillNext == false
-    ns.Print(ns.db.fillNext and "after each Send, Butler fills the next mail."
-        or "Butler fills a mail only when you click Fill mail.")
+    ns.Print(ns.db.fillNext and L["after each Send, Butler fills the next mail."]
+        or L["Butler fills a mail only when you click Fill mail."])
 end)
 
-ns.RegisterCommand("bank", "turn the Butler window coming up at the bank on or off", function()
+ns.RegisterCommand("bank", L["turn the Butler window coming up at the bank on or off"], function()
     ns.db.openAtBank = not ns.db.openAtBank
-    ns.Print(ns.db.openAtBank and "the Butler window comes up at the bank when there is something to move."
-        or "the Butler window no longer comes up at the bank by itself.")
+    ns.Print(ns.db.openAtBank and L["the Butler window comes up at the bank when there is something to move."]
+        or L["the Butler window no longer comes up at the bank by itself."])
 end)

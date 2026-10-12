@@ -34,6 +34,7 @@
 -- at a vendor, SendMail) and one event each; no timers, no bag scans.
 
 local _, ns = ...
+local L = ns.L
 
 local Learning = ns.NewModule("Learning")
 
@@ -55,9 +56,8 @@ Learning.ADDON_SUBJECTS = {
 }
 
 local REASONS = {
-    keep = "You bought this back, so Butler keeps it",
-    sell = "You usually sell these",
-    mail = "You usually mail this to %s",
+    keep = L["You bought this back, so Butler keeps it"],
+    sell = L["You usually sell these"],
 }
 
 local function Text(value)
@@ -100,9 +100,8 @@ end
 
 --- The row's reason for a learned verdict.
 function Learning.Reason(verdict, to)
-    local text = REASONS[verdict]
-    if verdict == "mail" then return text:format(to or "?") end
-    return text
+    if verdict == "mail" then return L.Format("You usually mail this to %s", to or "?") end
+    return REASONS[verdict]
 end
 
 --- Forget what was learned about an item, and the counting toward it.
@@ -123,7 +122,7 @@ end
 
 local function ItemName(itemID)
     local name, link = Items.Call({ "C_Item.GetItemInfo", "GetItemInfo" }, itemID)
-    return link or name or ("item " .. tostring(itemID))
+    return link or name or L.Format("item %s", tostring(itemID))
 end
 
 --- Take a habit as learned, say so once in chat and judge again.
@@ -133,15 +132,14 @@ function Learning:Learn(itemID, verdict, to)
     Learned()[itemID] = { verdict = verdict, to = to, at = now }
     Tally("sells")[itemID] = nil
     Tally("mails")[itemID] = nil
-    local said
+    local name = ItemName(itemID)
     if verdict == "keep" then
-        said = "%s: you bought it back, so Butler keeps it from now on."
+        ns.Print(L.Format("%s: you bought it back, so Butler keeps it from now on. Right-click it in the Butler window to change that.", name))
     elseif verdict == "sell" then
-        said = "%s: you sell these, so Butler puts them under Sell from now on."
+        ns.Print(L.Format("%s: you sell these, so Butler puts them under Sell from now on. Right-click it in the Butler window to change that.", name))
     else
-        said = "%s: you mail these to " .. to .. ", so Butler puts them under Mail from now on."
+        ns.Print(L.Format("%s: you mail these to %s, so Butler puts them under Mail from now on. Right-click it in the Butler window to change that.", name, to))
     end
-    ns.Print(said:format(ItemName(itemID)) .. " Right-click it in the Butler window to change that.")
     if ns.Verdicts then ns.Verdicts:Changed(true) end
 end
 
@@ -360,14 +358,14 @@ function Learning:PrintLearned()
     end
     table.sort(ids)
     if #ids == 0 then
-        ns.PrintRaw(("  |c%sLearned from you:|r none yet"):format(ns.COLORS.muted))
+        ns.PrintRaw(L.Format("  |c%sLearned from you:|r none yet", ns.COLORS.muted))
         return
     end
     local parts = {}
     for _, itemID in ipairs(ids) do
         local verdict, to = self:Get(itemID)
-        local what = verdict == "mail" and ("mail to " .. to) or verdict
+        local what = verdict == "mail" and L.Format("mail to %s", to) or verdict == "keep" and L["keep"] or L["sell"]
         parts[#parts + 1] = ("%s (%s)"):format(ItemName(itemID), what)
     end
-    ns.PrintRaw(("  |c%sLearned from you (%d):|r %s"):format(ns.COLORS.muted, #ids, table.concat(parts, ", ")))
+    ns.PrintRaw(L.Format("  |c%sLearned from you (%d):|r %s", ns.COLORS.muted, #ids, table.concat(parts, ", ")))
 end

@@ -10,6 +10,7 @@
 -- game's own Options > AddOns list. Nothing here deletes anything.
 
 local _, ns = ...
+local L = ns.L
 
 local SettingsUI = ns.NewModule("SettingsUI")
 
@@ -34,12 +35,12 @@ local TITLE = "Blackthornes Butler"
 -- The pages along the top (UI/SettingsPages.lua), as Tradeskills' Settings
 -- tab has them. Every setting kept its saved name; only its place moved.
 local PAGES = {
-    { key = "selling", text = "ERRANDS",
-      tip = "Selling at a vendor, mail and the bank, and your Always keep, sell and bank lists" },
-    { key = "gold", text = "GOLD",
-      tip = "A gold fund: how much each of your characters keeps, topped up by mail" },
-    { key = "general", text = "GENERAL",
-      tip = "The minimap button, window position, text size and debug output" },
+    { key = "selling", text = L["ERRANDS"],
+      tip = L["Selling at a vendor, mail and the bank, and your Always keep, sell and bank lists"] },
+    { key = "gold", text = L["GOLD"],
+      tip = L["A gold fund: how much each of your characters keeps, topped up by mail"] },
+    { key = "general", text = L["GENERAL"],
+      tip = L["The minimap button, window position, text size and debug output"] },
 }
 
 --- Put the settings window back where it started.
@@ -119,7 +120,7 @@ function SettingsUI:Build()
     local footer = Theme.CreateLabel(frame, "tiny", "dim")
     footer:SetPoint("BOTTOMLEFT", PADDING, 14)
     footer:SetPoint("BOTTOMRIGHT", -PADDING, 14)
-    footer:SetText("Changes save as you make them.")
+    footer:SetText(L["Changes save as you make them."])
     self.footer = footer
 
     frame:Hide()
@@ -146,7 +147,7 @@ function SettingsUI:BuildHeader()
 
     local subtitle = Theme.CreateLabel(header, "small", "muted")
     subtitle:SetPoint("BOTTOMLEFT", header, "BOTTOMLEFT", PADDING - EDGE_PAD, 7)
-    subtitle:SetText("Settings")
+    subtitle:SetText(L["Settings"])
 
     local version = Theme.CreateLabel(header, "tiny", "dim", "RIGHT")
     version:SetText(ns.VersionLabel())
@@ -190,13 +191,13 @@ function SettingsUI.WindowStyleControl(row, x)
     stepper:SetPoint("TOPLEFT", x, -2)
 
     -- ReloadUI is allowed from a click, and saves everything first.
-    reload = Widgets.CreateButton(row, "Reload now", function()
+    reload = Widgets.CreateButton(row, L["Reload now"], function()
         if ReloadUI then ReloadUI() end
     end, { width = 60, height = 20 })
     reload:SetPoint("LEFT", stepper, "RIGHT", 6, 0)
     reload:HookScript("OnEnter", function(self)
         GameTooltip:SetOwner(self, "ANCHOR_TOP")
-        GameTooltip:AddLine("Reload the interface so the new window style shows (/reload)", 1, 1, 1, true)
+        GameTooltip:AddLine(L["Reload the interface so the new window style shows (/reload)"], 1, 1, 1, true)
         GameTooltip:Show()
     end)
     reload:HookScript("OnLeave", function() GameTooltip:Hide() end)
@@ -229,7 +230,7 @@ function SettingsUI.CharacterPicker(row, x, onChange)
     local function Show()
         local count = #picker.names
         picker.index = math.max(1, math.min(picker.index, math.max(1, count)))
-        text:SetText(picker.names[picker.index] or "No characters yet")
+        text:SetText(picker.names[picker.index] or L["No characters yet"])
         picker.prev:SetLabelColor(picker.index <= 1 and "dim" or nil)
         picker.next:SetLabelColor(picker.index >= count and "dim" or nil)
     end
@@ -283,7 +284,7 @@ function SettingsUI:SyncHeld()
     local name = controls.heldPick:GetName()
     controls.heldAll:SetChecked(not (name and (ns.db.noUpgradesFor or {})[name]))
     local count = name and #ns.Verdicts:HeldItems(name) or 0
-    controls.heldItems:SetText(count > 0 and ("Undo %d"):format(count) or "None")
+    controls.heldItems:SetText(count > 0 and L.Format("Undo %d", count) or L["None"])
     controls.heldItems:SetLabelColor(count == 0 and "dim" or nil)
 end
 
@@ -292,103 +293,103 @@ function SettingsUI:BuildPages()
     local pages = self.pages
 
     -- Selling: the vendor on the left, the player's lists on the right.
-    pages:Section("selling", 1, "AT A VENDOR")
+    pages:Section("selling", 1, L["AT A VENDOR"])
 
-    local vendorRow = pages:Row("selling", 1, "Open at a vendor",
-        "The Butler window comes up by itself at every vendor, and goes when you leave. Nothing sells until you click Sell. Also /bbutler vendor.")
-    controls.openAtVendor = Widgets.CreateCheckbox(vendorRow, "On", function(checked)
+    local vendorRow = pages:Row("selling", 1, L["Open at a vendor"],
+        L["The Butler window comes up by itself at every vendor, and goes when you leave. Nothing sells until you click Sell. Also /bbutler vendor."])
+    controls.openAtVendor = Widgets.CreateCheckbox(vendorRow, L["On"], function(checked)
         ns.db.openAtVendor = checked
     end, true)
     controls.openAtVendor:SetPoint("TOPLEFT", CONTROL_X, -2)
 
-    local testRow, testButton = CommandRow(pages, "selling", 1, "Test selling",
-        "At a vendor, sells your cheapest grey item from Butler's own code to see whether the game allows it. If it does, Sell sells up to 12 a click; if not, one stack a click. Same as /bbutler selltest.",
-        "Test it", "selltest")
+    local testRow, testButton = CommandRow(pages, "selling", 1, L["Test selling"],
+        L["At a vendor, sells your cheapest grey item from Butler's own code to see whether the game allows it. If it does, Sell sells up to 12 a click; if not, one stack a click. Same as /bbutler selltest."],
+        L["Test it"], "selltest")
     controls.sellTest = testButton
     controls.sellTestRow = testRow
 
-    pages:Section("selling", 1, "MAIL AND BANK")
+    pages:Section("selling", 1, L["MAIL AND BANK"])
 
-    local mailRow = pages:Row("selling", 1, "Open at a mailbox",
-        "The Butler window comes up at every mailbox, in place of Tradeskills' mail panel (close it to get that back). Fill mail at its foot fills the game's Send Mail page for one character a click; you press Send. Needs Blackthornes Tradeskills. Also /bbutler mailbox.")
-    controls.openAtMailbox = Widgets.CreateCheckbox(mailRow, "On", function(checked)
+    local mailRow = pages:Row("selling", 1, L["Open at a mailbox"],
+        L["The Butler window comes up at every mailbox, in place of Tradeskills' mail panel (close it to get that back). Fill mail at its foot fills the game's Send Mail page for one character a click; you press Send. Needs Blackthornes Tradeskills. Also /bbutler mailbox."])
+    controls.openAtMailbox = Widgets.CreateCheckbox(mailRow, L["On"], function(checked)
         ns.db.openAtMailbox = checked
     end, true)
     controls.openAtMailbox:SetPoint("TOPLEFT", CONTROL_X, -2)
 
-    local nextRow = pages:Row("selling", 1, "Fill the next mail",
-        "After you send a mail Butler filled, it fills the next one straight away, so you only press Send for each character. Also /bbutler fillnext.")
-    controls.fillNext = Widgets.CreateCheckbox(nextRow, "On", function(checked)
+    local nextRow = pages:Row("selling", 1, L["Fill the next mail"],
+        L["After you send a mail Butler filled, it fills the next one straight away, so you only press Send for each character. Also /bbutler fillnext."])
+    controls.fillNext = Widgets.CreateCheckbox(nextRow, L["On"], function(checked)
         ns.db.fillNext = checked
     end, true)
     controls.fillNext:SetPoint("TOPLEFT", CONTROL_X, -2)
 
     -- Jobs for the craft queue on other characters (Logic/Jobs.lua, asked
     -- 2026-10-11).
-    local jobRow = pages:Row("selling", 1, "Jobs at login",
-        "Logging in on a character with a job for Tradeskills' craft queue (craft this, mail that) brings the Butler window up on its steps. Also /bbutler joblogin.")
-    controls.jobsAtLogin = Widgets.CreateCheckbox(jobRow, "On", function(checked)
+    local jobRow = pages:Row("selling", 1, L["Jobs at login"],
+        L["Logging in on a character with a job for Tradeskills' craft queue (craft this, mail that) brings the Butler window up on its steps. Also /bbutler joblogin."])
+    controls.jobsAtLogin = Widgets.CreateCheckbox(jobRow, L["On"], function(checked)
         ns.db.jobsAtLogin = checked
     end, true)
     controls.jobsAtLogin:SetPoint("TOPLEFT", CONTROL_X, -2)
 
-    CommandRow(pages, "selling", 1, "Every character's jobs",
-        "Lists in chat what each of your characters has to craft or mail for Tradeskills' craft queue. Also /bbutler jobs.", "List", "jobs")
+    CommandRow(pages, "selling", 1, L["Every character's jobs"],
+        L["Lists in chat what each of your characters has to craft or mail for Tradeskills' craft queue. Also /bbutler jobs."], L["List"], "jobs")
 
-    local bankRow = pages:Row("selling", 1, "Open at the bank",
-        "The Butler window comes up at the bank when there is something to move: Move to bank puts your Always bank items away, and Take from bank brings out what your craft queue needs. Also /bbutler bank.")
-    controls.openAtBank = Widgets.CreateCheckbox(bankRow, "On", function(checked)
+    local bankRow = pages:Row("selling", 1, L["Open at the bank"],
+        L["The Butler window comes up at the bank when there is something to move: Move to bank puts your Always bank items away, and Take from bank brings out what your craft queue needs. Also /bbutler bank."])
+    controls.openAtBank = Widgets.CreateCheckbox(bankRow, L["On"], function(checked)
         ns.db.openAtBank = checked
     end, true)
     controls.openAtBank:SetPoint("TOPLEFT", CONTROL_X, -2)
 
     -- Asked 2026-10-11: anything worth less than this joins Sell. It only
     -- ever adds to Sell; nothing sells until the player clicks.
-    pages:Section("selling", 2, "JUNK")
+    pages:Section("selling", 2, L["JUNK"])
 
-    local belowRow = pages:Row("selling", 2, "Sell below",
-        "Anything worth less than this goes under Sell, judged on the most it could fetch from a vendor, the auction house or a disenchant. Quest items, upgrades, goal and craft materials, pet food, soulbound green or better gear and your Always keep, bank and mail items are never included, and nothing sells until you click Sell. Needs Blackthornes Tradeskills for auction prices. Leave it at 0 for off. Also /bbutler sellbelow 50s.")
+    local belowRow = pages:Row("selling", 2, L["Sell below"],
+        L["Anything worth less than this goes under Sell, judged on the most it could fetch from a vendor, the auction house or a disenchant. Quest items, upgrades, goal and craft materials, pet food, soulbound green or better gear and your Always keep, bank and mail items are never included, and nothing sells until you click Sell. Needs Blackthornes Tradeskills for auction prices. Leave it at 0 for off. Also /bbutler sellbelow 50s."])
     controls.sellBelow = Widgets.CreateMoneyBox(belowRow, function(copper)
         ns.Verdicts:SetSellBelow(copper)
     end)
     controls.sellBelow:SetPoint("TOPLEFT", CONTROL_X, 0)
 
-    pages:Section("selling", 2, "YOUR LISTS")
+    pages:Section("selling", 2, L["YOUR LISTS"])
 
-    local learnRow = pages:Row("selling", 2, "Learn from what you do",
-        "Butler watches what you do anyway and remembers it: buy back something it sold and it keeps it from then on; sell an item yourself at a vendor on two visits and it goes under Sell; mail an item to the same one of your characters twice and it goes under Mail to them. Your own right-click choices always win, and right-click shows Forget what Butler learned. Nothing is sold or sent without your click.")
-    controls.learn = Widgets.CreateCheckbox(learnRow, "On", function(checked)
+    local learnRow = pages:Row("selling", 2, L["Learn from what you do"],
+        L["Butler watches what you do anyway and remembers it: buy back something it sold and it keeps it from then on; sell an item yourself at a vendor on two visits and it goes under Sell; mail an item to the same one of your characters twice and it goes under Mail to them. Your own right-click choices always win, and right-click shows Forget what Butler learned. Nothing is sold or sent without your click."])
+    controls.learn = Widgets.CreateCheckbox(learnRow, L["On"], function(checked)
         ns.db.learn = checked
         ns.Verdicts:Changed(true)
     end)
     controls.learn:SetPoint("TOPLEFT", CONTROL_X, -2)
 
-    local _, listsButton = CommandRow(pages, "selling", 2, "Keep, sell, bank, mail",
-        "Right-click an item in the Butler window to always keep it, sell it, bank it or mail it to one of your characters. This lists all four in chat, and what Butler learned from you. To empty them, type /bbutler reset confirm. Same as /bbutler lists.",
-        "List them", "lists")
+    local _, listsButton = CommandRow(pages, "selling", 2, L["Keep, sell, bank, mail"],
+        L["Right-click an item in the Butler window to always keep it, sell it, bank it or mail it to one of your characters. This lists all four in chat, and what Butler learned from you. To empty them, type /bbutler reset confirm. Same as /bbutler lists."],
+        L["List them"], "lists")
     controls.lists = listsButton
 
     -- Upgrades held back from a character (the owner asked 2026-10-12):
     -- right-click an upgrade under Mail to hold it back; undone here.
-    pages:Section("selling", 2, "UPGRADES FOR YOUR CHARACTERS")
+    pages:Section("selling", 2, L["UPGRADES FOR YOUR CHARACTERS"])
 
-    local heldRow = pages:Row("selling", 2, "Character",
-        "Pick one of your characters to see what you hold back from them. Right-click an upgrade under Mail to hold back that item, or every upgrade, from the character it was going to.")
+    local heldRow = pages:Row("selling", 2, L["Character"],
+        L["Pick one of your characters to see what you hold back from them. Right-click an upgrade under Mail to hold back that item, or every upgrade, from the character it was going to."])
     controls.heldPick = SettingsUI.CharacterPicker(heldRow, CONTROL_X, function()
         SettingsUI:SyncHeld()
     end)
 
-    local allRow = pages:Row("selling", 2, "Mail them upgrades",
-        "Untick to stop Butler offering this character any upgrades by mail. Your own Always mail picks still go to them.")
-    controls.heldAll = Widgets.CreateCheckbox(allRow, "On", function(checked)
+    local allRow = pages:Row("selling", 2, L["Mail them upgrades"],
+        L["Untick to stop Butler offering this character any upgrades by mail. Your own Always mail picks still go to them."])
+    controls.heldAll = Widgets.CreateCheckbox(allRow, L["On"], function(checked)
         local name = controls.heldPick:GetName()
         if name then ns.Verdicts:HoldAllUpgrades(name, not checked) end
     end)
     controls.heldAll:SetPoint("TOPLEFT", CONTROL_X, -2)
 
-    local itemsRow = pages:Row("selling", 2, "Items held back",
-        "The items you said not to mail to this character. Undo lets them go as upgrades again.")
-    controls.heldItems = Widgets.CreateButton(itemsRow, "Undo", function()
+    local itemsRow = pages:Row("selling", 2, L["Items held back"],
+        L["The items you said not to mail to this character. Undo lets them go as upgrades again."])
+    controls.heldItems = Widgets.CreateButton(itemsRow, L["Undo"], function()
         local name = controls.heldPick:GetName()
         if not name then return end
         for _, itemID in ipairs(ns.Verdicts:HeldItems(name)) do
@@ -398,46 +399,46 @@ function SettingsUI:BuildPages()
     end, { width = 100, height = 20 })
     controls.heldItems:SetPoint("TOPLEFT", CONTROL_X, 0)
 
-    local _, heldButton = CommandRow(pages, "selling", 2, "Everyone held back",
-        "Lists in chat every upgrade you hold back, and from whom. Same as /bbutler upgrademail.",
-        "List them", "upgrademail")
+    local _, heldButton = CommandRow(pages, "selling", 2, L["Everyone held back"],
+        L["Lists in chat every upgrade you hold back, and from whom. Same as /bbutler upgrademail."],
+        L["List them"], "upgrademail")
     controls.heldList = heldButton
 
     -- Gold: the gold fund (the owner asked 2026-10-11). The usual amount on
     -- the left, one character's own on the right. Logic/Funds.lua.
-    pages:Section("gold", 1, "GOLD FUND")
+    pages:Section("gold", 1, L["GOLD FUND"])
 
-    local minRow = pages:Row("gold", 1, "Keep at least",
-        "Every character keeps this much gold. At a mailbox, a character with more is offered a gold mail to each of your characters below it (Fill mail fills it, you press Send), never going below its own amount. Needs Blackthornes Tradeskills, which keeps your characters' gold as last seen. Leave it at 0 for off. Also /bbutler goldmin 50g.")
+    local minRow = pages:Row("gold", 1, L["Keep at least"],
+        L["Every character keeps this much gold. At a mailbox, a character with more is offered a gold mail to each of your characters below it (Fill mail fills it, you press Send), never going below its own amount. Needs Blackthornes Tradeskills, which keeps your characters' gold as last seen. Leave it at 0 for off. Also /bbutler goldmin 50g."])
     controls.goldMinimum = Widgets.CreateMoneyBox(minRow, function(copper)
         ns.Funds:SetMinimum(copper)
     end)
     controls.goldMinimum:SetPoint("TOPLEFT", CONTROL_X, 0)
 
-    local _, goldButton = CommandRow(pages, "gold", 1, "Everyone's gold",
-        "Lists in chat each character's gold as last seen, what it keeps and what the fund would send it. Same as /bbutler gold.",
-        "List it", "gold")
+    local _, goldButton = CommandRow(pages, "gold", 1, L["Everyone's gold"],
+        L["Lists in chat each character's gold as last seen, what it keeps and what the fund would send it. Same as /bbutler gold."],
+        L["List it"], "gold")
     controls.goldReport = goldButton
 
-    pages:Section("gold", 2, "ONE CHARACTER")
+    pages:Section("gold", 2, L["ONE CHARACTER"])
 
-    local pickRow = pages:Row("gold", 2, "Character",
-        "Pick one of your characters to give it an amount of its own.")
+    local pickRow = pages:Row("gold", 2, L["Character"],
+        L["Pick one of your characters to give it an amount of its own."])
     controls.goldPick = SettingsUI.CharacterPicker(pickRow, CONTROL_X, function()
         SettingsUI:SyncGoldFor()
     end)
 
-    local ownRow = pages:Row("gold", 2, "They keep",
-        "This character's own amount, in place of the usual. 0 means it keeps nothing back, so it can give all it has.")
+    local ownRow = pages:Row("gold", 2, L["They keep"],
+        L["This character's own amount, in place of the usual. 0 means it keeps nothing back, so it can give all it has."])
     controls.goldFor = Widgets.CreateMoneyBox(ownRow, function(copper)
         local name = controls.goldPick:GetName()
         if name then ns.Funds:SetMinimumFor(name, copper) end
     end)
     controls.goldFor:SetPoint("TOPLEFT", CONTROL_X, 0)
 
-    local usualRow = pages:Row("gold", 2, "Back to the usual",
-        "This character keeps the usual amount again.")
-    controls.goldUsual = Widgets.CreateButton(usualRow, "Use the usual", function()
+    local usualRow = pages:Row("gold", 2, L["Back to the usual"],
+        L["This character keeps the usual amount again."])
+    controls.goldUsual = Widgets.CreateButton(usualRow, L["Use the usual"], function()
         local name = controls.goldPick:GetName()
         if name then ns.Funds:SetMinimumFor(name, nil) end
         SettingsUI:SyncGoldFor()
@@ -445,99 +446,98 @@ function SettingsUI:BuildPages()
     controls.goldUsual:SetPoint("TOPLEFT", CONTROL_X, 0)
 
     -- General: windows and text on the left, debug on the right.
-    pages:Section("general", 1, "WINDOWS")
+    pages:Section("general", 1, L["WINDOWS"])
 
-    local windowRow = pages:Row("general", 1, "Butler window",
-        "What to do with each item in your bags. Same as /bbutler window, or /bbutler on its own.")
-    controls.openWindow = Widgets.CreateButton(windowRow, "Open it", function()
+    local windowRow = pages:Row("general", 1, L["Butler window"],
+        L["What to do with each item in your bags. Same as /bbutler window, or /bbutler on its own."])
+    controls.openWindow = Widgets.CreateButton(windowRow, L["Open it"], function()
         ns.HandleSlash("window")
     end, { width = 100, height = 20, primary = true })
     controls.openWindow:SetPoint("TOPLEFT", CONTROL_X, 0)
 
-    local _, allButton = CommandRow(pages, "general", 1, "All characters",
-        "Every character's items in one list, with who has each and whether it is in their bags, bank or mail. Needs Blackthornes Tradeskills for the other characters. Same as /bbutler all.",
-        "Show them", "all")
+    local _, allButton = CommandRow(pages, "general", 1, L["All characters"],
+        L["Every character's items in one list, with who has each and whether it is in their bags, bank or mail. Needs Blackthornes Tradeskills for the other characters. Same as /bbutler all."],
+        L["Show them"], "all")
     controls.all = allButton
 
-    local minimapRow = pages:Row("general", 1, "Minimap button",
-        "Click it for the Butler window, right-click for this page. Drag it to move it. Also /bbutler minimap.")
+    local minimapRow = pages:Row("general", 1, L["Minimap button"],
+        L["Click it for the Butler window, right-click for this page. Drag it to move it. Also /bbutler minimap."])
 
-    controls.minimap = Widgets.CreateCheckbox(minimapRow, "Show it", function(checked)
+    controls.minimap = Widgets.CreateCheckbox(minimapRow, L["Show it"], function(checked)
         ns.db.minimapHidden = not checked
         if ns.MinimapButton then ns.MinimapButton:ApplyVisibility() end
     end, true)
     controls.minimap:SetPoint("TOPLEFT", CONTROL_X, -2)
 
-    local spaceRow = pages:Row("general", 1, "Free bag space",
-        "How many bag slots are free, as a number on the backpack button of your bag bar: white, amber at 8 or fewer, red at 3 or fewer. Hover the button for each bag. Profession and reagent bags are listed but not counted. Also /bbutler freespace.")
-    controls.freeSpace = Widgets.CreateCheckbox(spaceRow, "Show it", function(checked)
+    local spaceRow = pages:Row("general", 1, L["Free bag space"],
+        L["How many bag slots are free, as a number on the backpack button of your bag bar: white, amber at 8 or fewer, red at 3 or fewer. Hover the button for each bag. Profession and reagent bags are listed but not counted. Also /bbutler freespace."])
+    controls.freeSpace = Widgets.CreateCheckbox(spaceRow, L["Show it"], function(checked)
         if ns.FreeSpace then ns.FreeSpace:SetEnabled(checked) end
     end, true)
     controls.freeSpace:SetPoint("TOPLEFT", CONTROL_X, -2)
 
-    local whoRow = pages:Row("general", 1, "Who has it",
-        "Item tooltips list which of your characters have that item and where: bags, bank or mail. Needs Blackthornes Tradeskills, which remembers your other characters. Also /bbutler whohas.")
-    controls.whoHas = Widgets.CreateCheckbox(whoRow, "Show it", function(checked)
+    local whoRow = pages:Row("general", 1, L["Who has it"],
+        L["Item tooltips list which of your characters have that item and where: bags, bank or mail. Needs Blackthornes Tradeskills, which remembers your other characters. Also /bbutler whohas."])
+    controls.whoHas = Widgets.CreateCheckbox(whoRow, L["Show it"], function(checked)
         if ns.WhoHas then ns.WhoHas:SetEnabled(checked) end
     end, true)
     controls.whoHas:SetPoint("TOPLEFT", CONTROL_X, -2)
 
-    local voiceRow = pages:Row("general", 1, "Butler's voice",
-        "\"You rang?\" when you open the Butler window and \"Now, where was I?\" when you close it, in the voice of Karazhan's butler. Never at a vendor, mailbox, bank or other NPC, and at most once every few minutes. Uses your Dialog volume.")
-    controls.voice = Widgets.CreateCheckbox(voiceRow, "On", function(checked)
+    local voiceRow = pages:Row("general", 1, L["Butler's voice"],
+        L["\"You rang?\" when you open the Butler window and \"Now, where was I?\" when you close it, in the voice of Karazhan's butler. Never at a vendor, mailbox, bank or other NPC, and at most once every few minutes. Uses your Dialog volume."])
+    controls.voice = Widgets.CreateCheckbox(voiceRow, L["On"], function(checked)
         ns.db.voice = checked
     end, true)
     controls.voice:SetPoint("TOPLEFT", CONTROL_X, -2)
 
-    local positionRow = pages:Row("general", 1, "Window position",
-        "Moves this window back where it started, if it ends up off screen.")
+    local positionRow = pages:Row("general", 1, L["Window position"],
+        L["Moves this window back where it started, if it ends up off screen."])
 
-    local reset = Widgets.CreateButton(positionRow, "Put it back", function()
+    local reset = Widgets.CreateButton(positionRow, L["Put it back"], function()
         SettingsUI:ResetPositions()
     end, { width = 100, height = 20 })
     reset:SetPoint("TOPLEFT", CONTROL_X, 0)
 
     -- Bigger letters in the same windows, as Tradeskills has. Every size
     -- is read as text is drawn, so it waits for /reload.
-    local textRow = pages:Row("general", 1, "Text size",
-        "Large and Larger add a point or two to all of this addon's text. Takes effect after /reload.")
+    local textRow = pages:Row("general", 1, L["Text size"],
+        L["Large and Larger add a point or two to all of this addon's text. Takes effect after /reload."])
     controls.textSize = ns.SettingsPages.TextSizeControl(textRow, CONTROL_X, function() return ns.db end)
 
     -- Asked 2026-10-10: the game's own look for players who would rather
     -- the windows matched the rest of their screen. Read at login, so it
     -- waits for /reload as Text size does. See UI/BlizzardLook.lua.
-    local styleRow = pages:Row("general", 1, "Window style",
-        "Titanforged is the house look, with a gold rim and glowing edges. Blizzard uses the game's own frames, red buttons and tick boxes. Takes effect after /reload.")
+    local styleRow = pages:Row("general", 1, L["Window style"],
+        L["Titanforged is the house look, with a gold rim and glowing edges. Blizzard uses the game's own frames, red buttons and tick boxes. Takes effect after /reload."])
     controls.windowStyle = SettingsUI.WindowStyleControl(styleRow, CONTROL_X)
 
-    pages:Section("general", 2, "ADVANCED")
+    pages:Section("general", 2, L["ADVANCED"])
 
-    local debugRow = pages:Row("general", 2, "Debug output",
-        "Extra messages in chat, to help track down a problem.")
+    local debugRow = pages:Row("general", 2, L["Debug output"],
+        L["Extra messages in chat, to help track down a problem."])
 
-    controls.debug = Widgets.CreateCheckbox(debugRow, "Enabled", function(checked)
+    controls.debug = Widgets.CreateCheckbox(debugRow, L["Enabled"], function(checked)
         ns.db.debug = checked
     end, false)
     controls.debug:SetPoint("TOPLEFT", CONTROL_X, -2)
 
     -- Core/SisterNote.lua: one chat line, once, naming the Blackthornes
     -- addons the player does not have. Off here is off in all of them.
-    local sistersRow = pages:Row("general", 2, "Sister addons",
-        "Once, a few seconds after login, says in chat which Blackthornes addons you don't have "
-        .. "and what each adds. Turning it off here turns it off in all of them. Same as /bbutler sisters.")
-    controls.sisters = Widgets.CreateCheckbox(sistersRow, "Mention them", function(checked)
+    local sistersRow = pages:Row("general", 2, L["Sister addons"],
+        L["Once, a few seconds after login, says in chat which Blackthornes addons you don't have and what each adds. Turning it off here turns it off in all of them. Same as /bbutler sisters."])
+    controls.sisters = Widgets.CreateCheckbox(sistersRow, L["Mention them"], function(checked)
         ns.SisterNote:SetOn(checked)
     end, true)
     controls.sisters:SetPoint("TOPLEFT", CONTROL_X, -2)
 
-    local _, probeButton = CommandRow(pages, "general", 2, "Client check",
-        "Lists in chat which bag, vendor and mail calls this client has, and which Blackthornes addons are loaded. It only reads. Same as /bbutler probe.",
-        "Check", "probe")
+    local _, probeButton = CommandRow(pages, "general", 2, L["Client check"],
+        L["Lists in chat which bag, vendor and mail calls this client has, and which Blackthornes addons are loaded. It only reads. Same as /bbutler probe."],
+        L["Check"], "probe")
     controls.probe = probeButton
 
-    local _, helpButton = CommandRow(pages, "general", 2, "Commands",
-        "Lists every /bbutler command in chat. Same as /bbutler help.",
-        "List them", "help")
+    local _, helpButton = CommandRow(pages, "general", 2, L["Commands"],
+        L["Lists every /bbutler command in chat. Same as /bbutler help."],
+        L["List them"], "help")
     controls.help = helpButton
 end
 
@@ -660,9 +660,9 @@ function SettingsUI:RegisterGameOptions()
 
     local blurb = Theme.CreateLabel(panel, "normal", "text")
     blurb:SetPoint("TOPLEFT", title, "BOTTOMLEFT", 0, -10)
-    blurb:SetText("Butler's settings have a window of their own.")
+    blurb:SetText(L["Butler's settings have a window of their own."])
 
-    local open = Widgets.CreateButton(panel, "Open Butler settings", function()
+    local open = Widgets.CreateButton(panel, L["Open Butler settings"], function()
         -- The game's panel is left as it is: hiding a stock frame runs the
         -- game's own code as this addon and taints it (Equipment's Edit
         -- Mode error, 2026-10-10). Butler's window is top level in the dialog
@@ -673,7 +673,7 @@ function SettingsUI:RegisterGameOptions()
 
     local hint = Theme.CreateLabel(panel, "small", "muted")
     hint:SetPoint("TOPLEFT", open, "BOTTOMLEFT", 0, -10)
-    hint:SetText("Or type /bbutler settings, or click the minimap button.")
+    hint:SetText(L["Or type /bbutler settings, or click the minimap button."])
 
     self.optionsPanel = panel
 
@@ -706,7 +706,7 @@ function SettingsUI:OnEnable()
     end
 end
 
-ns.RegisterCommand("settings", "open the settings window", function()
+ns.RegisterCommand("settings", L["open the settings window"], function()
     SettingsUI:Toggle()
 end)
 

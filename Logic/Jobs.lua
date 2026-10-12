@@ -36,6 +36,7 @@
 -- apart from the one look a few seconds after logging in.
 
 local _, ns = ...
+local L = ns.L
 
 local Jobs = ns.NewModule("Jobs")
 
@@ -236,7 +237,7 @@ function Jobs.ItemName(itemID, fallback)
         if Text(name) then return name end
         Items:RequestLoad(itemID)
     end
-    return fallback or ("Item %s"):format(tostring(itemID))
+    return fallback or L.Format("Item %s", tostring(itemID))
 end
 
 local function ItemIcon(itemID)
@@ -253,8 +254,8 @@ end
 
 local function JoinNames(names)
     if #names <= 1 then return names[1] or "" end
-    if #names == 2 then return names[1] .. " and " .. names[2] end
-    return table.concat(names, ", ", 1, #names - 1) .. " and " .. names[#names]
+    if #names == 2 then return L.Format("%s and %s", names[1], names[2]) end
+    return L.Format("%s and %s", table.concat(names, ", ", 1, #names - 1), names[#names])
 end
 
 --- "20 Medium Leather", "20 Medium Leather and 3 Light Leather", or the
@@ -264,9 +265,9 @@ function Jobs.ItemsText(items)
     if not first then return "" end
     local text = Amount(first.count, Jobs.ItemName(first.itemID))
     if #items == 2 then
-        return text .. " and " .. Amount(items[2].count, Jobs.ItemName(items[2].itemID))
+        return L.Format("%s and %s", text, Amount(items[2].count, Jobs.ItemName(items[2].itemID)))
     elseif #items > 2 then
-        return ("%s and %d more"):format(text, #items - 1)
+        return L.Format("%s and %d more", text, #items - 1)
     end
     return text
 end
@@ -281,23 +282,23 @@ function Jobs.StepText(step)
             if item.bank then banked[#banked + 1] = { itemID = item.itemID, count = math.min(item.bank, item.count) } end
         end
         if #banked > 0 then
-            return ("Mail to %s"):format(step.to),
-                ("%s. Take %s out of the bank first, then Fill mail at a mailbox puts it in for you.")
-                    :format(what, Jobs.ItemsText(banked))
+            return L.Format("Mail to %s", step.to),
+                L.Format("%s. Take %s out of the bank first, then Fill mail at a mailbox puts it in for you.",
+                    what, Jobs.ItemsText(banked))
         end
-        return ("Mail to %s"):format(step.to),
-            ("%s. At a mailbox, Fill mail puts it in for you."):format(what)
+        return L.Format("Mail to %s", step.to),
+            L.Format("%s. At a mailbox, Fill mail puts it in for you.", what)
     end
-    local title = ("Craft %s"):format(Amount(step.count, Jobs.ItemName(step.itemID, step.name)))
+    local title = L.Format("Craft %s", Amount(step.count, Jobs.ItemName(step.itemID, step.name)))
     local detail
     if not step.ready and step.missing[1] then
-        detail = ("Still needs %s first."):format(Jobs.ItemsText(step.missing))
+        detail = L.Format("Still needs %s first.", Jobs.ItemsText(step.missing))
         local from = step.missing[1].from
-        if from then detail = ("%s %s has it."):format(detail, from) end
+        if from then detail = L.Format("%s %s has it.", detail, from) end
     elseif #step.forNames > 0 then
-        detail = ("For %s. Mail it over once it's made."):format(JoinNames(step.forNames))
+        detail = L.Format("For %s. Mail it over once it's made.", JoinNames(step.forNames))
     else
-        detail = "For your own queue."
+        detail = L["For your own queue."]
     end
     return title, detail
 end
@@ -305,11 +306,11 @@ end
 --- A step in one line, for the line about another character.
 function Jobs.Short(step)
     if step.kind == "mail" then
-        return ("mail %s to %s"):format(Jobs.ItemsText(step.items), step.to)
+        return L.Format("mail %s to %s", Jobs.ItemsText(step.items), step.to)
     end
-    local text = ("craft %s"):format(Amount(step.count, Jobs.ItemName(step.itemID, step.name)))
+    local text = L.Format("craft %s", Amount(step.count, Jobs.ItemName(step.itemID, step.name)))
     if #step.forNames > 0 then
-        text = ("%s, then mail it to %s"):format(text, JoinNames(step.forNames))
+        text = L.Format("%s, then mail it to %s", text, JoinNames(step.forNames))
     end
     return text
 end
@@ -320,9 +321,10 @@ function Jobs.Summary(job)
     local text = Jobs.Short(first)
     text = text:sub(1, 1):upper() .. text:sub(2)
     if #job.steps > 1 then
-        text = ("%s, and %d more %s"):format(text, #job.steps - 1, #job.steps == 2 and "step" or "steps")
+        text = #job.steps == 2 and L.Format("%s, and %d more step", text, #job.steps - 1)
+            or L.Format("%s, and %d more steps", text, #job.steps - 1)
     end
-    if not Jobs.Ready(job) then text = text .. ". Waiting on materials" end
+    if not Jobs.Ready(job) then return L.Format("%s. Waiting on materials.", text) end
     return text .. "."
 end
 
@@ -364,24 +366,24 @@ end
 function Jobs:Craft(step)
     if not (step and step.kind == "craft") then return false end
     if InCombat() then
-        ns.Print("crafting waits until the fight is over.")
+        ns.Print(L["crafting waits until the fight is over."])
         return false
     end
     local ts = Tradeskills("Craft")
     if not ts then
-        ns.Print("crafting from here needs Blackthornes Tradeskills.")
+        ns.Print(L["crafting from here needs Blackthornes Tradeskills."])
         return false
     end
     local name = Jobs.ItemName(step.itemID, step.name)
     local ok, done, why = pcall(ts.Craft, ts, step.recipeID)
     if not ok then
-        ns.Print(("couldn't start %s."):format(name))
+        ns.Print(L.Format("couldn't start %s.", name))
         return false
     end
     if done and why == "opened" then
-        ns.Print(("open your profession for %s: Tradeskills' Open button is on its Queue tab. Then click Craft again."):format(name))
+        ns.Print(L.Format("open your profession for %s: Tradeskills' Open button is on its Queue tab. Then click Craft again.", name))
     elseif not done then
-        ns.Print(("can't craft %s yet: %s."):format(name, tostring(why or "the game said no")))
+        ns.Print(L.Format("can't craft %s yet: %s.", name, tostring(why or L["the game said no"])))
     end
     return done == true
 end
@@ -397,7 +399,7 @@ end
 --- button should be next to the step that needs the logout").
 function Jobs:CreateLogout()
     if self.button then return self.button end
-    local button = ns.Widgets.CreateButton(UIParent, "Log out", nil, {
+    local button = ns.Widgets.CreateButton(UIParent, L["Log out"], nil, {
         name = "BlackthornesButlerLogout", template = "SecureActionButtonTemplate",
         width = BUTTON_WIDTH, height = BUTTON_HEIGHT, primary = true,
     })
@@ -421,7 +423,7 @@ function Jobs:CreateLogout()
 end
 
 local function Tip(nextJob)
-    return ("Log out for %s. %s\nLogs you out to the character list, where you pick %s. Addons can't pick a character for you."):format(
+    return L.Format("Log out for %s. %s\nLogs you out to the character list, where you pick %s. Addons can't pick a character for you.",
         nextJob.name, Jobs.Summary(nextJob), nextJob.name)
 end
 
@@ -476,7 +478,7 @@ function Jobs:Noticed()
     local plan = self:Plan()
     local hasHere = plan.here ~= nil
     if self.hadHere and not hasHere and plan.nextJob then
-        ns.Print(("that's everything here. Next: %s. %s Log out on their line in the Butler window to switch."):format(
+        ns.Print(L.Format("that's everything here. Next: %s. %s Log out on their line in the Butler window to switch.",
             plan.nextJob.name, Jobs.Summary(plan.nextJob)))
     end
     self.hadHere = hasHere
@@ -490,7 +492,7 @@ function Jobs:Greet()
     local plan = self:Plan()
     local first = plan.here and plan.here.steps[1]
     if not first then return end
-    ns.Print(("a job for you here: %s."):format(Jobs.Short(first)))
+    ns.Print(L.Format("a job for you here: %s.", Jobs.Short(first)))
     if ns.UI and not ns.UI:IsShown() then ns.UI:Show("bags") end
 end
 
@@ -498,15 +500,15 @@ end
 function Jobs:Report()
     local list = self:Read()
     if not Tradeskills("Jobs") then
-        ns.Print("jobs come from Blackthornes Tradeskills' craft queue, and it isn't loaded.")
+        ns.Print(L["jobs come from Blackthornes Tradeskills' craft queue, and it isn't loaded."])
         return
     end
     if #list == 0 then
-        ns.Print("no jobs: nothing in the craft queue needs a character.")
+        ns.Print(L["no jobs: nothing in the craft queue needs a character."])
         return
     end
     for _, job in ipairs(list) do
-        ns.Print(("%s%s:"):format(job.name, job.isCurrent and " (you)" or ""))
+        ns.Print(job.isCurrent and L.Format("%s (you):", job.name) or (job.name .. ":"))
         for _, step in ipairs(job.steps) do
             ns.PrintRaw("   " .. Jobs.Short(step))
         end
@@ -547,12 +549,12 @@ function Jobs:OnEnable()
     end)
 end
 
-ns.RegisterCommand("jobs", "list every character's jobs for the craft queue", function()
+ns.RegisterCommand("jobs", L["list every character's jobs for the craft queue"], function()
     Jobs:Report()
 end)
 
-ns.RegisterCommand("joblogin", "turn bringing the window up for a job at login on or off", function()
+ns.RegisterCommand("joblogin", L["turn bringing the window up for a job at login on or off"], function()
     ns.db.jobsAtLogin = ns.db.jobsAtLogin == false
-    ns.Print(ns.db.jobsAtLogin and "logging in on a character with a job brings the Butler window up."
-        or "Butler no longer comes up at login for a job.")
+    ns.Print(ns.db.jobsAtLogin and L["logging in on a character with a job brings the Butler window up."]
+        or L["Butler no longer comes up at login for a job."])
 end)

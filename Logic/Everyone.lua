@@ -23,6 +23,8 @@
 
 local _, ns = ...
 
+local L = ns.L
+
 local Everyone = ns.NewModule("Everyone")
 
 local Items = ns.Items
@@ -33,7 +35,7 @@ Everyone.NAME_BUDGET = 40
 
 -- Where an item can be, in the order a holder's line names them.
 Everyone.PLACES = { "bags", "bank", "mail" }
-Everyone.PLACE_WORDS = { bags = "in bags", bank = "in the bank", mail = "in the mail" }
+Everyone.PLACE_WORDS = { bags = L["in bags"], bank = L["in the bank"], mail = L["in the mail"] }
 
 -- The built list: { [itemID] = item }, in name order in `sorted`.
 Everyone.items = {}
@@ -96,7 +98,7 @@ end
 local function Self()
     local name = Items.Call({ "UnitName" }, "player")
     return {
-        key = "self", name = Text(name) or "You", short = Text(name) or "You",
+        key = "self", name = Text(name) or L["You"], short = Text(name) or L["You"],
         isCurrent = true, bags = {}, bank = {}, mail = {},
     }
 end
@@ -173,7 +175,7 @@ local function Name(item)
         item.name, item.lower, item.quality, item.icon = info.name, info.lower, info.quality, info.icon
         item.named = true
     else
-        item.name = ("Item %d"):format(item.itemID)
+        item.name = L.Format("Item %d", item.itemID)
         item.lower = item.name:lower()
         item.quality = 1
         item.named = false
@@ -363,14 +365,14 @@ end
 
 --- How long ago a time() was, in a few words: "now", "today", "3 days ago".
 function Everyone.Age(at, now)
-    if type(at) ~= "number" then return "never read" end
+    if type(at) ~= "number" then return L["never read"] end
     now = now or Now() or at
     local seconds = math.max(0, now - at)
-    if seconds < 120 then return "now" end
-    if seconds < 3600 then return ("%d min ago"):format(math.floor(seconds / 60)) end
-    if seconds < 86400 then return ("%d h ago"):format(math.floor(seconds / 3600)) end
+    if seconds < 120 then return L["now"] end
+    if seconds < 3600 then return L.Format("%d min ago", math.floor(seconds / 60)) end
+    if seconds < 86400 then return L.Format("%d h ago", math.floor(seconds / 3600)) end
     local days = math.floor(seconds / 86400)
-    return days == 1 and "1 day ago" or ("%d days ago"):format(days)
+    return days == 1 and L["1 day ago"] or L.Format("%d days ago", days)
 end
 
 --- Where one character keeps an item: "20 in bags, 40 in the bank".
@@ -378,7 +380,7 @@ function Everyone.Where(holder)
     local parts = {}
     for _, place in ipairs(Everyone.PLACES) do
         if holder[place] > 0 then
-            parts[#parts + 1] = ("%d %s"):format(holder[place], Everyone.PLACE_WORDS[place])
+            parts[#parts + 1] = L.Format("%d %s", holder[place], Everyone.PLACE_WORDS[place])
         end
     end
     return table.concat(parts, ", ")
@@ -405,7 +407,8 @@ function Everyone.Summary(item, most)
     local parts = {}
     for i, holder in ipairs(item.holders) do
         if i > most then
-            parts[#parts + 1] = ("%d more"):format(#item.holders - most)
+            parts[#parts + 1] = L.Format("%d more", #item.holders - most)
+
             break
         end
         parts[#parts + 1] = ("%s %d"):format(holder.character.short, holder.total)
