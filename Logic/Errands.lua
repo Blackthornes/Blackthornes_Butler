@@ -112,7 +112,12 @@ function Errands:Recipients()
                     byName[entry.to] = recipient
                     list[#list + 1] = recipient
                 end
-                recipient.money = entry.amount
+                -- Postage is per item attached: the plan set aside one
+                -- mail's, so the rest comes off the gold, or the purse can
+                -- fall short of the stamps and the Send fail.
+                local stamps = math.min(Errands.ATTACHMENTS, #recipient.items) - 1
+                local money = entry.amount - math.max(0, stamps) * (ns.Funds.POSTAGE or 30)
+                recipient.money = money >= 1 and money or nil
             end
         end
     end
@@ -386,6 +391,7 @@ function Errands:FillMail(to)
     self.filled[recipient.to] = true
     self.sending = recipient.to
     self.sendingUpgrades = recipient.upgrades
+    self.sendingItems = items
     if recipient.money and ns.Funds then ns.Funds:Filled(recipient.to, recipient.money) end
     self:Update()
     -- The full name the mail went to, when Tradeskills says it: the short
@@ -404,7 +410,38 @@ function Errands:Sent()
     self.sending = nil
     local upgrades = self.sendingUpgrades
     self.sendingUpgrades = nil
-    if was and upgrades then ns.Verdicts:UpgradesMailed(was, upgrades) end
+    self.sendingItems = nil
+    local call = self.sendCall
+    self.sendCall = nil
+    -- Only the mail Butler filled counts: a mail sent by hand after
+    -- clearing the form records no upgrade and no gold (a ring once went
+    -- down as mailed to the alt it was filled for while the player sent
+    -- something else). Without the SendMail hook, trust the fill.
+    if was and self.hookedSend and not (call and call.butler) then was = nil end
+    if was then
+        if upgrades then
+            -- Only what was attached: Tradeskills fills at most a mail's
+            -- worth of stacks and leaves the rest for the next one.
+            if call and call.ids then
+                local kept = {}
+                for _, item in ipairs(upgrades) do
+                    if call.ids[item.itemID] then kept[#kept + 1] = item end
+                end
+                upgrades = kept
+            end
+            ns.Verdicts:UpgradesMailed(was, upgrades)
+        end
+        if ns.Funds and ns.Funds.MailWent then ns.Funds:MailWent(was, call and call.money) end
+        -- What did not fit in this mail (more than a mail's worth of
+        -- stacks) is offered again for this character.
+        if call and call.ids and self.sendingItems then
+            for _, item in ipairs(self.sendingItems) do
+                if not call.ids[item.itemID] then self.filled[was] = nil end
+            end
+        end
+    elseif ns.Funds then
+        ns.Funds.waiting = nil
+    end
     if not was or not self.mailOpen or ns.db.fillNext == false then return end
     if not (ns.UI and ns.UI:IsShown()) then return end
     -- The bags say what left them a moment after the mail goes.
@@ -424,11 +461,37 @@ end
 
 Errands.NEXT_DELAY = 0.5
 
+-- Stacks one mail carries.
+Errands.ATTACHMENTS = tonumber(rawget(_G, "ATTACHMENTS_MAX_SEND")) or 12
+
+--- SendMail was called (a post-hook, nothing is changed): note whether it
+--- is the mail Butler filled (Tradeskills' subject), what it carries and
+--- its gold, for MAIL_SEND_SUCCESS.
+function Errands:OnSendMail(recipient, subject)
+    local okSubject, said = pcall(function() return (subject or "") .. "" end)
+    local ids = {}
+    for slot = 1, Errands.ATTACHMENTS do
+        local name, itemID = Items.Call({ "GetSendMailItem" }, slot)
+        local okID, id = pcall(function() return itemID + 0 end)
+        if name ~= nil and okID and id then ids[id] = true end
+    end
+    local money = tonumber((Items.Call({ "GetSendMailMoney" })))
+    self.sendCall = {
+        butler = okSubject and said == Errands.SUBJECT,
+        ids = ids,
+        money = money,
+    }
+end
+
+-- The subject Tradeskills' FillMail gives the mail Butler fills.
+Errands.SUBJECT = "From Blackthornes Butler"
+
 --- The mail did not go: it can be filled again.
 function Errands:SendFailed()
     if self.sending then self.filled[self.sending] = nil end
     self.sending = nil
     self.sendingUpgrades = nil
+    self.sendCall = nil
     self:Update()
 end
 
@@ -449,7 +512,16 @@ function Errands.BankBagIDs()
     end
     Add(type(index) == "table" and index.Bank or -1)
     if type(index) == "table" then Add(index.Reagentbank or index.ReagentBank) end
-    local first = type(index) == "table" and index.BankBag_1 or ((tonumber(_G.NUM_BAG_SLOTS) or 4) + 1)
+    -- The bank bags come after every carried bag: on a retail client the
+    -- reagent bag is 5, so a guess from NUM_BAG_SLOTS alone would count it
+    -- as the bank, and Take from bank would put its items away.
+    local carried = Bags.BagIDs()
+    local lastCarried = 0
+    for _, id in ipairs(carried) do
+        seen[id] = true
+        if id > lastCarried then lastCarried = id end
+    end
+    local first = type(index) == "table" and (index.BankBag_1 or index.CharacterBankTab_1) or (lastCarried + 1)
     local count = tonumber(_G.NUM_BANKBAGSLOTS) or 7
     for bag = first, first + count - 1 do Add(bag) end
     return ids
@@ -636,6 +708,9 @@ function Errands:Left(place)
     if place == "mail" then
         self.mailOpen = false
         self.sending = nil
+        self.sendingUpgrades = nil
+        self.sendCall = nil
+        if ns.Funds then ns.Funds.waiting = nil end
     else
         self.bankOpen = false
     end
@@ -648,6 +723,11 @@ function Errands:OnEnable()
     ns.RegisterEvent(self, "MAIL_SHOW", function() Errands:Arrived("mail") end)
     ns.RegisterEvent(self, "MAIL_CLOSED", function() Errands:Left("mail") end)
     ns.RegisterEvent(self, "MAIL_SEND_SUCCESS", function() Errands:Sent() end)
+    if type(rawget(_G, "SendMail")) == "function" then
+        Errands.hookedSend = pcall(hooksecurefunc, "SendMail", function(recipient, subject)
+            Errands:OnSendMail(recipient, subject)
+        end)
+    end
     ns.RegisterEvent(self, "MAIL_FAILED", function() Errands:SendFailed() end)
     ns.RegisterEvent(self, "BANKFRAME_OPENED", function() Errands:Arrived("bank") end)
     ns.RegisterEvent(self, "BANKFRAME_CLOSED", function() Errands:Left("bank") end)

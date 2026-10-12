@@ -450,6 +450,10 @@ function Ammo:Buy()
     if not (offer and offer.state == "fill") then return end
     local ammo = offer.ammo
     self.buying = true
+    -- A run of its own: a vendor closed and opened again before the next
+    -- lot must not carry on with the first vendor's list and prices.
+    self.run = (self.run or 0) + 1
+    local run = self.run
     if ns.UI and ns.UI.Refresh then ns.UI:Refresh(true) end
     local bought, spent = 0, 0
 
@@ -471,6 +475,7 @@ function Ammo:Buy()
     end
 
     local function Step()
+        if Ammo.run ~= run then return Done() end
         if bought >= offer.lots or not ns.Selling:MerchantOpen(true) or InCombat() then return Done() end
         if IDFromLink(Call({ "GetMerchantItemLink" }, ammo.index)) ~= ammo.itemID then return Done() end
         local purse = Purse()
@@ -528,5 +533,8 @@ function Ammo:OnEnable()
             Ammo:VendorChanged()
         end)
     end)
-    ns.RegisterEvent(self, "MERCHANT_CLOSED", function() Ammo.offer, Ammo.offerKey = nil, nil end)
+    ns.RegisterEvent(self, "MERCHANT_CLOSED", function()
+        Ammo.offer, Ammo.offerKey = nil, nil
+        Ammo.run = (Ammo.run or 0) + 1
+    end)
 end

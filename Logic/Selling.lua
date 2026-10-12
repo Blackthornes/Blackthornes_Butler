@@ -98,19 +98,27 @@ function Selling:Queue(limit)
 end
 
 --- The next stack to sell that the bags still hold, or nil.
+--- Does the slot still hold this item, unlocked, and is it still under
+--- Sell? Read and judged again just before a sale: the same item ID can
+--- be another copy now (an upgrade "of the Eagle" put where a "of the
+--- Monkey" was), or a choice changed since the list was drawn.
+local function StillSell(item)
+    if not Bags.Holds(item.bag, item.slot, item.itemID) then return false end
+    local entry = Bags.ReadSlot(item.bag, item.slot)
+    if not entry then return false end
+    entry.quest = Bags.ReadQuest(item.bag, item.slot, item.itemID)
+    return ns.Verdicts:VerdictOf(entry) == "sell"
+end
+
 function Selling:Next()
     for _, item in ipairs(self:Queue()) do
-        if Bags.Holds(item.bag, item.slot, item.itemID) then return item end
+        if StillSell(item) then return item end
     end
 end
 
 --- Sell one stack from addon code. True when the game took the call.
 local function SellOne(item)
-    if not Bags.Holds(item.bag, item.slot, item.itemID) then return false end
-    -- Judged again, in case a choice changed since the list was drawn.
-    local entry = Bags.ReadSlot(item.bag, item.slot)
-    entry.quest = Bags.ReadQuest(item.bag, item.slot, item.itemID)
-    if ns.Verdicts:VerdictOf(entry) ~= "sell" then return false end
+    if not StillSell(item) then return false end
     local fn = Items.Resolve("C_Container.UseContainerItem")
     return fn ~= nil and pcall(fn, item.bag, item.slot)
 end
@@ -123,10 +131,16 @@ function Selling:SellBatch()
     if #queue == 0 then return end
 
     self.selling = true
+    -- A run of its own: a vendor closed and opened again before the next
+    -- step must not let this one go on beside a new one (more than 12
+    -- would sell, past what the Buyback tab holds).
+    self.run = (self.run or 0) + 1
+    local run = self.run
     self:Update()
     local index = 0
 
     local function Step()
+        if Selling.run ~= run then return end
         index = index + 1
         local item = queue[index]
         if not item or not Selling:MerchantOpen(true) or InCombat() then
@@ -409,6 +423,7 @@ function Selling:OnEnable()
     ns.RegisterEvent(self, "MERCHANT_CLOSED", function()
         Selling.merchantOpen = false
         Selling.selling = false
+        Selling.run = (Selling.run or 0) + 1
         local button = Selling.button
         if button and not InCombat() then
             button:SetAttribute("type", nil)

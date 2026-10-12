@@ -326,8 +326,9 @@ function Verdicts:Kept(said, entry, noAlt)
     local ts = said.ts
     local queued = Number(ts, "need")
     local mailTo = String(ts, "mailTo")
-    -- An older Tradeskills could name the character playing.
-    if mailTo and Verdicts:IsMe(mailTo) then mailTo = nil end
+    -- An older Tradeskills could name the character playing, and a
+    -- soulbound stack can't go in the mail, whoever's craft wants it.
+    if mailTo and (Verdicts:IsMe(mailTo) or (entry and entry.bound)) then mailTo = nil end
     if queued and queued > 0 then
         -- The alt's share goes in the mail too: Tradeskills' mailCount is
         -- what is left once this character's own crafts are kept back, so
