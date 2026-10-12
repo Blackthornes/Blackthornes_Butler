@@ -4,6 +4,37 @@ Versions follow [semantic versioning](https://semver.org): the middle number
 moves for new behaviour, the last for fixes alone. The newest version goes at
 the top; a release is refused if its version has no section here.
 
+## 0.4.0
+
+For WoW: Forever (interface 16001). No files were added, so `/reload` is
+enough after updating.
+
+- **Buttons on their lines:** at a mailbox each character gets a Fill mail
+  button on the first line that mails them (a Jobs mail step, a gold
+  top-up or a Mail row), with the row's worth on its tooltip so the note
+  keeps its full width. Sell, Disenchant, Move to bank and Take from bank
+  sit on their group's heading. A button whose line is scrolled away waits
+  at the window's foot until it comes back.
+- **Mail and gold:** gold top-ups and alts' upgrades are written down only
+  when Butler's own mail goes, so taking gold from the inbox or sending a
+  mail by hand no longer hides or fakes a send. Gold that rides with items
+  leaves room for their postage, and a character whose items didn't all
+  fit in one mail is offered again.
+- **Selling:** every slot is judged again right before it sells, and a sell
+  or ammo run stops when the vendor closes. Using the Disenchant button at
+  a vendor is no longer learned as selling by hand.
+- **Soulbound copies:** a soulbound copy and an unbound copy of the same
+  gear are judged apart, so the bound one is never offered to an alt.
+- **Bank:** the reagent bag is never taken for a bank bag, so Take from
+  bank can't put its items away.
+- **Looting:** the window always redraws after the bags change, even when
+  it was reading them at the time.
+- **All characters:** the character you're on is listed once, the list is
+  built once, who has an item shows once on its tooltip, and the open item
+  is marked in dark gold.
+- **What's New:** closing the window while holding its scroll bar lets go
+  of it.
+
 ## 0.3.0
 
 For WoW: Forever (interface 16001). Files were added, so restart the game
