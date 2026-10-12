@@ -15,6 +15,10 @@ player's name never goes in a report (only the #general post thanks them).
 
 It also checks the TOC still says `## Version: @project-version@`: a version
 typed in by hand would disagree with the tag the packager builds.
+
+And it checks `ns.RELEASED_VERSION` in Core/Init.lua is the tag's version:
+played from a checkout, that is the version the addon shows, so the release
+PR that writes the CHANGELOG.md section changes it in the same breath.
 """
 
 import os
@@ -24,9 +28,16 @@ import sys
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 TAG = re.compile(r"^v(\d+\.\d+\.\d+(?:-[0-9A-Za-z.]+)?)$")
 HEADING = re.compile(r"^##\s+v?(\S+)")
+RELEASED = re.compile(r'^ns\.RELEASED_VERSION\s*=\s*"([^"]*)"', re.M)
 
 
-def check(tag, changelog, toc):
+def released_version(init):
+    """The version Core/Init.lua shows from a checkout, or None."""
+    match = RELEASED.search(init or "")
+    return match and match.group(1)
+
+
+def check(tag, changelog, toc, init=None):
     """Return a list of problems; empty means the tag can be released."""
     match = TAG.match(tag)
     if not match:
@@ -51,6 +62,10 @@ def check(tag, changelog, toc):
     if not re.search(r"^## Version: @project-version@\s*$", toc, re.M):
         problems.append("Blackthornes_Butler.toc must say "
                         "'## Version: @project-version@' so the tag sets it")
+
+    if init is not None and released_version(init) != version:
+        problems.append("Core/Init.lua says ns.RELEASED_VERSION = %r; make it "
+                        "%r, the version a checkout shows" % (released_version(init), version))
     return problems
 
 
@@ -77,7 +92,9 @@ def main(argv):
         changelog = f.read()
     with open(os.path.join(ROOT, "Blackthornes_Butler.toc"), encoding="utf-8") as f:
         toc = f.read()
-    problems = check(argv[1], changelog, toc) + named_players(argv[1], changelog)
+    with open(os.path.join(ROOT, "Core", "Init.lua"), encoding="utf-8") as f:
+        init = f.read()
+    problems = check(argv[1], changelog, toc, init) + named_players(argv[1], changelog)
     for problem in problems:
         print("Not releasing: " + problem)
     if not problems:
