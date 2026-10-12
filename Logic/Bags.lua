@@ -135,9 +135,14 @@ function Bags:Scan(done)
         Bags.scanning = false
 
         if Bags.again then
+            -- What this read found still needs a redraw, even when the
+            -- read again finds nothing more.
+            Bags.changedBefore = Bags.changedBefore or changed
             Bags.again = false
             return Bags:Scan()
         end
+        changed = changed or Bags.changedBefore
+        Bags.changedBefore = nil
 
         local waiters = Bags.waiters
         Bags.waiters = nil

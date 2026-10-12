@@ -143,6 +143,22 @@ ns.Bags:Scan()
 _G.C_Container.UseContainerItem(0, 5)
 suite.check("soulbound green gear is never learned as Sell", Learning:Get(302) == nil)
 
+-- Disenchanting at a vendor: the cast aims at the slot through the same
+-- call, and the item stays (locked) while the cast runs. No sale.
+fake.Put({ bag = 0, slot = 9, id = 304, name = "Green Belt", quality = 2, price = 70 })
+ns.Bags:Scan()
+local canSell = fake.canSell
+fake.canSell = false
+_G.SpellIsTargeting = function() return true end
+_G.C_Container.UseContainerItem(0, 9)
+_G.SpellIsTargeting = function() return false end
+fake.bags[0][9].locked = true
+_G.C_Container.UseContainerItem(0, 9)
+suite.check("a disenchant at a vendor is not a hand sale", not ns.db.learnTally.sells[304])
+fake.bags[0][9] = nil
+_G.SpellIsTargeting = nil
+fake.canSell = canSell
+
 -- Away from a vendor, using an item teaches nothing.
 env.Fire("MERCHANT_CLOSED")
 fake.Put({ bag = 0, slot = 8, id = 303, name = "Silk Cloth", quality = 1, price = 40 })

@@ -52,6 +52,8 @@ _G.BlackthornesTS = { Butler = { Holdings = function()
         { key = "Ana-R", name = "Ana", short = "Ana", isCurrent = false,
           bags = saved.alt.bags, bank = saved.alt.bank, mail = saved.alt.mail,
           bagsAt = 1000, bankAt = 500, mailAt = 900 },
+        { key = "Mia-Old", name = "Mia", short = "Mia", playing = true,
+          bags = { [501] = 500 } },
         { key = "Bob-R", name = "Bob", short = "Bob", linked = "Zed",
           bags = { [501] = "lots", [504] = -2 }, bank = "no" },
         "not a character",
@@ -62,7 +64,8 @@ UI:Hide()
 ns.HandleSlash("all")
 suite.check("Tradeskills is asked once a build", holdingsAsked == 1, holdingsAsked)
 linen = Find("Linen Cloth")
-suite.check("Butler's own read wins for the character playing", linen.total == 65, linen.total)
+suite.check("Butler's own read wins for the character playing, an old record of it not counted again",
+    linen.total == 65, linen.total)
 suite.check("most first", linen.holders[1].character.short == "Ana" and linen.holders[2].total == 25)
 suite.check("who has it, in short", Everyone.Summary(linen) == "Ana 40, Mia 25", Everyone.Summary(linen))
 local ore = Find("Copper Ore")
