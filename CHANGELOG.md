@@ -4,6 +4,26 @@ Versions follow [semantic versioning](https://semver.org): the middle number
 moves for new behaviour, the last for fixes alone. The newest version goes at
 the top; a release is refused if its version has no section here.
 
+## 0.3.0
+
+For WoW: Forever (interface 16001). Files were added, so restart the game
+fully after updating (`/reload` is not enough).
+
+- **What's New window:** the first time the game loads after an update,
+  one window shows what changed in every Blackthornes addon that was
+  updated, with dark glass cards and a little motion. "Motion" in Settings
+  turns the movement off, "Show after updates" turns the window off (off
+  in one addon is off in all of them), and the `whatsnew` command or a
+  Settings button opens it any time.
+- **Ready cooldowns as jobs:** when Tradeskills says a transmute,
+  Mooncloth or Salt Shaker is ready, the Jobs list shows it as a step, with
+  a Craft button on the character you're playing, or as the next character
+  to log in to.
+- **Forever vendor prices and bags:** Butler knows what a vendor pays for
+  about 11,500 items, and which bags are quivers, ammo pouches and
+  profession bags, from the Forever client's own data, so fewer items wait
+  on "price still loading". The live game still wins.
+
 ## 0.2.0
 
 For WoW: Forever (interface 16001). Butler now does more of the running

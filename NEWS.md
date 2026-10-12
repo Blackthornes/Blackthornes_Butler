@@ -15,6 +15,12 @@ the thanks line: `python tools/make_whatsnew.py` writes them into
 Core/WhatsNewText.lua for the in-game What's New window. Run it after
 writing a section; the release check refuses a tag while it is behind.
 
+## 0.3.0
+
+- A new What's New window shows what changed after each update.
+- Ready transmutes and other cooldowns show up in your Jobs list.
+- Butler knows vendor prices right away, so fewer items say "price still loading".
+
 ## 0.2.0
 
 - Butler speaks Deutsch now if your game is in German.

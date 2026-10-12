@@ -5,6 +5,11 @@
 local _, ns = ...
 
 ns.WHATS_NEW = {
+    { version = "0.3.0", lines = {
+        "A new What's New window shows what changed after each update.",
+        "Ready transmutes and other cooldowns show up in your Jobs list.",
+        "Butler knows vendor prices right away, so fewer items say \"price still loading\".",
+    } },
     { version = "0.2.0", lines = {
         "Butler speaks Deutsch now if your game is in German.",
         "Fill mail keeps going: send one and the next one's ready right away.",
