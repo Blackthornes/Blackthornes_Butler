@@ -28,6 +28,7 @@
 -- with one read of Tradeskills' Holdings each time.
 
 local _, ns = ...
+local L = ns.L
 
 local Funds = ns.NewModule("Funds")
 
@@ -272,12 +273,16 @@ end
 --- What a Gold row says: "Has 12g (2 days ago), keeps 50g".
 function Funds.Reason(entry)
     local seen = ns.Everyone and ns.Everyone.Age and ns.Everyone.Age(entry.at) or ""
-    local text = ("Has %s"):format(Items.FormatMoney(entry.have))
-    if seen ~= "" then text = ("%s (seen %s)"):format(text, seen) end
+    local have, keeps = Items.FormatMoney(entry.have), Items.FormatMoney(entry.minimum)
     if (entry.sent or 0) > 0 then
-        text = ("%s with %s on its way"):format(text, Items.FormatMoney(entry.sent))
+        local sent = Items.FormatMoney(entry.sent)
+        if seen ~= "" then
+            return L.Format("Has %s (seen %s) with %s on its way, keeps %s", have, seen, sent, keeps)
+        end
+        return L.Format("Has %s with %s on its way, keeps %s", have, sent, keeps)
     end
-    return ("%s, keeps %s"):format(text, Items.FormatMoney(entry.minimum))
+    if seen ~= "" then return L.Format("Has %s (seen %s), keeps %s", have, seen, keeps) end
+    return L.Format("Has %s, keeps %s", have, keeps)
 end
 
 --------------------------------------------------------------------------------
@@ -328,38 +333,38 @@ end
 function Funds:Report()
     local characters = self:Characters()
     if #characters == 0 then
-        ns.Print("the gold fund needs Blackthornes Tradeskills, which keeps your characters' gold.")
+        ns.Print(L["the gold fund needs Blackthornes Tradeskills, which keeps your characters' gold."])
         return
     end
     local usual = self:Minimum()
-    ns.Print(usual and ("every character keeps at least %s."):format(Items.FormatMoney(usual))
-        or "no usual amount set. Type /bbutler goldmin 50g to set one.")
+    ns.Print(usual and L.Format("every character keeps at least %s.", Items.FormatMoney(usual))
+        or L["no usual amount set. Type /bbutler goldmin 50g to set one."])
     for _, character in ipairs(characters) do
         local own = self:Override(character.name)
         local entry = self:For(character.name)
         local line = ("  %s: %s"):format(character.name,
-            character.gold and Items.FormatMoney(character.gold) or "gold not seen yet")
-        if character.isCurrent then line = line .. " (you)" end
-        if own then line = line .. (", keeps %s"):format(Items.FormatMoney(own)) end
-        if entry then line = line .. (", send %s"):format(Items.FormatMoney(entry.amount)) end
+            character.gold and Items.FormatMoney(character.gold) or L["gold not seen yet"])
+        if character.isCurrent then line = L.Format("%s (you)", line) end
+        if own then line = L.Format("%s, keeps %s", line, Items.FormatMoney(own)) end
+        if entry then line = L.Format("%s, send %s", line, Items.FormatMoney(entry.amount)) end
         ns.PrintRaw(line)
     end
 end
 
-ns.RegisterCommand("gold", "list each character's gold and the top-ups the gold fund would send", function()
+ns.RegisterCommand("gold", L["list each character's gold and the top-ups the gold fund would send"], function()
     Funds:Report()
 end)
 
-ns.RegisterCommand("goldmin", "set the gold every character keeps, e.g. goldmin 50g (goldmin off to stop)", function(rest)
+ns.RegisterCommand("goldmin", L["set the gold every character keeps, e.g. goldmin 50g (goldmin off to stop)"], function(rest)
     rest = rest or ""
     if rest:match("^%s*$") then return Funds:Report() end
     local copper = ns.Verdicts.ParseMoney(rest)
     if not copper then
-        ns.Print("type an amount like 50g or 20g 50s, or off.")
+        ns.Print(L["type an amount like 50g or 20g 50s, or off."])
         return
     end
     Funds:SetMinimum(copper)
     local usual = Funds:Minimum()
-    ns.Print(usual and ("every character keeps at least %s now. At a mailbox, Fill mail tops up those below it."):format(Items.FormatMoney(usual))
-        or "the usual gold amount is off.")
+    ns.Print(usual and L.Format("every character keeps at least %s now. At a mailbox, Fill mail tops up those below it.", Items.FormatMoney(usual))
+        or L["the usual gold amount is off."])
 end)

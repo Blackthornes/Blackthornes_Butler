@@ -32,6 +32,7 @@
 -- Ammo.GAP seconds, so the game keeps up.
 
 local _, ns = ...
+local L = ns.L
 
 local Ammo = ns.NewModule("Ammo")
 
@@ -51,9 +52,28 @@ Ammo.WEAPONS = {
 local AMMO_SUBCLASS = { arrow = ARROW, bullet = BULLET }
 
 -- The bags made for each (their bag family: 1 holds arrows, 2 bullets).
+-- `word` is the internal name; `label` is what the player reads.
 Ammo.BAGS = {
-    arrow = { family = 1, word = "quiver" },
-    bullet = { family = 2, word = "ammo pouch" },
+    arrow = { family = 1, word = "quiver", label = L["quiver"] },
+    bullet = { family = 2, word = "ammo pouch", label = L["ammo pouch"] },
+}
+
+-- The player's words for each weapon and bag, one whole sentence a key, so
+-- German can give each its own grammar. Keyed by the internal words above.
+local KEEPS = {
+    bow = L["Ammo for your bow"],
+    crossbow = L["Ammo for your crossbow"],
+    gun = L["Ammo for your gun"],
+}
+local NO_BAG = {
+    bow = L["Put on a quiver and Butler fills it with these for your bow"],
+    crossbow = L["Put on a quiver and Butler fills it with these for your crossbow"],
+    gun = L["Put on an ammo pouch and Butler fills it with these for your gun"],
+}
+local MISMATCH = {
+    bow = L["Your bow fires arrows, but your ammo pouch can't hold them. Put on a quiver to fill it here"],
+    crossbow = L["Your crossbow fires arrows, but your ammo pouch can't hold them. Put on a quiver to fill it here"],
+    gun = L["Your gun fires bullets, but your quiver can't hold them. Put on an ammo pouch to fill it here"],
 }
 
 -- The ranged slot, then the main hand (a client that moved ranged weapons
@@ -139,7 +159,7 @@ function Ammo:Bag()
         for holds, kind in pairs(self.BAGS) do
             if math.floor(family / kind.family) % 2 == 1 then
                 local name = Call({ "C_Container.GetBagName", "GetBagName" }, bag)
-                return { bag = bag, holds = holds, word = kind.word, name = type(name) == "string" and name or nil }
+                return { bag = bag, holds = holds, word = kind.word, label = kind.label, name = type(name) == "string" and name or nil }
             end
         end
     end
@@ -152,7 +172,7 @@ function Ammo:Keeps(itemID)
     if not weapon then return nil end
     local classID, subclassID = ClassOf(itemID)
     if classID == PROJECTILE_CLASS and subclassID == AMMO_SUBCLASS[weapon.ammo] then
-        return ("Ammo for your %s"):format(weapon.word)
+        return KEEPS[weapon.word]
     end
     return nil
 end
@@ -388,28 +408,30 @@ local function Thousands(number)
 end
 Ammo.Thousands = Thousands
 
---- "a quiver", "an ammo pouch".
-local function A(word)
-    return (word:match("^[aeiou]") and "an " or "a ") .. word
-end
-
 --- What the Ammo row says.
 function Ammo.Reason(offer)
     local weapon, bag = offer.weapon, offer.bag
-    local word = offer.weapon.ammo == "arrow" and "arrows" or "bullets"
+    local quiver = bag and bag.holds == "arrow"
     if offer.state == "nobag" then
-        return ("Put on %s and Butler fills it with these for your %s"):format(
-            A(Ammo.BAGS[weapon.ammo].word), weapon.word)
+        return NO_BAG[weapon.word]
     elseif offer.state == "mismatch" then
-        return ("Your %s fires %s, but your %s can't hold them. Put on %s to fill it here"):format(
-            weapon.word, word, bag.word, A(Ammo.BAGS[weapon.ammo].word))
+        return MISMATCH[weapon.word]
     elseif offer.state == "poor" then
-        return ("Your %s has room for %s (%s), but you can't pay for one lot yet"):format(
-            bag.word, Thousands(offer.full), Items.FormatMoney(offer.fullCost))
+        if quiver then
+            return L.Format("Your quiver has room for %s (%s), but you can't pay for one lot yet",
+                Thousands(offer.full), Items.FormatMoney(offer.fullCost))
+        end
+        return L.Format("Your ammo pouch has room for %s (%s), but you can't pay for one lot yet",
+            Thousands(offer.full), Items.FormatMoney(offer.fullCost))
     end
-    local text = ("Fills your %s: %s for %s"):format(bag.word, Thousands(offer.count), Items.FormatMoney(offer.cost))
+    local text
+    if quiver then
+        text = L.Format("Fills your quiver: %s for %s", Thousands(offer.count), Items.FormatMoney(offer.cost))
+    else
+        text = L.Format("Fills your ammo pouch: %s for %s", Thousands(offer.count), Items.FormatMoney(offer.cost))
+    end
     if offer.short then
-        text = ("%s, all you can pay for now"):format(text)
+        text = L.Format("%s, all you can pay for now", text)
     end
     return text
 end
@@ -434,9 +456,14 @@ function Ammo:Buy()
         Ammo.buying = false
         if bought > 0 then
             local full = bought >= offer.lots and not offer.short
-            ns.Print(("bought %s %s for %s.%s"):format(
-                Thousands(bought * ammo.perBuy), ammo.name or "ammo", Items.FormatMoney(spent),
-                full and (" Your %s is full."):format(offer.bag.word) or ""))
+            local amount, name, money = Thousands(bought * ammo.perBuy), ammo.name or L["ammo"], Items.FormatMoney(spent)
+            if not full then
+                ns.Print(L.Format("bought %s %s for %s.", amount, name, money))
+            elseif offer.bag.holds == "arrow" then
+                ns.Print(L.Format("bought %s %s for %s. Your quiver is full.", amount, name, money))
+            else
+                ns.Print(L.Format("bought %s %s for %s. Your ammo pouch is full.", amount, name, money))
+            end
         end
         Ammo.offerKey = nil
         if ns.UI and ns.UI.Refresh then ns.UI:Refresh(true) end

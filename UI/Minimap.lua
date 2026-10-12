@@ -11,6 +11,7 @@
 -- A left-click opens the Butler window, a right-click the settings.
 
 local _, ns = ...
+local L = ns.L
 
 local MinimapButton = ns.NewModule("MinimapButton")
 
@@ -134,12 +135,12 @@ function MinimapButton:Build()
         GameTooltip:AddLine(ns.VersionLabel(), 0.5, 0.5, 0.5)
 
         if ns.UI and ns.UI.Toggle then
-            GameTooltip:AddLine("Click to open", 0.7, 0.7, 0.7)
-            GameTooltip:AddLine("Right-click for settings", 0.7, 0.7, 0.7)
+            GameTooltip:AddLine(L["Click to open"], 0.7, 0.7, 0.7)
+            GameTooltip:AddLine(L["Right-click for settings"], 0.7, 0.7, 0.7)
         else
-            GameTooltip:AddLine("Click for settings", 0.7, 0.7, 0.7)
+            GameTooltip:AddLine(L["Click for settings"], 0.7, 0.7, 0.7)
         end
-        GameTooltip:AddLine("Drag to move it round the minimap", 0.5, 0.5, 0.5)
+        GameTooltip:AddLine(L["Drag to move it round the minimap"], 0.5, 0.5, 0.5)
         GameTooltip:Show()
     end)
 
@@ -204,10 +205,10 @@ function MinimapButton:OnEnable()
     end
 end
 
-ns.RegisterCommand("minimap", "show or hide the minimap button", function()
+ns.RegisterCommand("minimap", L["show or hide the minimap button"], function()
     if MinimapButton:Toggle() then
-        ns.Print("minimap button shown.")
+        ns.Print(L["minimap button shown."])
     else
-        ns.Print("minimap button hidden. /bbutler minimap brings it back.")
+        ns.Print(L["minimap button hidden. /bbutler minimap brings it back."])
     end
 end)

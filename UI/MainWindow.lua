@@ -19,6 +19,7 @@
 -- (Widgets.CreateRowList).
 
 local _, ns = ...
+local L = ns.L
 
 local UI = ns.NewModule("UI")
 
@@ -196,21 +197,21 @@ function UI:Build()
             if message then ns.Print(message) end
         end
     end
-    self.mailButton = Widgets.CreateButton(frame, "Fill mail", Run(ns.Errands.FillMail),
+    self.mailButton = Widgets.CreateButton(frame, L["Fill mail"], Run(ns.Errands.FillMail),
         { width = MAIL_WIDTH, height = 24, primary = true })
     self.mailButton:SetPoint("BOTTOMRIGHT", -UI.SELL_INSET_X, UI.SELL_INSET_Y)
-    self.mailButton.tooltipText = "Fills the game's Send Mail page. Check it, then press Send."
+    self.mailButton.tooltipText = L["Fills the game's Send Mail page. Check it, then press Send."]
     self.mailButton:Hide()
 
-    self.bankButton = Widgets.CreateButton(frame, "Move to bank", Run(ns.Errands.MoveToBank),
+    self.bankButton = Widgets.CreateButton(frame, L["Move to bank"], Run(ns.Errands.MoveToBank),
         { width = ERRAND_WIDTH, height = 24, primary = true })
     self.bankButton:SetPoint("BOTTOMRIGHT", -UI.SELL_INSET_X, UI.SELL_INSET_Y)
-    self.bankButton.tooltipText = "Puts your Always bank items in the bank, a stack at a time"
+    self.bankButton.tooltipText = L["Puts your Always bank items in the bank, a stack at a time"]
     self.bankButton:Hide()
 
-    self.takeButton = Widgets.CreateButton(frame, "Take from bank", Run(ns.Errands.TakeFromBank),
+    self.takeButton = Widgets.CreateButton(frame, L["Take from bank"], Run(ns.Errands.TakeFromBank),
         { width = ERRAND_WIDTH, height = 24 })
-    self.takeButton.tooltipText = "Takes out what your craft queue still needs, in whole stacks"
+    self.takeButton.tooltipText = L["Takes out what your craft queue still needs, in whole stacks"]
     self.takeButton:Hide()
 
     self:BuildSizeGrip()
@@ -249,7 +250,7 @@ function UI:BuildHeader()
     self.subtitle = subtitle
 
     -- All characters' search, in the subtitle's place.
-    local search = Widgets.CreateSearchBox(header, "Search all characters", function()
+    local search = Widgets.CreateSearchBox(header, L["Search all characters"], function()
         UI:Refresh()
     end)
     search:SetPoint("LEFT", header, "LEFT", 48, -2)
@@ -258,17 +259,17 @@ function UI:BuildHeader()
     self.search = search
 
     -- Below the close gem on the corner.
-    local settings = Widgets.CreateButton(header, "Settings", function()
+    local settings = Widgets.CreateButton(header, L["Settings"], function()
         if ns.SettingsUI then ns.SettingsUI:Toggle() end
     end, { width = 70, height = 20 })
     settings:SetPoint("BOTTOMRIGHT", header, "BOTTOMRIGHT", -10, 4)
 
     -- Between the two lists.
-    local view = Widgets.CreateButton(header, "All characters", function()
+    local view = Widgets.CreateButton(header, L["All characters"], function()
         UI:SetView(UI.view == "all" and "bags" or "all")
     end, { width = 110, height = 20 })
     view:SetPoint("RIGHT", settings, "LEFT", -6, 0)
-    view.tooltipText = "Every character's items, and where each one is"
+    view.tooltipText = L["Every character's items, and where each one is"]
     self.viewButton = view
 end
 
@@ -283,9 +284,9 @@ function UI:SetView(view)
     self.subtitle:SetShown(not all)
     self.search:SetShown(all)
     if not all then self.search:ClearFocus() end
-    self.viewButton:SetText(all and "Your bags" or "All characters")
-    self.viewButton.tooltipText = all and "What to do with each item in your bags"
-        or "Every character's items, and where each one is"
+    self.viewButton:SetText(all and L["Your bags"] or L["All characters"])
+    self.viewButton.tooltipText = all and L["What to do with each item in your bags"]
+        or L["Every character's items, and where each one is"]
 
     if changed then
         self.drawnKey = nil
@@ -329,7 +330,7 @@ function UI.CreateRow(row)
 
     -- The Ammo row's Fill button and a job's Craft button sit where the
     -- worth goes (Logic/Ammo.lua, Logic/Jobs.lua).
-    row.action = Widgets.CreateButton(row, "Fill", function() UI.RowAction(row.data) end, {
+    row.action = Widgets.CreateButton(row, L["Fill"], function() UI.RowAction(row.data) end, {
         primary = true, width = 80, height = 22,
     })
     row.action:SetPoint("RIGHT", -8, 0)
@@ -347,7 +348,7 @@ function UI.RowAction(data)
 end
 
 local function Plural(count, one, many)
-    return ("%d %s"):format(count, count == 1 and one or many)
+    return L.Format("%d %s", count, count == 1 and one or many)
 end
 
 function UI.UpdateRow(row, data)
@@ -368,7 +369,7 @@ function UI.UpdateRow(row, data)
         row.fold:SetText(data.folded and "+" or "-")
         row.name:SetTextColor(Theme.Unpack("accent"))
         row.name:SetText(group.label:upper())
-        row.reason:SetText(Plural(group.count, group.one or "item", group.many or "items"))
+        row.reason:SetText(Plural(group.count, group.one or L["item"], group.many or L["items"]))
         row.worth:SetText(group.worth > 0 and Items.FormatMoney(group.worth) or "")
         return
     end
@@ -378,7 +379,7 @@ function UI.UpdateRow(row, data)
     row.icon:SetTexture(data.icon or [[Interface\Icons\INV_Misc_QuestionMark]])
     local color = QUALITY[data.quality or 1] or QUALITY[1]
     row.name:SetTextColor(color[1], color[2], color[3])
-    row.name:SetText(data.count > 1 and ("%s x%d"):format(data.name, data.count) or data.name)
+    row.name:SetText(data.count > 1 and L.Format("%s x%d", data.name, data.count) or data.name)
     row.reason:SetText(data.reason or "")
     -- Bought to disenchant reads in the tag's violet, as on Tradeskills' tab.
     if data.bought then
@@ -415,7 +416,7 @@ function UI.UpdateJobRow(row, data)
     if step.kind == "craft" and not step.ready then row.reason:SetTextColor(Theme.Unpack("accent")) end
     row.worth:SetText("")
     if step.kind == "craft" and step.ready then
-        row.action:SetText("Craft")
+        row.action:SetText(L["Craft"])
         row.action:Show()
     end
 end
@@ -427,7 +428,8 @@ function UI.UpdateNextRow(row, data)
     row.icon:Show()
     row.icon:SetTexture([[Interface\Icons\Ability_Rogue_Disguise]])
     row.name:SetTextColor(Theme.Unpack(data.isNext and "accent" or "text"))
-    row.name:SetText(("%s: %s"):format(data.isFirst and "First" or data.isNext and "Next" or "Then", job.name))
+    row.name:SetText(data.isFirst and L.Format("First: %s", job.name)
+        or data.isNext and L.Format("Next: %s", job.name) or L.Format("Then: %s", job.name))
     row.reason:SetText(ns.Jobs.Summary(job))
     row.worth:SetText("")
 end
@@ -440,12 +442,12 @@ function UI.UpdateAmmoRow(row, data)
     row.icon:Show()
     row.icon:SetTexture(offer.ammo.icon or [[Interface\Icons\INV_Ammo_Arrow_02]])
     row.name:SetTextColor(Theme.Unpack("text"))
-    row.name:SetText(offer.ammo.name or "Ammo")
+    row.name:SetText(offer.ammo.name or L["Ammo"])
     row.reason:SetText(ns.Ammo.Reason(offer))
     if offer.state ~= "fill" then row.reason:SetTextColor(Theme.Unpack("accent")) end
     row.worth:SetText("")
     if offer.state == "fill" then
-        row.action:SetText(ns.Ammo.buying and "Buying..." or "Fill")
+        row.action:SetText(ns.Ammo.buying and L["Buying..."] or L["Fill"])
         row.action:Show()
     end
 end
@@ -471,9 +473,9 @@ function UI.UpdateHolderRow(row, data)
     row.icon:Hide()
     local name = "    " .. character.short
     if character.isCurrent then
-        name = name .. " (you)"
+        name = "    " .. L.Format("%s (you)", character.short)
     elseif character.linked then
-        name = name .. " (other account)"
+        name = "    " .. L.Format("%s (other account)", character.short)
     end
     row.name:SetTextColor(Theme.Unpack("text"))
     row.name:SetText(name)
@@ -491,8 +493,8 @@ function UI:Lines()
     -- (Logic/Ammo.lua).
     local offer = ns.Ammo and ns.Ammo:Offer()
     if offer then
-        local word = offer.bag and offer.bag.word or ns.Ammo.BAGS[offer.weapon.ammo].word
-        local group = { verdict = "ammo", label = "Ammo", count = 1, worth = offer.cost or 0,
+        local word = offer.bag and offer.bag.label or ns.Ammo.BAGS[offer.weapon.ammo].label
+        local group = { verdict = "ammo", label = L["Ammo"], count = 1, worth = offer.cost or 0,
             one = word, many = word }
         local isFolded = folded.ammo == true
         lines[#lines + 1] = { type = "header", group = group, folded = isFolded }
@@ -502,8 +504,8 @@ function UI:Lines()
     -- (Logic/Jobs.lua).
     local jobRows = ns.Jobs and ns.Jobs:Lines() or {}
     if #jobRows > 0 then
-        local group = { verdict = "jobs", label = "Jobs", count = #jobRows, worth = 0,
-            one = "step", many = "steps" }
+        local group = { verdict = "jobs", label = L["Jobs"], count = #jobRows, worth = 0,
+            one = L["step"], many = L["steps"] }
         local isFolded = folded.jobs == true
         lines[#lines + 1] = { type = "header", group = group, folded = isFolded }
         if not isFolded then
@@ -516,8 +518,8 @@ function UI:Lines()
         if #plan > 0 then
             local worth = 0
             for _, entry in ipairs(plan) do worth = worth + entry.amount end
-            local group = { verdict = "gold", label = "Gold", count = #plan, worth = worth,
-                one = "character", many = "characters" }
+            local group = { verdict = "gold", label = L["Gold"], count = #plan, worth = worth,
+                one = L["character"], many = L["characters"] }
             local isFolded = folded.gold == true
             lines[#lines + 1] = { type = "header", group = group, folded = isFolded }
             if not isFolded then
@@ -549,6 +551,14 @@ end
 -- Mouse
 --------------------------------------------------------------------------------
 
+-- The Ammo row's tooltip, one whole sentence per weapon (Logic/Ammo.lua's
+-- internal words), so German can give each its own grammar.
+UI.AMMO_BEST = {
+    bow = L["The best ammo this vendor has for your bow at your level."],
+    crossbow = L["The best ammo this vendor has for your crossbow at your level."],
+    gun = L["The best ammo this vendor has for your gun at your level."],
+}
+
 function UI:Clicked(data, button)
     if data.type == "everyone" or data.type == "holder" then
         local itemID = data.item.itemID
@@ -576,18 +586,18 @@ function UI:Enter(row, data)
     end
     if data.type == "header" then
         GameTooltip:AddLine(data.group.label, Theme.Unpack("accent"))
-        GameTooltip:AddLine(data.folded and "Click to show these" or "Click to fold these away", 1, 1, 1, true)
+        GameTooltip:AddLine(data.folded and L["Click to show these"] or L["Click to fold these away"], 1, 1, 1, true)
         GameTooltip:Show()
         return
     end
     if data.type == "ammo" then
         local offer = data.offer
         local shown = offer.ammo.index and pcall(GameTooltip.SetMerchantItem, GameTooltip, offer.ammo.index)
-        if not shown then GameTooltip:AddLine(offer.ammo.name or "Ammo", 1, 1, 1) end
+        if not shown then GameTooltip:AddLine(offer.ammo.name or L["Ammo"], 1, 1, 1) end
         GameTooltip:AddLine(" ")
-        GameTooltip:AddLine("Butler: Ammo", Theme.Unpack("accent"))
+        GameTooltip:AddLine(L["Butler: Ammo"], Theme.Unpack("accent"))
         GameTooltip:AddLine(ns.Ammo.Reason(offer), 1, 1, 1, true)
-        GameTooltip:AddLine(("The best ammo this vendor has for your %s at your level."):format(offer.weapon.word),
+        GameTooltip:AddLine(UI.AMMO_BEST[offer.weapon.word] or L["The best ammo this vendor has for you at your level."],
             Theme.Unpack("muted"))
         GameTooltip:Show()
         return
@@ -598,8 +608,8 @@ function UI:Enter(row, data)
         GameTooltip:AddLine(title, Theme.Unpack("accent"))
         GameTooltip:AddLine(detail, 1, 1, 1, true)
         if step.kind == "craft" then
-            GameTooltip:AddLine(step.ready and "Craft makes it with your profession open; Tradeskills opens it otherwise."
-                or "The Craft button comes once you have the materials.", Theme.Unpack("muted"))
+            GameTooltip:AddLine(step.ready and L["Craft makes it with your profession open; Tradeskills opens it otherwise."]
+                or L["The Craft button comes once you have the materials."], Theme.Unpack("muted"))
         end
         GameTooltip:Show()
         return
@@ -611,17 +621,17 @@ function UI:Enter(row, data)
             local line = ns.Jobs.Short(step)
             GameTooltip:AddLine(line:sub(1, 1):upper() .. line:sub(2), 1, 1, 1, true)
         end
-        GameTooltip:AddLine(data.isNext and "Log out on this line to switch to them."
-            or "Do the steps above first.", Theme.Unpack("muted"))
+        GameTooltip:AddLine(data.isNext and L["Log out on this line to switch to them."]
+            or L["Do the steps above first."], Theme.Unpack("muted"))
         GameTooltip:Show()
         return
     end
     if data.type == "gold" then
         local entry = data.entry
-        GameTooltip:AddLine(("Gold for %s"):format(entry.to), Theme.Unpack("accent"))
+        GameTooltip:AddLine(L.Format("Gold for %s", entry.to), Theme.Unpack("accent"))
         GameTooltip:AddLine(ns.Funds.Reason(entry), 1, 1, 1, true)
-        GameTooltip:AddLine(("Fill mail sends %s. You press Send."):format(Items.FormatMoney(entry.amount)), 1, 1, 1, true)
-        GameTooltip:AddLine("Gold is as last seen when they played. Set the amounts in Settings, Gold.",
+        GameTooltip:AddLine(L.Format("Fill mail sends %s. You press Send.", Items.FormatMoney(entry.amount)), 1, 1, 1, true)
+        GameTooltip:AddLine(L["Gold is as last seen when they played. Set the amounts in Settings, Gold."],
             Theme.Unpack("muted"))
         GameTooltip:Show()
         return
@@ -633,14 +643,14 @@ function UI:Enter(row, data)
 
     GameTooltip:AddLine(" ")
     local r, g, b = Theme.Unpack("accent")
-    GameTooltip:AddLine(("Butler: %s"):format(ns.Verdicts.LABELS[data.verdict] or data.verdict), r, g, b)
+    GameTooltip:AddLine(L.Format("Butler: %s", ns.Verdicts.LABELS[data.verdict] or data.verdict), r, g, b)
     if data.reason and data.reason ~= "" then
         GameTooltip:AddLine(data.reason, 1, 1, 1, true)
     end
     if data.bought then
-        GameTooltip:AddLine(("%d bought on the auction house to disenchant"):format(data.bought), 0.73, 0.55, 1)
+        GameTooltip:AddLine(L.Format("%d bought on the auction house to disenchant", data.bought), 0.73, 0.55, 1)
     end
-    GameTooltip:AddLine("Right-click to always keep, sell or bank it", Theme.Unpack("muted"))
+    GameTooltip:AddLine(L["Right-click to always keep, sell or bank it"], Theme.Unpack("muted"))
     GameTooltip:Show()
 end
 
@@ -650,13 +660,13 @@ function UI:EnterEveryone(data)
     pcall(GameTooltip.SetHyperlink, GameTooltip, "item:" .. item.itemID)
     GameTooltip:AddLine(" ")
     local r, g, b = Theme.Unpack("accent")
-    GameTooltip:AddLine(("Butler: %d on %s"):format(item.total,
-        Plural(#item.holders, "character", "characters")), r, g, b)
+    GameTooltip:AddLine(L.Format("Butler: %d on %s", item.total,
+        Plural(#item.holders, L["character"], L["characters"])), r, g, b)
     for _, holder in ipairs(item.holders) do
         GameTooltip:AddDoubleLine(holder.character.short, ns.Everyone.Where(holder), 1, 1, 1, 1, 1, 1)
     end
-    GameTooltip:AddLine(data.type == "holder" and "Click to close"
-        or (data.open and "Click to close" or "Click to see each character"), Theme.Unpack("muted"))
+    GameTooltip:AddLine(data.type == "holder" and L["Click to close"]
+        or (data.open and L["Click to close"] or L["Click to see each character"]), Theme.Unpack("muted"))
     GameTooltip:Show()
 end
 
@@ -696,17 +706,17 @@ function UI:BuildMenu()
     end
     menu.Pick = Pick
 
-    menu.keep = Widgets.CreateButton(menu, "Always keep", function() Pick("keep") end,
+    menu.keep = Widgets.CreateButton(menu, L["Always keep"], function() Pick("keep") end,
         { width = MENU_WIDTH - 16, height = 20 })
     menu.keep:SetPoint("TOPLEFT", 8, -26)
-    menu.sell = Widgets.CreateButton(menu, "Always sell", function() Pick("sell") end,
+    menu.sell = Widgets.CreateButton(menu, L["Always sell"], function() Pick("sell") end,
         { width = MENU_WIDTH - 16, height = 20 })
     menu.sell:SetPoint("TOPLEFT", menu.keep, "BOTTOMLEFT", 0, -4)
-    menu.bank = Widgets.CreateButton(menu, "Always bank", function() Pick("bank") end,
+    menu.bank = Widgets.CreateButton(menu, L["Always bank"], function() Pick("bank") end,
         { width = MENU_WIDTH - 16, height = 20 })
     menu.bank:SetPoint("TOPLEFT", menu.sell, "BOTTOMLEFT", 0, -4)
     -- Bought to disenchant: Tradeskills keeps the mark, for the whole account.
-    menu.bought = Widgets.CreateButton(menu, "Bought to disenchant", function()
+    menu.bought = Widgets.CreateButton(menu, L["Bought to disenchant"], function()
         local data = UI.menu.data
         UI:HideMenu()
         if not data then return end
@@ -718,19 +728,19 @@ function UI:BuildMenu()
         ns.Verdicts:Changed(true)
     end, { width = MENU_WIDTH - 16, height = 20 })
     menu.bought:SetPoint("TOPLEFT", menu.bank, "BOTTOMLEFT", 0, -4)
-    menu.mail = Widgets.CreateButton(menu, "Always mail to...", function() UI:ShowMailMenu() end,
+    menu.mail = Widgets.CreateButton(menu, L["Always mail to..."], function() UI:ShowMailMenu() end,
         { width = MENU_WIDTH - 16, height = 20 })
     menu.mail:SetPoint("TOPLEFT", menu.bank, "BOTTOMLEFT", 0, -4)
-    menu.decide = Widgets.CreateButton(menu, "Let Butler decide", function() Pick(nil) end,
+    menu.decide = Widgets.CreateButton(menu, L["Let Butler decide"], function() Pick(nil) end,
         { width = MENU_WIDTH - 16, height = 20 })
     -- An alt's upgrade under Mail: hold this one back from them, or every
     -- upgrade (the owner asked 2026-10-12). Undone in Settings.
-    menu.hold = Widgets.CreateButton(menu, "Don't mail this", function()
+    menu.hold = Widgets.CreateButton(menu, L["Don't mail this"], function()
         local data = UI.menu.data
         UI:HideMenu()
         if data and data.mailTo then ns.Verdicts:HoldUpgrade(data.itemID, data.mailTo, true) end
     end, { width = MENU_WIDTH - 16, height = 20 })
-    menu.holdAll = Widgets.CreateButton(menu, "Never mail upgrades", function()
+    menu.holdAll = Widgets.CreateButton(menu, L["Never mail upgrades"], function()
         local data = UI.menu.data
         UI:HideMenu()
         if data and data.mailTo then ns.Verdicts:HoldAllUpgrades(data.mailTo, true) end
@@ -738,7 +748,7 @@ function UI:BuildMenu()
 
     -- The characters page: one button a character, made as needed, and Back.
     menu.characters = {}
-    menu.back = Widgets.CreateButton(menu, "Back", function()
+    menu.back = Widgets.CreateButton(menu, L["Back"], function()
         if UI.menu.data then UI:ShowMenu(UI.menu.data, true) end
     end, { width = MENU_WIDTH - 16, height = 20 })
 
@@ -771,10 +781,10 @@ function UI:ShowMenu(data, stay)
     menu.back:Hide()
 
     local choice, mailTo = ns.Verdicts:Choice(data.itemID)
-    menu.keep:SetText(choice == "keep" and "Always keep (now)" or "Always keep")
-    menu.sell:SetText(choice == "sell" and "Always sell (now)" or "Always sell")
-    menu.bank:SetText(choice == "bank" and "Always bank (now)" or "Always bank")
-    menu.mail:SetText(choice == "mail" and ("Always mail to %s"):format(mailTo) or "Always mail to...")
+    menu.keep:SetText(choice == "keep" and L["Always keep (now)"] or L["Always keep"])
+    menu.sell:SetText(choice == "sell" and L["Always sell (now)"] or L["Always sell"])
+    menu.bank:SetText(choice == "bank" and L["Always bank (now)"] or L["Always bank"])
+    menu.mail:SetText(choice == "mail" and L.Format("Always mail to %s", mailTo) or L["Always mail to..."])
     menu.keep:Show()
     menu.sell:Show()
     menu.bank:Show()
@@ -787,7 +797,7 @@ function UI:ShowMenu(data, stay)
     -- Marked or unmarked through Tradeskills, so only with it loaded.
     local canMark = ns.Sisters.CanMarkBought()
     menu.bought:SetShown(canMark)
-    menu.bought:SetText(data.bought and "Bought to disenchant (now)" or "Bought to disenchant")
+    menu.bought:SetText(data.bought and L["Bought to disenchant (now)"] or L["Bought to disenchant"])
     menu.mail:ClearAllPoints()
     menu.mail:SetPoint("TOPLEFT", canMark and menu.bought or menu.bank, "BOTTOMLEFT", 0, -4)
 
@@ -796,8 +806,8 @@ function UI:ShowMenu(data, stay)
     menu.hold:SetShown(upgradeTo ~= nil)
     menu.holdAll:SetShown(upgradeTo ~= nil)
     if upgradeTo then
-        menu.hold:SetText(("Don't mail this to %s"):format(upgradeTo))
-        menu.holdAll:SetText(("Never mail upgrades to %s"):format(upgradeTo))
+        menu.hold:SetText(L.Format("Don't mail this to %s", upgradeTo))
+        menu.holdAll:SetText(L.Format("Never mail upgrades to %s", upgradeTo))
         menu.hold:ClearAllPoints()
         menu.hold:SetPoint("TOPLEFT", last, "BOTTOMLEFT", 0, -4)
         menu.holdAll:ClearAllPoints()
@@ -811,7 +821,7 @@ function UI:ShowMenu(data, stay)
     local learned = choice == nil and ns.Learning and ns.Learning:Get(data.itemID) or nil
     local decides = choice ~= nil or learned ~= nil
     menu.decide:SetShown(decides)
-    menu.decide:SetText(learned and "Forget what Butler learned" or "Let Butler decide")
+    menu.decide:SetText(learned and L["Forget what Butler learned"] or L["Let Butler decide"])
 
     local rows = 3 + (canMark and 1 or 0) + (canMail and 1 or 0) + (upgradeTo and 2 or 0) + (decides and 1 or 0)
     menu:SetHeight(30 + rows * MENU_ROW)
@@ -854,7 +864,7 @@ function UI:ShowMailMenu()
 
     local choice, mailTo = ns.Verdicts:Choice(data.itemID)
     local names = ns.Errands:Characters()
-    menu.title:SetText(("Always mail %s to"):format(data.name))
+    menu.title:SetText(L.Format("Always mail %s to", data.name))
 
     menu.keep:Hide()
     menu.sell:Hide()
@@ -875,7 +885,7 @@ function UI:ShowMailMenu()
             menu.characters[index] = button
         end
         button.character = name
-        button:SetText(choice == "mail" and mailTo == name and (name .. " (now)") or name)
+        button:SetText(choice == "mail" and mailTo == name and L.Format("%s (now)", name) or name)
         button:ClearAllPoints()
         if above then
             button:SetPoint("TOPLEFT", above, "BOTTOMLEFT", 0, -4)
@@ -931,12 +941,12 @@ function UI:Refresh(force)
 
     local total = 0
     for _, entry in pairs(ns.Bags.slots) do total = total + 1 end
-    self.subtitle:SetText(total > 0 and ("Your bags: %s"):format(Plural(total, "stack", "stacks")) or "Your bags")
+    self.subtitle:SetText(total > 0 and L.Format("Your bags: %s", Plural(total, L["stack"], L["stacks"])) or L["Your bags"])
 
     if total == 0 and (ns.Bags.scanning or ns.Bags.stale) then
-        self.emptyLabel:SetText("Reading your bags...")
+        self.emptyLabel:SetText(L["Reading your bags..."])
     elseif total == 0 then
-        self.emptyLabel:SetText("Your bags are empty.")
+        self.emptyLabel:SetText(L["Your bags are empty."])
     else
         self.emptyLabel:SetText("")
     end
@@ -971,12 +981,12 @@ function UI:RefreshAll(force)
 
     local text = ""
     if #everyone.sorted == 0 and (everyone.building or ns.Bags.scanning or everyone:IsStale()) then
-        text = "Reading every character's items..."
+        text = L["Reading every character's items..."]
     elseif #everyone.sorted == 0 then
-        text = everyone:FromTradeskills() and "No items on record yet."
-            or "Your bags are empty. Blackthornes Tradeskills keeps your other characters' items."
+        text = everyone:FromTradeskills() and L["No items on record yet."]
+            or L["Your bags are empty. Blackthornes Tradeskills keeps your other characters' items."]
     elseif (self.shownItems or 0) == 0 then
-        text = ('Nothing matches "%s".'):format(search)
+        text = L.Format('Nothing matches "%s".', search)
     end
     self.emptyLabel:SetText(text)
     self.emptyLabel:SetShown(text ~= "")
@@ -989,11 +999,11 @@ function UI:UpdateFooter()
         local everyone = ns.Everyone
         local text
         if not everyone:FromTradeskills() then
-            text = "Only your bags. Load Blackthornes Tradeskills to add your other characters."
+            text = L["Only your bags. Load Blackthornes Tradeskills to add your other characters."]
         else
-            text = ("%s on %s. Bank and mail as each last saw them."):format(
-                Plural(#everyone.sorted, "item", "items"),
-                Plural(everyone:Holders(), "character", "characters"))
+            text = L.Format("%s on %s. Bank and mail as each last saw them.",
+                Plural(#everyone.sorted, L["item"], L["items"]),
+                Plural(everyone:Holders(), L["character"], L["characters"]))
         end
         self.footer:SetText(text)
         return
@@ -1003,14 +1013,14 @@ function UI:UpdateFooter()
     if self.errandText then
         text = self.errandText
     elseif ns.Jobs and ns.Jobs:DoneHere() then
-        text = "Everything here is done."
+        text = L["Everything here is done."]
     elseif self.sellShown then
-        text = "Sold items stay in the vendor's Buyback tab."
+        text = L["Sold items stay in the vendor's Buyback tab."]
     elseif sell and sell.count > 0 then
-        text = ("To sell: %s, %s. Open a vendor to sell them."):format(
-            Plural(sell.count, "item", "items"), Items.FormatMoney(sell.worth))
+        text = L.Format("To sell: %s, %s. Open a vendor to sell them.",
+            Plural(sell.count, L["item"], L["items"]), Items.FormatMoney(sell.worth))
     else
-        text = "Nothing to sell right now."
+        text = L["Nothing to sell right now."]
     end
     self.footer:SetText(text)
 end
@@ -1045,12 +1055,12 @@ function UI:UpdateErrands()
 
     local mail = offers.mail
     self.mailButton:SetShown(mail ~= nil)
-    if mail then self.mailButton:SetText(("Fill mail to %s"):format(mail.to)) end
+    if mail then self.mailButton:SetText(L.Format("Fill mail to %s", mail.to)) end
 
     self.bankButton:SetShown(offers.toBank > 0)
-    self.bankButton:SetText(("Move %d to bank"):format(offers.toBank))
+    self.bankButton:SetText(L.Format("Move %d to bank", offers.toBank))
     self.takeButton:SetShown(offers.fromBank > 0)
-    self.takeButton:SetText("Take from bank")
+    self.takeButton:SetText(L["Take from bank"])
     self.takeButton:ClearAllPoints()
     if offers.toBank > 0 then
         self.takeButton:SetPoint("RIGHT", self.bankButton, "LEFT", -6, 0)
@@ -1065,9 +1075,9 @@ function UI:UpdateErrands()
     if offers.fromBank > 0 then room = room + (room > 0 and 6 or 0) + (self.takeButton:GetWidth() or ERRAND_WIDTH) end
     self.errandRoom = count > 0 and room or nil
     if mail then
-        self.errandText = "Fills the Send Mail page. You press Send."
+        self.errandText = L["Fills the Send Mail page. You press Send."]
     elseif count > 0 then
-        self.errandText = "Moves whole stacks, one at a time."
+        self.errandText = L["Moves whole stacks, one at a time."]
     else
         self.errandText = nil
     end
@@ -1318,8 +1328,8 @@ function UI:BuildSizeGrip()
         Light(true)
         GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
         GameTooltip:SetText(UI.ScaleText(frame:GetScale()), Theme.Unpack("accentHi"))
-        GameTooltip:AddLine("Drag to make the window bigger or smaller.", 1, 1, 1, true)
-        GameTooltip:AddLine("Right-click: back to the normal size.", 1, 1, 1, true)
+        GameTooltip:AddLine(L["Drag to make the window bigger or smaller."], 1, 1, 1, true)
+        GameTooltip:AddLine(L["Right-click: back to the normal size."], 1, 1, 1, true)
         GameTooltip:Show()
     end)
     grip:SetScript("OnLeave", function()
@@ -1436,11 +1446,12 @@ function UI:Say(which)
     return ok
 end
 
-ns.RegisterCommand("window", "open the Butler window (so does /bbutler on its own)", function()
+ns.RegisterCommand("window", L["open the Butler window (so does /bbutler on its own)"], function()
     UI:Toggle()
 end)
 
-ns.RegisterCommand("all", "every character's items in one list, with where each one is", function()
+ns.RegisterCommand("all", L["every character's items in one list, with where each one is"], function()
+
     if UI:IsShown() and UI.view == "all" then
         UI:Hide()
     else

@@ -27,6 +27,7 @@
 -- Disenchant. It never touches a Blizzard frame.
 
 local _, ns = ...
+local L = ns.L
 
 local Disenchanting = ns.NewModule("Disenchanting")
 
@@ -110,7 +111,7 @@ function Disenchanting:Create()
     -- The main action: a gold face with dark ink lettering (the game's red
     -- in the Blizzard style), on the game's secure template, with no
     -- OnClick of its own: the template's is what casts.
-    local button = ns.Widgets.CreateButton(UIParent, "Disenchant", nil, {
+    local button = ns.Widgets.CreateButton(UIParent, L["Disenchant"], nil, {
         name = "BlackthornesButlerDisenchant", template = "SecureActionButtonTemplate",
         primary = true, width = BUTTON_WIDTH, height = BUTTON_HEIGHT,
     })
@@ -138,7 +139,7 @@ function Disenchanting:Create()
         local item = Disenchanting:Next()
         if not item then
             Clear(frame)
-            ns.Print("nothing left to disenchant.")
+            ns.Print(L["nothing left to disenchant."])
             return
         end
         frame:SetAttribute("type", "spell")
@@ -160,14 +161,15 @@ end
 function Disenchanting:Words()
     local queue, total = self:Queue()
     local first = queue[1]
-    local text = total > 0 and ("Disenchant (%d left)"):format(total) or "Nothing to disenchant"
+    local text = total > 0 and L.Format("Disenchant (%d left)", total) or L["Nothing to disenchant"]
 
     local lines = {}
     if first then
-        lines[#lines + 1] = ("Next: %s%s."):format(first.name, first.bought and ", bought to disenchant" or "")
+        lines[#lines + 1] = first.bought and L.Format("Next: %s, bought to disenchant.", first.name)
+            or L.Format("Next: %s.", first.name)
     end
-    lines[#lines + 1] = "Each click casts Disenchant once, on the next item under Disenchant."
-    lines[#lines + 1] = "Items you bought to disenchant go first. Never in combat."
+    lines[#lines + 1] = L["Each click casts Disenchant once, on the next item under Disenchant."]
+    lines[#lines + 1] = L["Items you bought to disenchant go first. Never in combat."]
     return text, table.concat(lines, "\n"), total
 end
 

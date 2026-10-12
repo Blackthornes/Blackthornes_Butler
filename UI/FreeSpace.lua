@@ -17,6 +17,7 @@
 -- number or its colour changed. Nothing runs while the bag bar is hidden.
 
 local _, ns = ...
+local L = ns.L
 
 local FreeSpace = ns.NewModule("FreeSpace")
 
@@ -76,7 +77,7 @@ function FreeSpace.Read()
                 any = true
                 local name = Call("GetBagName", bag)
                 if type(name) ~= "string" or name == "" then
-                    name = bag == 0 and "Backpack" or ("Bag " .. bag)
+                    name = bag == 0 and L["Backpack"] or L.Format("Bag %d", bag)
                 end
                 local entry = { bag = bag, name = name, free = free, total = total }
                 local general = (Number(family) or 0) == 0 and not IsReagentBag(bag)
@@ -208,15 +209,15 @@ function FreeSpace:AddTooltip(owner)
         if not read then return end
         local color = FreeSpace.COLORS[FreeSpace.Level(read.free)]
         GameTooltip:AddLine(" ")
-        GameTooltip:AddLine(("Free bag space: %d of %d"):format(read.free, read.total),
+        GameTooltip:AddLine(L.Format("Free bag space: %d of %d", read.free, read.total),
             color[1], color[2], color[3])
         for _, entry in ipairs(read.bags) do
-            GameTooltip:AddDoubleLine(entry.name, ("%d of %d free"):format(entry.free, entry.total),
+            GameTooltip:AddDoubleLine(entry.name, L.Format("%d of %d free", entry.free, entry.total),
                 0.8, 0.8, 0.8, 1, 1, 1)
         end
         for _, entry in ipairs(read.special) do
-            GameTooltip:AddDoubleLine(entry.name .. " (only some items)",
-                ("%d of %d free"):format(entry.free, entry.total), 0.6, 0.6, 0.6, 0.8, 0.8, 0.8)
+            GameTooltip:AddDoubleLine(L.Format("%s (only some items)", entry.name),
+                L.Format("%d of %d free", entry.free, entry.total), 0.6, 0.6, 0.6, 0.8, 0.8, 0.8)
         end
         GameTooltip:Show()
     end)
@@ -251,8 +252,8 @@ function FreeSpace:OnEnable()
     ns.RegisterEvent(self, "PLAYER_ENTERING_WORLD", function() FreeSpace:Changed() end)
 end
 
-ns.RegisterCommand("freespace", "show or hide the free bag space number on your backpack button", function()
+ns.RegisterCommand("freespace", L["show or hide the free bag space number on your backpack button"], function()
     FreeSpace:SetEnabled(not FreeSpace:Enabled())
-    ns.Print(FreeSpace:Enabled() and "free bag space shows on your backpack button."
-        or "free bag space no longer shows on your backpack button.")
+    ns.Print(FreeSpace:Enabled() and L["free bag space shows on your backpack button."]
+        or L["free bag space no longer shows on your backpack button."])
 end)

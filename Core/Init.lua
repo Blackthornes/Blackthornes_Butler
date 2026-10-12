@@ -6,6 +6,7 @@
 -- the framework is ours and is small enough to read in one sitting.
 
 local ADDON_NAME, ns = ...
+local L = ns.L
 
 _G.BlackthornesButler = ns
 
@@ -149,7 +150,7 @@ function ns.KeepCheck(name, fn, ...)
             version = ns.VERSION,
             lines = lines,
         }
-        ns.Print("Saved for Claude, /reload to write it.")
+        ns.Print(L["Saved for Claude, /reload to write it."])
     end
     if not ok then error(err, 0) end
 end
@@ -271,7 +272,7 @@ local function RunLifecycle(method)
         if type(fn) == "function" then
             local ok, err = pcall(fn, module)
             if not ok then
-                ns.Warn(("module %s:%s failed"):format(module.moduleName, method))
+                ns.Warn(L.Format("module %s:%s failed", module.moduleName, method))
                 geterrorhandler()(err)
             end
         end
@@ -426,7 +427,7 @@ local function ShowHelp()
     end
 end
 
-ns.RegisterCommand("help", "show this list", ShowHelp)
+ns.RegisterCommand("help", L["show this list"], ShowHelp)
 
 SLASH_BLACKTHORNESBUTLER1 = "/bbutler"
 SLASH_BLACKTHORNESBUTLER2 = "/butler"
@@ -448,7 +449,7 @@ function ns.HandleSlash(input)
 
     local command = ns.commands[keyword:lower()]
     if not command then
-        ns.Warn(("unknown command: %s"):format(keyword))
+        ns.Warn(L.Format("unknown command: %s", keyword))
         ShowHelp()
         return
     end
@@ -469,7 +470,7 @@ function ns.HandleSlash(input)
     end
 
     if not ok then
-        ns.Warn(("/bbutler %s failed: %s"):format(keyword, tostring(err)))
+        ns.Warn(L.Format("/bbutler %s failed: %s", keyword, tostring(err)))
         geterrorhandler()(err)
     end
 end

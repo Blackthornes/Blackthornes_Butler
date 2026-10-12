@@ -13,6 +13,8 @@
 
 local _, ns = ...
 
+local L = ns.L
+
 local Sisters = ns.NewModule("Sisters")
 
 -- name = the global and whether Advise takes the item ID or the link.
@@ -80,10 +82,10 @@ end
 --- Mark `count` of an item bought to disenchant, or take the mark off.
 -- @return true, or false and why
 function Sisters:MarkBought(itemID, on, count)
-    if not Sisters.CanMarkBought() then return false, "Blackthornes Tradeskills isn't loaded." end
+    if not Sisters.CanMarkBought() then return false, L["Blackthornes Tradeskills isn't loaded."] end
     local butler = Sisters.Butler("ts")
     local ok, done, why = pcall(butler.SetBoughtToDisenchant, butler, itemID, on and true or false, count)
-    if not ok then return false, "Tradeskills couldn't mark it." end
+    if not ok then return false, L["Tradeskills couldn't mark it."] end
     return done == true, why
 end
 

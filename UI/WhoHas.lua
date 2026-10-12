@@ -21,6 +21,7 @@
 -- beside a hovered piece of gear are left alone.
 
 local _, ns = ...
+local L = ns.L
 
 local WhoHas = ns.NewModule("WhoHas")
 
@@ -30,8 +31,8 @@ WhoHas.MOST = 6
 WhoHas.REBUILD_GAP = 1
 
 WhoHas.PLACES = { "bags", "bank", "mail" }
-WhoHas.PLACE_WORDS = { bags = "in bags", bank = "in the bank", mail = "in the mail" }
-WhoHas.PLACE_SHORT = { bags = "bags", bank = "bank", mail = "mail" }
+WhoHas.PLACE_WORDS = { bags = L["in bags"], bank = L["in the bank"], mail = L["in the mail"] }
+WhoHas.PLACE_SHORT = { bags = L["bags"], bank = L["bank"], mail = L["mail"] }
 
 -- [itemID] = { holders = { { name, isCurrent, bags, bank, mail, total } }, total }
 WhoHas.lookup = nil
@@ -157,14 +158,14 @@ function WhoHas.Lines(item)
     if #holders == 1 and holders[1].isCurrent and holders[1].bank == 0 and holders[1].mail == 0 then
         return nil
     end
-    local lines = { { "Your characters have " .. item.total } }
+    local lines = { { L.Format("Your characters have %d", item.total) } }
     for i, holder in ipairs(holders) do
         if i > WhoHas.MOST then
             local more = #holders - WhoHas.MOST
-            lines[#lines + 1] = { more == 1 and "and 1 more character" or ("and %d more characters"):format(more) }
+            lines[#lines + 1] = { more == 1 and L["and 1 more character"] or L.Format("and %d more characters", more) }
             break
         end
-        local name = holder.isCurrent and (holder.name .. " (you)") or holder.name
+        local name = holder.isCurrent and L.Format("%s (you)", holder.name) or holder.name
         lines[#lines + 1] = { name, WhoHas.Where(holder) }
     end
     return lines
@@ -275,8 +276,8 @@ function WhoHas:OnEnable()
     end
 end
 
-ns.RegisterCommand("whohas", "show or hide which of your characters have an item, on its tooltip", function()
+ns.RegisterCommand("whohas", L["show or hide which of your characters have an item, on its tooltip"], function()
     WhoHas:SetEnabled(not WhoHas:Enabled())
-    ns.Print(WhoHas:Enabled() and "item tooltips say which of your characters have it."
-        or "item tooltips no longer say which of your characters have it.")
+    ns.Print(WhoHas:Enabled() and L["item tooltips say which of your characters have it."]
+        or L["item tooltips no longer say which of your characters have it."])
 end)

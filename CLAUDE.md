@@ -495,6 +495,31 @@ Each line waits `UI.VOICE_GAP` (180 s). "Butler's voice" on the General
 page (`voice`, account wide, on unless unticked; never rename it). Tested
 in `tools/test_voice.lua`. Not yet seen in game.
 
+## German translation
+
+The owner said yes (2026-10-12) to German in Butler, after Pets' pilot and
+Farmer. Players are told the language as "Deutsch"; the code names stay
+`deDE` and `Locale/deDE.lua`. It ships with 0.2.0.
+
+- **English is the key and the fallback.** `Locale/Locale.lua` (first in
+  the TOC, Pets' file) makes `ns.L`, whose missing keys answer the key
+  itself; `L.Format(key, ...)` is `string.format` on the translation and
+  puts values named by place (`%2$s ... %1$d`) in order.
+- **Adding a string:** `L["English text"]` or `L.Format("English %s",
+  value)`, a literal where it is written, one whole sentence a key (never
+  pieces joined with `..`), both forms for a plural; add its line to
+  `Locale/deDE.lua` (informal "du", a polite butler's voice) and run
+  `python tools/check_locale.py` (warns only; keep it at 0 missing).
+  `tools/test_locale.lua` loads Butler as a German client.
+- **Left in English on purpose:** slash command words and typed words
+  (`off`, g/s/c), saved and internal keys (verdict keys; `Verdicts.LABELS`
+  only shows them; Ammo's `word`, with `label` shown), secure button
+  macros, mail subjects that are matched (`Learning.ADDON_SUBJECTS`),
+  Ammo's English DPS fallbacks, data and client names, debug lines and
+  every `ProbeText` (`/bbutler probe`).
+- German runs about 30% longer: buttons grow to fit and rows wrap; a new
+  fixed width must wrap or grow, never end in "...".
+
 ## How this repo was set up
 
 It copies Pets (itself Equipment's, itself Farmer's) on purpose, so check the

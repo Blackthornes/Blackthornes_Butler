@@ -52,6 +52,7 @@
 -- row.mailCount), for the Fill mail button (Logic/Errands.lua).
 
 local _, ns = ...
+local L = ns.L
 
 local Verdicts = ns.NewModule("Verdicts")
 
@@ -62,13 +63,13 @@ local Sisters = ns.Sisters
 Verdicts.ORDER = { "sell", "auction", "disenchant", "mail", "bank", "look", "keep" }
 
 Verdicts.LABELS = {
-    sell = "Sell",
-    auction = "Auction",
-    disenchant = "Disenchant",
-    mail = "Mail",
-    bank = "Bank",
-    look = "Look at it",
-    keep = "Keep",
+    sell = L["Sell"],
+    auction = L["Auction"],
+    disenchant = L["Disenchant"],
+    mail = L["Mail"],
+    bank = L["Bank"],
+    look = L["Look at it"],
+    keep = L["Keep"],
 }
 
 -- An auction price is worth this much of itself when Tradeskills says the
@@ -130,7 +131,7 @@ end
 
 local function Each(unit)
     if not unit or unit <= 0 then return "" end
-    return "Vendor " .. Items.FormatMoney(unit) .. " each"
+    return L.Format("Vendor %s each", Items.FormatMoney(unit))
 end
 
 --- The verdict for one carried item, why, what a vendor pays for one, and
@@ -175,21 +176,21 @@ function Verdicts:Decide(entry, noAlt)
         end
     end
     if choice == "keep" then
-        return "keep", "On your Always keep list", nil, true
+        return "keep", L["On your Always keep list"], nil, true
     end
     if choice == "bank" then
-        return "bank", "On your Always bank list", Items:SellPrice(itemID), true
+        return "bank", L["On your Always bank list"], Items:SellPrice(itemID), true
     end
     if choice == "mail" then
         -- Soulbound can't go in the mail, whatever the list says, and the
         -- list is account wide, so it can name the character playing.
         if self:IsMe(mailTo) then
-            return "keep", ("On your Always mail list for %s, the character you're on"):format(mailTo), nil, true
+            return "keep", L.Format("On your Always mail list for %s, the character you're on", mailTo), nil, true
         end
         if entry.bound then
-            return "keep", ("Soulbound, so it can't be mailed to %s"):format(mailTo), nil, true
+            return "keep", L.Format("Soulbound, so it can't be mailed to %s", mailTo), nil, true
         end
-        return "mail", ("On your Always mail list, to %s"):format(mailTo), Items:SellPrice(itemID), true,
+        return "mail", L.Format("On your Always mail list, to %s", mailTo), Items:SellPrice(itemID), true,
             { to = mailTo }
     end
 
@@ -202,22 +203,22 @@ function Verdicts:Decide(entry, noAlt)
     end
 
     if entry.quest == "starts" then
-        return "keep", "Starts a quest", nil, true
+        return "keep", L["Starts a quest"], nil, true
     elseif entry.quest == "item" then
-        return "keep", "Quest item", nil, true
+        return "keep", L["Quest item"], nil, true
     end
 
     if entry.noValue then
-        return "keep", "Vendors won't buy it", nil, true
+        return "keep", L["Vendors won't buy it"], nil, true
     end
 
     local unit = Items:SellPrice(itemID)
     if unit == 0 then
-        return "keep", "Vendors won't buy it", 0, true
+        return "keep", L["Vendors won't buy it"], 0, true
     end
 
     if choice == "sell" then
-        return "sell", "On your Always sell list", unit, unit ~= nil
+        return "sell", L["On your Always sell list"], unit, unit ~= nil
     end
 
     -- A vendor always pays most for arrows and bullets, so the hunter's
@@ -242,17 +243,17 @@ function Verdicts:Decide(entry, noAlt)
     end
 
     if unit == nil then
-        return "look", "Still loading from the game", nil, false
+        return "look", L["Still loading from the game"], nil, false
     end
 
     -- A habit of selling it by hand. Soulbound green or better is never
     -- sold for the player, habit or not.
     if learned == "sell" and not (entry.bound and (entry.quality or 0) >= 2) then
-        return "sell", ("%s: %s each"):format(ns.Learning.Reason("sell"), Items.FormatMoney(unit)), unit, true
+        return "sell", L.Format("%s: %s each", ns.Learning.Reason("sell"), Items.FormatMoney(unit)), unit, true
     end
 
     if entry.quality == 0 then
-        return "sell", "Grey, vendor only", unit, true
+        return "sell", L["Grey, vendor only"], unit, true
     end
 
     verdict, reason, worth, extra = self:Best(entry, unit, said)
@@ -268,7 +269,7 @@ function Verdicts:ForAltCraft(entry)
     local mailTo = Sisters.String(ts, "mailTo")
     local count = Sisters.Number(ts, "mailCount")
     if not mailTo or self:IsMe(mailTo) or not (count and count > 0) then return nil end
-    return "mail", ("Mail %d to %s for their crafts, keep the rest"):format(count, mailTo),
+    return "mail", L.Format("Mail %d to %s for their crafts, keep the rest", count, mailTo),
         { to = mailTo, count = count }
 end
 
@@ -303,11 +304,11 @@ function Verdicts:Kept(said, entry, noAlt)
     local eq = said.equipment
     if eq then
         if eq.upgrade == "now" then
-            return "keep", "An upgrade: wear it"
+            return "keep", L["An upgrade: wear it"]
         elseif eq.upgrade == "later" then
-            return "keep", "An upgrade at a later level"
+            return "keep", L["An upgrade at a later level"]
         elseif True(eq, "tool") then
-            return "keep", "A tool you use"
+            return "keep", L["A tool you use"]
         end
     end
 
@@ -315,8 +316,8 @@ function Verdicts:Kept(said, entry, noAlt)
     local need = Number(farmer, "need")
     if need and need > 0 then
         local goal = String(farmer, "goal")
-        return "keep", goal and ("Your %s goal needs %d more"):format(goal, need)
-            or ("A goal needs %d more"):format(need)
+        return "keep", goal and L.Format("Your %s goal needs %d more", goal, need)
+            or L.Format("A goal needs %d more", need)
     end
 
     local ts = said.ts
@@ -331,15 +332,15 @@ function Verdicts:Kept(said, entry, noAlt)
         -- was all kept while an alt's craft waited on it, 2026-10-11).
         local count = Number(ts, "mailCount")
         if mailTo and count and count > 0 then
-            return "mail", ("Mail %d to %s for their crafts, keep %d for yours"):format(count, mailTo, queued),
+            return "mail", L.Format("Mail %d to %s for their crafts, keep %d for yours", count, mailTo, queued),
                 nil, { to = mailTo, count = count }
         end
-        return "keep", ("Your craft queue needs %d"):format(queued)
+        return "keep", L.Format("Your craft queue needs %d", queued)
     end
     if mailTo then
         local count = Number(ts, "mailCount")
-        return "mail", count and ("Mail %d to %s for their crafts"):format(count, mailTo)
-            or ("Mail to %s for their crafts"):format(mailTo), nil, { to = mailTo, count = count }
+        return "mail", count and L.Format("Mail %d to %s for their crafts", count, mailTo)
+            or L.Format("Mail to %s for their crafts", mailTo), nil, { to = mailTo, count = count }
     end
 
     -- No use here, but an upgrade for another of the player's characters
@@ -355,9 +356,16 @@ function Verdicts:Kept(said, entry, noAlt)
         if to and not Verdicts:IsMe(to) and wanted > 0 and not Verdicts:UpgradeHeld(entry.itemID, to) then
             local gain = Number(alt, "gain")
             local level = Number(alt, "level")
-            local reason = gain and ("An upgrade for %s (+%d%%)"):format(to, gain)
-                or ("An upgrade for %s (an empty slot)"):format(to)
-            if level then reason = ("%s at level %d"):format(reason, level) end
+            local reason
+            if gain and level then
+                reason = L.Format("An upgrade for %s (+%d%%) at level %d", to, gain, level)
+            elseif gain then
+                reason = L.Format("An upgrade for %s (+%d%%)", to, gain)
+            elseif level then
+                reason = L.Format("An upgrade for %s (an empty slot) at level %d", to, level)
+            else
+                reason = L.Format("An upgrade for %s (an empty slot)", to)
+            end
             return "mail", reason, nil, { to = to, count = wanted, upgrade = true }
         end
     end
@@ -366,10 +374,12 @@ function Verdicts:Kept(said, entry, noAlt)
     -- Pets' hours are for all the food carried, and only a rough guess
     -- (classic's hunger rule), so they are shown, never used to sell food.
     if True(pets, "eats") then
-        local what = True(pets, "buff") and "Buff food for your pet" or "Your pet eats it"
+        local buff = True(pets, "buff")
+        local what = buff and L["Buff food for your pet"] or L["Your pet eats it"]
         local hours = Number(pets, "hours")
         if hours and hours > 0 then
-            what = ("%s (about %s h of food carried)"):format(what, Verdicts.Hours(hours))
+            what = buff and L.Format("Buff food for your pet (about %s h of food carried)", Verdicts.Hours(hours))
+                or L.Format("Your pet eats it (about %s h of food carried)", Verdicts.Hours(hours))
         end
         return "keep", what
     end
@@ -507,20 +517,20 @@ function Verdicts:Bought(entry, said)
     if not bought or bought <= 0 then return nil end
 
     local value = Number(ts, "disenchant")
-    local about = value and (", about %s"):format(Items.FormatMoney(value)) or ""
 
     if True(ts, "canDisenchant") then
-        return "disenchant", "Bought to disenchant" .. about, value, { bought = bought }
+        return "disenchant", value and L.Format("Bought to disenchant, about %s", Items.FormatMoney(value))
+            or L["Bought to disenchant"], value, { bought = bought }
     end
 
     local enchanter = not entry.bound and String(ts, "enchanter") or nil
     if enchanter and self:IsMe(enchanter) then enchanter = nil end
     if enchanter then
-        return "mail", ("Bought to disenchant: mail to %s"):format(enchanter), value,
+        return "mail", L.Format("Bought to disenchant: mail to %s", enchanter), value,
             { to = enchanter, bought = bought }
     end
 
-    return "look", "Bought to disenchant, but none of your characters can yet", value, { bought = bought }
+    return "look", L["Bought to disenchant, but none of your characters can yet"], value, { bought = bought }
 end
 
 --- Step 8c: Tradeskills' disenchanter (the owner asked 2026-10-11: Butler
@@ -539,8 +549,9 @@ function Verdicts:ForDisenchanter(entry, said)
     if self:IsMe(to) then return nil end
 
     local value = Number(ts, "disenchant")
-    local about = value and (", about %s"):format(Items.FormatMoney(value)) or ""
-    return "mail", ("For your disenchanter: mail to %s%s"):format(to, about), value, { to = to }
+    local reason = value and L.Format("For your disenchanter: mail to %s, about %s", to, Items.FormatMoney(value))
+        or L.Format("For your disenchanter: mail to %s", to)
+    return "mail", reason, value, { to = to }
 end
 
 --------------------------------------------------------------------------------
@@ -611,7 +622,7 @@ function Verdicts:Best(entry, unit, said)
     if below and ts and not (bound and (entry.quality or 0) >= 2) then
         local most = math.max(unit, auction or 0, disenchant or 0)
         if most < below then
-            return "sell", ("Worth less than %s: %s each"):format(Items.FormatMoney(below),
+            return "sell", L.Format("Worth less than %s: %s each", Items.FormatMoney(below),
                 Items.FormatMoney(unit)), unit
         end
     end
@@ -622,15 +633,15 @@ function Verdicts:Best(entry, unit, said)
 
     if best == "disenchant" then
         if canDisenchant then
-            return "disenchant", ("Disenchant, about %s"):format(Items.FormatMoney(disenchant)), disenchant
+            return "disenchant", L.Format("Disenchant, about %s", Items.FormatMoney(disenchant)), disenchant
         end
-        return "mail", ("Mail to %s to disenchant, about %s"):format(enchanter, Items.FormatMoney(disenchant)),
+        return "mail", L.Format("Mail to %s to disenchant, about %s", enchanter, Items.FormatMoney(disenchant)),
             disenchant, { to = enchanter }
     end
 
     if best == "auction" then
-        local text = ("Auction about %s each"):format(Items.FormatMoney(auction))
-        if slow then text = text .. ", sells slowly" end
+        local text = slow and L.Format("Auction about %s each, sells slowly", Items.FormatMoney(auction))
+            or L.Format("Auction about %s each", Items.FormatMoney(auction))
         return "auction", text, auctionWorth
     end
 
@@ -642,18 +653,21 @@ function Verdicts:Best(entry, unit, said)
         -- are taken, or it pays more but sells too slowly to wait for (a
         -- player read "vendor pays more" under a higher auction price).
         if auction and auction > unit then
-            return "sell", ("Sells slowly at auction (about %s after the cut), vendor pays %s each")
-                :format(Items.FormatMoney(auction), Items.FormatMoney(unit)), unit
+            return "sell", L.Format("Sells slowly at auction (about %s after the cut), vendor pays %s each",
+                Items.FormatMoney(auction), Items.FormatMoney(unit)), unit
         end
         if auction then
-            return "sell", ("Vendor pays more than the auction house after its cut (about %s): %s each")
-                :format(Items.FormatMoney(auction), Items.FormatMoney(unit)), unit
+            return "sell", L.Format("Vendor pays more than the auction house after its cut (about %s): %s each",
+                Items.FormatMoney(auction), Items.FormatMoney(unit)), unit
         end
-        return "sell", ("Not an upgrade: %s each"):format(Items.FormatMoney(unit)), unit
+        return "sell", L.Format("Not an upgrade: %s each", Items.FormatMoney(unit)), unit
     end
 
     if bound and (entry.quality or 0) >= 2 and eq and True(eq, "sell") then
-        return "look", ("Not an upgrade. %s"):format(Each(unit)), unit
+        if unit and unit > 0 then
+            return "look", L.Format("Not an upgrade. Vendor %s each", Items.FormatMoney(unit)), unit
+        end
+        return "look", L["Not an upgrade."], unit
     end
 
     -- Short enough for the row; the tooltip says right-click decides it.
@@ -718,7 +732,7 @@ function Verdicts:Groups()
                 mailTo = extra and extra.to, mailCount = extra and extra.count,
                 upgrade = extra and extra.upgrade or nil,
                 bought = extra and extra.bought,
-                name = Items.NameFromLink(entry.link) or ("item " .. tostring(entry.itemID)),
+                name = Items.NameFromLink(entry.link) or L.Format("item %s", tostring(entry.itemID)),
                 count = 0, slots = {},
             }
             rowsByKey[key] = row
@@ -810,7 +824,7 @@ local function PrintList(name, title)
     for itemID in pairs(List(name)) do ids[#ids + 1] = itemID end
     table.sort(ids)
     if #ids == 0 then
-        ns.PrintRaw(("  |c%s%s:|r none"):format(ns.COLORS.muted, title))
+        ns.PrintRaw(("  |c%s%s|r"):format(ns.COLORS.muted, L.Format("%s: none", title)))
         return
     end
     local names = {}
@@ -818,30 +832,30 @@ local function PrintList(name, title)
         local itemName, link = Items.Call({ "C_Item.GetItemInfo", "GetItemInfo" }, itemID)
         if not itemName then Items:RequestLoad(itemID) end
         local to = List(name)[itemID]
-        names[#names + 1] = (link or itemName or ("item " .. itemID))
-            .. (type(to) == "string" and (" to " .. to) or "")
+        local shown = link or itemName or L.Format("item %s", tostring(itemID))
+        names[#names + 1] = type(to) == "string" and L.Format("%s to %s", shown, to) or shown
     end
-    ns.PrintRaw(("  |c%s%s (%d):|r %s"):format(ns.COLORS.muted, title, #ids, table.concat(names, ", ")))
+    ns.PrintRaw(("  |c%s%s|r %s"):format(ns.COLORS.muted, L.Format("%s (%d):", title, #ids), table.concat(names, ", ")))
 end
 
-ns.RegisterCommand("lists", "show your Always keep, Always sell, Always bank and Always mail lists", function()
-    ns.Print("your lists (right-click a row in the Butler window to change them)")
-    PrintList("alwaysKeep", "Always keep")
-    PrintList("alwaysSell", "Always sell")
-    PrintList("alwaysBank", "Always bank")
-    PrintList("alwaysMail", "Always mail")
+ns.RegisterCommand("lists", L["show your Always keep, Always sell, Always bank and Always mail lists"], function()
+    ns.Print(L["your lists (right-click a row in the Butler window to change them)"])
+    PrintList("alwaysKeep", L["Always keep"])
+    PrintList("alwaysSell", L["Always sell"])
+    PrintList("alwaysBank", L["Always bank"])
+    PrintList("alwaysMail", L["Always mail"])
     if ns.Learning then ns.Learning:PrintLearned() end
 end)
 
 local function ItemName(itemID)
     local itemName, link = Items.Call({ "C_Item.GetItemInfo", "GetItemInfo" }, itemID)
     if not itemName then Items:RequestLoad(itemID) end
-    return link or itemName or ("item " .. itemID)
+    return link or itemName or L.Format("item %d", itemID)
 end
 
 -- Upgrades held back from a character (right-click a Mail upgrade row).
 -- Undo lets them go again; nothing else is deleted.
-ns.RegisterCommand("upgrademail", "list upgrades you hold back from your characters (upgrademail undo Full Name to mail them again)", function(rest)
+ns.RegisterCommand("upgrademail", L["list upgrades you hold back from your characters (upgrademail undo Full Name to mail them again)"], function(rest)
     rest = (rest or ""):match("^%s*(.-)%s*$")
     local name = rest:match("^undo%s+(.+)$")
     if name then
@@ -851,22 +865,22 @@ ns.RegisterCommand("upgrademail", "list upgrades you hold back from your charact
             if held == name then known = true end
         end
         if not known then
-            ns.Print(("nothing is held back from %s."):format(name))
+            ns.Print(L.Format("nothing is held back from %s.", name))
             return
         end
         Verdicts:UnholdUpgrades(name)
-        ns.Print(("upgrades go to %s again."):format(name))
+        ns.Print(L.Format("upgrades go to %s again.", name))
         return
     end
     local names = Verdicts:HeldNames()
     if #names == 0 then
-        ns.Print("every upgrade goes to your characters. Right-click an upgrade under Mail to hold it back.")
+        ns.Print(L["every upgrade goes to your characters. Right-click an upgrade under Mail to hold it back."])
         return
     end
-    ns.Print("upgrades you hold back (type /bbutler upgrademail undo Full Name to mail them again)")
+    ns.Print(L["upgrades you hold back (type /bbutler upgrademail undo Full Name to mail them again)"])
     for _, who in ipairs(names) do
         if List("noUpgradesFor")[who] then
-            ns.PrintRaw(("  |c%s%s:|r no upgrades"):format(ns.COLORS.muted, who))
+            ns.PrintRaw(("  |c%s%s|r"):format(ns.COLORS.muted, L.Format("%s: no upgrades", who)))
         end
         local items = {}
         for _, itemID in ipairs(Verdicts:HeldItems(who)) do items[#items + 1] = ItemName(itemID) end
@@ -876,42 +890,43 @@ ns.RegisterCommand("upgrademail", "list upgrades you hold back from your charact
     end
 end)
 
-ns.RegisterCommand("vendor", "turn the Butler window coming up at a vendor on or off", function()
+ns.RegisterCommand("vendor", L["turn the Butler window coming up at a vendor on or off"], function()
     ns.db.openAtVendor = not ns.db.openAtVendor
-    ns.Print(ns.db.openAtVendor and "the Butler window comes up at every vendor."
-        or "the Butler window no longer comes up at a vendor by itself.")
+    ns.Print(ns.db.openAtVendor and L["the Butler window comes up at every vendor."]
+        or L["the Butler window no longer comes up at a vendor by itself."])
 end)
 
 -- Deletes the player's choices, so typed only, with "confirm" (a house
 -- rule: no button deletes data).
-ns.RegisterCommand("reset", "empty your Always keep, sell, bank and mail lists and what Butler learned (type: reset confirm)", function(rest)
+ns.RegisterCommand("reset", L["empty your Always keep, sell, bank and mail lists and what Butler learned (type: reset confirm)"], function(rest)
     if rest ~= "confirm" then
-        ns.Print("this empties your Always keep, Always sell, Always bank and Always mail lists, and forgets what Butler learned from you. To do it, type /bbutler reset confirm")
+        ns.Print(L["this empties your Always keep, Always sell, Always bank and Always mail lists, and forgets what Butler learned from you. To do it, type /bbutler reset confirm"])
         return
     end
     ns.db.alwaysKeep, ns.db.alwaysSell, ns.db.alwaysBank, ns.db.alwaysMail = {}, {}, {}, {}
     if ns.Learning then ns.Learning:ForgetAll() end
     Verdicts:Changed(true)
-    ns.Print("your Always keep, Always sell, Always bank and Always mail lists are empty, and Butler has forgotten what it learned from you. Butler decides every item again.")
+    ns.Print(L["your Always keep, Always sell, Always bank and Always mail lists are empty, and Butler has forgotten what it learned from you. Butler decides every item again."])
 end)
 
 -- Asked 2026-10-11: anything worth less than an amount the player sets
 -- joins Sell. It never deletes or sells by itself; Sell is still a click.
-ns.RegisterCommand("sellbelow", "sell anything worth less than an amount, e.g. sellbelow 50s (sellbelow off to stop)", function(rest)
+ns.RegisterCommand("sellbelow", L["sell anything worth less than an amount, e.g. sellbelow 50s (sellbelow off to stop)"], function(rest)
     rest = rest or ""
     if rest:match("^%s*$") then
         local below = Verdicts:SellBelow()
-        ns.Print(below and ("items worth less than %s go under Sell. Type /bbutler sellbelow off to stop."):format(Items.FormatMoney(below))
-            or "Sell below is off. Type an amount to turn it on, e.g. /bbutler sellbelow 50s or /bbutler sellbelow 1g 20s")
+        ns.Print(below and L.Format("items worth less than %s go under Sell. Type /bbutler sellbelow off to stop.", Items.FormatMoney(below))
+            or L["Sell below is off. Type an amount to turn it on, e.g. /bbutler sellbelow 50s or /bbutler sellbelow 1g 20s"])
         return
     end
     local copper = Verdicts.ParseMoney(rest)
     if not copper then
-        ns.Print("type an amount like 50s, 1g 20s or 75c, or off.")
+        ns.Print(L["type an amount like 50s, 1g 20s or 75c, or off."])
         return
     end
     Verdicts:SetSellBelow(copper)
     local below = Verdicts:SellBelow()
-    ns.Print(below and ("items worth less than %s now go under Sell. Nothing sells until you click Sell."):format(Items.FormatMoney(below))
-        or "Sell below is off.")
+    ns.Print(below and L.Format("items worth less than %s now go under Sell. Nothing sells until you click Sell.", Items.FormatMoney(below))
+        or L["Sell below is off."])
+
 end)
