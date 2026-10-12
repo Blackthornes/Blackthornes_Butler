@@ -59,6 +59,8 @@ expect("the Claude notes are refused anywhere",
 expect("a file the addon does not ship is refused",
        with_({"Bindings.xml": "<Bindings>\n</Bindings>\n"}), False)
 expect("a probe is allowed", with_({"Probe/Probe.lua": "local _, ns = ...\n"}), True)
+expect("the translations are allowed",
+       with_({"Locale/Locale.lua": "local _, ns = ...\n", "Locale/deDE.lua": "local _, ns = ...\n"}), True)
 expect("a folder the addon does not have is refused",
        with_({"Scratch/Notes.lua": "local _, ns = ...\n"}), False)
 expect("a saved-variables file is refused by name",

@@ -281,8 +281,11 @@ function env.TocFiles()
 end
 
 --- Load the addon exactly as the TOC does, and return its namespace.
-function env.Load()
+--- `locale` ("deDE") loads it as a client in that language would.
+function env.Load(locale)
     env.InstallClient()
+    _G.GetLocale = nil
+    if locale then _G.GetLocale = function() return locale end end
 
     local ns = {}
     for _, file in ipairs(env.TocFiles()) do
