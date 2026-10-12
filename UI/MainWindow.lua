@@ -164,8 +164,9 @@ function UI:Build()
         onClick = function(data, button) UI:Clicked(data, button) end,
         onEnter = function(row, data) UI:Enter(row, data) end,
         onLeave = function() GameTooltip:Hide() end,
-        -- Log out follows the next character's row as the list scrolls.
-        onRefresh = function() if ns.Jobs then ns.Jobs:UpdateLogout() end end,
+        -- The buttons on group lines (Sell, Disenchant, Bank, Log out)
+        -- follow their line as the list scrolls.
+        onRefresh = function() UI:PlaceButtons() end,
     })
     self.list:SetPoint("TOPLEFT", 6, -6)
     self.list:SetPoint("BOTTOMRIGHT", -6, 6)
@@ -1091,11 +1092,57 @@ function UI:UpdateFooter()
     self.footer:SetText(text)
 end
 
---- The Sell button came up over the window's foot, or went.
+--------------------------------------------------------------------------------
+-- Buttons on their lines
+--------------------------------------------------------------------------------
+
+-- The owner asked (2026-10-12) for each button to sit by the line it acts
+-- on: Sell on the Sell group's line, Disenchant on Disenchant's, Move to
+-- bank on Bank's, Take from bank on Jobs', as Log out sits on the next
+-- character's line and Fill mail on each character's. A button whose line
+-- is scrolled out of sight waits at the window's foot.
+
+-- How far in from a line's right edge its button ends: past the column
+-- that shows the group's worth, so that stays in sight.
+UI.LINE_BUTTON_RIGHT = 110
+
+--- The group's heading line, while it is on screen, or nil.
+function UI:HeaderRow(verdict)
+    if not (self.list and self:IsShown() and self.view ~= "all") then return nil end
+    for _, row in ipairs(self.list.rows) do
+        local data = row.data
+        if row:IsShown() and data and data.type == "header" and data.group
+            and data.group.verdict == verdict then
+            return row
+        end
+    end
+    return nil
+end
+
+--- Put a button (a secure one is a child of UIParent) on a line by screen
+--- position, at the line's size. True when placed.
+function UI.PlaceOnLine(button, row)
+    local right, top, bottom = row:GetRight(), row:GetTop(), row:GetBottom()
+    if not (right and top and bottom) then return false end
+    local scale = (row:GetEffectiveScale() or 1) / (UIParent:GetEffectiveScale() or 1)
+    button:SetScale(scale)
+    button:ClearAllPoints()
+    button:SetPoint("RIGHT", UIParent, "BOTTOMLEFT", right - UI.LINE_BUTTON_RIGHT, (top + bottom) / 2)
+    return true
+end
+
+--- Every button that sits on a line, placed again: after the list is drawn
+--- or scrolled. Selling:Update ends in UI:FootRoom, which places the rest.
+function UI:PlaceButtons()
+    if ns.Selling then ns.Selling:Update() else self:FootRoom() end
+end
+
+--- The Sell button came up (`width` when it waits at the window's foot,
+--- nil when it sits on the Sell line), or went.
 function UI:SellShown(shown, width)
     if not self.frame then return end
     self.sellShown = shown and true or false
-    self.sellRoom = shown and (width or 150) or nil
+    self.sellRoom = shown and width or nil
     self:FootRoom()
     if self:IsShown() then self:UpdateFooter() end
 end
@@ -1103,6 +1150,7 @@ end
 --- The footer's words stop short of whatever buttons sit at the foot, and
 --- the version label gives way to them.
 function UI:FootRoom()
+    self:PlaceErrands()
     local room = math.max(self.sellRoom or 0, self.errandRoom or 0)
     -- The Disenchant button goes left of those.
     local disenchant = ns.Disenchanting and ns.Disenchanting:Update(room) or 0
@@ -1140,19 +1188,8 @@ function UI:UpdateErrands()
     self.bankButton:SetText(L.Format("Move %d to bank", offers.toBank))
     self.takeButton:SetShown(offers.fromBank > 0)
     self.takeButton:SetText(L["Take from bank"])
-    self.takeButton:ClearAllPoints()
-    if offers.toBank > 0 then
-        self.takeButton:SetPoint("RIGHT", self.bankButton, "LEFT", -6, 0)
-    else
-        self.takeButton:SetPoint("BOTTOMRIGHT", -UI.SELL_INSET_X, UI.SELL_INSET_Y)
-    end
 
     local count = (mail and 1 or 0) + (offers.toBank > 0 and 1 or 0) + (offers.fromBank > 0 and 1 or 0)
-    -- A button grows to fit a long label, so measure what is shown.
-    local room = mail and (self.mailButton:GetWidth() or MAIL_WIDTH) or 0
-    if offers.toBank > 0 then room = room + (self.bankButton:GetWidth() or ERRAND_WIDTH) end
-    if offers.fromBank > 0 then room = room + (room > 0 and 6 or 0) + (self.takeButton:GetWidth() or ERRAND_WIDTH) end
-    self.errandRoom = count > 0 and room or nil
     if mail or onRows then
         self.errandText = L["Fills the Send Mail page. You press Send."]
     elseif count > 0 then
@@ -1162,6 +1199,41 @@ function UI:UpdateErrands()
     end
     self:FootRoom()
     if self:IsShown() then self:UpdateFooter() end
+end
+
+--- The errand buttons on their lines: Move to bank on the Bank group's,
+--- Take from bank on the Jobs line (it brings out what the craft queue
+--- wants). One whose line is out of sight, and a Fill mail left at the
+--- foot, line up from the window's bottom right corner; `errandRoom` is
+--- how much of the foot they take.
+function UI:PlaceErrands()
+    local foot = {}
+    local function Place(button, verdict)
+        if not button:IsShown() then return end
+        local row = verdict and self:HeaderRow(verdict)
+        button:ClearAllPoints()
+        if row then
+            button:SetPoint("RIGHT", row, "RIGHT", -UI.LINE_BUTTON_RIGHT, 0)
+            button:SetFrameLevel(row:GetFrameLevel() + 5)
+        else
+            foot[#foot + 1] = button
+        end
+    end
+    Place(self.mailButton)
+    Place(self.bankButton, "bank")
+    Place(self.takeButton, "jobs")
+    local room = 0
+    for index, button in ipairs(foot) do
+        if index == 1 then
+            button:SetPoint("BOTTOMRIGHT", -UI.SELL_INSET_X, UI.SELL_INSET_Y)
+        else
+            button:SetPoint("RIGHT", foot[index - 1], "LEFT", -6, 0)
+            room = room + 6
+        end
+        -- A button grows to fit a long label, so measure what is shown.
+        room = room + (button:GetWidth() or ERRAND_WIDTH)
+    end
+    self.errandRoom = room > 0 and room or nil
 end
 
 --------------------------------------------------------------------------------
