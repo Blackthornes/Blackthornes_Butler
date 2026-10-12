@@ -15,6 +15,12 @@ the thanks line: `python tools/make_whatsnew.py` writes them into
 Core/WhatsNewText.lua for the in-game What's New window. Run it after
 writing a section; the release check refuses a tag while it is behind.
 
+## 0.4.0
+
+- Fill mail, Sell and the bank buttons now sit right on the line they work on.
+- Gold top-ups and mailed upgrades are only counted once the mail really goes.
+- Fixes for selling, soulbound gear and the All characters list.
+
 ## 0.3.0
 
 - A new What's New window shows what changed after each update.

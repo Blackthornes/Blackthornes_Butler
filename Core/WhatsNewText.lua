@@ -5,6 +5,11 @@
 local _, ns = ...
 
 ns.WHATS_NEW = {
+    { version = "0.4.0", lines = {
+        "Fill mail, Sell and the bank buttons now sit right on the line they work on.",
+        "Gold top-ups and mailed upgrades are only counted once the mail really goes.",
+        "Fixes for selling, soulbound gear and the All characters list.",
+    } },
     { version = "0.3.0", lines = {
         "A new What's New window shows what changed after each update.",
         "Ready transmutes and other cooldowns show up in your Jobs list.",
@@ -19,12 +24,5 @@ ns.WHATS_NEW = {
         "Hover any item to see which of your characters have it.",
         "Hunters get a Fill button for ammo at the vendor.",
         "Butler learns from what you do, shows your free bag space, and says \"You rang?\" when you open it.",
-    } },
-    { version = "0.1.0", lines = {
-        "Meet Butler! It looks at every item in your bags and tells you what to do with it: sell it, post it, disenchant it, mail it to an alt, bank it or keep it.",
-        "Open it at any vendor and press Sell to clear out the junk. Nothing gets sold unless you click.",
-        "Pick an amount, and anything worth less goes on the sell list.",
-        "See every item on all your characters in one list.",
-        "At the mailbox, it fills in a letter with what your alts need.",
     } },
 }
