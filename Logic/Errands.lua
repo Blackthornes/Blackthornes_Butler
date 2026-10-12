@@ -327,6 +327,20 @@ function Errands:TellTradeskills(shown)
     if butler then pcall(butler.Mailbox, butler, covered) end
 end
 
+--- Do two names name the same character? Case and spacing aside.
+function Errands.SameName(a, b)
+    local fa, fb = Fold(a), Fold(b)
+    return fa ~= nil and fa == fb
+end
+
+--- The mail for one character, filled already or not, or nil.
+function Errands:RecipientFor(to)
+    for _, recipient in ipairs(self:Recipients()) do
+        if Errands.SameName(recipient.to, to) then return recipient end
+    end
+    return nil
+end
+
 --- The next character to fill a mail for on this visit, or nil.
 function Errands:NextRecipient()
     for _, recipient in ipairs(self:Recipients()) do
@@ -337,9 +351,10 @@ end
 
 Errands.filled = {}
 
---- Fill the Send Mail page for the next character. Returns true when it
---- started, or false and why.
-function Errands:FillMail()
+--- Fill the Send Mail page for one character (`to`, from the Fill mail
+--- button on its row), or the next one. Returns true when it started, or
+--- false and why.
+function Errands:FillMail(to)
     if not self.mailOpen then return false, L["Open a mailbox first."] end
     if InCombat() then return false, L["Not in combat."] end
     local butler = Errands.Tradeskills("FillMail")
@@ -347,8 +362,15 @@ function Errands:FillMail()
     -- Ask the other addons afresh: an alt's queue may have changed since
     -- the window last asked, and the click must send what it wants now.
     ns.Verdicts:Changed(true)
-    local recipient = self:NextRecipient()
-    if not recipient then return false, L["Nothing left to mail."] end
+    local recipient
+    if to then
+        -- A click on a row fills that character's mail, again if need be.
+        recipient = self:RecipientFor(to)
+        if not recipient then return false, L.Format("Nothing left to mail to %s.", to) end
+    else
+        recipient = self:NextRecipient()
+        if not recipient then return false, L["Nothing left to mail."] end
+    end
 
     -- The last guard before the mail is filled: never the character playing.
     if self:IsMe(recipient.to) then return false, L["That's the character you're on."] end

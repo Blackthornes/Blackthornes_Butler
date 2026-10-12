@@ -56,8 +56,8 @@ L["At a vendor, sells your cheapest grey item from Butler's own code to see whet
 L["Test it"] = "Testen"
 L["MAIL AND BANK"] = "POST UND BANK"
 L["Open at a mailbox"] = "Am Briefkasten öffnen"
-L["The Butler window comes up at every mailbox, in place of Tradeskills' mail panel (close it to get that back). Fill mail at its foot fills the game's Send Mail page for one character a click; you press Send. Needs Blackthornes Tradeskills. Also /bbutler mailbox."] =
-    "Das Butler-Fenster öffnet sich an jedem Briefkasten anstelle der Post-Leiste von Tradeskills (schließ es, um sie zurückzubekommen). Post füllen unten im Fenster füllt die Seite Post verschicken des Spiels für einen Charakter pro Klick; Senden drückst du selbst. Braucht Blackthornes Tradeskills. Auch /bbutler mailbox."
+L["The Butler window comes up at every mailbox, in place of Tradeskills' mail panel (close it to get that back). Fill mail, on the line of each character there is mail for, fills the game's Send Mail page for one character a click; you press Send. Needs Blackthornes Tradeskills. Also /bbutler mailbox."] =
+    "Das Butler-Fenster öffnet sich an jedem Briefkasten anstelle der Post-Leiste von Tradeskills (schließ es, um sie zurückzubekommen). Post füllen in der Zeile jedes Charakters, für den Post da ist, füllt die Seite Post verschicken des Spiels für einen Charakter pro Klick; Senden drückst du selbst. Braucht Blackthornes Tradeskills. Auch /bbutler mailbox."
 L["Fill the next mail"] = "Nächste Post füllen"
 L["After you send a mail Butler filled, it fills the next one straight away, so you only press Send for each character. Also /bbutler fillnext."] =
     "Hast du eine Post verschickt, die Butler gefüllt hat, füllt er gleich die nächste, sodass du für jeden Charakter nur noch Senden drückst. Auch /bbutler fillnext."
@@ -199,6 +199,7 @@ L["item tooltips no longer say which of your characters have it."] =
 -- ======================================================================
 L["Fill mail"] = "Post füllen"
 L["Fills the game's Send Mail page. Check it, then press Send."] = "Füllt die Seite „Brief verschicken“ des Spiels. Sieh sie dir an und klicke dann auf Senden."
+L["Fills the game's Send Mail page for %s. Check it, then press Send."] = "Füllt die Seite „Brief verschicken“ des Spiels für %s. Sieh sie dir an und klicke dann auf Senden."
 L["Move to bank"] = "In die Bank"
 L["Puts your Always bank items in the bank, a stack at a time"] = "Bringt deine Gegenstände von „Immer in die Bank“ in die Bank, einen Stapel nach dem anderen"
 L["Take from bank"] = "Aus der Bank holen"
@@ -379,6 +380,7 @@ L["Open a mailbox first."] = "Öffne zuerst einen Briefkasten."
 L["Not in combat."] = "Nicht im Kampf."
 L["Filling mail needs Blackthornes Tradeskills."] = "Zum Post füllen brauchst du Blackthornes Tradeskills."
 L["Nothing left to mail."] = "Es ist nichts mehr zu verschicken."
+L["Nothing left to mail to %s."] = "Für %s ist nichts mehr zu verschicken."
 L["That's the character you're on."] = "Das ist der Charakter, mit dem du gerade spielst."
 L["Tradeskills could not fill the mail."] = "Tradeskills konnte die Post nicht füllen."
 L["Couldn't fill it: %s."] = "Konnte sie nicht füllen: %s."

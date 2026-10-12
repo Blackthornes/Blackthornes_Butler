@@ -211,7 +211,13 @@ Tradeskills' `UI/QueueMailPanel.lua` reads it.
   character a click (most items first; `Errands.filled` per visit), through
   `_G.BlackthornesTS.Butler:FillMail(name, items)` (Tradeskills'
   `QueueMail:Fill`). Mail rows carry `mailTo` and `mailCount`
-  (`Verdicts:Decide`'s fifth return). The player presses Send; Butler never
+  (`Verdicts:Decide`'s fifth return). The button sits on the first line
+  that mails each character (the owner asked 2026-10-12, as Log out sits on
+  the next character's line): a Jobs mail step, a gold top-up or a Mail
+  row, set by `UI:PlaceMail` each time the lines are built (`UI.fillRows`,
+  the row's own `row.action`, `Errands:FillMail(to)`). Only a character
+  whose lines are all folded away keeps it at the window's foot. The
+  player presses Send; Butler never
   sends, hooks or moves the mail frame. There are no mailbox Take buttons
   (the owner had them removed from Tradeskills; never add them unasked).
   Nothing is ever mailed to the character playing (a player found Fill

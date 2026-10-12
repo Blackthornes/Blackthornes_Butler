@@ -78,12 +78,33 @@ env.Enable(ns)
 
 local UI, Errands = ns.UI, ns.Errands
 
+-- The line carrying a character's Fill mail button, and a click on it.
+local function FillLine(name)
+    for _, line in ipairs(UI.list.data) do
+        if UI.fillRows[line] == name then return line end
+    end
+end
+local function ClickFill(name)
+    name = name or (Errands:NextRecipient() or {}).to
+    UI.RowAction(FillLine(name))
+end
+
 -- The mailbox.
 env.Fire("MAIL_SHOW")
 suite.check("a mailbox brings the window up", UI:IsShown() and UI.openedFor == "mail")
 suite.check("on Your bags", UI.view == "bags")
-suite.check("with Fill mail for the character with the most", UI.mailButton:IsShown()
-    and UI.mailButton.label:GetText() == "Fill mail to Bob", UI.mailButton.label:GetText())
+local bobLine = FillLine("Bob")
+suite.check("Fill mail sits on Bob's first Mail line", bobLine and bobLine.mailTo == "Bob"
+    and bobLine == (function()
+        for _, row in ipairs(UI.list.data) do if row.mailTo == "Bob" then return row end end
+    end)())
+suite.check("and on Ana's", FillLine("Ana") ~= nil and FillLine("Ana").mailTo == "Ana")
+suite.check("once each", (function()
+    local n = 0
+    for _ in pairs(UI.fillRows) do n = n + 1 end
+    return n == 2
+end)())
+suite.check("so the foot has no Fill mail", not UI.mailButton:IsShown())
 suite.check("the footer says who presses Send", UI.footer:GetText():find("You press Send", 1, true) ~= nil)
 suite.check("no bank buttons at a mailbox", not UI.bankButton:IsShown() and not UI.takeButton:IsShown())
 suite.check("Tradeskills' mail panel is told to step aside", mailboxSaid[#mailboxSaid] == true)
@@ -99,7 +120,7 @@ UI:Show("bags")
 UI.openedFor = "mail"
 suite.check("and opening it again covers it", mailboxSaid[#mailboxSaid] == true)
 
-UI.mailButton:GetScript("OnClick")(UI.mailButton)
+ClickFill("Bob")
 local first = filled[1]
 suite.check("a click fills Bob's mail", first and first.name == "Bob")
 local counts = {}
@@ -114,11 +135,11 @@ suite.check("and the row says what stays", oreReason == "Mail 6 to Bob for their
     tostring(oreReason))
 suite.check("own crafts alone still keep it", ns.Verdicts:Kept({ ts = { need = 4 } }) == "keep")
 suite.check("and nothing to spare keeps it", ns.Verdicts:Kept({ ts = { need = 4, mailTo = "Bob", mailCount = 0 } }) == "keep")
-suite.check("then the next character", UI.mailButton.label:GetText() == "Fill mail to Ana", UI.mailButton.label:GetText())
-UI.mailButton:GetScript("OnClick")(UI.mailButton)
+suite.check("then the next character", Errands:NextRecipient().to == "Ana")
+ClickFill("Ana")
 suite.check("the enchanter gets the whole item", filled[2] and filled[2].name == "Ana"
     and filled[2].items[1].itemID == 402 and filled[2].items[1].count == 1)
-suite.check("nobody left: the button goes", not UI.mailButton:IsShown())
+suite.check("nobody left", Errands:NextRecipient() == nil and not UI.mailButton:IsShown())
 local ok, why = Errands:FillMail()
 suite.check("and nothing more is filled", not ok and why == "Nothing left to mail." and #filled == 2)
 
@@ -129,15 +150,14 @@ env.Fire("MAIL_SHOW")
 local before = #filled
 env.Fire("MAIL_SEND_SUCCESS")
 suite.check("a mail sent by hand fills nothing", #filled == before)
-UI.mailButton:GetScript("OnClick")(UI.mailButton)
+ClickFill()
 suite.check("Fill mail fills Bob's", #filled == before + 1 and filled[#filled].name == "Bob")
 env.Fire("MAIL_SEND_SUCCESS")
 suite.check("sending it fills Ana's straight away", #filled == before + 2 and filled[#filled].name == "Ana")
 suite.check("and says so", env.ChatText():find("Sent. Filled a mail to Ana", 1, true) ~= nil)
 env.Fire("MAIL_FAILED")
-suite.check("a mail that fails can be filled again", UI.mailButton:IsShown()
-    and UI.mailButton.label:GetText() == "Fill mail to Ana", UI.mailButton.label:GetText())
-UI.mailButton:GetScript("OnClick")(UI.mailButton)
+suite.check("a mail that fails can be filled again", Errands:NextRecipient().to == "Ana")
+ClickFill()
 env.Fire("MAIL_SEND_SUCCESS")
 suite.check("the last one sent: nothing more to fill", #filled == before + 3)
 suite.check("and Butler says that's all", env.ChatText():find("That's all the mail for now.", 1, true) ~= nil)
@@ -145,7 +165,7 @@ env.Fire("MAIL_CLOSED")
 env.Fire("MAIL_SHOW")
 ns.HandleSlash("fillnext")
 suite.check("/bbutler fillnext turns it off", ns.db.fillNext == false)
-UI.mailButton:GetScript("OnClick")(UI.mailButton)
+ClickFill()
 before = #filled
 env.Fire("MAIL_SEND_SUCCESS")
 suite.check("off, a Send fills nothing more", #filled == before)
@@ -177,7 +197,21 @@ Close()
 
 -- A new visit starts again from the first character.
 env.Fire("MAIL_SHOW")
-suite.check("a new visit starts again", UI.mailButton.label:GetText() == "Fill mail to Bob")
+suite.check("a new visit starts again", Errands:NextRecipient().to == "Bob")
+
+-- With the Mail group folded, Fill mail goes back to the window's foot.
+UI:Folded().mail = true
+UI:Refresh(true)
+suite.check("folded away, the foot fills Bob's", UI.mailButton:IsShown()
+    and UI.mailButton.label:GetText() == "Fill mail to Bob", UI.mailButton.label:GetText())
+local count = #filled
+UI.mailButton:GetScript("OnClick")(UI.mailButton)
+suite.check("and a click there fills it", #filled == count + 1 and filled[#filled].name == "Bob")
+suite.check("then Ana's", UI.mailButton.label:GetText() == "Fill mail to Ana", UI.mailButton.label:GetText())
+UI:Folded().mail = nil
+UI:Refresh(true)
+ClickFill("Bob")
+suite.check("a row's button fills that character again", #filled == count + 2 and filled[#filled].name == "Bob")
 env.Fire("MAIL_CLOSED")
 
 -- Without Tradeskills' FillMail.
