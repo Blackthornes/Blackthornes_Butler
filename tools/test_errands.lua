@@ -245,11 +245,6 @@ suite.check("with Move to bank", UI.bankButton:IsShown() and UI.bankButton.label
     UI.bankButton.label:GetText())
 suite.check("and Take from bank", UI.takeButton:IsShown())
 suite.check("no Fill mail at the bank", not UI.mailButton:IsShown())
-local bankLine = UI:HeaderRow("bank")
-suite.check("Move to bank sits on the Bank line", bankLine ~= nil and UI.bankButton._point[2] == bankLine
-    and UI.bankButton._point[4] == -UI.LINE_BUTTON_RIGHT)
-suite.check("Take from bank waits at the foot with no Jobs line", UI.takeButton._point[1] == "BOTTOMRIGHT"
-    and UI.errandRoom ~= nil)
 
 UI.bankButton:GetScript("OnClick")(UI.bankButton)
 suite.check("the ore went to the bank", fake.bags[0][4] == nil and used[#used] == "0:4")

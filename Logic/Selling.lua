@@ -273,11 +273,6 @@ end
 function Selling:Place()
     local button, window = self.button, ns.UI and ns.UI.frame
     if not (button and window) or InCombat() then return false end
-    -- On the Sell group's line while it is on screen (the owner asked
-    -- 2026-10-12), else at the window's foot.
-    local row = ns.UI:HeaderRow("sell")
-    self.onLine = row ~= nil and ns.UI.PlaceOnLine(button, row)
-    if self.onLine then return true end
     local right, bottom = window:GetRight(), window:GetBottom()
     if not (right and bottom) then return false end
     -- Drawn at the window's size (its grip makes it bigger or smaller), so
@@ -314,7 +309,7 @@ function Selling:Update()
         return
     end
     button:Show()
-    ns.UI:SellShown(true, not self.onLine and button:GetWidth() or nil)
+    ns.UI:SellShown(true, button:GetWidth())
 end
 
 --------------------------------------------------------------------------------

@@ -36,29 +36,6 @@ suite.check("in a layer above the window, so the window never covers it",
 suite.check("which names the stack it sells", button.label:GetText() == "Sell Junk 1", button.label:GetText())
 suite.check("and the version label makes room", not UI.versionLabel:IsShown())
 
--- On the Sell line while it is on screen (the owner asked 2026-10-12: the
--- buttons go by the action they take).
-local realRows = UI.list.rows
-local function Line(verdict, shown)
-    return { data = { type = "header", group = { verdict = verdict } },
-        IsShown = function() return shown ~= false end,
-        GetRight = function() return 700 end, GetTop = function() return 500 end,
-        GetBottom = function() return 470 end, GetEffectiveScale = function() return 1 end }
-end
-UI.list.rows = { Line("jobs"), Line("sell") }
-Selling:Update()
-local onLine = button._point
-suite.check("the Sell button sits on the Sell line", button:IsShown() and onLine[1] == "RIGHT"
-    and onLine[4] == 700 - UI.LINE_BUTTON_RIGHT and onLine[5] == 485,
-    tostring(onLine[4]) .. "," .. tostring(onLine[5]))
-suite.check("and leaves the foot to the words", UI.sellRoom == nil and UI.versionLabel:IsShown())
-UI.list.rows = { Line("jobs"), Line("sell", false) }
-Selling:Update()
-suite.check("its line scrolled away, it waits at the foot", button:IsShown()
-    and button._point[1] == "BOTTOMRIGHT" and UI.sellRoom ~= nil)
-UI.list.rows = realRows
-Selling:Update()
-
 -- A click: the secure button gets one /use line, set just before.
 button:GetScript("PreClick")(button)
 suite.check("one stack a click, through a /use line", button:GetAttribute("type") == "macro"

@@ -78,23 +78,6 @@ ns.Selling:Update()
 local button = Disenchanting.button
 suite.check("the Disenchant button shows", button and button:IsShown())
 suite.check("placed by screen position", button._point[2] == UIParent)
--- On the Disenchant line while it is on screen (the owner, 2026-10-12).
-local realRows = UI.list.rows
-local function Line(verdict, shown)
-    return { data = { type = "header", group = { verdict = verdict } },
-        IsShown = function() return shown ~= false end,
-        GetRight = function() return 700 end, GetTop = function() return 300 end,
-        GetBottom = function() return 270 end, GetEffectiveScale = function() return 1 end }
-end
-UI.list.rows = { Line("sell"), Line("disenchant") }
-ns.Selling:Update()
-suite.check("it sits on the Disenchant line", button:IsShown() and button._point[1] == "RIGHT"
-    and button._point[4] == 700 - UI.LINE_BUTTON_RIGHT and button._point[5] == 285)
-UI.list.rows = { Line("disenchant", false) }
-ns.Selling:Update()
-suite.check("its line out of sight, at the foot", button:IsShown() and button._point[1] == "BOTTOMRIGHT")
-UI.list.rows = realRows
-ns.Selling:Update()
 suite.check("it counts what is left", button.label:GetText() == "Disenchant (3 left)", button.label:GetText())
 suite.check("nothing aimed before a click", button:GetAttribute("target-bag") == nil)
 button:GetScript("PreClick")(button)

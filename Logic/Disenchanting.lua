@@ -198,13 +198,6 @@ function Disenchanting:Update(room)
     button:SetText(text)
     button.tooltipText = tip
 
-    -- On the Disenchant group's line while it is on screen (the owner
-    -- asked 2026-10-12), else at the window's foot.
-    local row = ns.UI:HeaderRow("disenchant")
-    if row and ns.UI.PlaceOnLine(button, row) then
-        button:Show()
-        return 0
-    end
     local right, bottom = window:GetRight(), window:GetBottom()
     if not (right and bottom) then
         button:Hide()
