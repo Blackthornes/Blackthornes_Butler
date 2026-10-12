@@ -723,6 +723,18 @@ function UI:BuildMenu()
     menu.mail:SetPoint("TOPLEFT", menu.bank, "BOTTOMLEFT", 0, -4)
     menu.decide = Widgets.CreateButton(menu, "Let Butler decide", function() Pick(nil) end,
         { width = MENU_WIDTH - 16, height = 20 })
+    -- An alt's upgrade under Mail: hold this one back from them, or every
+    -- upgrade (the owner asked 2026-10-12). Undone in Settings.
+    menu.hold = Widgets.CreateButton(menu, "Don't mail this", function()
+        local data = UI.menu.data
+        UI:HideMenu()
+        if data and data.mailTo then ns.Verdicts:HoldUpgrade(data.itemID, data.mailTo, true) end
+    end, { width = MENU_WIDTH - 16, height = 20 })
+    menu.holdAll = Widgets.CreateButton(menu, "Never mail upgrades", function()
+        local data = UI.menu.data
+        UI:HideMenu()
+        if data and data.mailTo then ns.Verdicts:HoldAllUpgrades(data.mailTo, true) end
+    end, { width = MENU_WIDTH - 16, height = 20 })
 
     -- The characters page: one button a character, made as needed, and Back.
     menu.characters = {}
@@ -780,6 +792,18 @@ function UI:ShowMenu(data, stay)
     menu.mail:SetPoint("TOPLEFT", canMark and menu.bought or menu.bank, "BOTTOMLEFT", 0, -4)
 
     local last = canMail and menu.mail or (canMark and menu.bought or menu.bank)
+    local upgradeTo = data.upgrade and type(data.mailTo) == "string" and data.mailTo or nil
+    menu.hold:SetShown(upgradeTo ~= nil)
+    menu.holdAll:SetShown(upgradeTo ~= nil)
+    if upgradeTo then
+        menu.hold:SetText(("Don't mail this to %s"):format(upgradeTo))
+        menu.holdAll:SetText(("Never mail upgrades to %s"):format(upgradeTo))
+        menu.hold:ClearAllPoints()
+        menu.hold:SetPoint("TOPLEFT", last, "BOTTOMLEFT", 0, -4)
+        menu.holdAll:ClearAllPoints()
+        menu.holdAll:SetPoint("TOPLEFT", menu.hold, "BOTTOMLEFT", 0, -4)
+        last = menu.holdAll
+    end
     menu.decide:ClearAllPoints()
     menu.decide:SetPoint("TOPLEFT", last, "BOTTOMLEFT", 0, -4)
     -- Also there for what Butler learned from the player (a buyback, a
@@ -789,9 +813,10 @@ function UI:ShowMenu(data, stay)
     menu.decide:SetShown(decides)
     menu.decide:SetText(learned and "Forget what Butler learned" or "Let Butler decide")
 
-    local rows = 3 + (canMark and 1 or 0) + (canMail and 1 or 0) + (decides and 1 or 0)
+    local rows = 3 + (canMark and 1 or 0) + (canMail and 1 or 0) + (upgradeTo and 2 or 0) + (decides and 1 or 0)
     menu:SetHeight(30 + rows * MENU_ROW)
-    UI.FitMenu(menu, { menu.keep, menu.sell, menu.bank, menu.bought, menu.mail, menu.decide })
+    UI.FitMenu(menu, { menu.keep, menu.sell, menu.bank, menu.bought, menu.mail,
+        menu.hold, menu.holdAll, menu.decide })
 
     if stay and menu:IsShown() then return end
     local x, y = 0, 0
@@ -836,6 +861,8 @@ function UI:ShowMailMenu()
     menu.bank:Hide()
     menu.mail:Hide()
     menu.bought:Hide()
+    menu.hold:Hide()
+    menu.holdAll:Hide()
     menu.decide:Hide()
 
     local above

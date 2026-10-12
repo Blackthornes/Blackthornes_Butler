@@ -25,7 +25,8 @@ from vendor prices and the game's own quest marks.
     disenchant them.
   - **Mail**: items an alt needs for their crafts (only what your own
     crafts can spare), gear that's an upgrade for another of your
-    characters, or that your enchanter alt should disenchant.
+    characters, or that your enchanter alt should disenchant. Right-click
+    an upgrade to stop mailing that item, or any upgrade, to that character.
   - **Look at it**: everything Butler can't judge yet, with what a vendor
     pays. Soulbound green or better gear never goes under Sell.
   - **Keep**: quest items, upgrades and tools, what your Farmer goals and
@@ -138,6 +139,7 @@ inside it. If they differ, the client ignores the folder and says nothing.
 /bbutler bank      turn the window coming up at the bank on or off
 /bbutler selltest  at a vendor, sell your cheapest grey to test whether Butler may sell 12 a click
 /bbutler lists     show your Always keep, sell, bank and mail lists
+/bbutler upgrademail   list upgrades you hold back from your characters (upgrademail undo Full Name to mail them again)
 /bbutler reset confirm   empty all three lists (typed only)
 ```
 
