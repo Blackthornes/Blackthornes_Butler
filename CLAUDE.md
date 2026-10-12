@@ -241,6 +241,16 @@ Tradeskills' `UI/QueueMailPanel.lua` reads it.
   (account wide, never rename it) and not offered again to that
   character for 30 days (`Verdicts.MAILED_KEEP`, when unclaimed mail goes
   back). Tested in `tools/test_altupgrade.lua`.
+- **Holding an upgrade back** (the owner asked 2026-10-12): right-click a
+  Mail upgrade row (`row.upgrade`) for "Don't mail this to NAME"
+  (`Verdicts:HoldUpgrade`, `noUpgradeMail[itemID][name] = true`) or
+  "Never mail upgrades to NAME" (`HoldAllUpgrades`, `noUpgradesFor[name]
+  = true`), account wide by full name; never rename either. The alt
+  branch skips a held item (`Verdicts:UpgradeHeld`), so it gets its next
+  verdict and Fill mail leaves it. Settings > Selling > Upgrades for your
+  characters picks a character, ticks Mail them upgrades and has Undo for
+  its held items; `/bbutler upgrademail` lists them and `upgrademail undo
+  NAME` undoes both. Tested in `tools/test_holdupgrade.lua`.
 - **Fill the next mail** (the owner's goal, 2026-10-11: do the work for
   the player): once a mail Butler filled goes (`MAIL_SEND_SUCCESS`, with
   `Errands.sending` set by `FillMail`), `Errands:Sent` waits

@@ -352,7 +352,7 @@ function Verdicts:Kept(said, entry, noAlt)
     if type(alt) == "table" and not noAlt and not (entry and entry.bound) then
         local to = ns.Errands and ns.Errands.NameOf and ns.Errands:NameOf(alt.key)
         local wanted = to and Verdicts:UpgradeWanted(entry.itemID, to) or 0
-        if to and not Verdicts:IsMe(to) and wanted > 0 then
+        if to and not Verdicts:IsMe(to) and wanted > 0 and not Verdicts:UpgradeHeld(entry.itemID, to) then
             local gain = Number(alt, "gain")
             local level = Number(alt, "level")
             local reason = gain and ("An upgrade for %s (+%d%%)"):format(to, gain)
@@ -404,6 +404,80 @@ function Verdicts:UpgradeWanted(itemID, to)
         wants = wants - (tonumber(sent.count) or 0)
     end
     return math.max(0, wants)
+end
+
+-- The player can hold an upgrade back from an alt (the owner asked
+-- 2026-10-12): one item (`noUpgradeMail[itemID][name] = true`) or every
+-- upgrade (`noUpgradesFor[name] = true`), account wide, by full name.
+-- Held back, the item gets its next verdict and Fill mail leaves it.
+-- Never rename these keys.
+
+--- True when the player said not to mail `itemID` to `to` as an upgrade.
+function Verdicts:UpgradeHeld(itemID, to)
+    if type(to) ~= "string" then return false end
+    if List("noUpgradesFor")[to] then return true end
+    local held = List("noUpgradeMail")[itemID]
+    return type(held) == "table" and held[to] == true
+end
+
+--- Hold `itemID` back from `to` (`held` true), or let it go to them again.
+function Verdicts:HoldUpgrade(itemID, to, held)
+    if not itemID or type(to) ~= "string" or to == "" then return end
+    local list = List("noUpgradeMail")
+    local names = type(list[itemID]) == "table" and list[itemID] or {}
+    names[to] = held and true or nil
+    list[itemID] = next(names) and names or nil
+    self:Changed(true)
+end
+
+--- Stop (`held` true) or start again mailing every upgrade to `to`.
+function Verdicts:HoldAllUpgrades(to, held)
+    if type(to) ~= "string" or to == "" then return end
+    List("noUpgradesFor")[to] = held and true or nil
+    self:Changed(true)
+end
+
+--- The items held back from `to` one by one, as item IDs in order.
+function Verdicts:HeldItems(to)
+    local ids = {}
+    for itemID, names in pairs(List("noUpgradeMail")) do
+        if type(names) == "table" and names[to] then ids[#ids + 1] = itemID end
+    end
+    table.sort(ids)
+    return ids
+end
+
+--- Everyone with an upgrade held back, by full name in order.
+function Verdicts:HeldNames()
+    local seen, names = {}, {}
+    local function Add(name)
+        if type(name) == "string" and not seen[name] then
+            seen[name] = true
+            names[#names + 1] = name
+        end
+    end
+    for name in pairs(List("noUpgradesFor")) do Add(name) end
+    for _, held in pairs(List("noUpgradeMail")) do
+        if type(held) == "table" then
+            for name in pairs(held) do Add(name) end
+        end
+    end
+    table.sort(names)
+    return names
+end
+
+--- Undo both kinds for `to`: every upgrade goes to them again.
+function Verdicts:UnholdUpgrades(to)
+    if type(to) ~= "string" then return end
+    List("noUpgradesFor")[to] = nil
+    local list = List("noUpgradeMail")
+    for itemID, names in pairs(list) do
+        if type(names) == "table" then
+            names[to] = nil
+            if not next(names) then list[itemID] = nil end
+        end
+    end
+    self:Changed(true)
 end
 
 --- A mail Butler filled went: write down the alt upgrades in it
@@ -757,6 +831,49 @@ ns.RegisterCommand("lists", "show your Always keep, Always sell, Always bank and
     PrintList("alwaysBank", "Always bank")
     PrintList("alwaysMail", "Always mail")
     if ns.Learning then ns.Learning:PrintLearned() end
+end)
+
+local function ItemName(itemID)
+    local itemName, link = Items.Call({ "C_Item.GetItemInfo", "GetItemInfo" }, itemID)
+    if not itemName then Items:RequestLoad(itemID) end
+    return link or itemName or ("item " .. itemID)
+end
+
+-- Upgrades held back from a character (right-click a Mail upgrade row).
+-- Undo lets them go again; nothing else is deleted.
+ns.RegisterCommand("upgrademail", "list upgrades you hold back from your characters (upgrademail undo Full Name to mail them again)", function(rest)
+    rest = (rest or ""):match("^%s*(.-)%s*$")
+    local name = rest:match("^undo%s+(.+)$")
+    if name then
+        if ns.Errands and ns.Errands.FullName then name = ns.Errands:FullName(name) end
+        local known = false
+        for _, held in ipairs(Verdicts:HeldNames()) do
+            if held == name then known = true end
+        end
+        if not known then
+            ns.Print(("nothing is held back from %s."):format(name))
+            return
+        end
+        Verdicts:UnholdUpgrades(name)
+        ns.Print(("upgrades go to %s again."):format(name))
+        return
+    end
+    local names = Verdicts:HeldNames()
+    if #names == 0 then
+        ns.Print("every upgrade goes to your characters. Right-click an upgrade under Mail to hold it back.")
+        return
+    end
+    ns.Print("upgrades you hold back (type /bbutler upgrademail undo Full Name to mail them again)")
+    for _, who in ipairs(names) do
+        if List("noUpgradesFor")[who] then
+            ns.PrintRaw(("  |c%s%s:|r no upgrades"):format(ns.COLORS.muted, who))
+        end
+        local items = {}
+        for _, itemID in ipairs(Verdicts:HeldItems(who)) do items[#items + 1] = ItemName(itemID) end
+        if #items > 0 then
+            ns.PrintRaw(("  |c%s%s (%d):|r %s"):format(ns.COLORS.muted, who, #items, table.concat(items, ", ")))
+        end
+    end
 end)
 
 ns.RegisterCommand("vendor", "turn the Butler window coming up at a vendor on or off", function()

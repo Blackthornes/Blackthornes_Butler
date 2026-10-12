@@ -275,6 +275,18 @@ function SettingsUI:SyncGoldFor()
     controls.goldUsual:SetShown(own ~= nil)
 end
 
+--- The picked character's upgrade mail: the tick, and Undo with how many
+--- items are held back (dim with none).
+function SettingsUI:SyncHeld()
+    local controls = self.controls
+    if not (controls and controls.heldPick) then return end
+    local name = controls.heldPick:GetName()
+    controls.heldAll:SetChecked(not (name and (ns.db.noUpgradesFor or {})[name]))
+    local count = name and #ns.Verdicts:HeldItems(name) or 0
+    controls.heldItems:SetText(count > 0 and ("Undo %d"):format(count) or "None")
+    controls.heldItems:SetLabelColor(count == 0 and "dim" or nil)
+end
+
 function SettingsUI:BuildPages()
     local controls = self.controls
     local pages = self.pages
@@ -355,6 +367,41 @@ function SettingsUI:BuildPages()
         "Right-click an item in the Butler window to always keep it, sell it, bank it or mail it to one of your characters. This lists all four in chat, and what Butler learned from you. To empty them, type /bbutler reset confirm. Same as /bbutler lists.",
         "List them", "lists")
     controls.lists = listsButton
+
+    -- Upgrades held back from a character (the owner asked 2026-10-12):
+    -- right-click an upgrade under Mail to hold it back; undone here.
+    pages:Section("selling", 2, "UPGRADES FOR YOUR CHARACTERS")
+
+    local heldRow = pages:Row("selling", 2, "Character",
+        "Pick one of your characters to see what you hold back from them. Right-click an upgrade under Mail to hold back that item, or every upgrade, from the character it was going to.")
+    controls.heldPick = SettingsUI.CharacterPicker(heldRow, CONTROL_X, function()
+        SettingsUI:SyncHeld()
+    end)
+
+    local allRow = pages:Row("selling", 2, "Mail them upgrades",
+        "Untick to stop Butler offering this character any upgrades by mail. Your own Always mail picks still go to them.")
+    controls.heldAll = Widgets.CreateCheckbox(allRow, "On", function(checked)
+        local name = controls.heldPick:GetName()
+        if name then ns.Verdicts:HoldAllUpgrades(name, not checked) end
+    end)
+    controls.heldAll:SetPoint("TOPLEFT", CONTROL_X, -2)
+
+    local itemsRow = pages:Row("selling", 2, "Items held back",
+        "The items you said not to mail to this character. Undo lets them go as upgrades again.")
+    controls.heldItems = Widgets.CreateButton(itemsRow, "Undo", function()
+        local name = controls.heldPick:GetName()
+        if not name then return end
+        for _, itemID in ipairs(ns.Verdicts:HeldItems(name)) do
+            ns.Verdicts:HoldUpgrade(itemID, name, false)
+        end
+        SettingsUI:SyncHeld()
+    end, { width = 100, height = 20 })
+    controls.heldItems:SetPoint("TOPLEFT", CONTROL_X, 0)
+
+    local _, heldButton = CommandRow(pages, "selling", 2, "Everyone held back",
+        "Lists in chat every upgrade you hold back, and from whom. Same as /bbutler upgrademail.",
+        "List them", "upgrademail")
+    controls.heldList = heldButton
 
     -- Gold: the gold fund (the owner asked 2026-10-11). The usual amount on
     -- the left, one character's own on the right. Logic/Funds.lua.
@@ -524,6 +571,17 @@ function SettingsUI:Refresh()
     table.sort(names)
     controls.goldPick:SetNames(names)
     self:SyncGoldFor()
+    local heldNames, seen = {}, {}
+    for _, name in ipairs(ns.Errands:Characters()) do
+        seen[name] = true
+        heldNames[#heldNames + 1] = name
+    end
+    for _, name in ipairs(ns.Verdicts:HeldNames()) do
+        if not seen[name] then heldNames[#heldNames + 1] = name end
+    end
+    table.sort(heldNames)
+    controls.heldPick:SetNames(heldNames)
+    self:SyncHeld()
     controls.textSize:Sync()
     controls.windowStyle:Sync()
     self.pages:Refresh()
