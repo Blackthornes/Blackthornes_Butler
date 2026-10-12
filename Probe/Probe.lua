@@ -151,6 +151,24 @@ local function FirstItem()
     return "backpack empty"
 end
 
+-- How many items the Forever client's game tables give Butler, and for each
+-- bag slot the family the client says beside the one the tables say, so a
+-- report shows whether the two agree (Data/ForeverItems.lua).
+local function ForeverTables()
+    local data = ns.ForeverItems
+    if not data then return "missing" end
+    local prices, bags = 0, 0
+    for _ in pairs(data.SELL or {}) do prices = prices + 1 end
+    for _ in pairs(data.BAGS or {}) do bags = bags + 1 end
+    local parts = { ("%d sell prices, %d bag kinds"):format(prices, bags) }
+    for bag = 1, tonumber(_G.NUM_BAG_SLOTS) or 4 do
+        local live = select(2, ns.Items.Call({ "C_Container.GetContainerNumFreeSlots", "GetContainerNumFreeSlots" }, bag))
+        local ok, text = pcall(function() return tostring(live) end)
+        parts[#parts + 1] = ("bag %d %s/%s"):format(bag, ok and text or "(secret)", tostring(ns.Items.TableBagFamily(bag)))
+    end
+    return table.concat(parts, ", ")
+end
+
 function Probe:Run()
     ns.Print("probe: what this client supports for bags, vendors and mail")
 
@@ -187,6 +205,7 @@ function Probe:Run()
     if ns.FreeSpace then Line("free bag space", ns.FreeSpace:ProbeText()) end
     if ns.WhoHas then Line("who has it", ns.WhoHas:ProbeText()) end
     if ns.Ammo then Line("ammo", ns.Ammo:ProbeText()) end
+    Line("forever tables", ForeverTables())
     if ns.Jobs then Line("jobs", ns.Jobs:ProbeText()) end
 end
 

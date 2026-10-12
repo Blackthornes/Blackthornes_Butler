@@ -80,7 +80,8 @@ function FreeSpace.Read()
                     name = bag == 0 and L["Backpack"] or L.Format("Bag %d", bag)
                 end
                 local entry = { bag = bag, name = name, free = free, total = total }
-                local general = (Number(family) or 0) == 0 and not IsReagentBag(bag)
+                family = Number(family) or ns.Items.TableBagFamily(bag) or 0
+                local general = family == 0 and not IsReagentBag(bag)
                 if general then
                     result.free = result.free + free
                     result.total = result.total + total

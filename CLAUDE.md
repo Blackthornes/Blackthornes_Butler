@@ -332,6 +332,26 @@ out of Sell (step 4b). No setting: it shows only where it can help. Not
 yet seen in game; `/bbutler probe` has an ammo line. Tested in
 `tools/test_ammo.lua`.
 
+## Forever's game tables
+
+The owner asked (2026-10-12) for the Forever client's own game tables to be
+put to use in every addon. Butler's part is `Data/ForeverItems.lua`,
+written by `tools/make_forever_items.py <folder>` from the client's
+ItemSparse table (kept privately in the project's files, never committed;
+rerun it when Forever's build changes, never edit the data by hand). It
+holds only two things: `SELL[itemID]`, what a vendor pays in copper, and
+`BAGS[itemID]`, the bag family of containers that hold only some things
+(quivers, ammo pouches, soul, herb, enchanting, mining and skinning bags).
+The live game always wins: `Items:SellPrice` takes the tooltip, then item
+info, and only for an item the client has not loaded yet answers
+`Items.TableSellPrice` (not kept, so the live price replaces it on
+`GET_ITEM_INFO_RECEIVED`); `Ammo:Bag` and `FreeSpace.Read` read a bag's
+family from the client and fall back to `Items.TableBagFamily(bag)` only
+when it gives none. `/bbutler probe` has a "forever tables" line comparing
+the two for each bag. Never name where the tables were downloaded from;
+say "the Forever client's game tables". Tested in
+`tools/test_foreveritems.lua`.
+
 ## Learning from the player
 
 The owner's goal (2026-10-11): the addons should work "almost like it's
@@ -534,8 +554,7 @@ Farmer. Players are told the language as "Deutsch"; the code names stay
 It copies Pets (itself Equipment's, itself Farmer's) on purpose, so check the
 sisters before inventing a convention:
 
-- **Layout** `Core/ Logic/ UI/ Probe/ tools/ docs/` so far (`Data/` comes
-  when a feature needs it), one module per file through
+- **Layout** `Core/ Data/ Logic/ UI/ Probe/ tools/ docs/`, one module per file through
   `ns.NewModule`, no Ace3 or LibStub. The global is `_G.BlackthornesButler`,
   the commands `/bbutler` and `/butler`, the saved data
   `BlackthornesButlerDB` (account) and `BlackthornesButlerCharDB` (per
