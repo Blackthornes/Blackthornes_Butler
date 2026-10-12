@@ -388,6 +388,8 @@ function UI.UpdateRow(row, data)
 end
 
 function UI.DrawRow(row, data)
+    local openEdge = rawget(row, "openEdge")
+    if openEdge then openEdge:Hide() end
     row.worth:SetTextColor(Theme.Unpack("text"))
     row.reason:SetTextColor(Theme.Unpack("muted"))
     if row.action then row.action:Hide() end
@@ -499,6 +501,19 @@ function UI.UpdateItemRow(row, data)
     row.name:SetText(item.name)
     row.reason:SetText(ns.Everyone.Summary(item))
     row.worth:SetText(tostring(item.total))
+    -- The item opened to show each character is dark gold with a bright
+    -- gold edge down its left, as every list's open row is (the house rule).
+    if data.open then
+        if row.stripe then row.stripe:SetColorTexture(Theme.Unpack("glassActive")) end
+        if not rawget(row, "openEdge") then
+            row.openEdge = row:CreateTexture(nil, "ARTWORK")
+            row.openEdge:SetPoint("TOPLEFT", row, "TOPLEFT", 0, 0)
+            row.openEdge:SetPoint("BOTTOMLEFT", row, "BOTTOMLEFT", 0, 0)
+            row.openEdge:SetWidth(2)
+        end
+        row.openEdge:SetColorTexture(Theme.Unpack("accentHi"))
+        row.openEdge:Show()
+    end
 end
 
 --- One character's share of an opened item, set in under it.
@@ -726,7 +741,11 @@ end
 --- An item in All characters: the item's own tooltip, then who has it.
 function UI:EnterEveryone(data)
     local item = data.item
+    -- Butler lists who has it below, so the who-has-it lines stay off
+    -- this one tooltip (they said it all twice).
+    if ns.WhoHas then ns.WhoHas.quiet = true end
     pcall(GameTooltip.SetHyperlink, GameTooltip, "item:" .. item.itemID)
+    if ns.WhoHas then ns.WhoHas.quiet = nil end
     GameTooltip:AddLine(" ")
     local r, g, b = Theme.Unpack("accent")
     GameTooltip:AddLine(L.Format("Butler: %d on %s", item.total,

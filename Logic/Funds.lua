@@ -289,26 +289,33 @@ end
 -- Watching a filled mail go
 --------------------------------------------------------------------------------
 
---- Fill mail put `amount` in a mail to `name`: when the purse drops by it
---- while the mailbox is open, it went.
+--- Fill mail put `amount` in a mail to `name`: it is written down when
+--- that mail goes (MAIL_SEND_SUCCESS, Errands:Sent calls MailWent).
 function Funds:Filled(name, amount)
     local entry = self:For(name)
     self.waiting = {
-        to = name, amount = amount, purse = Purse(),
+        to = name, amount = amount,
         before = entry and entry.have and (entry.have - (entry.sent or 0)) or nil,
     }
 end
 
-function Funds:MoneyChanged()
+--- The mail Butler filled for `name` went, carrying `money` copper (read
+--- off the form as it was sent; nil when it could not be read). Watching
+--- the purse instead counted gold taken from the inbox against it, and any
+--- spend after an unsent fill as gold sent.
+function Funds:MailWent(name, money)
     local waiting = self.waiting
-    if waiting and waiting.purse then
-        local purse = Purse()
-        if purse and waiting.purse - purse >= waiting.amount then
-            self.waiting = nil
-            self:Sent(waiting.to, waiting.amount, waiting.before)
-            return
-        end
+    self.waiting = nil
+    if not (waiting and waiting.to == name) then return end
+    local amount = waiting.amount
+    if type(money) == "number" then
+        if money < 1 then return end
+        amount = math.min(amount, money)
     end
+    self:Sent(waiting.to, amount, waiting.before)
+end
+
+function Funds:MoneyChanged()
     self.plan = nil
     if self.refreshing then return end
     self.refreshing = true
@@ -323,6 +330,7 @@ end
 function Funds:OnEnable()
     ns.RegisterEvent(self, "PLAYER_MONEY", function() Funds:MoneyChanged() end)
     ns.RegisterEvent(self, "MAIL_CLOSED", function() Funds.waiting = nil end)
+    ns.RegisterEvent(self, "MAIL_FAILED", function() Funds.waiting = nil end)
 end
 
 --------------------------------------------------------------------------------

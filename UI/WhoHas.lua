@@ -194,7 +194,7 @@ end
 
 --- Add the lines under the game's own. Never raises.
 function WhoHas:Decorate(tooltip, data)
-    if not self:Enabled() or not Decorates(tooltip) then return end
+    if self.quiet or not self:Enabled() or not Decorates(tooltip) then return end
     local itemID = WhoHas.ItemID(tooltip, data)
     if not itemID then return end
     local ok = pcall(function()

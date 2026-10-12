@@ -314,9 +314,13 @@ function Everyone:Build(done)
             Everyone.again = false
             return Everyone:Build()
         end
-        local waiters = Everyone.waiters
+        local waiters = Everyone.waiters or {}
         Everyone.waiters = nil
-        for _, fn in ipairs(waiters or {}) do fn() end
+        if Everyone.lateWaiter then
+            waiters[#waiters + 1] = Everyone.lateWaiter
+            Everyone.lateWaiter = nil
+        end
+        for _, fn in ipairs(waiters) do fn() end
     end
 
     local function NameStep()
@@ -356,7 +360,14 @@ end
 
 --- Build the list if it is out of date, then run `done`.
 function Everyone:Fresh(done)
-    if self.building or self:IsStale() then
+    if self.building then
+        -- Wait for the build under way: asking for another made every
+        -- redraw while it ran (a name arriving, a key typed in the search)
+        -- build the whole list a second time. A change it missed is
+        -- caught by IsStale once it ends. One such wait at a time: the
+        -- latest replaces it, so a burst of redraws is one at the end.
+        if done then self.lateWaiter = done end
+    elseif self:IsStale() then
         self:Build(done)
     elseif done then
         done()

@@ -96,9 +96,16 @@ UI.mailButton:GetScript("OnClick")(UI.mailButton)
 suite.check("Ana's items and gold go together", filled[1] and filled[1].name == "Ana Ash"
     and filled[1].money == 10 * G and #filled[1].items == 1)
 
--- 5. The gold leaves the purse: on its way, not offered again.
+-- 5. The purse moving says nothing about the mail: gold taken from the
+-- inbox, or spent, is not counted as sent.
+fake.money = fake.money - 20 * G
+env.Fire("PLAYER_MONEY")
+suite.check("a purse drop alone writes nothing down", ns.db.goldSent == nil or ns.db.goldSent["Ana Ash"] == nil)
+fake.money = fake.money + 20 * G
+-- The mail goes: on its way, not offered again.
 fake.money = fake.money - 10 * G - Funds.POSTAGE
 env.Fire("PLAYER_MONEY")
+env.Fire("MAIL_SEND_SUCCESS")
 suite.check("seen leaving, it is written down", ns.db.goldSent["Ana Ash"]
     and ns.db.goldSent["Ana Ash"][1].amount == 10 * G)
 suite.check("so Ana is not offered it again", Funds:For("Ana Ash") == nil)
