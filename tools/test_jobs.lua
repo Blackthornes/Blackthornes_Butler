@@ -251,6 +251,31 @@ suite.check("then the window stays down", not UI:IsShown())
 env.Fire("PLAYER_ENTERING_WORLD", false, true)
 suite.check("a reload never brings it up", not UI:IsShown())
 
+-- 7b. Profession cooldowns (Tradeskills' "cooldown" steps, 2026-10-12).
+ns.db.jobsAtLogin = true
+UI:Hide()
+local MOON = { name = "Blackthornes Wither", isCurrent = false, steps = {
+    { kind = "cooldown", name = "Mooncloth", craft = "Mooncloth", recipeID = 18560 } } }
+local HERE = { name = "Ana Blackthorne", isCurrent = true, steps = {
+    { kind = "cooldown", name = "Transmute", craft = "Transmute: Arcanite", recipeID = 17187 },
+    { kind = "cooldown", name = "Salt Shaker", itemID = 15846 } } }
+local plan = Fresh({ HERE, MOON })
+suite.check("a ready cooldown is a step here", plan.here and #plan.here.steps == 2)
+suite.check("one on another character is a job to go to", plan.nextJob and plan.nextJob.name == "Blackthornes Wither")
+local title, detail = Jobs.StepText(plan.here.steps[1])
+suite.check("says it is ready", title == "Transmute is ready", title)
+suite.check("and what to make", detail:find("Transmute: Arcanite", 1, true) ~= nil, detail)
+suite.check("the other's line says so", Jobs.Summary(plan.nextJob):find("Mooncloth", 1, true) ~= nil,
+    Jobs.Summary(plan.nextJob))
+crafted = {}
+craftAnswer = { true, "crafting" }
+suite.check("Craft makes a ready transmute", Jobs:Craft(plan.here.steps[1]) == true and crafted[1] == 17187)
+suite.check("an item's cooldown has no Craft", Jobs:Craft(plan.here.steps[2]) == false and #crafted == 1)
+local _, itemDetail = Jobs.StepText(plan.here.steps[2])
+suite.check("an item's says to use it", itemDetail:find("bags", 1, true) ~= nil, itemDetail)
+suite.check("a cooldown without a name is left out",
+    #Jobs.Clean({ { name = "X", steps = { { kind = "cooldown", recipeID = 1 } } } }) == 0)
+
 -- 8. Wrong shapes and errors.
 local clean = Jobs.Clean({ { name = "X", steps = { { kind = "craft" }, { kind = "mail", to = "Y", items = {} },
     "junk", { kind = "dance" } } }, "junk", { steps = {} } })
