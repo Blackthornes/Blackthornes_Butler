@@ -155,7 +155,8 @@ function Ammo:Bag()
     local last = tonumber(_G.NUM_BAG_SLOTS) or 4
     for bag = 1, last do
         local _, family = Call({ "C_Container.GetContainerNumFreeSlots", "GetContainerNumFreeSlots" }, bag)
-        family = tonumber(family) or 0
+        local ok, read = pcall(function() return tonumber(family) + 0 end)
+        family = (ok and type(read) == "number" and read) or Items.TableBagFamily(bag) or 0
         for holds, kind in pairs(self.BAGS) do
             if math.floor(family / kind.family) % 2 == 1 then
                 local name = Call({ "C_Container.GetBagName", "GetBagName" }, bag)

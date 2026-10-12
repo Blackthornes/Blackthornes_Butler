@@ -21,6 +21,8 @@ Core\Init.lua
 Core\SisterNote.lua
 Core\WhatsNewText.lua
 
+Data\ForeverItems.lua
+
 Logic\Items.lua
 Logic\Bags.lua
 Logic\Sisters.lua

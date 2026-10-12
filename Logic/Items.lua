@@ -1,6 +1,8 @@
 -- Blackthornes Butler -- Logic/Items.lua
 -- What Butler needs to know about one item: what a vendor pays for it, its
--- kind, and its name, plus money in gold, silver and copper.
+-- kind, and its name, plus money in gold, silver and copper. Where the
+-- client has not loaded an item yet, the Forever client's own game tables
+-- (Data/ForeverItems.lua) stand in; the live game always wins.
 --
 -- Every client call is inside a pcall: Forever is a retail engine that hands
 -- out secret values in instances, and a missing call must never stop the
@@ -105,16 +107,47 @@ function Items:SellPrice(itemID)
     local name, _, _, _, _, _, _, _, _, _, sellPrice =
         Items.Call({ "C_Item.GetItemInfo", "GetItemInfo" }, itemID)
     if not name then
+        -- Until the client loads it, the Forever client's own table says
+        -- (Data/ForeverItems.lua). Not kept: the live answer replaces it
+        -- once GET_ITEM_INFO_RECEIVED says the item is here.
         Items:RequestLoad(itemID)
-        return nil
+        return Items.TableSellPrice(itemID)
     end
 
     local fromTooltip = Items.TooltipSellPrice(itemID)
     if fromTooltip then sellPrice = fromTooltip end
-    if type(sellPrice) ~= "number" then sellPrice = 0 end
+    if type(sellPrice) ~= "number" then sellPrice = Items.TableSellPrice(itemID) or 0 end
 
     priceMemo[itemID] = sellPrice
     return sellPrice
+end
+
+--- What the Forever client's game tables say a vendor pays for one, or nil
+--- when they don't say (Data/ForeverItems.lua). Only a stand-in: the item's
+--- tooltip and item info win whenever the client has them.
+function Items.TableSellPrice(itemID)
+    local data = ns.ForeverItems
+    local price = data and data.SELL and itemID and data.SELL[itemID]
+    return type(price) == "number" and price or nil
+end
+
+--------------------------------------------------------------------------------
+-- Bag family
+--------------------------------------------------------------------------------
+
+--- The family of the bag in bag slot `bag` (1 to 4) from the Forever
+--- client's game tables, by the bag's own item: 1 arrows, 2 bullets, 4 soul
+--- shards, 32 herbs and so on, nil for a bag that takes anything or one not
+--- known. Only for when the client's own GetContainerNumFreeSlots gives no
+--- family (a secret value, a call missing).
+function Items.TableBagFamily(bag)
+    local data = ns.ForeverItems
+    if not (data and data.BAGS and type(bag) == "number" and bag > 0) then return nil end
+    local slot = Items.Call({ "C_Container.ContainerIDToInventoryID", "ContainerIDToInventoryID" }, bag)
+    if type(slot) ~= "number" then return nil end
+    local itemID = Items.Call({ "GetInventoryItemID" }, "player", slot)
+    local ok, family = pcall(function() return data.BAGS[tonumber(itemID)] end)
+    return ok and type(family) == "number" and family or nil
 end
 
 --------------------------------------------------------------------------------
