@@ -12,6 +12,17 @@ is the only report that names players. A version with no section here posts
 nothing in #general.
 This file does not ship in the addon.
 
+## 0.2.0
+
+- Butler speaks Deutsch now if your game is in German.
+- Fill mail keeps going: send one and the next one's ready right away.
+- Butler sends your alts the materials they need, and gear that's an upgrade for them. Don't want one sent? Just right-click it.
+- Set how much gold each character should keep, and Butler tops them up by mail.
+- A Jobs list shows what to craft or mail on each character, and who to log in next.
+- Hover any item to see which of your characters have it.
+- Hunters get a Fill button for ammo at the vendor.
+- Butler learns from what you do, shows your free bag space, and says "You rang?" when you open it.
+
 ## 0.1.0
 
 - Meet Butler! It looks at every item in your bags and tells you what to do with it: sell it, post it, disenchant it, mail it to an alt, bank it or keep it.
