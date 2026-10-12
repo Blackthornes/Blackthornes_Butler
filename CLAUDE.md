@@ -407,6 +407,15 @@ any name `Errands:IsMe` knows counts as here, whatever `isCurrent` says,
 and a mail step to the character doing it is dropped (`Jobs.Clean`). A player
 was told to log out for the character they were on, 2026-10-11.
 
+Profession cooldowns (the owner said yes, 2026-10-12): Tradeskills'
+`Jobs()` also gives each character's ready cooldown as a step, `{ kind =
+"cooldown", name (its group, "Transmute"), craft, recipeID or itemID }`
+(its `Logic/Cooldowns.lua`). It counts as a step that can be done now, so
+it can put a character on "Next:" with Log out; a recipe's has a Craft
+button (Tradeskills' `Butler:Craft` makes it once, queued or not, with the
+profession open), an item's (the Salt Shaker) says to use it from the
+bags. Tested in `tools/test_jobs.lua`.
+
 Logging in (`PLAYER_ENTERING_WORLD`'s initial login, `Jobs.LOGIN_DELAY`
 later) on a character with a step brings the window up and says what it is
 ("Jobs at login", `jobsAtLogin`, account wide, on unless unticked, never

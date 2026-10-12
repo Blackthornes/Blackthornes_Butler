@@ -415,7 +415,7 @@ function UI.UpdateJobRow(row, data)
     row.reason:SetText(detail)
     if step.kind == "craft" and not step.ready then row.reason:SetTextColor(Theme.Unpack("accent")) end
     row.worth:SetText("")
-    if step.kind == "craft" and step.ready then
+    if (step.kind == "craft" and step.ready) or (step.kind == "cooldown" and step.recipeID) then
         row.action:SetText(L["Craft"])
         row.action:Show()
     end
@@ -607,8 +607,8 @@ function UI:Enter(row, data)
         local title, detail = ns.Jobs.StepText(step)
         GameTooltip:AddLine(title, Theme.Unpack("accent"))
         GameTooltip:AddLine(detail, 1, 1, 1, true)
-        if step.kind == "craft" then
-            GameTooltip:AddLine(step.ready and L["Craft makes it with your profession open; Tradeskills opens it otherwise."]
+        if step.kind == "craft" or (step.kind == "cooldown" and step.recipeID) then
+            GameTooltip:AddLine((step.ready or step.kind == "cooldown") and L["Craft makes it with your profession open; Tradeskills opens it otherwise."]
                 or L["The Craft button comes once you have the materials."], Theme.Unpack("muted"))
         end
         GameTooltip:Show()
