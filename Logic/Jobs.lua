@@ -119,6 +119,14 @@ local function CleanStep(step)
         if not to or #items == 0 then return nil end
         return { kind = "mail", to = to, items = items, crafts = step.crafts == true,
             forCraft = step.forCraft == true }
+    elseif step.kind == "cooldown" then
+        -- A profession cooldown that is up (a transmute, Mooncloth): Craft
+        -- makes it when it has a recipe; an item (the Salt Shaker) is used
+        -- by hand.
+        local name = Text(step.name)
+        if not name then return nil end
+        return { kind = "cooldown", name = name, craft = Text(step.craft) or name,
+            recipeID = Count(step.recipeID), itemID = Count(step.itemID), ready = true }
     end
     return nil
 end
@@ -179,7 +187,7 @@ end
 --- once it has what it takes.
 function Jobs.Ready(job)
     for _, step in ipairs(job.steps) do
-        if step.kind == "mail" or step.ready then return true end
+        if step.kind == "mail" or step.kind == "cooldown" or step.ready then return true end
     end
     return false
 end
@@ -274,6 +282,14 @@ end
 
 --- A step as a title and a line under it.
 function Jobs.StepText(step)
+    if step.kind == "cooldown" then
+        if step.recipeID then
+            return L.Format("%s is ready", step.name),
+                L.Format("Your %s cooldown is up. Open the profession and click Craft to make %s.", step.name, step.craft)
+        end
+        return L.Format("%s is ready", step.name),
+            L.Format("Your %s cooldown is up. Use it from your bags.", step.name)
+    end
     if step.kind == "mail" then
         local what = Jobs.ItemsText(step.items)
         -- What is in the bank has to come out before Fill mail can see it.
@@ -305,6 +321,9 @@ end
 
 --- A step in one line, for the line about another character.
 function Jobs.Short(step)
+    if step.kind == "cooldown" then
+        return L.Format("use the %s cooldown, it's ready", step.name)
+    end
     if step.kind == "mail" then
         return L.Format("mail %s to %s", Jobs.ItemsText(step.items), step.to)
     end
@@ -330,6 +349,9 @@ end
 
 function Jobs.Icon(step)
     if step.kind == "mail" then return [[Interface\Icons\INV_Letter_15]] end
+    if step.kind == "cooldown" then
+        return ItemIcon(step.itemID) or [[Interface\Icons\INV_Misc_PocketWatch_01]]
+    end
     return ItemIcon(step.itemID) or [[Interface\Icons\Trade_LeatherWorking]]
 end
 
@@ -364,7 +386,7 @@ end
 --- A Craft click on a step: Tradeskills starts it with the profession
 --- open, else opens its Queue tab, where the Open button opens it.
 function Jobs:Craft(step)
-    if not (step and step.kind == "craft") then return false end
+    if not (step and (step.kind == "craft" or (step.kind == "cooldown" and step.recipeID))) then return false end
     if InCombat() then
         ns.Print(L["crafting waits until the fight is over."])
         return false
@@ -374,7 +396,7 @@ function Jobs:Craft(step)
         ns.Print(L["crafting from here needs Blackthornes Tradeskills."])
         return false
     end
-    local name = Jobs.ItemName(step.itemID, step.name)
+    local name = step.kind == "cooldown" and step.craft or Jobs.ItemName(step.itemID, step.name)
     local ok, done, why = pcall(ts.Craft, ts, step.recipeID)
     if not ok then
         ns.Print(L.Format("couldn't start %s.", name))

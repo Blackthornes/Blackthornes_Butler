@@ -589,3 +589,9 @@ L["Brings up the What's New window the first time you play after a Blackthornes 
 L["Show What's New"] = "Neuigkeiten zeigen"
 L["What's New motion"] = "Bewegung der Neuigkeiten"
 L["The What's New window rises in, and its news slides up and glows. Turning it off here turns it off in all of them."] = "Das Neuigkeiten-Fenster gleitet herein, und seine Neuigkeiten schieben sich hoch und leuchten. Hier ausgeschaltet ist es in allen aus."
+
+-- Profession cooldowns from Tradeskills (Logic/Jobs.lua)
+L["%s is ready"] = "%s ist bereit"
+L["Your %s cooldown is up. Open the profession and click Craft to make %s."] = "Deine Abklingzeit für %s ist vorbei. Öffne den Beruf und klicke auf Herstellen, um %s herzustellen."
+L["Your %s cooldown is up. Use it from your bags."] = "Deine Abklingzeit für %s ist vorbei. Benutze es aus deinen Taschen."
+L["use the %s cooldown, it's ready"] = "nutze die Abklingzeit für %s, sie ist bereit"
