@@ -95,7 +95,9 @@ skipped, and a field of the wrong type counts as not given.
 _G.BlackthornesTS.Butler:Advise(itemID)
   -- { auction (net copper each after the cut and deposit; nil for greys
   --   and bind on pickup), auctionNow (the same at today's cheapest
-  --   listing by someone else, from a fresh scan only), fast (true, false, or nil for middling),
+  --   listing by someone else, from a fresh scan only), belowCost (what
+  --   one costs to make, when Tradeskills won't list it at its price),
+  --   fast (true, false, or nil for middling),
   --   disenchant, canDisenchant, enchanter, need, mailTo, mailCount,
   --   bought (how many the account bought to disenchant), disenchanter
   --   (the disenchanter typed in its Settings, when its Mail page sends
@@ -170,7 +172,11 @@ Tradeskills' `auctionNow` is under `Verdicts.LOW_NOW` (0.85) of `auction`;
 the row keeps its usual worth. The group sits after Look at it and starts
 folded on every character (`UI.FOLDED_AT_FIRST`, `UI.IsFolded`): an
 opened one is saved as `folded.wait = false`. Nothing is sold or deleted.
-Tested in `tools/test_waitprice.lua`. Not yet seen in game.
+It waits too when Tradeskills' Sell list would refuse it as a loss
+(`belowCost`, what one costs to make, set only while "Recommend selling at
+a loss" is off there; a player saw Butler say Auction for a craft
+Tradeskills called a loss, 2026-10-13). A better way (disenchant) still
+wins. Tested in `tools/test_waitprice.lua`. Not yet seen in game.
 
 ## Tradeskills' disenchanter
 
