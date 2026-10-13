@@ -41,6 +41,8 @@ local PAGES = {
       tip = L["A gold fund: how much each of your characters keeps, topped up by mail"] },
     { key = "general", text = L["GENERAL"],
       tip = L["The minimap button, window position, text size and debug output"] },
+    { key = "about", text = L["ABOUT"],
+      tip = L["How these addons are made, the version, the Discord and the other Blackthornes addons"] },
 }
 
 --- Put the settings window back where it started.
@@ -115,6 +117,17 @@ function SettingsUI:Build()
         db = function() return ns.db end,
     })
     self:BuildPages()
+    -- About (UI/About.lua): the note on how the addons are made, then the
+    -- version, the Discord and the other Blackthornes addons.
+    if ns.About then
+        local pages = self.pages
+        pages:Section("about", 1, L["HOW THESE ADDONS ARE MADE"])
+        local note = pages:Place("about", 1, ns.About:Note(pages.pages.about.content, COLUMN_WIDTH))
+        pages:Searchable("about", note, note.words)
+        pages:Section("about", 2, L["ABOUT"])
+        local info = pages:Place("about", 2, ns.About:Info(pages.pages.about.content, COLUMN_WIDTH))
+        pages:Searchable("about", info, info.words)
+    end
     self.pages:Fit()
 
     local footer = Theme.CreateLabel(frame, "tiny", "dim")
