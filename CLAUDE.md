@@ -189,7 +189,11 @@ play: built only while shown, again when `Bags.version` moves or the window
 opens, 300 counts and 40 new names a frame (`Everyone.BUDGET`,
 `NAME_BUDGET`); a name the client has not loaded shows as "Item N", sorts
 last and is filled in by `Everyone:NamesArrived` after `Items:Loaded`'s
-burst. Search filters the built list. The Sell button stays off in this
+burst. Search filters the built list. Your bags has its own box in the same
+place (the owner said yes, 2026-10-13; `UI.bagSearch`, `UI:BagSearch`,
+`UI.RowMatches`): by name or item ID, matches under their groups even when
+folded, the ammo, jobs and gold lines left out while it has words, and
+each view keeps its own words. Tested in `tools/test_bagsearch.lua`. The Sell button stays off in this
 view, and a vendor opens the window on Your bags. Tradeskills'
 `CLAUDE.md` lists `Holdings` under "What Butler calls here"; if it
 changes, change `Logic/Everyone.lua` too. Not yet seen in game.

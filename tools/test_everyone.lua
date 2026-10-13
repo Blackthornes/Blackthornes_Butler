@@ -170,7 +170,7 @@ Everyone:Changed()
 
 -- Back to the bags.
 UI:SetView("bags")
-suite.check("Your bags again", UI.view == "bags" and UI.subtitle:IsShown() and not UI.search:IsShown())
+suite.check("Your bags again, with its own search", UI.view == "bags" and UI.bagSearch:IsShown() and not UI.search:IsShown())
 suite.check("with its own rows", Rows()[1].type == "header")
 ns.HandleSlash("all")
 suite.check("/bbutler all from the bags view switches", UI.view == "all" and UI:IsShown())
