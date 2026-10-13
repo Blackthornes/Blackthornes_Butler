@@ -392,6 +392,33 @@ end
 
 Errands.filled = {}
 
+--- How many bag stacks `count` of an item takes, or nil when the client
+--- has not said how many it stacks to.
+function Errands.Stacks(itemID, count)
+    local stack = select(8, Items.Call({ "C_Item.GetItemInfo", "GetItemInfo" }, itemID))
+    local ok, size = pcall(function() return math.floor(stack + 0) end)
+    if not ok or not size or size < 1 then return nil end
+    return math.ceil((tonumber(count) or 0) / size)
+end
+
+--- Put the items that take the fewest stacks first, in place. A mail holds
+--- 12 stacks and Tradeskills fills it in this order, so a material that
+--- fits in one stack goes in before a fifth stack of herbs: the vials for
+--- an alt's potions were always last (worth the least) and left out
+--- (a player found it, 2026-10-13). The rest goes in the next mail.
+function Errands.FewestStacksFirst(items)
+    local keys = {}
+    for index, item in ipairs(items) do
+        keys[item] = { stacks = Errands.Stacks(item.itemID, item.count) or math.huge, index = index }
+    end
+    table.sort(items, function(a, b)
+        local ka, kb = keys[a], keys[b]
+        if ka.stacks ~= kb.stacks then return ka.stacks < kb.stacks end
+        return ka.index < kb.index
+    end)
+    return items
+end
+
 --- Fill the Send Mail page for one character (`to`, from the Fill mail
 --- button on its row), or the next one. Returns true when it started, or
 --- false and why.
@@ -418,6 +445,7 @@ function Errands:FillMail(to)
 
     local items = {}
     for _, item in ipairs(recipient.items) do items[#items + 1] = { itemID = item.itemID, count = item.count } end
+    Errands.FewestStacksFirst(items)
 
     local ok, started, why, fullName = pcall(butler.FillMail, butler, recipient.to, items, recipient.money)
     if not ok then return false, L["Tradeskills could not fill the mail."] end
@@ -446,6 +474,7 @@ function Errands:Sent()
     self.sending = nil
     local upgrades = self.sendingUpgrades
     self.sendingUpgrades = nil
+    local filledItems = self.sendingItems
     self.sendingItems = nil
     local call = self.sendCall
     self.sendCall = nil
@@ -469,10 +498,14 @@ function Errands:Sent()
         end
         if ns.Funds and ns.Funds.MailWent then ns.Funds:MailWent(was, call and call.money) end
         -- What did not fit in this mail (more than a mail's worth of
-        -- stacks) is offered again for this character.
-        if call and call.ids and self.sendingItems then
-            for _, item in ipairs(self.sendingItems) do
-                if not call.ids[item.itemID] then self.filled[was] = nil end
+        -- stacks) is offered again for this character, so the next mail
+        -- carries the rest.
+        if call and call.ids and filledItems then
+            for _, item in ipairs(filledItems) do
+                local went = call.ids[item.itemID]
+                if not went or (type(went) == "number" and went < (tonumber(item.count) or 0)) then
+                    self.filled[was] = nil
+                end
             end
         end
     elseif ns.Funds then
@@ -507,9 +540,12 @@ function Errands:OnSendMail(recipient, subject)
     local okSubject, said = pcall(function() return (subject or "") .. "" end)
     local ids = {}
     for slot = 1, Errands.ATTACHMENTS do
-        local name, itemID = Items.Call({ "GetSendMailItem" }, slot)
+        local name, itemID, _, count = Items.Call({ "GetSendMailItem" }, slot)
         local okID, id = pcall(function() return itemID + 0 end)
-        if name ~= nil and okID and id then ids[id] = true end
+        if name ~= nil and okID and id then
+            local okCount, units = pcall(function() return count + 0 end)
+            ids[id] = (ids[id] or 0) + ((okCount and units) or 1)
+        end
     end
     local money = tonumber((Items.Call({ "GetSendMailMoney" })))
     self.sendCall = {
