@@ -299,11 +299,11 @@ function Jobs.StepText(step)
         end
         if #banked > 0 then
             return L.Format("Mail to %s", step.to),
-                L.Format("%s. Take %s out of the bank first, then Fill mail at a mailbox puts it in for you.",
+                L.Format("%s. Take %s out of the bank first, then at a mailbox Fill mail adds it.",
                     what, Jobs.ItemsText(banked))
         end
         return L.Format("Mail to %s", step.to),
-            L.Format("%s. At a mailbox, Fill mail puts it in for you.", what)
+            L.Format("%s. At a mailbox, Fill mail adds it.", what)
     end
     local title = L.Format("Craft %s", Amount(step.count, Jobs.ItemName(step.itemID, step.name)))
     local detail
@@ -514,7 +514,7 @@ function Jobs:Greet()
     local plan = self:Plan()
     local first = plan.here and plan.here.steps[1]
     if not first then return end
-    ns.Print(L.Format("a job for you here: %s.", Jobs.Short(first)))
+    ns.Print(L.Format("a job on this character: %s.", Jobs.Short(first)))
     if ns.UI and not ns.UI:IsShown() then ns.UI:Show("bags") end
 end
 

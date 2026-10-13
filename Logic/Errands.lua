@@ -793,7 +793,7 @@ end
 ns.RegisterCommand("mailbox", L["turn the Butler window coming up at a mailbox on or off"], function()
     ns.db.openAtMailbox = not ns.db.openAtMailbox
     ns.Print(ns.db.openAtMailbox and L["the Butler window comes up at every mailbox."]
-        or L["the Butler window no longer comes up at a mailbox by itself."])
+        or L["the Butler window no longer comes up at a mailbox."])
 end)
 
 ns.RegisterCommand("fillnext", L["turn filling the next mail after each Send on or off"], function()
@@ -805,5 +805,5 @@ end)
 ns.RegisterCommand("bank", L["turn the Butler window coming up at the bank on or off"], function()
     ns.db.openAtBank = not ns.db.openAtBank
     ns.Print(ns.db.openAtBank and L["the Butler window comes up at the bank when there is something to move."]
-        or L["the Butler window no longer comes up at the bank by itself."])
+        or L["the Butler window no longer comes up at the bank."])
 end)

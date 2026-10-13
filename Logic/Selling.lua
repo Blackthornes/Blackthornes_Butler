@@ -272,7 +272,7 @@ function Selling:Words()
         and L.Format("Sells what Butler put under Sell: %d stack, %s in all.", count, Items.FormatMoney(worth))
         or L.Format("Sells what Butler put under Sell: %d stacks, %s in all.", count, Items.FormatMoney(worth))
     if self:CanSellBatch() then
-        lines[#lines + 1] = L["Each click sells up to 12. The vendor's Buyback tab keeps the last 12, so every sale of a click can be bought back."]
+        lines[#lines + 1] = L["Each click sells up to 12, and the vendor's Buyback tab keeps the last 12, so you can buy back anything one click sold."]
     else
         lines[#lines + 1] = L["Each click sells one stack. The vendor's Buyback tab keeps the last 12 you sold."]
     end

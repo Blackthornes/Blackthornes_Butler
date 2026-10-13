@@ -299,7 +299,7 @@ function SettingsUI:BuildPages()
     pages:Section("selling", 1, L["AT A VENDOR"])
 
     local vendorRow = pages:Row("selling", 1, L["Open at a vendor"],
-        L["The Butler window comes up by itself at every vendor, and goes when you leave. Nothing sells until you click Sell. Also /bbutler vendor."])
+        L["The Butler window opens at every vendor and closes when you leave. Nothing sells until you click Sell. Also /bbutler vendor."])
     controls.openAtVendor = Widgets.CreateCheckbox(vendorRow, L["On"], function(checked)
         ns.db.openAtVendor = checked
     end, true)
@@ -314,14 +314,14 @@ function SettingsUI:BuildPages()
     pages:Section("selling", 1, L["MAIL AND BANK"])
 
     local mailRow = pages:Row("selling", 1, L["Open at a mailbox"],
-        L["The Butler window comes up at every mailbox, in place of Tradeskills' mail panel (close it to get that back). Fill mail, on the line of each character there is mail for, fills the game's Send Mail page for one character a click; you press Send. Needs Blackthornes Tradeskills. Also /bbutler mailbox."])
+        L["The Butler window opens at every mailbox in place of Tradeskills' mail panel; close it to get the panel back. Fill mail, on each character's line, fills the game's Send Mail page for that character, and you press Send. Needs Blackthornes Tradeskills. Also /bbutler mailbox."])
     controls.openAtMailbox = Widgets.CreateCheckbox(mailRow, L["On"], function(checked)
         ns.db.openAtMailbox = checked
     end, true)
     controls.openAtMailbox:SetPoint("TOPLEFT", CONTROL_X, -2)
 
     local nextRow = pages:Row("selling", 1, L["Fill the next mail"],
-        L["After you send a mail Butler filled, it fills the next one straight away, so you only press Send for each character. Also /bbutler fillnext."])
+        L["After you send a mail Butler filled, it fills the next character's mail. You still press Send each time. Also /bbutler fillnext."])
     controls.fillNext = Widgets.CreateCheckbox(nextRow, L["On"], function(checked)
         ns.db.fillNext = checked
     end, true)
@@ -351,7 +351,7 @@ function SettingsUI:BuildPages()
     pages:Section("selling", 2, L["JUNK"])
 
     local belowRow = pages:Row("selling", 2, L["Sell below"],
-        L["Anything worth less than this goes under Sell, judged on the most it could fetch from a vendor, the auction house or a disenchant. Quest items, upgrades, goal and craft materials, pet food, soulbound green or better gear and your Always keep, bank and mail items are never included, and nothing sells until you click Sell. Needs Blackthornes Tradeskills for auction prices. Leave it at 0 for off. Also /bbutler sellbelow 50s."])
+        L["Anything worth less than this goes under Sell, by the most a vendor, the auction house or a disenchant would give for it. Never quest items, upgrades, goal or craft materials, pet food, soulbound green or better gear, or your Always keep, bank and mail items. Nothing sells until you click Sell. Needs Blackthornes Tradeskills for auction prices. 0 is off. Also /bbutler sellbelow 50s."])
     controls.sellBelow = Widgets.CreateMoneyBox(belowRow, function(copper)
         ns.Verdicts:SetSellBelow(copper)
     end)
@@ -360,7 +360,7 @@ function SettingsUI:BuildPages()
     pages:Section("selling", 2, L["YOUR LISTS"])
 
     local learnRow = pages:Row("selling", 2, L["Learn from what you do"],
-        L["Butler watches what you do anyway and remembers it: buy back something it sold and it keeps it from then on; sell an item yourself at a vendor on two visits and it goes under Sell; mail an item to the same one of your characters twice and it goes under Mail to them. Your own right-click choices always win, and right-click shows Forget what Butler learned. Nothing is sold or sent without your click."])
+        L["Butler learns from what you do. Buy back something it sold and it keeps it from then on. Sell an item yourself at a vendor on two visits and it goes under Sell. Mail an item to the same character twice and it goes under Mail to them. Your own right-click choices always win, and right-click shows Forget what Butler learned. Nothing is sold or sent without your click."])
     controls.learn = Widgets.CreateCheckbox(learnRow, L["On"], function(checked)
         ns.db.learn = checked
         ns.Verdicts:Changed(true)
@@ -419,7 +419,7 @@ function SettingsUI:BuildPages()
     pages:Section("gold", 1, L["GOLD FUND"])
 
     local minRow = pages:Row("gold", 1, L["Keep at least"],
-        L["Every character keeps this much gold. At a mailbox, a character with more is offered a gold mail to each of your characters below it (Fill mail fills it, you press Send), never going below its own amount. Needs Blackthornes Tradeskills, which keeps your characters' gold as last seen. Leave it at 0 for off. Also /bbutler goldmin 50g."])
+        L["Every character keeps this much gold. At a mailbox, a character with more can send gold to each one below it, without dropping under its own amount. Fill mail fills it; you press Send. Needs Blackthornes Tradeskills, which keeps your characters' gold as last seen. 0 is off. Also /bbutler goldmin 50g."])
     controls.goldMinimum = Widgets.CreateMoneyBox(minRow, function(copper)
         ns.Funds:SetMinimum(copper)
     end)
