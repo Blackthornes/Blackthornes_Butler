@@ -445,6 +445,10 @@ L["%s for your crafts is in your mailbox. Take it out before you craft."] =
 L["%s was sent to you and is waiting in your mailbox."] =
     "%s wurde dir geschickt und wartet in deinem Briefkasten."
 L["get %s from the mailbox"] = "hol %s aus dem Briefkasten"
+L["Buy from a vendor"] = "Beim Händler kaufen"
+L["%s for your crafts. At a vendor that sells them, Tradeskills' Buy materials button gets them."] =
+    "%s für deine Herstellungen. Bei einem Händler, der sie verkauft, holt Tradeskills' Knopf „Materialien kaufen“ sie dir."
+L["buy %s from a vendor"] = "%s beim Händler kaufen"
 L["mail %s to %s"] = "%s an %s schicken"
 L["craft %s"] = "%s herstellen"
 L["%s, then mail it to %s"] = "%s, dann an %s schicken"
