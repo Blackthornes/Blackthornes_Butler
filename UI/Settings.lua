@@ -493,6 +493,13 @@ function SettingsUI:BuildPages()
     end, true)
     controls.whoHas:SetPoint("TOPLEFT", CONTROL_X, -2)
 
+    local tipRow = pages:Row("general", 1, L["Butler on tooltips"],
+        L["The last line on the tooltip of an item in your bags says what Butler would do with it (sell, keep, disenchant, mail to one of your characters) and what one is worth. Also /bbutler tooltip."])
+    controls.verdictTip = Widgets.CreateCheckbox(tipRow, L["Show it"], function(checked)
+        if ns.VerdictTip then ns.VerdictTip:SetEnabled(checked) end
+    end, true)
+    controls.verdictTip:SetPoint("TOPLEFT", CONTROL_X, -2)
+
     local voiceRow = pages:Row("general", 1, L["Butler's voice"],
         L["\"You rang?\" when you open the Butler window and \"Now, where was I?\" when you close it, in the voice of Karazhan's butler. Never at a vendor, mailbox, bank or other NPC, and at most once every few minutes. Uses your Dialog volume."])
     controls.voice = Widgets.CreateCheckbox(voiceRow, L["On"], function(checked)
@@ -592,6 +599,7 @@ function SettingsUI:Refresh()
     controls.openAtBank:SetChecked(ns.db.openAtBank ~= false)
     controls.freeSpace:SetChecked(ns.db.freeSpace ~= false)
     controls.whoHas:SetChecked(ns.db.whoHas ~= false)
+    controls.verdictTip:SetChecked(ns.db.verdictTip ~= false)
     controls.voice:SetChecked(ns.db.voice ~= false)
     controls.learn:SetChecked(ns.db.learn ~= false)
     controls.debug:SetChecked(ns.db.debug == true)
