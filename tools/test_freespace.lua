@@ -87,6 +87,37 @@ _G.MainMenuBarBackpackButtonCount = nil
 env.Fire("BAG_UPDATE_DELAYED")
 suite.check("and comes back when it goes", text:GetText() == "3")
 
+-- A game number that is not the free slots (a hunter's ammo) is put out of
+-- sight with SetAlpha, never hidden, and ours stands in for it.
+local alpha
+local gameCount = env.Stub({ _shown = true, _text = "1307" })
+gameCount.SetAlpha = function(_, value) alpha = value end
+_G.MainMenuBarBackpackButtonCount = gameCount
+env.Fire("BAG_UPDATE_DELAYED")
+suite.check("a game number that is not the free slots gives way", text:GetText() == "3", text:GetText())
+suite.check("and is put out of sight with SetAlpha", alpha == 0)
+_G.MainMenuBarBackpackButtonCount = nil
+FreeSpace:Refresh()
+suite.check("and comes back when it goes", alpha == 1)
+
+-- An ammo bag's count sits on its own bag bar button, not the backpack.
+local realBag = ns.Ammo.Bag
+ns.Ammo.Bag = function() return { bag = 3 } end
+_G.CharacterBag2Slot = env.Stub({ _shown = true })
+local realInfo = _G.C_Container.GetContainerItemInfo
+_G.C_Container.GetContainerItemInfo = function(bag, slot)
+    if bag == 3 and slot <= 2 then return { stackCount = 200 } end
+end
+FreeSpace:Refresh()
+suite.check("the ammo count sits on the ammo bag's button", FreeSpace.ammoFrame
+    and FreeSpace.ammoText:GetText() == "400", FreeSpace.ammoText and FreeSpace.ammoText:GetText())
+ns.Ammo.Bag = function() return nil end
+FreeSpace:Refresh()
+suite.check("and goes when there is no ammo bag", FreeSpace.ammoText:GetText() == "")
+ns.Ammo.Bag = realBag
+_G.C_Container.GetContainerItemInfo = realInfo
+_G.CharacterBag2Slot = nil
+
 -- The tooltip lists each bag after the game's lines.
 GameTooltip.GetOwner = function() return _G.MainMenuBarBackpackButton end
 local doubles = {}

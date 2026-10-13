@@ -112,15 +112,44 @@ function FreeSpace:Button()
     return nil
 end
 
---- Is the game already showing its own count on the button?
-function FreeSpace:GameCounts()
+--- The game's own count text on the button, or nil when it shows none.
+function FreeSpace:GameText()
     local count = _G[self.GAME_COUNT]
-    if type(count) ~= "table" then return false end
-    local ok, shown = pcall(function()
+    if type(count) ~= "table" then return nil, nil end
+    local ok, text = pcall(function()
         local text = count:GetText()
-        return count:IsShown() and type(text) == "string" and text ~= ""
+        if count:IsShown() and type(text) == "string" and text ~= "" then return text end
     end)
-    return ok and shown == true
+    if ok and text then return text, count end
+    return nil, count
+end
+
+--- Is the game already showing the free slots on the button? Only a number
+--- that matches ours counts: the game's own count can be something else
+--- (a hunter's ammo, 1307), and then Butler's takes its place.
+function FreeSpace:GameCounts()
+    local text = self:GameText()
+    if not text then return false end
+    local read = self.read
+    if not read then return true end
+    local shown = tonumber(text:match("%d+"))
+    return shown == read.free
+end
+
+--- Put the game's own number out of sight (SetAlpha only, never Hide) while
+--- ours stands in for it, and back as it was when it does not.
+function FreeSpace:VeilGame(on)
+    local _, count = self:GameText()
+    if on then
+        if count and not self.veiled then
+            self.veiled = count
+            pcall(count.SetAlpha, count, 0)
+        end
+    elseif self.veiled then
+        local veiled = self.veiled
+        self.veiled = nil
+        pcall(veiled.SetAlpha, veiled, 1)
+    end
 end
 
 --- Make the number, once, on the backpack button. False on a client with
@@ -169,6 +198,7 @@ function FreeSpace:Draw()
     if self:Enabled() and read and not self:GameCounts() then
         key = read.free .. ":" .. FreeSpace.Level(read.free)
     end
+    self:VeilGame(key ~= nil and self:GameText() ~= nil)
     if key == self.drawn then return end
     self.drawn = key
     if not key then
@@ -199,6 +229,7 @@ function FreeSpace:Refresh()
     self.stale = false
     self.read = FreeSpace.Read()
     self:Draw()
+    self:DrawAmmo()
 end
 
 --- The free slots of each bag, under the game's own tooltip lines.
@@ -225,6 +256,69 @@ function FreeSpace:AddTooltip(owner)
     if not ok then ns.Debug("free space tooltip failed") end
 end
 
+--------------------------------------------------------------------------------
+-- The ammo count, on the quiver or pouch itself
+--------------------------------------------------------------------------------
+
+--- How many pieces of ammo the ammo bag holds, or nil when there is no ammo
+--- bag or the client will not say.
+function FreeSpace.AmmoCount()
+    if not (ns.Ammo and ns.Ammo.Bag) then return nil end
+    local ok, found = pcall(ns.Ammo.Bag, ns.Ammo)
+    if not ok or type(found) ~= "table" or not found.bag then return nil end
+    local total = Number(Call("GetContainerNumSlots", found.bag))
+    if not total then return nil end
+    local sum = 0
+    for slot = 1, total do
+        local info = Call("GetContainerItemInfo", found.bag, slot)
+        local count = type(info) == "table" and Number(info.stackCount)
+        if count then sum = sum + count end
+    end
+    return sum, found.bag
+end
+
+--- The bag bar's button for a bag number (1 to 4), or nil.
+function FreeSpace:BagButton(bag)
+    local button = _G["CharacterBag" .. (bag - 1) .. "Slot"]
+    if type(button) == "table" then return button end
+    return nil
+end
+
+--- Put the ammo number on the ammo bag's button, in the game's stack count
+--- font like the free slots, and take it off when there is none to show.
+function FreeSpace:DrawAmmo()
+    local count, bag = nil, nil
+    if self:Enabled() then count, bag = FreeSpace.AmmoCount() end
+    local button = bag and self:BagButton(bag)
+    if self.ammoFrame and (not button or self.ammoFrame:GetParent() ~= button) then
+        self.ammoText:SetText("")
+        self.ammoDrawn = nil
+    end
+    if not (count and button) then return end
+    local frame = self.ammoFrame
+    if not frame or frame:GetParent() ~= button then
+        frame = frame or CreateFrame("Frame", nil, button)
+        frame:SetParent(button)
+        frame:SetAllPoints(button)
+        frame:EnableMouse(false)
+        pcall(function() frame:SetFrameLevel(button:GetFrameLevel() + 5) end)
+        if not self.ammoText or self.ammoFrame ~= frame then
+            local made, text = pcall(frame.CreateFontString, frame, nil, "OVERLAY", "NumberFontNormal")
+            if not made or not text then text = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal") end
+            text:SetPoint("BOTTOMRIGHT", -3, 3)
+            text:SetJustifyH("RIGHT")
+            self.ammoText = text
+        end
+        self.ammoFrame = frame
+        self.ammoDrawn = nil
+    end
+    local key = tostring(count)
+    if key == self.ammoDrawn then return end
+    self.ammoDrawn = key
+    self.ammoText:SetText(key)
+    self.ammoText:SetTextColor(1, 1, 1)
+end
+
 --- Turn the number on or off (Settings and /bbutler freespace).
 function FreeSpace:SetEnabled(on)
     ns.db.freeSpace = on and true or false
@@ -235,6 +329,7 @@ function FreeSpace:SetEnabled(on)
         if self:Attach() then self:Refresh() end
     else
         self:Draw()
+        self:DrawAmmo()
     end
 end
 
