@@ -309,7 +309,7 @@ function Trash:ShowTooltip(owner)
             GameTooltip:AddLine(row.reason, 0.8, 0.8, 0.8, true)
         end
         GameTooltip:AddLine(" ")
-        GameTooltip:AddLine(L["Click to pick it up. Drop it outside your bags and the game asks before it is destroyed."],
+        GameTooltip:AddLine(L["This is the least valuable item in your bags."],
             0.2, 1, 0.2, true)
         GameTooltip:Show()
     end)
