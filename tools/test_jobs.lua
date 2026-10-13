@@ -242,7 +242,7 @@ UI:Hide()
 jobs = { { name = "Blackthornes Wither", isCurrent = true, steps = WITHER.steps } }
 env.Fire("PLAYER_ENTERING_WORLD", true, false)
 suite.check("a job here brings the window up", UI:IsShown())
-suite.check("and says what it is", env.ChatText():find("a job for you here", 1, true) ~= nil)
+suite.check("and says what it is", env.ChatText():find("a job on this character", 1, true) ~= nil)
 UI:Hide()
 ns.HandleSlash("joblogin")
 suite.check("joblogin turns it off", ns.db.jobsAtLogin == false)

@@ -1013,7 +1013,7 @@ end)
 ns.RegisterCommand("vendor", L["turn the Butler window coming up at a vendor on or off"], function()
     ns.db.openAtVendor = not ns.db.openAtVendor
     ns.Print(ns.db.openAtVendor and L["the Butler window comes up at every vendor."]
-        or L["the Butler window no longer comes up at a vendor by itself."])
+        or L["the Butler window no longer comes up at a vendor."])
 end)
 
 -- Deletes the player's choices, so typed only, with "confirm" (a house

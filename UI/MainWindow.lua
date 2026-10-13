@@ -1162,7 +1162,7 @@ function UI:UpdateFooter()
         text = L.Format("To sell: %s, %s. Open a vendor to sell them.",
             Plural(sell.count, L["item"], L["items"]), Items.FormatMoney(sell.worth))
     else
-        text = L["Nothing to sell right now."]
+        text = L["Nothing to sell."]
     end
     self.footer:SetText(text)
 end
