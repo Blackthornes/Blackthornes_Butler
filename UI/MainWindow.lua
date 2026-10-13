@@ -366,6 +366,13 @@ function UI.RowAction(data)
         ns.Ammo:Buy()
     elseif data.type == "job" then
         ns.Jobs:Craft(data.step)
+    elseif data.type == "train" then
+        local training = ns.ClassTraining
+        if training.trainerOpen and training.atClassTrainer then
+            training:TrainAll()
+        else
+            training:ShowTheWay()
+        end
     end
 end
 
@@ -412,6 +419,9 @@ function UI.DrawRow(row, data)
     if data.type == "gold" then return UI.UpdateGoldRow(row, data) end
     if data.type == "job" then return UI.UpdateJobRow(row, data) end
     if data.type == "jobnext" then return UI.UpdateNextRow(row, data) end
+    if data.type == "train" or data.type == "trainnext" or data.type == "trainalt" then
+        return UI.UpdateTrainRow(row, data)
+    end
 
     if data.type == "header" then
         local group = data.group
@@ -483,6 +493,65 @@ function UI.UpdateNextRow(row, data)
         or data.isNext and L.Format("Next: %s", job.name) or L.Format("Then: %s", job.name))
     row.reason:SetText(ns.Jobs.Summary(job))
     row.worth:SetText("")
+end
+
+--- Class spells to train (Logic/ClassTraining.lua): now, at the next
+--- level, or on another character. The row for now has Show the way, or
+--- Train all at the trainer.
+function UI.UpdateTrainRow(row, data)
+    local training = ns.ClassTraining
+    row.fold:Hide()
+    row.icon:Show()
+    row.name:SetTextColor(Theme.Unpack("text"))
+    if data.type == "train" then
+        local plan = data.plan
+        local count = #plan.ready
+        row.icon:SetTexture(training.Icon(plan.ready[1].entry))
+        row.name:SetText(count == 1 and L["Train 1 new spell"] or L.Format("Train %d new spells", count))
+        local spot = training:Nearest()
+        local where = training.Where(spot)
+        local class = training.Player().className or ""
+        if where then
+            row.reason:SetText(L.Format("%s trainer, %s", class, where))
+        else
+            row.reason:SetText(L.Format("At any %s trainer", class))
+        end
+        row.worth:SetText("")
+        if training.trainerOpen and training.atClassTrainer then
+            row.action:SetText(training.buying and L["Training..."] or L["Train all"])
+            row.action:Show()
+        elseif spot then
+            row.action:SetText(L["Show the way"])
+            row.action:Show()
+        else
+            row.worth:SetText(training.CostText(plan.cost, plan.unknown, count))
+        end
+        return
+    end
+    if data.type == "trainnext" then
+        local plan = data.plan
+        row.icon:SetTexture(training.Icon(plan.next[1].entry))
+        row.name:SetTextColor(Theme.Unpack("muted"))
+        local count = #plan.next
+        row.name:SetText(count == 1 and L.Format("At level %d: 1 more spell", plan.nextLevel)
+            or L.Format("At level %d: %d more spells", plan.nextLevel, count))
+        local names = {}
+        for index = 1, math.min(3, count) do names[index] = training.SpellName(plan.next[index].entry) end
+        local text = table.concat(names, ", ")
+        if count > 3 then text = L.Format("%s and %d more", text, count - 3) end
+        row.reason:SetText(text)
+        row.worth:SetText(training.CostText(plan.nextCost, plan.nextUnknown, count))
+        row.worth:SetTextColor(Theme.Unpack("muted"))
+        return
+    end
+    local other = data.other
+    row.icon:SetTexture([[Interface\Icons\INV_Misc_Book_09]])
+    row.name:SetTextColor(Theme.Unpack("accent"))
+    row.name:SetText(L.Format("Then: %s", other.name or "?"))
+    row.reason:SetText(other.count == 1
+        and L.Format("1 %s spell to train at level %d", other.className or "", other.level or 0)
+        or L.Format("%d %s spells to train at level %d", other.count, other.className or "", other.level or 0))
+    row.worth:SetText(training.CostText(other.cost, other.unknown, other.count))
 end
 
 --- Filling the quiver or ammo pouch: the best ammo the vendor has, how
@@ -725,7 +794,8 @@ function UI:Clicked(data, button)
         self:Refresh(true)
         return
     end
-    if data.type == "ammo" or data.type == "job" or data.type == "jobnext" then return end
+    if data.type == "ammo" or data.type == "job" or data.type == "jobnext"
+        or data.type == "train" or data.type == "trainnext" or data.type == "trainalt" then return end
     if button == "RightButton" and data.type ~= "gold" then
         self:ShowMenu(data)
     end
@@ -766,6 +836,18 @@ function UI:Enter(row, data)
             GameTooltip:AddLine((step.ready or step.kind == "cooldown") and L["Craft makes it with your profession open; Tradeskills opens it otherwise."]
                 or L["The Craft button comes once you have the materials."], Theme.Unpack("muted"))
         end
+        GameTooltip:Show()
+        return
+    end
+    if data.type == "train" or data.type == "trainnext" then
+        return self:EnterTraining(data)
+    end
+    if data.type == "trainalt" then
+        local other = data.other
+        GameTooltip:AddLine(other.name or "", Theme.Unpack("accent"))
+        GameTooltip:AddLine(other.count == 1 and L["1 spell to train, as of when they last played."]
+            or L.Format("%d spells to train, as of when they last played.", other.count), 1, 1, 1, true)
+        GameTooltip:AddLine(ns.ClassTraining.CostText(other.cost, other.unknown, other.count), 1, 1, 1)
         GameTooltip:Show()
         return
     end
@@ -810,6 +892,46 @@ function UI:Enter(row, data)
 end
 
 --- An item in All characters: the item's own tooltip, then who has it.
+--- The training rows' tooltip: each spell and what it costs.
+function UI:EnterTraining(data)
+    local training = ns.ClassTraining
+    local plan = data.plan
+    local list = data.type == "train" and plan.ready or plan.next
+    local count = #list
+    if data.type == "train" then
+        GameTooltip:AddLine(count == 1 and L["Train 1 new spell"] or L.Format("Train %d new spells", count), 1, 1, 1)
+        GameTooltip:AddLine(L.Format("Ready at level %d, from any %s trainer", training.Player().level,
+            training.Player().className or ""), Theme.Unpack("muted"))
+    else
+        GameTooltip:AddLine(L.Format("At level %d", plan.nextLevel), 1, 1, 1)
+    end
+    for _, spell in ipairs(list) do
+        GameTooltip:AddDoubleLine(training.Label(spell.entry),
+            spell.cost and Items.FormatMoney(spell.cost) or L["not priced yet"], 1, 1, 1, 1, 1, 1)
+    end
+    local cost, unknown = training.Sum(list)
+    GameTooltip:AddDoubleLine(L["In all"], training.CostText(cost, unknown, count), 1, 0.82, 0, 1, 1, 1)
+    if unknown > 0 then
+        GameTooltip:AddLine(L["Open a trainer once and Butler keeps every price, for all your characters of this class."],
+            Theme.Unpack("muted"))
+    end
+    if data.type == "train" then
+        local ok, money = pcall(GetMoney)
+        local purse = ok and tonumber(money) or 0
+        if cost > 0 and purse >= cost then
+            GameTooltip:AddLine(L["You have enough gold for them."], 0.31, 0.88, 0.42, true)
+        elseif cost > 0 then
+            GameTooltip:AddLine(L.Format("You're %s short.", Items.FormatMoney(cost - purse)), 1, 0.72, 0.29, true)
+        end
+        if training.trainerOpen and training.atClassTrainer then
+            GameTooltip:AddLine(L["Train all trains them one at a time, the ones you can pay for."], Theme.Unpack("muted"))
+        elseif training:Nearest() then
+            GameTooltip:AddLine(L["Show the way puts a pin on the map to your trainer."], Theme.Unpack("muted"))
+        end
+    end
+    GameTooltip:Show()
+end
+
 function UI:EnterEveryone(data)
     local item = data.item
     -- Butler lists who has it below, so the who-has-it lines stay off
@@ -1088,7 +1210,8 @@ function UI:Refresh(force)
 
     if ns.Ammo then ns.Ammo:Offer() end
     local search = self:BagSearch()
-    local key = ("%d:%d:%d:%d:%s:%s:%s:%s"):format(ns.Bags.version, ns.Verdicts.version,
+    local key = ("%d:%d:%d:%d:%d:%s:%s:%s:%s"):format(ns.ClassTraining and ns.ClassTraining.version or 0,
+        ns.Bags.version, ns.Verdicts.version,
         ns.Funds and ns.Funds.version or 0, ns.Jobs and ns.Jobs.version or 0, tostring(ns.Errands.mailOpen),
         tostring(ns.Selling and ns.Selling.merchantOpen), tostring(ns.Ammo and ns.Ammo.offerKey), search)
     if force or key ~= self.drawnKey then

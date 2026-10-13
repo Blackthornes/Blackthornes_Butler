@@ -523,6 +523,35 @@ Smooth play: Tradeskills is asked only while the window draws the list,
 again only when `Bags.version` or `Jobs.version` (moved as the window
 opens) moves; no timer. Tested in `tools/test_jobs.lua`.
 
+## Class training
+
+The owner said build it (2026-10-13), in Butler and Equipment: which class
+spells the character (and the other characters) can train now and soon,
+and what they cost. `Logic/ClassTraining.lua`, `Data/ClassSpells.lua` and
+`tools/make_class_spells.py` are the same files in both addons (a fix to
+one belongs in both); neither calls the other for it. The data is
+generated from the Forever client's game tables (`make_class_spells.py
+<tables folder> --build <build>`; never edit it by hand, never commit the
+tables): each class's trainable spells with level, rank, races and the rank
+before. Prices, which spells no trainer teaches (a quest does) and where
+the trainer stands are not in the tables: the first look at a class
+trainer's window keeps them, account wide, in `classTrainingData = {
+prices, notTaught, trainers, characters }` (never rename it), reading the
+"unavailable" lines by turning the trainer's filter on and back. Each
+character notes what it can train (`characters[guid]`) for the others.
+"Class training" on the Gold page (`classTraining`, on unless unticked,
+never rename it) and `/bbutler training [on|off]`.
+
+In Butler: the Jobs group leads with "Train N new spells" (Train all at a
+class trainer, one spell every `ClassTraining.GAP`, only what the purse
+pays for; Show the way elsewhere, through TomTom or the game's map pin),
+the next level's spells and a "Then:" line for each other character
+(`Jobs:TrainingLines`, `UI.UpdateTrainRow`). The window comes up at a
+class trainer with something to train (`Jobs:AtTrainer`). The gold fund
+keeps back the playing character's `ReadyCost()` and tops another
+character up by its `Other(guid).cost` (`Funds:Plan`). Tested in
+`tools/test_classtraining.lua`. Not yet seen in game.
+
 ## Sell below
 
 A player asked for anything looted below a value they set to be marked

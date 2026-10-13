@@ -350,6 +350,13 @@ local DEFAULTS = {
     -- window up on its steps (Logic/Jobs.lua, asked 2026-10-11).
     jobsAtLogin = true,
 
+    -- Class spells to train lead the Jobs group, with their cost, Train
+    -- all at the trainer and a word in chat at each level
+    -- (Logic/ClassTraining.lua, the owner said build it 2026-10-13). What
+    -- it learns at trainers is kept in classTrainingData. Never rename
+    -- either.
+    classTraining = true,
+
     -- Also kept here, never renamed (made when first needed, so not given
     -- defaults): alwaysKeep, alwaysSell and alwaysBank ([itemID] = true, the player's
     -- right-click choices), alwaysMail ([itemID] = a character's short name)

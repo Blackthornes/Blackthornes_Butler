@@ -22,6 +22,7 @@ Core\SisterNote.lua
 Core\WhatsNewText.lua
 
 Data\ForeverItems.lua
+Data\ClassSpells.lua
 
 Logic\Items.lua
 Logic\Bags.lua
@@ -50,5 +51,6 @@ Logic\Funds.lua
 Logic\Ammo.lua
 Logic\Learning.lua
 Logic\Jobs.lua
+Logic\ClassTraining.lua
 
 Probe\Probe.lua

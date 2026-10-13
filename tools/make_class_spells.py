@@ -109,8 +109,22 @@ def build(folder):
         if row["DifficultyID"] == "0":
             attributes[num(row["SpellID"])] = num(row["Attributes_0"])
 
+    # Every rank on a class's lines, talents too, so a later rank can name
+    # the one before it (Pyroblast Rank 2 needs the talent's Rank 1).
+    ranks = {}
+    abilities = [row for row in rows(folder, "SkillLineAbility") if row["SkillLine"] in lines]
+    for row in abilities:
+        spell = num(row["Spell"])
+        rank = re.match(r"Rank (\d+)$", subtext.get(spell) or "")
+        mask = num(row["ClassMask"])
+        if rank and names.get(spell):
+            for class_id, token in CLASSES.items():
+                if mask >> (class_id - 1) & 1:
+                    key = (token, names[spell], int(rank.group(1)))
+                    ranks[key] = min(ranks.get(key, spell), spell)
+
     spells = defaultdict(dict)
-    for row in rows(folder, "SkillLineAbility"):
+    for row in abilities:
         if row["SkillLine"] not in lines or row["AcquireMethod"] != "0":
             continue
         spell = num(row["Spell"])
@@ -127,13 +141,15 @@ def build(folder):
         mask = num(row["ClassMask"])
         for class_id, token in CLASSES.items():
             if mask >> (class_id - 1) & 1:
-                spells[token][spell] = (level, int(rank.group(1)) if rank else 0, name, races)
+                number = int(rank.group(1)) if rank else 0
+                before = ranks.get((token, name, number - 1)) if number > 1 else None
+                spells[token][spell] = (level, number, name, races, before)
     # A spell and its own effect can both be listed (Immolation Trap, Touch
     # of Weakness): one name, rank and level is one spell, the first ID.
     for token, listed in spells.items():
         seen = {}
         for spell in sorted(list(listed)):
-            level, rank, name, races = listed[spell]
+            level, rank, name, races, _ = listed[spell]
             key = (name, rank, level)
             if key in seen:
                 del listed[spell]
@@ -153,16 +169,18 @@ def write(spells, out, build_name):
         "",
         "local _, ns = ...",
         "",
-        "-- [CLASS] = { { spell ID, level, rank (0 for none), English name, races or nil }, ... },",
-        "-- by level. `races` lists the race IDs that learn it (a mage's teleports).",
+        "-- [CLASS] = { { spell ID, level, rank (0 for none), English name, races or nil,",
+        "-- the rank before's spell ID }, ... }, by level. `races` lists the race IDs that",
+        "-- learn it (a mage's teleports); the rank before is learned first.",
         "ns.CLASS_SPELLS = {",
     ]
     for token in sorted(spells):
         parts.append(f"    {token} = {{")
         entries = sorted(spells[token].items(), key=lambda item: (item[1][0], item[1][2], item[1][1], item[0]))
-        for spell, (level, rank, name, races) in entries:
+        for spell, (level, rank, name, races, before) in entries:
             races_text = "{ " + ", ".join(str(race) for race in races) + " }" if races else "nil"
-            parts.append(f"        {{ {spell}, {level}, {rank}, {lua_string(name)}, {races_text} }},")
+            tail = f", {before}" if before else ""
+            parts.append(f"        {{ {spell}, {level}, {rank}, {lua_string(name)}, {races_text}{tail} }},")
         parts.append("    },")
     parts.append("}")
     Path(out).write_text("\n".join(parts) + "\n", encoding="utf-8")

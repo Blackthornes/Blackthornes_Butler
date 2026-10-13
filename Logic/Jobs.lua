@@ -397,10 +397,10 @@ end
 --- other character with work, the next one first. Empty with no jobs.
 function Jobs:Lines()
     local plan = self:Plan()
-    local rows = {}
+    local rows = self:TrainingLines()
     -- Nothing here can be done yet: the one who can goes first.
     if plan.goFirst then
-        rows[1] = { type = "jobnext", job = plan.nextJob, isNext = true, isFirst = true }
+        rows[#rows + 1] = { type = "jobnext", job = plan.nextJob, isNext = true, isFirst = true }
     end
     for _, step in ipairs(plan.here and plan.here.steps or {}) do
         rows[#rows + 1] = { type = "job", step = step }
@@ -408,6 +408,28 @@ function Jobs:Lines()
     for index, job in ipairs(plan.others) do
         if not (plan.goFirst and index == 1) then
             rows[#rows + 1] = { type = "jobnext", job = job, isNext = index == 1 }
+        end
+    end
+    return rows
+end
+
+--- Class spells to train lead the group (Logic/ClassTraining.lua): what
+--- can be trained now, what comes at the next level, and a line for each
+--- other character with spells waiting.
+function Jobs:TrainingLines()
+    local training = ns.ClassTraining
+    local rows = {}
+    if not (training and training:IsOn()) then return rows end
+    local plan = training:Plan()
+    if #plan.ready > 0 then
+        rows[#rows + 1] = { type = "train", plan = plan }
+    end
+    if #plan.next > 0 then
+        rows[#rows + 1] = { type = "trainnext", plan = plan }
+    end
+    for _, other in ipairs(training:Others()) do
+        if not (ns.Errands and ns.Errands.IsMe and ns.Errands:IsMe(other.name)) then
+            rows[#rows + 1] = { type = "trainalt", other = other }
         end
     end
     return rows
@@ -588,7 +610,30 @@ end
 -- Events
 --------------------------------------------------------------------------------
 
+--- At a class trainer with spells to train, the window comes up on them
+--- (Train all is on their row) and goes when the trainer closes.
+function Jobs:AtTrainer(open)
+    local ui, training = ns.UI, ns.ClassTraining
+    if not ui then return end
+    if not open then
+        if ui.openedFor == "trainer" then return ui:LeftPlace("trainer") end
+        if ui:IsShown() then ui:Refresh(true) end
+        return
+    end
+    if ui:IsShown() then return ui:Refresh(true) end
+    if not (training:IsOn() and training.atClassTrainer and #training:Plan().ready > 0) then return end
+    ui:Show("bags")
+    ui.openedFor = "trainer"
+end
+
 function Jobs:OnEnable()
+    local training = ns.ClassTraining
+    if training then
+        training.OnChanged = function()
+            if ns.UI and ns.UI.IsShown and ns.UI:IsShown() then ns.UI:Refresh() end
+        end
+        training.OnTrainer = function(open) Jobs:AtTrainer(open) end
+    end
     ns.RegisterEvent(self, "PLAYER_ENTERING_WORLD", function(_, _, isInitialLogin)
         if isInitialLogin and C_Timer and C_Timer.After then
             C_Timer.After(Jobs.LOGIN_DELAY, function() Jobs:Greet() end)
