@@ -310,11 +310,35 @@ function Trash:Take()
     return true
 end
 
---- One line for /bbutler probe.
+--- One line for /bbutler probe: why the can is or is not up right now.
 function Trash:ProbeText()
     local frames = #self:Frames()
+    local shown = #self:ShownFrames()
     local state = self.can and self.can:IsShown() and "showing" or "hidden"
-    return ("%d bag windows, can %s%s"):format(frames, state, self:Enabled() and "" or ", turned off")
+    local parts = { ("%d bag windows, %d open, can %s"):format(frames, shown, state) }
+    if not self:Enabled() then parts[#parts + 1] = "turned off" end
+    local read = ns.FreeSpace and ns.FreeSpace.Read()
+    if read then
+        parts[#parts + 1] = ("%d free of %d in the bags that take anything"):format(read.free, read.total)
+        local bags = {}
+        for _, entry in ipairs(read.bags) do bags[entry.bag] = true end
+        local pick = self:Pick(bags)
+        if pick then
+            parts[#parts + 1] = ("would pick bag %d slot %d, %s"):format(pick.entry.bag, pick.entry.slot,
+                tostring(pick.row.name or pick.row.itemID or "?"))
+            local found = self:FindButton(self:ShownFrames(), pick.entry.bag, pick.entry.slot)
+            parts[#parts + 1] = found and "its button was found" or "its button was NOT found"
+        else
+            local counts = {}
+            for _, group in ipairs(ns.Verdicts:Groups()) do
+                counts[#counts + 1] = ("%s %d"):format(tostring(group.verdict), #group.rows)
+            end
+            parts[#parts + 1] = "nothing to pick (" .. table.concat(counts, ", ") .. ")"
+        end
+    else
+        parts[#parts + 1] = "the client gave no bag count"
+    end
+    return table.concat(parts, "; ")
 end
 
 function Trash:OnEnable()
