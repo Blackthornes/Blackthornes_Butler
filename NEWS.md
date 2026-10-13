@@ -15,38 +15,50 @@ the thanks line: `python tools/make_whatsnew.py` writes them into
 Core/WhatsNewText.lua for the in-game What's New window. Run it after
 writing a section; the release check refuses a tag while it is behind.
 
+The window shows new features only. Write a section's features first, then
+a "Fixes and changes:" line with the fixes and other changes under it: those
+go to Discord but stay out of the window, and a section of only fixes puts
+nothing in it. Say what each feature does in a few plain words, the way you'd
+tell a friend: no hype, no questions to the reader, no exclamation marks
+outside the thanks line, no dashes as punctuation, no "now you can". The
+tool prints a note for a shipped line that reads like an advert.
+
 ## 0.5.0
 
-- Your bags now has a search box.
+- Your bags has a search box.
 - Gear in your equipment sets is always kept.
-- Mailing upgrades to your other characters is now off until you turn it on.
+
+Fixes and changes:
+
+- Mailing upgrades to your other characters is off until you turn it on.
 - Fill mail sends everything a job needs, herbs too.
-- The scroll bar moves the right way now.
+- The scroll bar moves the right way.
 
 Thanks Voldar and Ezmode for the ideas and reports!
 
 ## 0.4.0
 
-- Fill mail, Sell and the bank buttons now sit right on the line they work on.
-- Gold top-ups and mailed upgrades are only counted once the mail really goes.
+Fixes and changes:
+
+- Fill mail, Sell and the bank buttons sit on the line they work on.
+- Gold top-ups and mailed upgrades only count once the mail goes.
 - Fixes for selling, soulbound gear and the All characters list.
 
 ## 0.3.0
 
-- A new What's New window shows what changed after each update.
-- Ready transmutes and other cooldowns show up in your Jobs list.
-- Butler knows vendor prices right away, so fewer items say "price still loading".
+- Ready transmutes and other cooldowns show in your Jobs list.
+- Butler knows what vendors pay for most items from the start, so fewer items say "price still loading".
 
 ## 0.2.0
 
-- Butler speaks Deutsch now if your game is in German.
-- Fill mail keeps going: send one and the next one's ready right away.
-- Butler sends your alts the materials they need, and gear that's an upgrade for them. Don't want one sent? Just right-click it.
-- Set how much gold each character should keep, and Butler tops them up by mail.
+- Butler is in Deutsch on a German client.
+- After you send a mail, Fill mail fills the next one.
+- Butler mails your alts the materials their queued crafts need.
+- Set how much gold each character keeps, and Butler offers a top-up at the mailbox.
 - A Jobs list shows what to craft or mail on each character, and who to log in next.
-- Hover any item to see which of your characters have it.
+- Item tooltips show which of your characters have it.
 - Hunters get a Fill button for ammo at the vendor.
-- Butler learns from what you do, shows your free bag space, and says "You rang?" when you open it.
+- Butler learns from what you sell and mail by hand, shows your free bag space on the backpack, and says "You rang?" when you open it.
 
 ## 0.1.0
 
