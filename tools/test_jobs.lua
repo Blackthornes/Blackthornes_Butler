@@ -120,6 +120,48 @@ Jobs:Craft(plan.here.steps[1])
 suite.check("never in combat", #crafted == before)
 _G.InCombatLockdown = nil
 
+-- 4b. A form that stops a craft (travel form, Ghost Wolf): the first click
+-- leaves it through a secure /cancelform, the next crafts. As Tradeskills'.
+local class, form = "WARRIOR", 1
+_G.UnitClass = function() return "Ana", class end
+_G.GetShapeshiftForm = function() return form end
+suite.check("a warrior's stance is no form to leave", not Jobs.InBlockingForm())
+class = "DRUID"
+suite.check("a druid in a form has to leave it", Jobs.InBlockingForm())
+before = #crafted
+craftAnswer = { true }
+suite.check("Craft in a form crafts nothing", Jobs:Craft(plan.here.steps[1]) == false and #crafted == before)
+suite.check("and says to leave the form", env.ChatText():find("leave your form", 1, true) ~= nil)
+local formRows = UI.list.rows
+local function FormRow(data)
+    return { data = data, IsShown = function() return true end,
+        GetRight = function() return 700 end, GetTop = function() return 500 end,
+        GetBottom = function() return 470 end, GetEffectiveScale = function() return 1 end }
+end
+UI.list.rows = { FormRow({ type = "header" }), FormRow({ type = "job", step = plan.here.steps[1] }) }
+Jobs:UpdateLeaveForm()
+local leave = Jobs.formButton
+suite.check("Leave form shows over the Craft button", leave and leave:IsShown())
+suite.check("it runs /cancelform and nothing else", leave:GetAttribute("type") == "macro"
+    and leave:GetAttribute("macrotext") == "/cancelform" and leave:GetAttribute("spell") == nil)
+suite.check("at the Craft button's place", leave._point[4] == 692 and leave._point[5] == 485)
+env.Fire("PLAYER_REGEN_DISABLED")
+suite.check("combat hides it", not leave:IsShown())
+env.Fire("PLAYER_REGEN_ENABLED")
+Jobs:UpdateLeaveForm()
+suite.check("and it comes back after", leave:IsShown())
+form = 0
+Jobs:UpdateLeaveForm()
+suite.check("out of the form, it goes and Craft is back", not leave:IsShown())
+suite.check("and Craft crafts again", Jobs:Craft(plan.here.steps[1]) == true and #crafted == before + 1)
+form = 2
+UI.list.rows = { FormRow({ type = "job", step = { kind = "craft", ready = false } }) }
+Jobs:UpdateLeaveForm()
+suite.check("no Craft button, no Leave form", not leave:IsShown())
+UI.list.rows = formRows
+_G.UnitClass, _G.GetShapeshiftForm = nil, nil
+suite.check("a client without the calls is never in a form", not Jobs.InBlockingForm())
+
 -- 5. Log out, on the next character's row (the owner asked 2026-10-11:
 -- "the log out button should be next to the step that needs the logout").
 local realRows = UI.list.rows

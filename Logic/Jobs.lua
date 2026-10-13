@@ -590,6 +590,10 @@ function Jobs:Craft(step)
         return false
     end
     local name = step.kind == "cooldown" and step.craft or Jobs.ItemName(step.itemID, step.name)
+    if Jobs.InBlockingForm() then
+        ns.Print(L.Format("leave your form first, then click Craft for %s again.", name))
+        return false
+    end
     local ok, done, why = pcall(ts.Craft, ts, step.recipeID)
     if not ok then
         ns.Print(L.Format("couldn't start %s.", name))
@@ -676,6 +680,93 @@ function Jobs:UpdateLogout()
     end
     local button = self:CreateLogout()
     button.tooltipText = Tip(row.data.job)
+    local scale = (row:GetEffectiveScale() or 1) / (UIParent:GetEffectiveScale() or 1)
+    button:SetScale(scale)
+    button:ClearAllPoints()
+    button:SetPoint("RIGHT", UIParent, "BOTTOMLEFT", right - 8, (top + bottom) / 2)
+    button:Show()
+end
+
+--------------------------------------------------------------------------------
+-- Leaving a form first
+--------------------------------------------------------------------------------
+
+-- A craft will not start in travel form, cat form and the like, as
+-- Tradeskills' craft buttons know (its UI/ProfessionOpener.lua). Leaving one
+-- is protected, so it takes the player's own click on a secure button set to
+-- /cancelform: the first click leaves the form, the next crafts. Never both
+-- in one click. Only a druid's forms and a shaman's Ghost Wolf count: a
+-- warrior's stance is a "form" to the client too, and crafting works in it.
+local FORM_CLASSES = { DRUID = true, SHAMAN = true }
+
+--- Is the character in a form that stops a craft?
+function Jobs.InBlockingForm()
+    local ok, inForm = pcall(function()
+        if type(UnitClass) ~= "function" or type(GetShapeshiftForm) ~= "function" then return false end
+        local _, class = UnitClass("player")
+        if not FORM_CLASSES[class] then return false end
+        local form = GetShapeshiftForm()
+        return type(form) == "number" and form > 0
+    end)
+    return ok and inForm == true
+end
+
+--- A step with a Craft button.
+function Jobs.Craftable(step)
+    return step ~= nil and ((step.kind == "craft" and step.ready == true)
+        or (step.kind == "cooldown" and step.recipeID ~= nil))
+end
+
+--- The Leave form button: a secure button outside the window, as Log out
+--- is, laid over the Craft button of the first craft line on screen.
+function Jobs:CreateLeaveForm()
+    if self.formButton then return self.formButton end
+    local button = ns.Widgets.CreateButton(UIParent, L["Leave form"], nil, {
+        name = "BlackthornesButlerLeaveForm", template = "SecureActionButtonTemplate",
+        width = 80, height = 22, primary = true,
+    })
+    button:Hide()
+    button:SetFrameStrata("FULLSCREEN_DIALOG")
+    button:SetFrameLevel(10)
+    button:RegisterForClicks("AnyUp")
+    button:SetAttribute("useOnKeyDown", false)
+    button:SetAttribute("type", "macro")
+    button:SetAttribute("macrotext", "/cancelform")
+    button.tooltipText = L["You can't craft in this form. Click to leave it, then click Craft. Not in combat."]
+    button:HookScript("OnEnter", function(frame)
+        GameTooltip:SetOwner(frame, "ANCHOR_BOTTOM")
+        GameTooltip:SetText(frame.tooltipText, 1, 1, 1, 1, true)
+        GameTooltip:Show()
+    end)
+    button:HookScript("OnLeave", function() GameTooltip:Hide() end)
+    self.formButton = button
+    return button
+end
+
+--- The first craft line on screen.
+function Jobs.CraftRow(list)
+    for _, row in ipairs((list and list.rows) or {}) do
+        local data = row.data
+        if row:IsShown() and data and data.type == "job" and Jobs.Craftable(data.step) then return row end
+    end
+end
+
+--- Put Leave form over the first craft line's button while in a form that
+--- stops a craft. Hidden in combat, while the window moves and in All
+--- characters, as Log out is; called each time the list is drawn or
+--- scrolled.
+function Jobs:UpdateLeaveForm()
+    if self.fighting or InCombat() then return end
+    local ui = ns.UI
+    local list = ui and ui.list
+    local show = list and ui:IsShown() and not ui.dragging and ui.view ~= "all" and Jobs.InBlockingForm()
+    local row = show and Jobs.CraftRow(list)
+    local right, top, bottom = row and row:GetRight(), row and row:GetTop(), row and row:GetBottom()
+    if not (right and top and bottom) then
+        if self.formButton then self.formButton:Hide() end
+        return
+    end
+    local button = self:CreateLeaveForm()
     local scale = (row:GetEffectiveScale() or 1) / (UIParent:GetEffectiveScale() or 1)
     button:SetScale(scale)
     button:ClearAllPoints()
@@ -780,10 +871,19 @@ function Jobs:OnEnable()
     ns.RegisterEvent(self, "PLAYER_REGEN_DISABLED", function()
         Jobs.fighting = true
         if Jobs.button then Jobs.button:Hide() end
+        if Jobs.formButton then Jobs.formButton:Hide() end
     end)
     ns.RegisterEvent(self, "PLAYER_REGEN_ENABLED", function()
         Jobs.fighting = false
         if ns.UI and ns.UI.frame then ns.UI:FootRoom() end
+    end)
+    -- Into or out of a form: the craft lines say Leave form or Craft. Only
+    -- on the change itself, and only while the window shows.
+    ns.RegisterEvent(self, "UPDATE_SHAPESHIFT_FORM", function()
+        local inForm = Jobs.InBlockingForm()
+        if inForm == Jobs.lastInForm then return end
+        Jobs.lastInForm = inForm
+        if ns.UI and ns.UI.IsShown and ns.UI:IsShown() then ns.UI:Refresh() end
     end)
 end
 
