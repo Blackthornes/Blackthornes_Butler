@@ -44,6 +44,9 @@ ns.CLASS_SPELLS = { MAGE = {
     { 10, 16, 1, "Later Spell" },
 } }
 
+-- Classic's price for Frost Nova, until a trainer says 200.
+ns.CLASS_SPELL_PRICES = { [3] = 150 }
+
 local level, known = 12, { [1] = true }
 _G.UnitClass = function() return "Mage", "MAGE" end
 _G.UnitLevel = function() return level end
@@ -73,7 +76,8 @@ suite.check("ready: rank 2, Frost Nova, rank 3 after rank 2, the quest spell",
     table.concat(ids, ",") == "2,3,4,6", table.concat(ids, ","))
 suite.check("never another race's spell", not table.concat(ids, ","):find("5"))
 suite.check("never a rank whose rank before nobody here has", not table.concat(ids, ","):find("7"))
-suite.check("nothing priced yet", plan.cost == 0 and plan.unknown == 4)
+suite.check("Classic's price stands in until a trainer is seen", plan.cost == 150 and plan.unknown == 3
+    and plan.guessed == 1, plan.cost .. " " .. plan.unknown)
 
 -- 2. The next level.
 suite.check("the next level is 14", plan.nextLevel == 14 and #plan.next == 2)
@@ -128,6 +132,7 @@ suite.check("the trainer's spot is kept", spot and spot.name == "Jennea Cannon" 
     and spot.x == 0.38 and spot.zone == "Stormwind City")
 suite.check("it says where", CT.Where(spot) == "Wizard's Sanctum in Stormwind City")
 plan = CT:Plan()
+suite.check("the trainer's own price wins", plan.guessed == 0)
 suite.check("the quest spell leaves the list", #plan.ready == 3 and plan.cost == 600 and plan.unknown == 0,
     #plan.ready .. " " .. plan.cost)
 suite.check("the next level is priced", plan.nextCost == 2200 and plan.nextUnknown == 0)

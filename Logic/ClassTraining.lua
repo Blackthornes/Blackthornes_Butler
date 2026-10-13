@@ -192,21 +192,35 @@ end
 -- The plan
 --------------------------------------------------------------------------------
 
+--- What a spell costs: the price a trainer showed, else Classic's
+--- (Data/ClassSpells.lua's CLASS_SPELL_PRICES) until one does. The second
+--- return is true for Classic's.
+function CT.PriceOf(id, prices)
+    prices = prices or CT:Data().prices
+    if prices[id] then return prices[id], false end
+    local base = ns.CLASS_SPELL_PRICES and ns.CLASS_SPELL_PRICES[id]
+    if base then return base, true end
+    return nil, false
+end
+
 local function Spell(entry, prices)
-    return { id = entry[1], level = entry[2], rank = entry[3], entry = entry, cost = prices[entry[1]] }
+    local cost, guess = CT.PriceOf(entry[1], prices)
+    return { id = entry[1], level = entry[2], rank = entry[3], entry = entry, cost = cost, guess = guess }
 end
 
 local function Sum(list)
-    local cost, unknown = 0, 0
+    local cost, unknown, guessed = 0, 0, 0
     for _, spell in ipairs(list) do
         if spell.cost then cost = cost + spell.cost else unknown = unknown + 1 end
+        if spell.guess then guessed = guessed + 1 end
     end
-    return cost, unknown
+    return cost, unknown, guessed
 end
 CT.Sum = Sum
 
 --- What the character playing can train: { ready = { spells }, cost,
---- unknown (how many have no price yet), nextLevel, next = { spells },
+--- unknown (how many have no price at all), guessed (how many go by
+--- Classic's price until a trainer shows theirs), nextLevel, next = { spells },
 --- nextCost, nextUnknown }. A spell is { id, level, rank, entry, cost }.
 --- Kept until ClassTraining.version or the level moves.
 function CT:Plan()
@@ -253,8 +267,8 @@ function CT:Work(player)
             end
         end
     end
-    plan.cost, plan.unknown = Sum(plan.ready)
-    plan.nextCost, plan.nextUnknown = Sum(plan.next)
+    plan.cost, plan.unknown, plan.guessed = Sum(plan.ready)
+    plan.nextCost, plan.nextUnknown, plan.nextGuessed = Sum(plan.next)
     return plan
 end
 
@@ -292,7 +306,8 @@ function CT:Other(guid)
     for _, id in ipairs(note.ready) do
         if not self:Data().notTaught[id] then
             count = count + 1
-            if prices[id] then cost = cost + prices[id] else unknown = unknown + 1 end
+            local price = CT.PriceOf(id, prices)
+            if price then cost = cost + price else unknown = unknown + 1 end
         end
     end
     if count == 0 then return nil end

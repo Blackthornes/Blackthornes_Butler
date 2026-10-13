@@ -533,7 +533,11 @@ one belongs in both); neither calls the other for it. The data is
 generated from the Forever client's game tables (`make_class_spells.py
 <tables folder> --build <build>`; never edit it by hand, never commit the
 tables): each class's trainable spells with level, rank, races and the rank
-before. Prices, which spells no trainer teaches (a quest does) and where
+before. With `--prices <Classic world database dump> --learn <a Classic
+client's SpellEffect table>` it also writes `CLASS_SPELL_PRICES`,
+Classic's trainer prices (the full price where Classic had a discount),
+which stand in until a trainer shows its own (`ClassTraining.PriceOf`,
+`spell.guess`); never name where either came from. Real prices, which spells no trainer teaches (a quest does) and where
 the trainer stands are not in the tables: the first look at a class
 trainer's window keeps them, account wide, in `classTrainingData = {
 prices, notTaught, trainers, characters }` (never rename it), reading the

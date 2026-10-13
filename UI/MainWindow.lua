@@ -909,11 +909,11 @@ function UI:EnterTraining(data)
         GameTooltip:AddDoubleLine(training.Label(spell.entry),
             spell.cost and Items.FormatMoney(spell.cost) or L["not priced yet"], 1, 1, 1, 1, 1, 1)
     end
-    local cost, unknown = training.Sum(list)
+    local cost, unknown, guessed = training.Sum(list)
     GameTooltip:AddDoubleLine(L["In all"], training.CostText(cost, unknown, count), 1, 0.82, 0, 1, 1, 1)
-    if unknown > 0 then
-        GameTooltip:AddLine(L["Open a trainer once and Butler keeps every price, for all your characters of this class."],
-            Theme.Unpack("muted"))
+    if unknown > 0 or guessed > 0 then
+        GameTooltip:AddLine(L["Prices are the usual ones until you open your trainer, then Butler keeps the real ones."],
+            Theme.Unpack("muted"), true)
     end
     if data.type == "train" then
         local ok, money = pcall(GetMoney)
