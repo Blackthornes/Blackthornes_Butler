@@ -630,7 +630,7 @@ function UI:Lines()
     end
     for _, group in ipairs(ns.Verdicts:Groups()) do
         if group.count > 0 then
-            local isFolded = folded[group.verdict] == true
+            local isFolded = UI.IsFolded(folded, group.verdict)
             lines[#lines + 1] = { type = "header", group = group, folded = isFolded }
             if not isFolded then
                 for _, row in ipairs(group.rows) do lines[#lines + 1] = row end
@@ -681,6 +681,16 @@ function UI:Folded()
     return char.folded
 end
 
+-- Groups folded until the player opens them, on every character, even one
+-- whose folds were saved before the group existed: false means opened.
+UI.FOLDED_AT_FIRST = { wait = true }
+
+function UI.IsFolded(folded, verdict)
+    local state = folded[verdict]
+    if state == nil then return UI.FOLDED_AT_FIRST[verdict] == true end
+    return state == true
+end
+
 --------------------------------------------------------------------------------
 -- Mouse
 --------------------------------------------------------------------------------
@@ -703,7 +713,15 @@ function UI:Clicked(data, button)
     end
     if data.type == "header" then
         local folded = self:Folded()
-        folded[data.group.verdict] = not folded[data.group.verdict] or nil
+        local verdict = data.group.verdict
+        local fold = not UI.IsFolded(folded, verdict)
+        if fold then
+            folded[verdict] = true
+        elseif UI.FOLDED_AT_FIRST[verdict] then
+            folded[verdict] = false
+        else
+            folded[verdict] = nil
+        end
         self:Refresh(true)
         return
     end
@@ -720,6 +738,9 @@ function UI:Enter(row, data)
     end
     if data.type == "header" then
         GameTooltip:AddLine(data.group.label, Theme.Unpack("accent"))
+        if data.group.verdict == "wait" then
+            GameTooltip:AddLine(L["The auction house is paying well under the usual price for these today. Hold on to them and post them when the price comes back."], 1, 1, 1, true)
+        end
         GameTooltip:AddLine(data.folded and L["Click to show these"] or L["Click to fold these away"], 1, 1, 1, true)
         GameTooltip:Show()
         return

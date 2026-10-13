@@ -31,6 +31,8 @@
 --  12. The best of vendor, auction (marked down when it sells slowly)
 --      and disenchant                              Sell, Auction,
 --                                                  Disenchant or Mail
+--      ... Auction, but today's cheapest listing
+--      is well under its usual price               Wait for a better price
 --  13. Anything else                               Look at it
 --
 -- Steps 5 to 8, 11 and 12 ask the other four addons (Logic/Sisters.lua); a
@@ -61,7 +63,7 @@ local Items = ns.Items
 local Sisters = ns.Sisters
 
 -- The order the groups show in: what to do first at the top.
-Verdicts.ORDER = { "sell", "auction", "disenchant", "mail", "bank", "look", "keep" }
+Verdicts.ORDER = { "sell", "auction", "disenchant", "mail", "bank", "look", "wait", "keep" }
 
 Verdicts.LABELS = {
     sell = L["Sell"],
@@ -70,12 +72,19 @@ Verdicts.LABELS = {
     mail = L["Mail"],
     bank = L["Bank"],
     look = L["Look at it"],
+    wait = L["Wait for a better price"],
     keep = L["Keep"],
 }
 
 -- An auction price is worth this much of itself when Tradeskills says the
 -- item sells slowly: a slow sale ties up the slot and the deposit.
 Verdicts.SLOW = 0.75
+
+-- An item to auction waits for a better price when today's cheapest listing
+-- by someone else (Tradeskills' auctionNow) would fetch less than this much
+-- of its usual price (auction). A little under is normal: the usual price is
+-- an average of the cheapest listings, so only a real dip counts.
+Verdicts.LOW_NOW = 0.85
 
 
 -- Moves whenever a judgement could change (a choice made, an item loaded),
@@ -752,6 +761,13 @@ function Verdicts:Best(entry, unit, said)
     end
 
     if best == "auction" then
+        -- Today's price is well under the usual one: hold it back, folded
+        -- away under Wait for a better price (the owner asked 2026-10-13).
+        local now = Number(ts, "auctionNow")
+        if now and now < auction * Verdicts.LOW_NOW then
+            return "wait", L.Format("Selling for about %s right now, usually about %s",
+                Items.FormatMoney(now), Items.FormatMoney(auction)), auctionWorth
+        end
         local text = slow and L.Format("Auction about %s each, sells slowly", Items.FormatMoney(auction))
             or L.Format("Auction about %s each", Items.FormatMoney(auction))
         return "auction", text, auctionWorth
