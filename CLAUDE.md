@@ -266,7 +266,10 @@ Tradeskills' `UI/QueueMailPanel.lua` reads it.
   to it the same way (`Verdicts:ForAltCraft`): the alt's share is a Mail
   row and the list keeps the rest. The Always bank list does not.
 - **An alt's upgrade** (Equipment's `alt`, the owner asked 2026-10-11)
-  goes to them only as many as they wear: one, two for rings and trinkets
+  is offered only while "Mail upgrades to your characters" is ticked
+  (`altUpgrades`, account wide, off by default, never rename it;
+  `Verdicts:AltUpgradesOn`, `/bbutler altupgrades`, Settings > Selling;
+  the owner, 2026-10-13). Then it goes to them only as many as they wear: one, two for rings and trinkets
   (`Verdicts.Wears`, from the item's equip slot). `Verdicts:Groups` hands
   out copies in bag order, and a copy past that is judged again as if no
   alt wanted it (`Judge(entry, true)`), so it lands under Sell, Auction or

@@ -443,9 +443,12 @@ function Verdicts:Kept(said, entry, noAlt)
     -- alt wanted them (a pair too many went in the mail, 2026-10-11).
     -- Bought to disenchant (Tradeskills' mark) is for breaking, never an
     -- alt's upgrade (a player was told to mail one, 2026-10-13): step 8b.
+    -- Off unless the player ticks "Mail upgrades to your characters" (the
+    -- owner, 2026-10-13): Verdicts:AltUpgradesOn.
     local alt = eq and eq.alt
     local bought = Number(ts, "bought")
     if bought and bought > 0 then alt = nil end
+    if not Verdicts:AltUpgradesOn() then alt = nil end
     if type(alt) == "table" and not noAlt and not (entry and entry.bound) then
         local to = ns.Errands and ns.Errands.NameOf and ns.Errands:NameOf(alt.key)
         local wanted = to and Verdicts:UpgradeWanted(entry.itemID, to) or 0
@@ -519,6 +522,19 @@ end
 -- Never rename these keys.
 
 --- True when the player said not to mail `itemID` to `to` as an upgrade.
+--- Whether Butler offers to mail upgrades to the player's other
+--- characters: off unless ticked (`altUpgrades`, account wide; the owner,
+--- 2026-10-13). Never rename it.
+function Verdicts:AltUpgradesOn()
+    return ns.db ~= nil and ns.db.altUpgrades == true
+end
+
+function Verdicts:SetAltUpgrades(on)
+    if not ns.db then return end
+    ns.db.altUpgrades = on and true or false
+    self:Changed(true)
+end
+
 function Verdicts:UpgradeHeld(itemID, to)
     if type(to) ~= "string" then return false end
     if List("noUpgradesFor")[to] then return true end
@@ -953,6 +969,12 @@ end
 
 -- Upgrades held back from a character (right-click a Mail upgrade row).
 -- Undo lets them go again; nothing else is deleted.
+ns.RegisterCommand("altupgrades", L["turn offering to mail upgrades to your other characters on or off"], function()
+    Verdicts:SetAltUpgrades(not Verdicts:AltUpgradesOn())
+    ns.Print(Verdicts:AltUpgradesOn() and L["Butler offers to mail gear to the character it's an upgrade for."]
+        or L["Butler no longer offers to mail upgrades to your other characters."])
+end)
+
 ns.RegisterCommand("upgrademail", L["list upgrades you hold back from your characters (upgrademail undo Full Name to mail them again)"], function(rest)
     rest = (rest or ""):match("^%s*(.-)%s*$")
     local name = rest:match("^undo%s+(.+)$")

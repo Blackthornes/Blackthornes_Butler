@@ -3,6 +3,7 @@
 -- pants going in one mail, 2026-10-11).
 --
 -- What must hold:
+--   0. Off unless the player ticks it; then it works as below.
 --   1. One copy goes to the alt; two for rings and trinkets.
 --   2. A copy past that gets its own verdict (here, the vendor's Sell).
 --   3. Fill mail sends only the alt's copies.
@@ -56,7 +57,13 @@ local function Rows(verdict)
 end
 
 UI:Show("bags")
+
+-- 0. Off unless ticked (the owner, 2026-10-13).
 Verdicts:Changed(true)
+suite.check("mailing upgrades to alts is off by default", not Verdicts:AltUpgradesOn())
+suite.check("so no upgrade goes under Mail", next(Rows("mail")) == nil)
+Verdicts:SetAltUpgrades(true)
+suite.check("ticked, it is on", ns.db.altUpgrades == true and Verdicts:AltUpgradesOn())
 local mail, sell = Rows("mail"), Rows("sell")
 
 -- 1 and 2.

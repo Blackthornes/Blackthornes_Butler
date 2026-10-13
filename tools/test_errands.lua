@@ -75,6 +75,8 @@ _G.BlackthornesTS = { Butler = {
     Mailbox = function(_, covered) mailboxSaid[#mailboxSaid + 1] = covered end,
 } }
 env.Enable(ns)
+-- Mailing upgrades to alts is off unless ticked; these checks need it on.
+ns.db.altUpgrades = true
 
 local UI, Errands = ns.UI, ns.Errands
 

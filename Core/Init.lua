@@ -323,6 +323,11 @@ local DEFAULTS = {
     -- (Errands:Sent, asked 2026-10-11).
     fillNext = true,
 
+    -- Gear that is an upgrade for another of the player's characters goes
+    -- under Mail to them only when this is ticked (Verdicts:AltUpgradesOn;
+    -- the owner asked 2026-10-13 for it off by default). Never rename it.
+    altUpgrades = false,
+
     -- The free bag space number on the backpack button (UI/FreeSpace.lua,
     -- asked 2026-10-11).
     freeSpace = true,

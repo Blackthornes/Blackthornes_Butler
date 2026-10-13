@@ -15,6 +15,8 @@ local fake = env.FakeBags({
 })
 _G.UnitName = function() return "Mia" end
 env.Enable(ns)
+-- Mailing upgrades to alts is off unless ticked; these checks need it on.
+ns.db.altUpgrades = true
 
 local UI, Everyone = ns.UI, ns.Everyone
 
