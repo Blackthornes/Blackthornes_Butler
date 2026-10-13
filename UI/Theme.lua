@@ -98,6 +98,13 @@ function Theme.Unpack(key, alpha)
     return color[1], color[2], color[3], alpha or 1
 end
 
+-- The muted colour followed by more arguments, for a tooltip's AddLine:
+-- Theme.Unpack in the middle of a call gives only its first value.
+function Theme.Muted(...)
+    local color = Theme.colors.muted or Theme.colors.text
+    return color[1], color[2], color[3], ...
+end
+
 --- Flat filled texture covering a frame.
 function Theme.Fill(frame, key, alpha, layer)
     local texture = frame:CreateTexture(nil, layer or "BACKGROUND")
