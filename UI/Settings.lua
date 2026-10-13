@@ -169,7 +169,7 @@ end
 local STYLES = { "titanforged", "blizzard" }
 local STYLE_LABELS = { titanforged = "Titanforged", blizzard = "Blizzard" }
 
---- Titanforged or Blizzard, with Reload beside it while the pick differs
+--- Titanforged or Blizzard, with Reload under it while the pick differs
 --- from what is drawn, as the Text size row has. Butler has no dropdown, so
 --- it is a stepper like Text size.
 function SettingsUI.WindowStyleControl(row, x)
@@ -187,14 +187,17 @@ function SettingsUI.WindowStyleControl(row, x)
             reload:SetShown(STYLES[value] ~= Drawn())
         end,
     })
-    stepper:SetWidth(100)
+    -- As wide as "Titanforged" at the player's text size, with Reload under
+    -- it: at 100 with Reload beside it, the word spilled out of its box and
+    -- Reload out of the column (a player's report, 2026-10-13).
+    ns.SettingsPages.FitStepper(stepper, STYLE_LABELS)
     stepper:SetPoint("TOPLEFT", x, -2)
 
     -- ReloadUI is allowed from a click, and saves everything first.
     reload = Widgets.CreateButton(row, L["Reload now"], function()
         if ReloadUI then ReloadUI() end
     end, { width = 60, height = 20 })
-    reload:SetPoint("LEFT", stepper, "RIGHT", 6, 0)
+    ns.SettingsPages.ReloadUnder(row, stepper, reload)
     reload:HookScript("OnEnter", function(self)
         GameTooltip:SetOwner(self, "ANCHOR_TOP")
         GameTooltip:AddLine(L["Reload the interface so the new window style shows (/reload)"], 1, 1, 1, true)

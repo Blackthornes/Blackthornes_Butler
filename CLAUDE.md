@@ -25,6 +25,15 @@ it, or look at it yourself. The full plan, with the order the verdicts are
 decided in and the four phases, is `ideas/bag-butler-plan.md` in the
 project's files.
 
+**Equipment sets** (a player asked, the owner said check and fix,
+2026-10-13): anything in one of the player's equipment sets is Keep,
+"In your NAME equipment set", before every other rule, so no list or
+sister can sell, mail or break it (`Verdicts:InSet`, step 0;
+`C_EquipmentSet` read in a pcall, else the classic set calls, else no
+sets; read again on `EQUIPMENT_SETS_CHANGED` and each time the window
+opens). Matched by item ID, so a spare copy of a set piece is kept too.
+Tested in `tools/test_digestbugs.lua`.
+
 Phase 1 is built and seen in game (2026-10-10): Butler on its own.
 `Logic/Bags.lua` reads the bags only while the window is up or a vendor is
 open, 0.2 s after a burst of bag events, 40 slots a frame, and looks further
@@ -134,7 +143,8 @@ disenchant to be marked, easy to break, and followed by Butler.
 Tradeskills keeps the marks, account wide (its `Logic/DisenchantBuys.lua`:
 a buy after a search from its Disenchanting tab, or marked by hand), so
 mail and the bank keep them. Butler reads `bought` from Advise
-(`Verdicts:Bought`, step 8b, after the sisters' Keep): Disenchant whatever
+(`Verdicts:Bought`, step 8b, after the sisters' Keep; an item marked
+bought is never an alt's upgrade, 2026-10-13): Disenchant whatever
 else it would fetch, Mail to the enchanter when this character can't, else
 Look at it. Bought rows head their group, their reason in violet; the
 right-click menu's "Bought to disenchant" marks or unmarks through
@@ -223,7 +233,11 @@ Tradeskills' `UI/QueueMailPanel.lua` reads it.
   character a click (most items first; `Errands.filled` per visit), through
   `_G.BlackthornesTS.Butler:FillMail(name, items)` (Tradeskills'
   `QueueMail:Fill`). Mail rows carry `mailTo` and `mailCount`
-  (`Verdicts:Decide`'s fifth return). The button sits on the first line
+  (`Verdicts:Decide`'s fifth return), and `Errands:Recipients` adds every
+  item a Jobs mail step for this character names, so the mail holds what
+  that line says (two herbs a Farmer goal kept were left out, 2026-10-13).
+  An alt's queued craft also comes before a Farmer goal in
+  `Verdicts:Kept`. The button sits on the first line
   that mails each character (the owner asked 2026-10-12, as Log out sits on
   the next character's line): a Jobs mail step, a gold top-up or a Mail
   row, set by `UI:PlaceMail` each time the lines are built (`UI.fillRows`,
