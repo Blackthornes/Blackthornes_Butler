@@ -3,6 +3,7 @@
 --
 -- The first rule that applies wins, and keeping always beats selling:
 --
+--   0. In one of the player's equipment sets       Keep
 --   1. On the player's Always keep list            Keep
 --      ... or Always bank list                     Bank
 --      ... or learned: bought back after Butler sold it   Keep
@@ -167,6 +168,13 @@ end
 --- Mail row goes to and how many ({ to, count }).
 function Verdicts:Decide(entry, noAlt)
     local itemID = entry.itemID
+    -- Gear in one of the player's equipment sets is never sold, mailed or
+    -- broken, whatever a list or a sister says (a player asked, 2026-10-13).
+    local set = self:InSet(itemID)
+    if set then
+        return "keep", type(set) == "string" and L.Format("In your %s equipment set", set)
+            or L["In one of your equipment sets"], nil, true
+    end
     local choice, mailTo = self:Choice(itemID)
 
     if choice == "keep" then
@@ -261,6 +269,74 @@ function Verdicts:Decide(entry, noAlt)
 
     verdict, reason, worth, extra = self:Best(entry, unit, said)
     return verdict, reason, worth, true, extra
+end
+
+--------------------------------------------------------------------------------
+-- Equipment sets
+--------------------------------------------------------------------------------
+
+-- [itemID] = the first set's name, read again after EQUIPMENT_SETS_CHANGED.
+local setItems
+
+--- Call a client function by dotted name inside a pcall: its results, or
+--- nothing when it is missing or raises.
+local function Client(path, ...)
+    local fn = _G
+    for part in path:gmatch("[^%.]+") do
+        fn = type(fn) == "table" and fn[part] or nil
+    end
+    if type(fn) ~= "function" then return nil end
+    local results = { pcall(fn, ...) }
+    if not results[1] then return nil end
+    return unpack(results, 2)
+end
+
+--- Every item in the player's equipment sets, by ID: the retail calls
+--- (C_EquipmentSet) first, then the classic ones. A client with neither
+--- has no sets, so nothing is held back.
+function Verdicts.ReadSets()
+    local items = {}
+    local function Add(ids, name)
+        if type(ids) ~= "table" then return end
+        for _, id in pairs(ids) do
+            id = tonumber(id)
+            if id and id > 0 and not items[id] then items[id] = name end
+        end
+    end
+    local setIDs = Client("C_EquipmentSet.GetEquipmentSetIDs")
+    if type(setIDs) == "table" then
+        for _, setID in ipairs(setIDs) do
+            local name = Client("C_EquipmentSet.GetEquipmentSetInfo", setID)
+            name = type(name) == "string" and name ~= "" and name or true
+            Add(Client("C_EquipmentSet.GetItemIDs", setID), name)
+        end
+        return items
+    end
+    local count = tonumber(Client("GetNumEquipmentSets")) or 0
+    for index = 1, count do
+        local name = Client("GetEquipmentSetInfo", index)
+        if type(name) == "string" and name ~= "" then
+            Add(Client("GetEquipmentSetItemIDs", name), name)
+        end
+    end
+    return items
+end
+
+--- The name of an equipment set holding this item, or nil.
+function Verdicts:InSet(itemID)
+    if not itemID then return nil end
+    if not setItems then setItems = Verdicts.ReadSets() end
+    return setItems[itemID]
+end
+
+--- The sets changed: read them again and judge again.
+function Verdicts:SetsChanged()
+    setItems = nil
+    self:Changed()
+end
+
+function Verdicts:OnEnable()
+    ns.RegisterEvent(self, "EQUIPMENT_SETS_CHANGED", function() Verdicts:SetsChanged() end)
 end
 
 --- "mail", why and { to, count } when Tradeskills says an alt's queued
@@ -822,6 +898,8 @@ end
 --- Judge every item again next time it is asked, without a redraw: the
 --- window opening, so what the other addons say is fresh for each look.
 function Verdicts:Forget()
+    -- Sets read again too: at login the client can answer before it has them.
+    setItems = nil
     self.version = self.version + 1
 end
 

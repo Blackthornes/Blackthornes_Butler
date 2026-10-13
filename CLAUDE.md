@@ -25,6 +25,15 @@ it, or look at it yourself. The full plan, with the order the verdicts are
 decided in and the four phases, is `ideas/bag-butler-plan.md` in the
 project's files.
 
+**Equipment sets** (a player asked, the owner said check and fix,
+2026-10-13): anything in one of the player's equipment sets is Keep,
+"In your NAME equipment set", before every other rule, so no list or
+sister can sell, mail or break it (`Verdicts:InSet`, step 0;
+`C_EquipmentSet` read in a pcall, else the classic set calls, else no
+sets; read again on `EQUIPMENT_SETS_CHANGED` and each time the window
+opens). Matched by item ID, so a spare copy of a set piece is kept too.
+Tested in `tools/test_digestbugs.lua`.
+
 Phase 1 is built and seen in game (2026-10-10): Butler on its own.
 `Logic/Bags.lua` reads the bags only while the window is up or a vendor is
 open, 0.2 s after a burst of bag events, 40 slots a frame, and looks further

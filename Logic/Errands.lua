@@ -122,12 +122,15 @@ function Errands:Recipients()
             end
             for _, wanted in ipairs(step.items or {}) do
                 local item = recipient.byID[wanted.itemID]
-                if not item then
+                -- Gear in an equipment set never goes, whoever asks.
+                if ns.Verdicts:InSet(wanted.itemID) then
+                    item = false
+                elseif not item then
                     item = { itemID = wanted.itemID, count = 0 }
                     recipient.byID[wanted.itemID] = item
                     recipient.items[#recipient.items + 1] = item
                 end
-                if wanted.count > item.count then
+                if item and wanted.count > item.count then
                     recipient.count = recipient.count + wanted.count - item.count
                     item.count = wanted.count
                 end
