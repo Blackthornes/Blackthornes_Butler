@@ -132,6 +132,8 @@ function Everyone:Read()
                 bagsAt = Stamp(entry.bagsAt),
                 bankAt = Stamp(entry.bankAt),
                 mailAt = Stamp(entry.mailAt),
+                -- Gold as Tradeskills last saw it, for the gold goals.
+                gold = Stamp(entry.gold),
             }
         end
     end

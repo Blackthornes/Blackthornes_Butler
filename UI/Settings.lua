@@ -460,6 +460,22 @@ function SettingsUI:BuildPages()
         L["List them"], "training")
     controls.trainingReport = trainingButton
 
+    -- Gold goals at the bottom of the window (Logic/GoldGoals.lua, the
+    -- owner said build it 2026-10-13).
+    pages:Section("gold", 1, L["GOLD GOALS"])
+
+    local goalsRow = pages:Row("gold", 1, L["Gold goals"],
+        L["The bottom of the window shows what your gold is for next: class spells, profession training and riding, each with a bar of your purse against its price. Gold the gold fund sets aside for your other characters isn't counted. Also /bbutler goals on or off."])
+    controls.goldGoals = Widgets.CreateCheckbox(goalsRow, L["On"], function(checked)
+        ns.GoldGoals:SetOn(checked)
+    end, true)
+    controls.goldGoals:SetPoint("TOPLEFT", CONTROL_X, -2)
+
+    local _, goalsButton = CommandRow(pages, "gold", 1, L["Your goals"],
+        L["Lists in chat your gold goals and how far along each is. Same as /bbutler goals."],
+        L["List them"], "goals")
+    controls.goalsReport = goalsButton
+
     pages:Section("gold", 2, L["ONE CHARACTER"])
 
     local pickRow = pages:Row("gold", 2, L["Character"],
@@ -633,6 +649,7 @@ function SettingsUI:Refresh()
     controls.voice:SetChecked(ns.db.voice ~= false)
     controls.learn:SetChecked(ns.db.learn ~= false)
     controls.classTraining:SetChecked(ns.ClassTraining:IsOn())
+    controls.goldGoals:SetChecked(ns.GoldGoals:IsOn())
     controls.debug:SetChecked(ns.db.debug == true)
     controls.sisters:SetChecked(ns.SisterNote:IsOn())
     controls.whatsNewPopup:SetChecked(ns.WhatsNew:IsOn())

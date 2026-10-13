@@ -171,6 +171,15 @@ function UI:Build()
     self.list:SetPoint("TOPLEFT", 6, -6)
     self.list:SetPoint("BOTTOMRIGHT", -6, 6)
 
+    -- Gold goals sit at the bottom, under the list (UI/GoldGoals.lua; the
+    -- owner, 2026-10-13: "the purse section goes at the bottom").
+    if ns.GoldGoalsUI then
+        local goals = ns.GoldGoalsUI:Build(frame)
+        goals:SetPoint("BOTTOMLEFT", PADDING, FOOT)
+        goals:SetPoint("BOTTOMRIGHT", -PADDING, FOOT)
+        goals:Hide()
+    end
+
     local empty = Theme.CreateLabel(well, "normal", "muted", "CENTER")
     empty:SetPoint("CENTER", 0, 0)
     empty:SetWidth(WIDTH - 4 * PADDING)
@@ -1238,11 +1247,42 @@ function UI:Refresh(force)
     end
     self.emptyLabel:SetShown(self.emptyLabel:GetText() ~= "")
 
+    self:PlaceGoals()
     if ns.Errands.mailOpen or ns.Errands.bankOpen then
         self:UpdateErrands()
     else
         self:UpdateFooter()
     end
+end
+
+--- The gold goals under the list: the window grows by their height, so
+--- the list keeps its own, and its top stays where it is.
+function UI:PlaceGoals()
+    local goalsUI = ns.GoldGoalsUI
+    if not (goalsUI and goalsUI.panel) then return end
+    local ok, height = pcall(goalsUI.Draw, goalsUI, self.view)
+    height = ok and height or 0
+    if not ok then
+        goalsUI.panel:Hide()
+        ns.Debug("gold goals:", tostring(height))
+    end
+    local extra = height > 0 and height + 6 or 0
+    if extra == self.goalsExtra then return end
+    self.goalsExtra = extra
+    self.well:SetPoint("BOTTOMRIGHT", -PADDING, FOOT + extra)
+    local frame = self.frame
+    local left, top = frame:GetLeft(), frame:GetTop()
+    frame:SetHeight(HEIGHT + extra)
+    if left and top and frame:IsShown() then
+        frame:ClearAllPoints()
+        frame:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT", left, top)
+        self:SavePosition()
+    end
+    if ns.Selling then ns.Selling:Update() end
+end
+
+function UI:GoldGoalsChanged()
+    if self:IsShown() then self:Refresh(true) end
 end
 
 --- All characters: built again when the bags moved (once Butler's own read
@@ -1277,6 +1317,7 @@ function UI:RefreshAll(force)
     self.emptyLabel:SetText(text)
     self.emptyLabel:SetShown(text ~= "")
 
+    self:PlaceGoals()
     self:UpdateFooter()
 end
 
@@ -1741,6 +1782,7 @@ function UI:Show(view)
         ns.Verdicts:Forget()
         ns.Everyone:Changed()
         if ns.Jobs then ns.Jobs:Changed() end
+        if ns.GoldGoals then ns.GoldGoals:Changed() end
         self:RestorePosition()
         self.frame:Show()
         ns.Motion:Open(self.frame)

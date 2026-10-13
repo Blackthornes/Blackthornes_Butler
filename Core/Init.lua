@@ -357,6 +357,13 @@ local DEFAULTS = {
     -- either.
     classTraining = true,
 
+    -- Gold goals at the bottom of the window: class spells, profession
+    -- training and riding, each with a bar of the purse against its price
+    -- (Logic/GoldGoals.lua, the owner said build it 2026-10-13). Trainers'
+    -- prices and every character's goals are kept in goldGoalsData. Never
+    -- rename either.
+    goldGoals = true,
+
     -- Also kept here, never renamed (made when first needed, so not given
     -- defaults): alwaysKeep, alwaysSell and alwaysBank ([itemID] = true, the player's
     -- right-click choices), alwaysMail ([itemID] = a character's short name)

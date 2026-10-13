@@ -556,6 +556,48 @@ keeps back the playing character's `ReadyCost()` and tops another
 character up by its `Other(guid).cost` (`Funds:Plan`). Tested in
 `tools/test_classtraining.lua`. Not yet seen in game.
 
+## Gold goals
+
+The owner said build it (2026-10-13, from a mockup; "the purse section
+goes at the bottom of Butler"). `Logic/GoldGoals.lua` works out three
+goals, filled from one purse in order: class spells (`ClassTraining`'s
+ready spells, else the next level's), profession training (the next rank
+once the skill reaches it, from `GoldGoals.RANKS`, Classic's usual
+prices, plus Tradeskills' `Butler:LearnCost()`, the trainers' recipes the
+character could learn now) and riding (`GoldGoals.RIDING`). Each is
+ready (green), saving (gold) or far (levels away, dim). The level cap is
+read from the game (`GoldGoals.MaxLevel`: 30 in the beta, 60 at release,
+60 when the game does not say); never hardcode it. A trainer's own price
+and level, read at `TRAINER_SHOW` by spell name (not at a class trainer),
+win over Classic's and are kept. The purse is less what the gold fund
+will mail to another character (`GoldGoals.SetAside`); the fund never
+limits spending.
+
+`UI/GoldGoals.lua` draws it under the list (`UI:PlaceGoals`; the window
+grows by its height, its top stays put): GOLD GOALS with the purse, a
+segment per goal, and a dark glass row per goal with a glowing bar. A
+click on the heading folds it (`folded.goldGoals`, per character). In All
+characters the same place lists every character (`GoldGoals:Everyone`,
+from each one's note in `goldGoalsData.characters[guid]`, gold from
+Tradeskills' `Holdings` when it has it), with how many goals are met.
+"Gold goals" on the Gold page (`goldGoals`, on unless unticked) and
+`/bbutler goals [on|off]`. Never rename `goldGoals` or `goldGoalsData`.
+Tested in `tools/test_goldgoals.lua`. Not yet seen in game.
+
+## What Farmer calls here
+
+Farmer's XP bar (2026-10-13) reads class training for its level-up cheer,
+inside a pcall, read only, falling back to Equipment's copy:
+
+```lua
+_G.BlackthornesButler.ClassTraining:IsOn()
+_G.BlackthornesButler.ClassTraining:Plan()   -- ready, cost, unknown
+```
+
+Keep these names and fields stable (they are the shared
+`Logic/ClassTraining.lua`'s, so Equipment's too); if one has to change,
+change Farmer's XP bar in the same breath.
+
 ## Sell below
 
 A player asked for anything looted below a value they set to be marked
