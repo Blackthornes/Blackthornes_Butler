@@ -163,6 +163,14 @@ slot (bought first) through `target-bag`/`target-slot`, re-reading the slot
 and its verdict first, never a "/use" macro (that equips when the cast does
 not start). Hidden, its aim emptied, in combat. Not yet seen in game.
 
+## Always sell and upgrades
+
+The owner asked (2026-10-13) that an item on the Always sell list that is
+gear Equipment calls an upgrade to wear now (`upgrade == "now"`) is not
+sold: `Verdicts:Decide` shows it as Look at it, "On your Always sell list,
+but it's an upgrade for you", and the list keeps it. Back to Sell once it is
+no upgrade. Tested in `tools/test_sellupgrade.lua`.
+
 ## Wait for a better price
 
 The owner asked (2026-10-13) for items to auction to be folded away while
