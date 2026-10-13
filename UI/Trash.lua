@@ -15,7 +15,7 @@
 -- and says so; the player drops it outside the bags and the game's own box
 -- asks before anything is destroyed, or clicks its slot to put it back.
 --
--- The can is Butler's own button on UIParent, anchored to the game's item
+-- The can is Butler's own button, a child of the game's item
 -- button (Equipment's way of finding them: retail's EnumerateValidItems
 -- and GetBagID, else classic's ContainerFrame<n>Item<m>). Nothing is
 -- written on a game frame: the bag windows' UpdateItems, OnShow and OnHide
@@ -209,7 +209,12 @@ end
 
 function Trash:Hide()
     self.pick = nil
-    if self.can then self.can:Hide() end
+    if self.can then
+        self.can:Hide()
+        -- Back to UIParent, so a button the game gives to another slot
+        -- never carries it away.
+        if Ask(self.can, "GetParent") ~= UIParent then pcall(self.can.SetParent, self.can, UIParent) end
+    end
 end
 
 --- Lay the can on the picked item's button.
@@ -222,12 +227,12 @@ function Trash:Place(frames, bags)
 
     local can = self:Can()
     self.pick = pick
+    -- A child of the item button it sits on, so it is drawn with that
+    -- button, at its scale and strata, over it, and goes when it does. Our
+    -- own frame; nothing is written on the game's.
+    if Ask(can, "GetParent") ~= button then pcall(can.SetParent, can, button) end
     local size = (Ask(button, "GetWidth") or 37) * self.SHARE
     can:SetSize(size, size)
-    local scale = (Ask(button, "GetEffectiveScale") or 1) / (Ask(UIParent, "GetEffectiveScale") or 1)
-    if scale > 0 then can:SetScale(scale) end
-    local strata = Ask(button, "GetFrameStrata")
-    if type(strata) == "string" then can:SetFrameStrata(strata) end
     can:SetFrameLevel((Ask(button, "GetFrameLevel") or 1) + 10)
     can:ClearAllPoints()
     can:SetPoint("TOPRIGHT", button, "TOPRIGHT", 1, 1)
@@ -321,7 +326,8 @@ function Trash:ButtonText(button)
         tostring(Ask(button, "GetFrameLevel")))
     local can = self.can
     if can then
-        parts[#parts + 1] = ("can %s strata %s level %s size %s scale %s alpha %s %s"):format(
+        parts[#parts + 1] = ("can in %s, %s, strata %s level %s size %s scale %s alpha %s %s"):format(
+            tostring(Ask(Ask(can, "GetParent"), "GetName") or "?"),
             Ask(can, "IsVisible") and "visible" or "not visible",
             tostring(Ask(can, "GetFrameStrata")), tostring(Ask(can, "GetFrameLevel")),
             tostring(Ask(can, "GetWidth")), tostring(Ask(can, "GetScale")),
