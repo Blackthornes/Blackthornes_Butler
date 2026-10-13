@@ -933,8 +933,8 @@ function UI:EnterTraining(data)
     local cost, unknown, guessed = training.Sum(list)
     GameTooltip:AddDoubleLine(L["In all"], training.CostText(cost, unknown, count), 1, 0.82, 0, 1, 1, 1)
     if unknown > 0 or guessed > 0 then
-        GameTooltip:AddLine(L["Prices are the usual ones until you open your trainer, then Butler keeps the real ones."],
-            Theme.Unpack("muted"), true)
+        GameTooltip:AddLine(L["Prices and skills may update when you visit your trainer for the first time."],
+            Theme.Muted(true))
     end
     if data.type == "train" then
         local ok, money = pcall(GetMoney)

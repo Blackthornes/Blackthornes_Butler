@@ -398,15 +398,15 @@ end
 
 function GoalsUI:EnterHead()
     GameTooltip:AddLine(L["Gold goals"], 1, 1, 1)
-    GameTooltip:AddLine(L["Your purse fills the goals in order: class spells, then profession training, then riding. Each bar shows what's left after the goals above it."], Theme.Unpack("muted"), true)
+    GameTooltip:AddLine(L["Your purse fills the goals in order: class spells, then profession training, then riding. Each bar shows what's left after the goals above it."], Theme.Muted(true))
     local result = self.result
     if result and (result.aside or 0) > 0 then
         GameTooltip:AddLine(L.Format("%s is set aside for your other characters by the gold fund.", Money(result.aside)),
-            Theme.Unpack("muted"), true)
+            Theme.Muted(true))
     end
     if (self.more or 0) > 0 then
         GameTooltip:AddLine(L.Format("And %d more characters. /bbutler goals lists them all.", self.more),
-            Theme.Unpack("muted"), true)
+            Theme.Muted(true))
     end
     GameTooltip:AddLine(self:IsFolded() and L["Click to open."] or L["Click to fold."], Theme.Unpack("muted"))
     GameTooltip:Show()
@@ -423,7 +423,7 @@ function GoalsUI:Enter(row)
         end
         if #(data.goals or {}) == 0 then GameTooltip:AddLine(L["nothing to save for"], Theme.Unpack("muted")) end
         if not data.isCurrent then
-            GameTooltip:AddLine(L["As that character last saw it."], Theme.Unpack("muted"), true)
+            GameTooltip:AddLine(L["As that character last saw it."], Theme.Muted(true))
         end
         GameTooltip:Show()
         return
@@ -446,21 +446,21 @@ function GoalsUI:Enter(row)
         end
         if #(goal.recipes or {}) == 0 and not (ns.Sisters and ns.Sisters.Butler("ts")) then
             GameTooltip:AddLine(L["With Blackthornes Tradeskills, the trainers' recipes you can learn are counted too."],
-                Theme.Unpack("muted"), true)
+                Theme.Muted(true))
         end
     elseif goal.kind == "riding" and goal.riding then
         GameTooltip:AddDoubleLine(goal.riding.name, Money(goal.riding.cost), 1, 1, 1, 1, 1, 1)
-        GameTooltip:AddLine(L["The training only, not the mount."], Theme.Unpack("muted"), true)
+        GameTooltip:AddLine(L["The training only, not the mount."], Theme.Muted(true))
     end
     GameTooltip:AddDoubleLine(L["In all"], Money(goal.cost), 1, 0.82, 0, 1, 1, 1)
     if goal.guessed or (goal.unknown or 0) > 0 then
-        GameTooltip:AddLine(L["Prices are the usual ones until you open the trainer, then Butler keeps the real ones."],
-            Theme.Unpack("muted"), true)
+        GameTooltip:AddLine(L["Prices and skills may update when you visit your trainer for the first time."],
+            Theme.Muted(true))
     end
     if goal.state == "ready" then
         GameTooltip:AddLine(L["You have enough gold for it."], 0.31, 0.88, 0.42, true)
     elseif goal.state == "far" then
-        GameTooltip:AddLine(L.Format("You can train it at level %d.", goal.level), Theme.Unpack("muted"), true)
+        GameTooltip:AddLine(L.Format("You can train it at level %d.", goal.level), Theme.Muted(true))
     end
     GameTooltip:Show()
 end
