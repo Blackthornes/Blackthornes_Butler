@@ -143,6 +143,11 @@ suite.check("this character is written down", data.characters["Player-1-AAA"]
 local rows = Jobs:TrainingLines()
 suite.check("a row for now and one for the next level", rows[1] and rows[1].type == "train"
     and rows[2] and rows[2].type == "trainnext")
+local jobRows = Jobs:Lines()
+suite.check("Jobs leads with the spells to train now only", jobRows[1] and jobRows[1].type == "train"
+    and not (jobRows[2] and jobRows[2].type == "trainnext"))
+local later = Jobs:LaterLines()
+suite.check("the next level waits under Later", later[1] and later[1].type == "trainnext")
 
 -- 4. Train all, with the purse short for the last.
 fake.money = 350
@@ -183,6 +188,12 @@ rows = Jobs:TrainingLines()
 local alt
 for _, row in ipairs(rows) do if row.type == "trainalt" then alt = row end end
 suite.check("the other character has its own line", alt and alt.other.name == "Bob Stone" and alt.other.count == 2)
+local laterAlt
+for _, row in ipairs(Jobs:LaterLines()) do if row.type == "trainalt" then laterAlt = row end end
+suite.check("and it waits under Later", laterAlt ~= nil)
+for _, row in ipairs(Jobs:Lines()) do
+    suite.check("not in Jobs", row.type ~= "trainalt" and row.type ~= "trainnext")
+end
 
 -- 7. Turned off.
 ns.HandleSlash("training off")

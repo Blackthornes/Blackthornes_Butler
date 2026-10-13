@@ -715,6 +715,18 @@ function UI:Lines()
             end
         end
     end
+    -- Training that waits for a level or another character goes last,
+    -- right above Gold goals (Jobs:LaterLines).
+    local laterRows = ns.Jobs and ns.Jobs:LaterLines() or {}
+    if #laterRows > 0 then
+        local group = { verdict = "later", label = L["Later"], count = #laterRows, worth = 0,
+            one = L["step"], many = L["steps"] }
+        local isFolded = folded.later == true
+        lines[#lines + 1] = { type = "header", group = group, folded = isFolded }
+        if not isFolded then
+            for _, row in ipairs(laterRows) do lines[#lines + 1] = row end
+        end
+    end
     self:PlaceMail(lines)
     return lines
 end
