@@ -513,6 +513,24 @@ rank: a `forCraft` mail that unblocks a craft here, then mail waiting for
 its crafts, then any mail waiting, then the first that can get on with
 it. Tested in `tools/test_jobs.lua`.
 
+Materials and parts first (the owner, 2026-10-13: "collecting all vendor
+materials and subcrafts should go to the top of the list", then "missing
+materials too that need to be purchased or gathered"): `Jobs.Order` lays
+out each character's steps as the mailbox visit, then what the crafts
+still need to get (`Jobs.GetSteps`, added up over the crafts): "Buy from
+a vendor" (`kind = "buy"`, missing materials marked `vendor`; Tradeskills'
+Buy materials button at the vendor gets them) and "Buy or gather"
+(`kind = "gather"`, the rest, from the auction house or the world), then
+crafts whose item another craft on the line still misses, deepest part
+first, then the rest as Tradeskills gave them. Left out of the get steps:
+what another character holds (`from`), what any queued craft on any line
+makes, and what waits in the mailbox. Both count as steps to do now.
+`Jobs:Plan` puts a character who can make a part a craft here waits on
+next, beside one whose mail unblocks it. The `vendor` mark (copper for
+one, or true) on a craft's `missing` items is Tradeskills' to give;
+without it every material to get shows under Buy or gather. Tested in
+`tools/test_jobs.lua`.
+
 Profession cooldowns (the owner said yes, 2026-10-12): Tradeskills'
 `Jobs()` also gives each character's ready cooldown as a step, `{ kind =
 "cooldown", name (its group, "Transmute"), craft, recipeID or itemID }`

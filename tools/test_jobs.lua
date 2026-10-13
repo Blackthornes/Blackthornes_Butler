@@ -58,11 +58,11 @@ end
 local ANA = { name = "Ana Blackthorne", isCurrent = true, steps = {
     { kind = "mail", to = "Blackthornes Wither", items = { { itemID = 2318, count = 30 } } },
     { kind = "craft", recipeID = 11, itemID = 4238, name = "Linen Bag", count = 1, forNames = {},
-      ready = false, missing = { { itemID = 2996, count = 2 } } },
+      ready = false, missing = { { itemID = 2996, count = 2, from = "Dee Tanner" } } },
 } }
 local CY = { name = "Cy Waiting", steps = {
     { kind = "craft", recipeID = 12, itemID = 9, name = "Thing", count = 2, forNames = {},
-      ready = false, missing = { { itemID = 2318, count = 4 } } },
+      ready = false, missing = { { itemID = 2318, count = 4, from = "Ana Blackthorne" } } },
 } }
 local WITHER = { name = "Blackthornes Wither", steps = {
     { kind = "craft", recipeID = 10, itemID = 2319, name = "Medium Leather", count = 20,
@@ -339,6 +339,59 @@ suite.check("it says to get the mail", title == "Get your mail" and detail:find(
 title, detail = Jobs.StepText(MIA.steps[2])
 suite.check("for crafts, it says to take it out first", detail:find("before you craft", 1, true) ~= nil, detail)
 suite.check("an empty pickup is left out", #Jobs.Clean({ { name = "Z", steps = { { kind = "pickup", items = {} } } } }) == 0)
+
+-- Materials to get and parts first (the owner, 2026-10-13: "collecting all
+-- vendor materials and subcrafts should go to the top", "missing materials
+-- too that need to be purchased or gathered").
+local PARTS = { name = "Ana Blackthorne", isCurrent = true, steps = {
+    { kind = "mail", to = "Cy Wither", items = { { itemID = 2318, count = 5 } } },
+    { kind = "craft", recipeID = 21, itemID = 9001, name = "Final Belt", count = 1, forNames = {},
+      ready = false, missing = { { itemID = 9002, count = 2 }, { itemID = 2321, count = 3, vendor = 10 } } },
+    { kind = "craft", recipeID = 22, itemID = 9002, name = "Bolt", count = 2, forNames = {},
+      ready = false, missing = { { itemID = 9003, count = 1 }, { itemID = 2321, count = 1, vendor = 10 } } },
+    { kind = "craft", recipeID = 23, itemID = 9003, name = "Spool", count = 1, forNames = {},
+      ready = true, missing = {} },
+    { kind = "pickup", items = { { itemID = 7001, count = 1 } } },
+    { kind = "craft", recipeID = 24, itemID = 9004, name = "Other", count = 1, forNames = {},
+      ready = false, missing = { { itemID = 2996, count = 1, vendor = true, from = "Dee Tanner" } } },
+} }
+plan = Fresh({ PARTS })
+local kinds = {}
+for _, step in ipairs(plan.here.steps) do kinds[#kinds + 1] = step.kind .. ":" .. tostring(step.recipeID or "") end
+local order = table.concat(kinds, " ")
+suite.check("mailbox, vendor, deepest part, part, then the rest",
+    order == "pickup: buy: craft:23 craft:22 mail: craft:21 craft:24", order)
+local buy = plan.here.steps[2]
+suite.check("the vendor step adds up what every craft is short",
+    #buy.items == 1 and buy.items[1].itemID == 2321 and buy.items[1].count == 4)
+title, detail = Jobs.StepText(buy)
+suite.check("it says to buy them", title == "Buy from a vendor" and detail:find("Buy materials", 1, true) ~= nil,
+    tostring(title) .. " / " .. tostring(detail))
+suite.check("a vendor run counts as a step to do now", Jobs.Ready({ steps = { buy } }))
+plan = Fresh({ { name = "Ana Blackthorne", isCurrent = true, steps = {
+    { kind = "craft", recipeID = 31, itemID = 9010, name = "Plain", count = 1, forNames = {},
+      ready = false, missing = { { itemID = 9011, count = 1 } } } } } })
+suite.check("a material nobody makes is bought or gathered first",
+    plan.here.steps[1].kind == "gather" and plan.here.steps[1].items[1].itemID == 9011 and #plan.here.steps == 2)
+title, detail = Jobs.StepText(plan.here.steps[1])
+suite.check("it says to buy or gather it", title == "Buy or gather" and detail:find("auction house", 1, true) ~= nil,
+    tostring(title) .. " / " .. tostring(detail))
+suite.check("no vendor step without vendor materials", plan.here.steps[1].kind ~= "buy")
+plan = Fresh({ { name = "Ana Blackthorne", isCurrent = true, steps = {
+    { kind = "pickup", items = { { itemID = 9011, count = 1 } }, forCraft = true },
+    { kind = "craft", recipeID = 31, itemID = 9010, name = "Plain", count = 1, forNames = {},
+      ready = false, missing = { { itemID = 9011, count = 1 } } } } } })
+suite.check("what waits in the mailbox is not gathered again", plan.here.steps[2].kind == "craft")
+local MAKER = { name = "Bo Smith", steps = {
+    { kind = "craft", recipeID = 41, itemID = 9011, name = "Part", count = 1, forNames = { "Ana Blackthorne" },
+      ready = true, missing = {} },
+} }
+plan = Fresh({ { name = "Ana Blackthorne", isCurrent = true, steps = {
+    { kind = "craft", recipeID = 31, itemID = 9010, name = "Plain", count = 1, forNames = {},
+      ready = false, missing = { { itemID = 9011, count = 1 } } } } }, MIA, MAKER })
+suite.check("one who can make a part a craft here waits on is next", plan.nextJob.name == "Bo Smith",
+    plan.nextJob.name)
+suite.check("a part another character makes is not bought or gathered", plan.here.steps[1].kind == "craft")
 
 -- 8. Wrong shapes and errors.
 local clean = Jobs.Clean({ { name = "X", steps = { { kind = "craft" }, { kind = "mail", to = "Y", items = {} },
