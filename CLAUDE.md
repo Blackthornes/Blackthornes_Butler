@@ -546,6 +546,26 @@ next hover builds it again at most once every `WhoHas.REBUILD_GAP` (1 s).
 unticked, never rename it) and `/bbutler whohas`. Tested in
 `tools/test_whohas.lua`. Not yet seen in game.
 
+## Butler on tooltips
+
+A player asked; the owner said yes (2026-10-13): "add Butler as the last
+line on the tooltip and only if Butler is loaded". `UI/VerdictTip.lua`
+adds one line to the tooltip of an item in the bags of the character
+playing: "Butler: Sell" (or "Butler: Mail to FULL NAME"), with what one is
+worth (the verdict's `unit`) on the right. Last line: its post call (or
+`OnTooltipSetItem` script hook) goes in `VerdictTip.DELAY` (1 s) after the
+first `PLAYER_ENTERING_WORLD`, so it runs after Who has it and the lines
+other addons hook at login. Only GameTooltip and ItemRefTooltip; nothing
+is written on them. Smooth play: a hover reads one slot (the hovered bag
+button's `GetBagID`/`GetID`, else where Butler's last read saw the item,
+read again to be sure), takes the window's row when `Verdicts.groupCache`
+is current, else `Verdicts:Judge` for that one item (kept). Butler reads
+the bags only while its window or a vendor is up, so a hover that finds
+nothing on stale bags asks for one `Bags:Scan()`. "Butler on tooltips" on
+the General page (`verdictTip`, account wide, on unless unticked, never
+rename it) and `/bbutler tooltip`. Tested in `tools/test_verdicttip.lua`.
+Not yet seen in game.
+
 ## Butler's voice
 
 The owner asked (2026-10-11) for Moroes, Karazhan's butler, to answer when

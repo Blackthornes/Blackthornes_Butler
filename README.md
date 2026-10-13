@@ -139,6 +139,7 @@ inside it. If they differ, the client ignores the folder and says nothing.
 /bbutler bank      turn the window coming up at the bank on or off
 /bbutler selltest  at a vendor, sell your cheapest grey to test whether Butler may sell 12 a click
 /bbutler lists     show your Always keep, sell, bank and mail lists
+/bbutler tooltip   show or hide Butler's verdict as the last line on the tooltips of items in your bags
 /bbutler upgrademail   list upgrades you hold back from your characters (upgrademail undo Full Name to mail them again)
 /bbutler reset confirm   empty all three lists (typed only)
 ```

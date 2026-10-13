@@ -194,6 +194,19 @@ L["item tooltips say which of your characters have it."] =
 L["item tooltips no longer say which of your characters have it."] =
     "Gegenstands-Tooltips sagen nicht mehr, welche deiner Charaktere ihn haben."
 
+-- UI/VerdictTip.lua and its Settings row
+L["Butler: Mail to %s"] = "Butler: Per Post an %s"
+L["%s each"] = "%s pro Stück"
+L["Butler on tooltips"] = "Butler im Tooltip"
+L["The last line on the tooltip of an item in your bags says what Butler would do with it (sell, keep, disenchant, mail to one of your characters) and what one is worth. Also /bbutler tooltip."] =
+    "Die letzte Zeile im Tooltip eines Gegenstands in deinen Taschen sagt, was Butler damit tun würde (verkaufen, behalten, entzaubern, per Post an einen deiner Charaktere) und was einer wert ist. Auch /bbutler tooltip."
+L["show or hide Butler's verdict on the tooltips of items in your bags"] =
+    "zeigt Butlers Urteil im Tooltip der Gegenstände in deinen Taschen oder blendet es aus"
+L["item tooltips show what Butler would do with them."] =
+    "Gegenstands-Tooltips zeigen, was Butler damit tun würde."
+L["item tooltips no longer show what Butler would do with them."] =
+    "Gegenstands-Tooltips zeigen nicht mehr, was Butler damit tun würde."
+
 -- ======================================================================
 -- The Butler window and its verdicts
 -- ======================================================================
