@@ -119,6 +119,12 @@ local function CleanStep(step)
         if not to or #items == 0 then return nil end
         return { kind = "mail", to = to, items = items, crafts = step.crafts == true,
             forCraft = step.forCraft == true }
+    elseif step.kind == "pickup" then
+        -- Mail waiting in the character's mailbox (the owner, 2026-10-13:
+        -- a mailbox visit for something sent to it goes up the list).
+        local items = ItemList(step.items)
+        if #items == 0 then return nil end
+        return { kind = "pickup", items = items, forCraft = step.forCraft == true }
     elseif step.kind == "cooldown" then
         -- A profession cooldown that is up (a transmute, Mooncloth): Craft
         -- makes it when it has a recipe; an item (the Salt Shaker) is used
@@ -153,6 +159,16 @@ function Jobs.Clean(answer)
                     steps[#steps + 1] = clean
                 end
             end
+            -- A mailbox visit is always the first step: it comes before
+            -- the crafts its mail is for.
+            local ordered = {}
+            for _, step in ipairs(steps) do
+                if step.kind == "pickup" then ordered[#ordered + 1] = step end
+            end
+            for _, step in ipairs(steps) do
+                if step.kind ~= "pickup" then ordered[#ordered + 1] = step end
+            end
+            steps = ordered
             if #steps > 0 then
                 list[#list + 1] = { name = name, isCurrent = job.isCurrent == true, steps = steps }
             end
@@ -187,7 +203,7 @@ end
 --- once it has what it takes.
 function Jobs.Ready(job)
     for _, step in ipairs(job.steps) do
-        if step.kind == "mail" or step.kind == "cooldown" or step.ready then return true end
+        if step.kind == "mail" or step.kind == "pickup" or step.kind == "cooldown" or step.ready then return true end
     end
     return false
 end
@@ -211,18 +227,25 @@ function Jobs:Plan()
             others[#others + 1] = job
         end
     end
-    -- Next: one that can get on with it, first one whose mail unblocks a
-    -- craft here.
-    local function Feeds(job)
+    -- Next: one that can get on with it. First one whose mail unblocks a
+    -- craft here, then one with mail waiting for its crafts, then one with
+    -- any mail waiting (the owner, 2026-10-13: a mailbox visit for
+    -- something sent to it goes up the list).
+    local function Rank(job)
+        local rank = 0
         for _, step in ipairs(job.steps) do
-            if step.kind == "mail" and step.forCraft and here and step.to == here.name then return true end
+            if step.kind == "mail" and step.forCraft and here and step.to == here.name then return 3 end
+            if step.kind == "pickup" then rank = math.max(rank, step.forCraft and 2 or 1) end
         end
-        return false
+        return rank
     end
-    local nextJob, nextIndex
+    local nextJob, nextIndex, nextRank
     for index, job in ipairs(others) do
-        if Jobs.Ready(job) and (not nextJob or (Feeds(job) and not Feeds(nextJob))) then
-            nextJob, nextIndex = job, index
+        if Jobs.Ready(job) then
+            local rank = Rank(job)
+            if not nextJob or rank > nextRank then
+                nextJob, nextIndex, nextRank = job, index, rank
+            end
         end
     end
     if nextJob then
@@ -290,6 +313,14 @@ function Jobs.StepText(step)
         return L.Format("%s is ready", step.name),
             L.Format("Your %s cooldown is up. Use it from your bags.", step.name)
     end
+    if step.kind == "pickup" then
+        local what = Jobs.ItemsText(step.items)
+        if step.forCraft then
+            return L["Get your mail"],
+                L.Format("%s for your crafts is in your mailbox. Take it out before you craft.", what)
+        end
+        return L["Get your mail"], L.Format("%s was sent to you and is waiting in your mailbox.", what)
+    end
     if step.kind == "mail" then
         local what = Jobs.ItemsText(step.items)
         -- What is in the bank has to come out before Fill mail can see it.
@@ -324,6 +355,9 @@ function Jobs.Short(step)
     if step.kind == "cooldown" then
         return L.Format("use the %s cooldown, it's ready", step.name)
     end
+    if step.kind == "pickup" then
+        return L.Format("get %s from the mailbox", Jobs.ItemsText(step.items))
+    end
     if step.kind == "mail" then
         return L.Format("mail %s to %s", Jobs.ItemsText(step.items), step.to)
     end
@@ -348,7 +382,7 @@ function Jobs.Summary(job)
 end
 
 function Jobs.Icon(step)
-    if step.kind == "mail" then return [[Interface\Icons\INV_Letter_15]] end
+    if step.kind == "mail" or step.kind == "pickup" then return [[Interface\Icons\INV_Letter_15]] end
     if step.kind == "cooldown" then
         return ItemIcon(step.itemID) or [[Interface\Icons\INV_Misc_PocketWatch_01]]
     end

@@ -466,6 +466,18 @@ any name `Errands:IsMe` knows counts as here, whatever `isCurrent` says,
 and a mail step to the character doing it is dropped (`Jobs.Clean`). A player
 was told to log out for the character they were on, 2026-10-11.
 
+Mail waiting (the owner, 2026-10-13: "if a character needs to visit the
+mail for something sent to it, butler should move that up the priority
+list"): Tradeskills' `Jobs()` gives a `{ kind = "pickup", items, forCraft
+}` step for materials a character's crafts count on that sit in its
+mailbox or are on their way, and for anything mailed to it not yet seen
+arrive (its `Queue:InMailFor`, `QueueMail:InFlightItems`). `Jobs.Clean`
+puts it first on that character's line ("Get your mail"), it counts as a
+step that can be done now, and `Jobs:Plan` picks the next character by
+rank: a `forCraft` mail that unblocks a craft here, then mail waiting for
+its crafts, then any mail waiting, then the first that can get on with
+it. Tested in `tools/test_jobs.lua`.
+
 Profession cooldowns (the owner said yes, 2026-10-12): Tradeskills'
 `Jobs()` also gives each character's ready cooldown as a step, `{ kind =
 "cooldown", name (its group, "Transmute"), craft, recipeID or itemID }`
