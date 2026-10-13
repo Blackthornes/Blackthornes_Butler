@@ -23,6 +23,10 @@
 -- gold (its gold seen after the send at least `before` plus the amount),
 -- or for 30 days, when unclaimed mail goes back.
 --
+-- Class training (Logic/ClassTraining.lua) counts too: a character keeps
+-- back what its spells to train cost, as well as its amount, and one that
+-- can't pay for them is topped up for them, while the fund is on.
+--
 -- Smooth play: the plan is worked out only while the Butler window shows,
 -- again only when the purse, the bags or a setting moved (Funds.version),
 -- with one read of Tradeskills' Holdings each time.
@@ -160,6 +164,7 @@ function Funds:Characters()
                 gold = tonumber(entry.gold),
                 goldAt = tonumber(entry.goldAt),
                 isCurrent = entry.isCurrent == true,
+                key = Text(entry.key),
             }
             characters[#characters + 1] = character
             if character.isCurrent then current = character end
@@ -223,7 +228,8 @@ end
 --- spare. Kept until Funds.version or the purse moves.
 function Funds:Plan()
     local purse = Purse()
-    local key = ("%d:%s"):format(self.version, tostring(purse))
+    local training = ns.ClassTraining
+    local key = ("%d:%s:%d"):format(self.version, tostring(purse), training and training.version or 0)
     if self.plan and self.planKey == key then return self.plan, self.spare end
     self.planKey = key
     self.plan, self.spare = {}, 0
@@ -231,7 +237,7 @@ function Funds:Plan()
 
     local characters, me = self:Characters()
     if not me then return self.plan, 0 end
-    local spare = purse - self:MinimumFor(me.name)
+    local spare = purse - self:MinimumFor(me.name) - (training and training:ReadyCost() or 0)
 
     local short = {}
     local now = Now()
@@ -240,9 +246,11 @@ function Funds:Plan()
             local minimum = self:MinimumFor(character.name)
             local sent = self:OnItsWay(character, now)
             local have = character.gold + sent
-            if minimum > 0 and have < minimum then
-                short[#short + 1] = { to = character.name, need = minimum - have, have = have,
-                    at = character.goldAt, minimum = minimum, sent = sent }
+            local other = training and training:IsOn() and character.key and training:Other(character.key)
+            local train = other and other.cost or 0
+            if minimum + train > 0 and have < minimum + train then
+                short[#short + 1] = { to = character.name, need = minimum + train - have, have = have,
+                    at = character.goldAt, minimum = minimum, sent = sent, train = train > 0 and train or nil }
             end
         end
     end
@@ -272,6 +280,14 @@ end
 
 --- What a Gold row says: "Has 12g (2 days ago), keeps 50g".
 function Funds.Reason(entry)
+    local text = Funds.KeepsText(entry)
+    if entry.train then
+        return L.Format("%s, plus %s to train new spells", text, Items.FormatMoney(entry.train))
+    end
+    return text
+end
+
+function Funds.KeepsText(entry)
     local seen = ns.Everyone and ns.Everyone.Age and ns.Everyone.Age(entry.at) or ""
     local have, keeps = Items.FormatMoney(entry.have), Items.FormatMoney(entry.minimum)
     if (entry.sent or 0) > 0 then

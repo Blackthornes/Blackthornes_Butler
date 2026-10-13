@@ -523,6 +523,81 @@ Smooth play: Tradeskills is asked only while the window draws the list,
 again only when `Bags.version` or `Jobs.version` (moved as the window
 opens) moves; no timer. Tested in `tools/test_jobs.lua`.
 
+## Class training
+
+The owner said build it (2026-10-13), in Butler and Equipment: which class
+spells the character (and the other characters) can train now and soon,
+and what they cost. `Logic/ClassTraining.lua`, `Data/ClassSpells.lua` and
+`tools/make_class_spells.py` are the same files in both addons (a fix to
+one belongs in both); neither calls the other for it. The data is
+generated from the Forever client's game tables (`make_class_spells.py
+<tables folder> --build <build>`; never edit it by hand, never commit the
+tables): each class's trainable spells with level, rank, races and the rank
+before. With `--prices <Classic world database dump> --learn <a Classic
+client's SpellEffect table>` it also writes `CLASS_SPELL_PRICES`,
+Classic's trainer prices (the full price where Classic had a discount),
+which stand in until a trainer shows its own (`ClassTraining.PriceOf`,
+`spell.guess`); never name where either came from. Real prices, which spells no trainer teaches (a quest does) and where
+the trainer stands are not in the tables: the first look at a class
+trainer's window keeps them, account wide, in `classTrainingData = {
+prices, notTaught, trainers, characters }` (never rename it), reading the
+"unavailable" lines by turning the trainer's filter on and back. Each
+character notes what it can train (`characters[guid]`) for the others.
+"Class training" on the Gold page (`classTraining`, on unless unticked,
+never rename it) and `/bbutler training [on|off]`.
+
+In Butler: the Jobs group leads with "Train N new spells" (Train all at a
+class trainer, one spell every `ClassTraining.GAP`, only what the purse
+pays for; Show the way elsewhere, through TomTom or the game's map pin),
+the next level's spells and a "Then:" line for each other character
+(`Jobs:TrainingLines`, `UI.UpdateTrainRow`). The window comes up at a
+class trainer with something to train (`Jobs:AtTrainer`). The gold fund
+keeps back the playing character's `ReadyCost()` and tops another
+character up by its `Other(guid).cost` (`Funds:Plan`). Tested in
+`tools/test_classtraining.lua`. Not yet seen in game.
+
+## Gold goals
+
+The owner said build it (2026-10-13, from a mockup; "the purse section
+goes at the bottom of Butler"). `Logic/GoldGoals.lua` works out three
+goals, filled from one purse in order: class spells (`ClassTraining`'s
+ready spells, else the next level's), profession training (the next rank
+once the skill reaches it, from `GoldGoals.RANKS`, Classic's usual
+prices, plus Tradeskills' `Butler:LearnCost()`, the trainers' recipes the
+character could learn now) and riding (`GoldGoals.RIDING`). Each is
+ready (green), saving (gold) or far (levels away, dim). The level cap is
+read from the game (`GoldGoals.MaxLevel`: 30 in the beta, 60 at release,
+60 when the game does not say); never hardcode it. A trainer's own price
+and level, read at `TRAINER_SHOW` by spell name (not at a class trainer),
+win over Classic's and are kept. The purse is less what the gold fund
+will mail to another character (`GoldGoals.SetAside`); the fund never
+limits spending.
+
+`UI/GoldGoals.lua` draws it under the list (`UI:PlaceGoals`; the window
+grows by its height, its top stays put): GOLD GOALS with the purse, a
+segment per goal, and a dark glass row per goal with a glowing bar. A
+click on the heading folds it (`folded.goldGoals`, per character). In All
+characters the same place lists every character (`GoldGoals:Everyone`,
+from each one's note in `goldGoalsData.characters[guid]`, gold from
+Tradeskills' `Holdings` when it has it), with how many goals are met.
+"Gold goals" on the Gold page (`goldGoals`, on unless unticked) and
+`/bbutler goals [on|off]`. Never rename `goldGoals` or `goldGoalsData`.
+Tested in `tools/test_goldgoals.lua`. Not yet seen in game.
+
+## What Farmer calls here
+
+Farmer's XP bar (2026-10-13) reads class training for its level-up cheer,
+inside a pcall, read only, falling back to Equipment's copy:
+
+```lua
+_G.BlackthornesButler.ClassTraining:IsOn()
+_G.BlackthornesButler.ClassTraining:Plan()   -- ready, cost, unknown
+```
+
+Keep these names and fields stable (they are the shared
+`Logic/ClassTraining.lua`'s, so Equipment's too); if one has to change,
+change Farmer's XP bar in the same breath.
+
 ## Sell below
 
 A player asked for anything looted below a value they set to be marked

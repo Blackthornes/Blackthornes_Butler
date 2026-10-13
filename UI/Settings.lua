@@ -443,6 +443,39 @@ function SettingsUI:BuildPages()
         L["List it"], "gold")
     controls.goldReport = goldButton
 
+    -- Class spells to train (Logic/ClassTraining.lua, the owner said build
+    -- it 2026-10-13).
+    pages:Section("gold", 1, L["CLASS TRAINING"])
+
+    local trainingRow = pages:Row("gold", 1, L["Class training"],
+        L["Spells you can train lead the Jobs list with what they cost, Train all shows at your class trainer, and a level up says in chat what's new. The gold fund keeps that gold back. Prices and the trainer's place are kept the first time you open a class trainer. Also /bbutler training on or off."])
+    controls.classTraining = Widgets.CreateCheckbox(trainingRow, L["On"], function(checked)
+        ns.ClassTraining:SetOn(checked)
+        ns.Funds:Changed()
+    end, true)
+    controls.classTraining:SetPoint("TOPLEFT", CONTROL_X, -2)
+
+    local _, trainingButton = CommandRow(pages, "gold", 1, L["Spells to train"],
+        L["Lists in chat the spells you can train now, what each costs, the next level's and your other characters'. Same as /bbutler training."],
+        L["List them"], "training")
+    controls.trainingReport = trainingButton
+
+    -- Gold goals at the bottom of the window (Logic/GoldGoals.lua, the
+    -- owner said build it 2026-10-13).
+    pages:Section("gold", 1, L["GOLD GOALS"])
+
+    local goalsRow = pages:Row("gold", 1, L["Gold goals"],
+        L["The bottom of the window shows what your gold is for next: class spells, profession training and riding, each with a bar of your purse against its price. Gold the gold fund sets aside for your other characters isn't counted. Also /bbutler goals on or off."])
+    controls.goldGoals = Widgets.CreateCheckbox(goalsRow, L["On"], function(checked)
+        ns.GoldGoals:SetOn(checked)
+    end, true)
+    controls.goldGoals:SetPoint("TOPLEFT", CONTROL_X, -2)
+
+    local _, goalsButton = CommandRow(pages, "gold", 1, L["Your goals"],
+        L["Lists in chat your gold goals and how far along each is. Same as /bbutler goals."],
+        L["List them"], "goals")
+    controls.goalsReport = goalsButton
+
     pages:Section("gold", 2, L["ONE CHARACTER"])
 
     local pickRow = pages:Row("gold", 2, L["Character"],
@@ -623,6 +656,8 @@ function SettingsUI:Refresh()
     controls.verdictTip:SetChecked(ns.db.verdictTip ~= false)
     controls.voice:SetChecked(ns.db.voice ~= false)
     controls.learn:SetChecked(ns.db.learn ~= false)
+    controls.classTraining:SetChecked(ns.ClassTraining:IsOn())
+    controls.goldGoals:SetChecked(ns.GoldGoals:IsOn())
     controls.debug:SetChecked(ns.db.debug == true)
     controls.sisters:SetChecked(ns.SisterNote:IsOn())
     controls.whatsNewPopup:SetChecked(ns.WhatsNew:IsOn())

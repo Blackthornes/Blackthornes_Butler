@@ -207,6 +207,8 @@ function Probe:Run()
     if ns.VerdictTip then Line("verdict on tooltips", ns.VerdictTip:ProbeText()) end
     if ns.Trash then Line("trash can", ns.Trash:ProbeText()) end
     if ns.Ammo then Line("ammo", ns.Ammo:ProbeText()) end
+    if ns.ClassTraining then Line("class training", ns.ClassTraining:ProbeText()) end
+    if ns.GoldGoals then Line("gold goals", ns.GoldGoals:ProbeText()) end
     Line("forever tables", ForeverTables())
     if ns.Jobs then Line("jobs", ns.Jobs:ProbeText()) end
 end
