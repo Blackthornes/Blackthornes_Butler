@@ -101,6 +101,39 @@ function Errands:Recipients()
             end
         end
     end
+    -- The Jobs group's mail steps for this character (Logic/Jobs.lua):
+    -- Fill mail sits on that line, so it sends what the line says, even
+    -- an item Butler would keep for itself (two herbs a goal here was
+    -- gathering were left out of a mail to the alt crafting with them,
+    -- 2026-10-13). Tradeskills fills from the bags, never more than they
+    -- hold.
+    local plan = ns.Jobs and ns.Jobs.Plan and ns.Jobs:Plan()
+    for _, step in ipairs(plan and plan.here and plan.here.steps or {}) do
+        local to = step.kind == "mail" and step.to
+        if type(to) == "string" and to ~= "" and not self:IsMe(to) then
+            local recipient
+            for _, known in ipairs(list) do
+                if Errands.SameName(known.to, to) then recipient = known break end
+            end
+            if not recipient then
+                recipient = { to = to, items = {}, byID = {}, count = 0, upgrades = {} }
+                byName[to] = recipient
+                list[#list + 1] = recipient
+            end
+            for _, wanted in ipairs(step.items or {}) do
+                local item = recipient.byID[wanted.itemID]
+                if not item then
+                    item = { itemID = wanted.itemID, count = 0 }
+                    recipient.byID[wanted.itemID] = item
+                    recipient.items[#recipient.items + 1] = item
+                end
+                if wanted.count > item.count then
+                    recipient.count = recipient.count + wanted.count - item.count
+                    item.count = wanted.count
+                end
+            end
+        end
+    end
     -- Gold from the fund (Logic/Funds.lua) rides with that character's
     -- items, or goes as a mail of its own.
     if ns.Funds and self.mailOpen then

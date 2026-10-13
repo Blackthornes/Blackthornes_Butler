@@ -315,6 +315,24 @@ function Verdicts:Kept(said, entry, noAlt)
         end
     end
 
+    local ts = said.ts
+    local queued = Number(ts, "need")
+    local mailTo = String(ts, "mailTo")
+    -- An older Tradeskills could name the character playing, and a
+    -- soulbound stack can't go in the mail, whoever's craft wants it.
+    if mailTo and (Verdicts:IsMe(mailTo) or (entry and entry.bound)) then mailTo = nil end
+    -- An alt's queued craft comes before a Farmer goal here: the goal is
+    -- usually Tradeskills' Set goal gathering for that queue, and Fill
+    -- mail left two herbs out while it kept them (2026-10-13). Only what
+    -- this character's own crafts can spare goes.
+    local share = Number(ts, "mailCount")
+    if mailTo and share and share > 0 then
+        local reason = (queued and queued > 0)
+            and L.Format("Mail %d to %s for their crafts, keep %d for yours", share, mailTo, queued)
+            or L.Format("Mail %d to %s for their crafts", share, mailTo)
+        return "mail", reason, nil, { to = mailTo, count = share }
+    end
+
     local farmer = said.farmer
     local need = Number(farmer, "need")
     if need and need > 0 then
@@ -323,12 +341,6 @@ function Verdicts:Kept(said, entry, noAlt)
             or L.Format("A goal needs %d more", need)
     end
 
-    local ts = said.ts
-    local queued = Number(ts, "need")
-    local mailTo = String(ts, "mailTo")
-    -- An older Tradeskills could name the character playing, and a
-    -- soulbound stack can't go in the mail, whoever's craft wants it.
-    if mailTo and (Verdicts:IsMe(mailTo) or (entry and entry.bound)) then mailTo = nil end
     if queued and queued > 0 then
         -- The alt's share goes in the mail too: Tradeskills' mailCount is
         -- what is left once this character's own crafts are kept back, so
@@ -353,7 +365,11 @@ function Verdicts:Kept(said, entry, noAlt)
     -- An alt needs one (two rings or trinkets): `count` says how many go,
     -- less any already mailed to them, and Groups judges the rest as if no
     -- alt wanted them (a pair too many went in the mail, 2026-10-11).
+    -- Bought to disenchant (Tradeskills' mark) is for breaking, never an
+    -- alt's upgrade (a player was told to mail one, 2026-10-13): step 8b.
     local alt = eq and eq.alt
+    local bought = Number(ts, "bought")
+    if bought and bought > 0 then alt = nil end
     if type(alt) == "table" and not noAlt and not (entry and entry.bound) then
         local to = ns.Errands and ns.Errands.NameOf and ns.Errands:NameOf(alt.key)
         local wanted = to and Verdicts:UpgradeWanted(entry.itemID, to) or 0
