@@ -275,6 +275,32 @@ suite.check("takes the smallest stacks that cover the need", table.concat(used, 
     table.concat(used, ","))
 suite.check("and leaves the big one", fake.bags[-1][1] ~= nil and fake.bags[-1][1].count == 20)
 
+-- Gear in the bank that Equipment calls an upgrade to wear now comes out
+-- too: the better of two chests, and not a ring that waits on a level.
+local function PutGear(slot, id, equipLoc)
+    local item = { bag = -1, slot = slot, id = id, name = "Gear " .. id, quality = 2, price = 100, equipLoc = equipLoc }
+    fake.bags[-1][slot] = item
+    fake.info[id] = item
+end
+PutGear(10, 601, "INVTYPE_CHEST")
+PutGear(11, 602, "INVTYPE_CHEST")
+PutGear(12, 603, "INVTYPE_FINGER")
+local gearSays = { [601] = { upgrade = "now", gain = 10 }, [602] = { upgrade = "now", gain = 20 }, [603] = { upgrade = "later" } }
+_G.BlackthornesEquipment = { Butler = { Advise = function(_, link)
+    local id = tonumber(tostring(link):match("item:(%d+)")) or link
+    return gearSays[id]
+end } }
+env.Fire("PLAYERBANKSLOTS_CHANGED")
+suite.check("a bank upgrade to wear now is offered", #Errands:BankUpgrades() == 1
+    and Errands:BankUpgrades()[1].itemID == 602, #Errands:BankUpgrades())
+used = {}
+Errands:TakeFromBank()
+suite.check("Take from bank brings it out first", used[1] == "-1:11", table.concat(used, ","))
+suite.check("and leaves the weaker chest and the ring", fake.bags[-1][10] ~= nil and fake.bags[-1][12] ~= nil)
+_G.BlackthornesEquipment = nil
+Errands:ForgetBankUpgrades()
+suite.check("without Equipment, no bank upgrades", #Errands:BankUpgrades() == 0)
+
 -- A full bank stops the run.
 ns.Verdicts:SetChoice(403, "bank")
 ns.Bags:Changed()

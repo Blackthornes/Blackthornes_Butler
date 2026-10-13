@@ -601,10 +601,55 @@ function Errands:BankWants()
     return clean
 end
 
+--- Bank gear Equipment calls an upgrade to wear now (the owner asked
+--- 2026-10-13): { { bag, slot, itemID } }, the best for each slot only (two
+--- for rings and trinkets). Read while the bank is open, kept until the
+--- bags or the bank change.
+function Errands:BankUpgrades()
+    if not self.bankOpen or not ns.Sisters.Butler("equipment") then return {} end
+    if self.upgradeCache and self.upgradeKey == Bags.version then return self.upgradeCache end
+
+    local bySlot = {}
+    for _, bag in ipairs(Errands.BankBagIDs()) do
+        for slot = 1, NumSlots(bag) do
+            local entry = Bags.ReadSlot(bag, slot)
+            if entry and entry.link and not entry.locked then
+                local answer = ns.Sisters:Ask("equipment", entry)
+                if answer and answer.upgrade == "now" then
+                    local _, _, _, equipLoc = Items.Call({ "C_Item.GetItemInfoInstant", "GetItemInfoInstant" }, entry.itemID)
+                    local group = (type(equipLoc) == "string" and equipLoc ~= "") and equipLoc or entry.itemID
+                    bySlot[group] = bySlot[group] or {}
+                    -- An empty slot (no percent) beats any percent.
+                    local gain = ns.Sisters.Number(answer, "gain") or math.huge
+                    table.insert(bySlot[group], { bag = bag, slot = slot, itemID = entry.itemID, gain = gain })
+                end
+            end
+        end
+    end
+
+    local found = {}
+    for _, list in pairs(bySlot) do
+        table.sort(list, function(a, b) return a.gain > b.gain end)
+        for i = 1, math.min(#list, ns.Verdicts.Wears(list[1].itemID)) do
+            found[#found + 1] = { bag = list[i].bag, slot = list[i].slot, itemID = list[i].itemID }
+        end
+    end
+    table.sort(found, function(a, b)
+        if a.bag ~= b.bag then return a.bag < b.bag end
+        return a.slot < b.slot
+    end)
+    self.upgradeCache, self.upgradeKey = found, Bags.version
+    return found
+end
+
+function Errands:ForgetBankUpgrades()
+    self.upgradeCache, self.upgradeKey = nil, nil
+end
+
 --- How many things Take from bank would bring out: the number of items
---- wanted, counted once each.
+--- wanted, counted once each, and each upgrade.
 function Errands:WantedCount()
-    local count = 0
+    local count = #self:BankUpgrades()
     for _ in pairs(self:BankWants()) do count = count + 1 end
     return count
 end
@@ -612,8 +657,9 @@ end
 --- The bank stacks to take for what is wanted: smallest first, until each
 --- item's count is covered. Read now, while the bank is open.
 function Errands:FromBankSlots()
+    local upgrades = self:BankUpgrades()
     local wants = self:BankWants()
-    if not next(wants) then return {} end
+    if not next(wants) then return upgrades end
 
     local stacks = {}
     for _, bag in ipairs(Errands.BankBagIDs()) do
@@ -631,6 +677,7 @@ function Errands:FromBankSlots()
     end)
 
     local left, slots = {}, {}
+    for _, step in ipairs(upgrades) do slots[#slots + 1] = step end
     for itemID, count in pairs(wants) do left[itemID] = count end
     for _, entry in ipairs(stacks) do
         if left[entry.itemID] > 0 then
@@ -730,6 +777,7 @@ function Errands:Arrived(place)
         self.sending = nil
     else
         self.bankOpen = true
+        self:ForgetBankUpgrades()
     end
     Bags:Fresh(function()
         if ns.UI then ns.UI:AtPlace(place) end
@@ -749,6 +797,7 @@ function Errands:Left(place)
         if ns.Funds then ns.Funds.waiting = nil end
     else
         self.bankOpen = false
+        self:ForgetBankUpgrades()
     end
     if ns.UI then ns.UI:LeftPlace(place) end
     self:TellTradeskills()
@@ -767,6 +816,16 @@ function Errands:OnEnable()
     ns.RegisterEvent(self, "MAIL_FAILED", function() Errands:SendFailed() end)
     ns.RegisterEvent(self, "BANKFRAME_OPENED", function() Errands:Arrived("bank") end)
     ns.RegisterEvent(self, "BANKFRAME_CLOSED", function() Errands:Left("bank") end)
+    -- The bank's own slots changed: look for upgrades again, once a burst.
+    ns.RegisterEvent(self, "PLAYERBANKSLOTS_CHANGED", function()
+        Errands:ForgetBankUpgrades()
+        if Errands.bankWaiting or not Errands.bankOpen then return end
+        Errands.bankWaiting = true
+        C_Timer.After(0.2, function()
+            Errands.bankWaiting = false
+            Errands:Update()
+        end)
+    end)
     -- Walking away ends the game's interaction with the mailbox or banker;
     -- heard as well in case the client says that and not MAIL_CLOSED (a
     -- player found the window left up after walking off, 2026-10-11).

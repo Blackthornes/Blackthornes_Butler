@@ -215,7 +215,7 @@ function UI:Build()
 
     self.takeButton = Widgets.CreateButton(frame, L["Take from bank"], Run(ns.Errands.TakeFromBank),
         { width = ERRAND_WIDTH, height = 24 })
-    self.takeButton.tooltipText = L["Takes out what your craft queue still needs, in whole stacks"]
+    self.takeButton.tooltipText = L["Takes out gear you can wear now that beats what you have on, and what your craft queue still needs"]
     self.takeButton:Hide()
 
     self:BuildSizeGrip()

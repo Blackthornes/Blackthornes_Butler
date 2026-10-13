@@ -232,7 +232,7 @@ function env.FakeBags(items)
         end,
         GetItemInfoInstant = function(id)
             local item = fake.info[id]
-            return id, "Misc", "Misc", "", 134400, item and item.class or 15, 0
+            return id, "Misc", "Misc", item and item.equipLoc or "", 134400, item and item.class or 15, 0
         end,
         RequestLoadItemDataByID = function(id) fake.requested = id end,
     }
