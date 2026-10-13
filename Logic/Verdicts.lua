@@ -20,6 +20,9 @@
 --   8b. Tradeskills: bought on the auction house
 --      to disenchant                              Disenchant, or Mail to
 --                                                  the enchanter
+--   8bb. Tradeskills: a green, not crafted, that
+--      gives a material this character's
+--      Enchanting still lacks for a sure point     Disenchant
 --   8c. Tradeskills: gear its Mail page sends to
 --      the disenchanter typed in its Settings      Mail to the disenchanter
 --   8d. Learned: the player mails it to one of
@@ -148,8 +151,9 @@ end
 --- The verdict for one carried item, why, what a vendor pays for one, and
 --- for Mail { to, count }. `entry` is a slot from Bags (itemID, link,
 --- quality, noValue, quest).
---- `noAlt` judges a copy past what an alt's upgrade needs (Verdicts:Groups):
---- as if no alt wanted it.
+--- `noAlt` judges a copy past what an alt's upgrade needs, or past the
+--- greens that already cover what Enchanting lacks (Verdicts:Groups): as
+--- if no alt and no skill-up wanted it.
 function Verdicts:Judge(entry, noAlt)
     if memoVersion ~= self.version then
         memo, memoVersion = {}, self.version
@@ -259,6 +263,11 @@ function Verdicts:Decide(entry, noAlt)
 
     verdict, reason, worth, extra = self:Bought(entry, said)
     if verdict then return verdict, reason, worth or unit, unit ~= nil, extra end
+
+    if not noAlt then
+        verdict, reason, worth, extra = self:ForEnchanting(entry, said)
+        if verdict then return verdict, reason, worth or unit, unit ~= nil, extra end
+    end
 
     verdict, reason, worth, extra = self:ForDisenchanter(entry, said)
     if verdict then return verdict, reason, worth or unit, unit ~= nil, extra end
@@ -661,6 +670,32 @@ function Verdicts:Bought(entry, said)
     return "look", L["Bought to disenchant, but none of your characters can yet"], value, { bought = bought }
 end
 
+--- Step 8bb: level Enchanting with your own greens (the owner asked
+--- 2026-10-13). Tradeskills' `forEnchanting` names a green this character
+--- can break, not crafted, whose likely material its Enchanting still lacks
+--- for the crafts that give a point every time, after what it owns. Then
+--- Disenchant, whatever the auction house or a vendor pays. Returns
+--- verdict, reason, worth and { enchanting, yield }; or nil.
+--- Verdicts:Groups stops once the greens already picked cover the shortfall.
+function Verdicts:ForEnchanting(entry, said)
+    local Number, String, True = Sisters.Number, Sisters.String, Sisters.True
+    local ts = said.ts
+    local wanted = ts and ts.forEnchanting
+    if type(wanted) ~= "table" or not True(ts, "canDisenchant") then return nil end
+    if (entry.quality or 2) ~= 2 then return nil end
+    local material = Number(wanted, "material")
+    local short = Number(wanted, "short")
+    local recipe = String(wanted, "recipe")
+    if not material or not short or short <= 0 or not recipe then return nil end
+
+    local value = Number(ts, "disenchant")
+    local name = String(wanted, "materialName")
+    local reason = name and L.Format("To level Enchanting: %s needs %s", recipe, name)
+        or L.Format("To level Enchanting: %s needs what it gives", recipe)
+    return "disenchant", reason, value,
+        { enchanting = material, short = short, yield = Number(wanted, "yield") or 1 }
+end
+
 --- Step 8c: Tradeskills' disenchanter (the owner asked 2026-10-11: Butler
 --- follows that setting). Gear its Mail page would send there (green up
 --- to the quality picked, can be disenchanted, never crafted, bind on
@@ -855,6 +890,16 @@ function Verdicts:Groups()
     local allotted, slotVerdicts = {}, {}
     for _, entry in ipairs(entries) do
         local verdict, reason, unit, extra = self:Judge(entry)
+        -- Greens broken to level Enchanting: once those before it should give
+        -- enough of the material, a copy gets its own verdict.
+        if extra and extra.enchanting then
+            local id = extra.enchanting
+            if (allotted["e" .. id] or 0) >= (extra.short or 0) then
+                verdict, reason, unit, extra = self:Judge(entry, true)
+            else
+                allotted["e" .. id] = (allotted["e" .. id] or 0) + (extra.yield or 1) * (entry.count or 1)
+            end
+        end
         if extra and extra.upgrade then
             local id = entry.itemID
             if (allotted[id] or 0) >= (extra.count or 1) then

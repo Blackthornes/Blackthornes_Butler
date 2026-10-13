@@ -186,6 +186,22 @@ a loss" is off there; a player saw Butler say Auction for a craft
 Tradeskills called a loss, 2026-10-13). A better way (disenchant) still
 wins. Tested in `tools/test_waitprice.lua`. Not yet seen in game.
 
+## Levelling Enchanting with your own greens
+
+The owner asked (2026-10-13): a green that isn't crafted and breaks into a
+material the character's own Enchanting still lacks for a guaranteed skill
+point goes under Disenchant. Tradeskills works it out (its Advise's
+`forEnchanting`: `{ recipe, material, materialName, short, yield }`,
+the orange recipes known, cheapest first, less what the character owns in
+bags, bank and mailbox) and `Verdicts:ForEnchanting`, step 8bb after the
+sisters' Keep and Bought to disenchant, says Disenchant, "To level
+Enchanting: RECIPE needs MATERIAL", whatever a vendor or the auction house
+pays. Only while this character can break it, only greens. Once the
+greens picked so far should give `short` (`yield` each), `Verdicts:Groups`
+judges the rest again without it (`Judge(entry, true)`), so it stops at
+enough. The player still clicks Disenchant. Tested in
+`tools/test_levelenchanting.lua`.
+
 ## Tradeskills' disenchanter
 
 The owner asked (2026-10-11) for Butler to follow Tradeskills' disenchanter
