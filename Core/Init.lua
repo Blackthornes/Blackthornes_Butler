@@ -337,6 +337,9 @@ local DEFAULTS = {
     -- Butler's verdict as the last line on the tooltips of carried items
     -- (UI/VerdictTip.lua, the owner said yes 2026-10-13). Never rename it.
     verdictTip = true,
+    -- A small can on the item worth the least while the bags are full
+    -- (UI/Trash.lua, the owner asked 2026-10-13). Never rename it.
+    trashCan = true,
     -- Moroes's "You rang?" and "Now, where was I?" when the player opens and
     -- closes the window (the owner asked 2026-10-11).
     voice = true,
