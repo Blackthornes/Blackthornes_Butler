@@ -55,7 +55,7 @@ to it (`UI:PlaceErrands`), all again whenever the list draws or scrolls
 (`UI:PlaceButtons`). One whose line is out of sight waits at the window's
 foot. A new button goes by its line too.
 `UI/MainWindow.lua` draws the groups with `Widgets.CreateRowList` (Farmer's,
-with the dark glass rows) and Butler's own right-click menu. Rows are two lines tall so a long reason or name wraps rather than
+with the dark glass rows) and Butler's own right-click menu. The list's scroll bar is drawn and dragged by hand (`CreateScrollbar` in `UI/Widgets.lua`, the thumb following the cursor), not the game's Slider, which ran backwards on Forever (the owner, 2026-10-13); tested in `tools/test_scrollbar.lua`. Rows are two lines tall so a long reason or name wraps rather than
 ending in "..." (the owner's rule). The window has the house size grip
 below its bottom right corner (Tradeskills' window and Equipment's upgrade
 quest panel have the same; asked 2026-10-11): drag to scale it 60% to 150%,
