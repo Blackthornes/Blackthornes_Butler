@@ -31,9 +31,9 @@ local L = ns.L
 
 local Trash = ns.NewModule("Trash")
 
--- Shows at this many free slots or fewer: when the backpack number turns
--- red (UI/FreeSpace.lua).
-Trash.FREE = 3
+-- Shows only at this many free slots or fewer: none, so the can goes the
+-- moment a slot frees up.
+Trash.FREE = 0
 Trash.SETTLE = 0.2
 Trash.ART = [[Interface\AddOns\Blackthornes_Butler\Media\Trash\TrashCan]]
 -- The can's side, as a share of the item button's.
@@ -309,7 +309,7 @@ function Trash:ShowTooltip(owner)
             GameTooltip:AddLine(row.reason, 0.8, 0.8, 0.8, true)
         end
         GameTooltip:AddLine(" ")
-        GameTooltip:AddLine(L["Click to pick it up. Drop it outside your bags and the game asks before it is destroyed."],
+        GameTooltip:AddLine(L["This is the least valuable item in your bags."],
             0.2, 1, 0.2, true)
         GameTooltip:Show()
     end)

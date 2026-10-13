@@ -783,8 +783,8 @@ L["When your bags are down to 3 free slots or fewer, a small gold can sits on th
     "Sind in deinen Taschen nur noch 3 Plätze oder weniger frei, liegt ein kleiner goldener Mülleimer auf dem Gegenstand mit dem geringsten Wert, den Butler ohnehin verkaufen würde. Klick darauf, um ihn aufzunehmen, und lass ihn außerhalb deiner Taschen fallen; das Spiel fragt nach, bevor etwas zerstört wird. Auch /bbutler trash."
 L["Throw away to make room"] = "Wegwerfen, um Platz zu schaffen"
 L["Worth %s in all, the least in your bags"] = "Insgesamt %s wert, das Wenigste in deinen Taschen"
-L["Click to pick it up. Drop it outside your bags and the game asks before it is destroyed."] =
-    "Klick, um es aufzunehmen. Lass es außerhalb deiner Taschen fallen, dann fragt das Spiel nach, bevor es zerstört wird."
+L["This is the least valuable item in your bags."] =
+    "Das ist der wertloseste Gegenstand in deinen Taschen."
 L["Your cursor is already holding something. Put it down first."] =
     "Dein Mauszeiger hält schon etwas. Leg es zuerst ab."
 L["%s is on your cursor. Drop it outside your bags and the game will ask before it is destroyed, or click its bag slot to put it back."] =
