@@ -66,6 +66,8 @@ _G.BlackthornesEquipment = { Butler = { Advise = function(_, link)
     if tostring(link):find("405") or tostring(link):find("407") then return { alt = { key = "bob", gain = 12 } } end
 end } }
 env.Enable(ns)
+-- Mailing upgrades to alts is off unless ticked; these checks need it on.
+ns.db.altUpgrades = true
 local Verdicts, UI = ns.Verdicts, ns.UI
 ns.Verdicts:SetChoice(406, "sell")
 

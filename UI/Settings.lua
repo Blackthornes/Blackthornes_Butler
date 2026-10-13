@@ -376,6 +376,13 @@ function SettingsUI:BuildPages()
     -- right-click an upgrade under Mail to hold it back; undone here.
     pages:Section("selling", 2, L["UPGRADES FOR YOUR CHARACTERS"])
 
+    local altRow = pages:Row("selling", 2, L["Mail upgrades to your characters"],
+        L["Gear that is no use here but an upgrade for another of your characters goes under Mail to them, so Fill mail sends it. Off unless you tick it. Needs Blackthornes Equipment. Also /bbutler altupgrades."])
+    controls.altUpgrades = Widgets.CreateCheckbox(altRow, L["On"], function(checked)
+        ns.Verdicts:SetAltUpgrades(checked)
+    end)
+    controls.altUpgrades:SetPoint("TOPLEFT", CONTROL_X, -2)
+
     local heldRow = pages:Row("selling", 2, L["Character"],
         L["Pick one of your characters to see what you hold back from them. Right-click an upgrade under Mail to hold back that item, or every upgrade, from the character it was going to."])
     controls.heldPick = SettingsUI.CharacterPicker(heldRow, CONTROL_X, function()
@@ -580,6 +587,7 @@ function SettingsUI:Refresh()
     controls.openAtVendor:SetChecked(ns.db.openAtVendor ~= false)
     controls.openAtMailbox:SetChecked(ns.db.openAtMailbox ~= false)
     controls.fillNext:SetChecked(ns.db.fillNext ~= false)
+    controls.altUpgrades:SetChecked(ns.Verdicts:AltUpgradesOn())
     controls.jobsAtLogin:SetChecked(ns.db.jobsAtLogin ~= false)
     controls.openAtBank:SetChecked(ns.db.openAtBank ~= false)
     controls.freeSpace:SetChecked(ns.db.freeSpace ~= false)

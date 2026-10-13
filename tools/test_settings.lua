@@ -188,7 +188,7 @@ suite.check("the command buttons run their commands",
 -- deletes the player's lists, which stays typed (a house rule).
 local covered = { sisters = true, whatsnew = true, window = true, all = true, probe = true, help = true, selltest = true, lists = true,
     vendor = true, mailbox = true, bank = true, minimap = true, settings = true, reset = true,
-    sellbelow = true, freespace = true, whohas = true, gold = true, goldmin = true, fillnext = true,
+    sellbelow = true, freespace = true, whohas = true, gold = true, goldmin = true, fillnext = true, altupgrades = true,
     jobs = true, joblogin = true, upgrademail = true }
 for _, name in ipairs(ns.commandOrder) do
     suite.check("/bbutler " .. name .. " has a place in Settings", covered[name] == true)

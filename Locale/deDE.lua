@@ -601,3 +601,11 @@ L["Your %s cooldown is up. Use it from your bags."] = "Deine Abklingzeit für %s
 L["use the %s cooldown, it's ready"] = "nutze die Abklingzeit für %s, sie ist bereit"
 L["In your %s equipment set"] = "In deinem Ausrüstungsset %s"
 L["In one of your equipment sets"] = "In einem deiner Ausrüstungssets"
+
+-- Mailing upgrades to the other characters, off unless ticked (2026-10-13).
+L["Mail upgrades to your characters"] = "Verbesserungen an deine Charaktere schicken"
+L["Gear that is no use here but an upgrade for another of your characters goes under Mail to them, so Fill mail sends it. Off unless you tick it. Needs Blackthornes Equipment. Also /bbutler altupgrades."] =
+    "Ausrüstung, die hier nichts bringt, aber für einen deiner anderen Charaktere eine Verbesserung ist, kommt unter Post an ihn, damit Post füllen sie mitschickt. Aus, bis du es ankreuzt. Braucht Blackthornes Equipment. Auch /bbutler altupgrades."
+L["turn offering to mail upgrades to your other characters on or off"] = "Angebot, Verbesserungen an deine anderen Charaktere zu schicken, ein- oder ausschalten"
+L["Butler offers to mail gear to the character it's an upgrade for."] = "Butler bietet an, Ausrüstung an den Charakter zu schicken, für den sie eine Verbesserung ist."
+L["Butler no longer offers to mail upgrades to your other characters."] = "Butler bietet nicht mehr an, Verbesserungen an deine anderen Charaktere zu schicken."

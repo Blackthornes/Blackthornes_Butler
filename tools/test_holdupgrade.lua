@@ -37,6 +37,8 @@ _G.BlackthornesEquipment = { Butler = { Advise = function()
     return { alt = { key = "bob", gain = 14 } }
 end } }
 env.Enable(ns)
+-- Mailing upgrades to alts is off unless ticked; these checks need it on.
+ns.db.altUpgrades = true
 local Verdicts, UI = ns.Verdicts, ns.UI
 
 local function Rows(verdict)
