@@ -148,36 +148,53 @@ function Jobs.SameName(a, b)
     return Fold(a) == Fold(b)
 end
 
---- What a character's crafts still need from a vendor, as one step: every
---- missing material a vendor sells and no other character holds, added
---- up over the crafts. Nil when there is none.
-function Jobs.BuyStep(steps)
-    local items, byID = {}, {}
+--- What a character's crafts still need to get, as up to two steps:
+--- "buy" for materials a vendor sells, "gather" for the rest (the auction
+--- house or out in the world; the owner, 2026-10-13: "missing materials
+--- too that need to be purchased or gathered"). Left out: what another
+--- character holds (`from`, a mail step brings it), what a queued craft
+--- makes (`made`), and what is already waiting in the mailbox.
+function Jobs.GetSteps(steps, made)
+    made = made or {}
+    local inMail = {}
+    for _, step in ipairs(steps) do
+        if step.kind == "craft" and step.itemID then made[step.itemID] = made[step.itemID] or true end
+        if step.kind == "pickup" then
+            for _, item in ipairs(step.items) do inMail[item.itemID] = true end
+        end
+    end
+    local lists = { buy = { items = {}, byID = {} }, gather = { items = {}, byID = {} } }
     for _, step in ipairs(steps) do
         if step.kind == "craft" then
             for _, need in ipairs(step.missing) do
-                if need.vendor and not need.from then
-                    local item = byID[need.itemID]
+                if not need.from and not made[need.itemID] and not inMail[need.itemID] then
+                    local list = need.vendor and lists.buy or lists.gather
+                    local item = list.byID[need.itemID]
                     if not item then
                         item = { itemID = need.itemID, count = 0 }
-                        byID[need.itemID] = item
-                        items[#items + 1] = item
+                        list.byID[need.itemID] = item
+                        list.items[#list.items + 1] = item
                     end
                     item.count = item.count + need.count
                 end
             end
         end
     end
-    if #items == 0 then return nil end
-    return { kind = "buy", items = items }
+    local found = {}
+    for _, kind in ipairs({ "buy", "gather" }) do
+        if #lists[kind].items > 0 then found[#found + 1] = { kind = kind, items = lists[kind].items } end
+    end
+    return found
 end
 
 --- A character's steps in the order to do them (the owner, 2026-10-13:
 --- "collecting all vendor materials and subcrafts should go to the top"):
---- a mailbox visit first, then buying vendor materials, then the crafts
+--- a mailbox visit first, then buying vendor materials, then buying or
+--- gathering the other materials (`made`: item IDs any queued craft
+--- makes, on any character's line, which are not got), then the crafts
 --- that make parts another craft on the line still needs, deepest part
 --- first, then the rest as Tradeskills gave them.
-function Jobs.Order(steps)
+function Jobs.Order(steps, made)
     -- How many crafts down the line a craft's item goes: 0 for one that
     -- nothing here waits on.
     local wantedBy = {}
@@ -220,8 +237,7 @@ function Jobs.Order(steps)
 
     local ordered = {}
     for _, step in ipairs(pickups) do ordered[#ordered + 1] = step end
-    local buy = Jobs.BuyStep(steps)
-    if buy then ordered[#ordered + 1] = buy end
+    for _, get in ipairs(Jobs.GetSteps(steps, made)) do ordered[#ordered + 1] = get end
     for _, part in ipairs(parts) do ordered[#ordered + 1] = part.step end
     for _, step in ipairs(rest) do ordered[#ordered + 1] = step end
     return ordered
@@ -229,7 +245,7 @@ end
 
 --- Tradeskills' list with anything of the wrong shape left out.
 function Jobs.Clean(answer)
-    local list = {}
+    local list, made = {}, {}
     for _, job in ipairs(type(answer) == "table" and answer or {}) do
         local name = type(job) == "table" and Text(job.name)
         if name then
@@ -239,14 +255,17 @@ function Jobs.Clean(answer)
                 -- Never a mail to the character doing it.
                 if clean and not (clean.kind == "mail" and Jobs.SameName(clean.to, name)) then
                     steps[#steps + 1] = clean
+                    if clean.kind == "craft" and clean.itemID then made[clean.itemID] = true end
                 end
             end
-            steps = Jobs.Order(steps)
             if #steps > 0 then
                 list[#list + 1] = { name = name, isCurrent = job.isCurrent == true, steps = steps }
             end
         end
     end
+    -- Ordered once every line is read, so a part another character makes
+    -- is never sent out to be bought or gathered.
+    for _, job in ipairs(list) do job.steps = Jobs.Order(job.steps, made) end
     return list
 end
 
@@ -272,11 +291,12 @@ function Jobs:Changed()
     self.version = self.version + 1
 end
 
---- Can the character do any of its steps now? A mail or a vendor run
---- always can; a craft once it has what it takes.
+--- Can the character do any of its steps now? A mail, a vendor run or
+--- materials to buy or gather always can; a craft once it has what it takes.
 function Jobs.Ready(job)
     for _, step in ipairs(job.steps) do
-        if step.kind == "mail" or step.kind == "pickup" or step.kind == "buy" or step.kind == "cooldown"
+        if step.kind == "mail" or step.kind == "pickup" or step.kind == "buy" or step.kind == "gather"
+            or step.kind == "cooldown"
             or step.ready then return true end
     end
     return false
@@ -410,6 +430,10 @@ function Jobs.StepText(step)
             L.Format("%s for your crafts. At a vendor that sells them, Tradeskills' Buy materials button gets them.",
                 Jobs.ItemsText(step.items))
     end
+    if step.kind == "gather" then
+        return L["Buy or gather"],
+            L.Format("%s for your crafts. Buy it on the auction house or gather it.", Jobs.ItemsText(step.items))
+    end
     if step.kind == "mail" then
         local what = Jobs.ItemsText(step.items)
         -- What is in the bank has to come out before Fill mail can see it.
@@ -450,6 +474,9 @@ function Jobs.Short(step)
     if step.kind == "buy" then
         return L.Format("buy %s from a vendor", Jobs.ItemsText(step.items))
     end
+    if step.kind == "gather" then
+        return L.Format("buy or gather %s", Jobs.ItemsText(step.items))
+    end
     if step.kind == "mail" then
         return L.Format("mail %s to %s", Jobs.ItemsText(step.items), step.to)
     end
@@ -475,7 +502,7 @@ end
 
 function Jobs.Icon(step)
     if step.kind == "mail" or step.kind == "pickup" then return [[Interface\Icons\INV_Letter_15]] end
-    if step.kind == "buy" then
+    if step.kind == "buy" or step.kind == "gather" then
         return ItemIcon(step.items[1] and step.items[1].itemID) or [[Interface\Icons\INV_Misc_Coin_01]]
     end
     if step.kind == "cooldown" then
