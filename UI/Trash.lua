@@ -15,7 +15,7 @@
 -- and says so; the player drops it outside the bags and the game's own box
 -- asks before anything is destroyed, or clicks its slot to put it back.
 --
--- The can is Butler's own button on UIParent, anchored to the game's item
+-- The can is Butler's own button, a child of the game's item
 -- button (Equipment's way of finding them: retail's EnumerateValidItems
 -- and GetBagID, else classic's ContainerFrame<n>Item<m>). Nothing is
 -- written on a game frame: the bag windows' UpdateItems, OnShow and OnHide
@@ -209,7 +209,12 @@ end
 
 function Trash:Hide()
     self.pick = nil
-    if self.can then self.can:Hide() end
+    if self.can then
+        self.can:Hide()
+        -- Back to UIParent, so a button the game gives to another slot
+        -- never carries it away.
+        if Ask(self.can, "GetParent") ~= UIParent then pcall(self.can.SetParent, self.can, UIParent) end
+    end
 end
 
 --- Lay the can on the picked item's button.
@@ -222,12 +227,12 @@ function Trash:Place(frames, bags)
 
     local can = self:Can()
     self.pick = pick
+    -- A child of the item button it sits on, so it is drawn with that
+    -- button, at its scale and strata, over it, and goes when it does. Our
+    -- own frame; nothing is written on the game's.
+    if Ask(can, "GetParent") ~= button then pcall(can.SetParent, can, button) end
     local size = (Ask(button, "GetWidth") or 37) * self.SHARE
     can:SetSize(size, size)
-    local scale = (Ask(button, "GetEffectiveScale") or 1) / (Ask(UIParent, "GetEffectiveScale") or 1)
-    if scale > 0 then can:SetScale(scale) end
-    local strata = Ask(button, "GetFrameStrata")
-    if type(strata) == "string" then can:SetFrameStrata(strata) end
     can:SetFrameLevel((Ask(button, "GetFrameLevel") or 1) + 10)
     can:ClearAllPoints()
     can:SetPoint("TOPRIGHT", button, "TOPRIGHT", 1, 1)
@@ -310,6 +315,32 @@ function Trash:Take()
     return true
 end
 
+--- Where the can sits against its button, for the probe: the button's
+--- window, its strata and level, and the can's own size, scale, alpha and
+--- whether the art file gave it a texture.
+function Trash:ButtonText(button)
+    local parent = Ask(button, "GetParent")
+    local parts = { ("button in %s (%s)"):format(tostring(Ask(parent, "GetName") or "?"),
+        Ask(parent, "IsVisible") and "visible" or "not visible") }
+    parts[#parts + 1] = ("button strata %s level %s"):format(tostring(Ask(button, "GetFrameStrata")),
+        tostring(Ask(button, "GetFrameLevel")))
+    local can = self.can
+    if can then
+        parts[#parts + 1] = ("can in %s, %s, strata %s level %s size %s scale %s alpha %s %s"):format(
+            tostring(Ask(Ask(can, "GetParent"), "GetName") or "?"),
+            Ask(can, "IsVisible") and "visible" or "not visible",
+            tostring(Ask(can, "GetFrameStrata")), tostring(Ask(can, "GetFrameLevel")),
+            tostring(Ask(can, "GetWidth")), tostring(Ask(can, "GetScale")),
+            tostring(Ask(can, "GetAlpha")), can.icon and Ask(can.icon, "GetTexture") and "art set" or "no art")
+        local left, bottom = Ask(can, "GetLeft"), Ask(can, "GetBottom")
+        parts[#parts + 1] = ("can at %s,%s; button at %s,%s"):format(tostring(left), tostring(bottom),
+            tostring(Ask(button, "GetLeft")), tostring(Ask(button, "GetBottom")))
+    else
+        parts[#parts + 1] = "no can made yet"
+    end
+    return table.concat(parts, "; ")
+end
+
 --- One line for /bbutler probe: why the can is or is not up right now.
 function Trash:ProbeText()
     local frames = #self:Frames()
@@ -328,6 +359,7 @@ function Trash:ProbeText()
                 tostring(pick.row.name or pick.row.itemID or "?"))
             local found = self:FindButton(self:ShownFrames(), pick.entry.bag, pick.entry.slot)
             parts[#parts + 1] = found and "its button was found" or "its button was NOT found"
+            if found then parts[#parts + 1] = self:ButtonText(found) end
         else
             local counts = {}
             for _, group in ipairs(ns.Verdicts:Groups()) do
