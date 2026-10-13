@@ -259,7 +259,12 @@ Tradeskills' `UI/QueueMailPanel.lua` reads it.
   item a Jobs mail step for this character names, so the mail holds what
   that line says (two herbs a Farmer goal kept were left out, 2026-10-13).
   An alt's queued craft also comes before a Farmer goal in
-  `Verdicts:Kept`. The button sits on the first line
+  `Verdicts:Kept`. A mail holds 12 stacks, so Fill mail puts the items taking the
+  fewest stacks first (`Errands.FewestStacksFirst`; cheap vials were
+  always last and left out, 2026-10-13), and once that mail goes,
+  `Errands:Sent` fills what did not fit into the next one to the same
+  character (`OnSendMail` counts what went). Tested in
+  `tools/test_mailoverflow.lua`. The button sits on the first line
   that mails each character (the owner asked 2026-10-12, as Log out sits on
   the next character's line): a Jobs mail step, a gold top-up or a Mail
   row, set by `UI:PlaceMail` each time the lines are built (`UI.fillRows`,
