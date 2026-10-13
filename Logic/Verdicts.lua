@@ -9,7 +9,8 @@
 --      ... or learned: bought back after Butler sold it   Keep
 --   2. A quest item, or one that starts one        Keep
 --   3. A vendor won't buy it                       Keep
---   4. On the player's Always sell list            Sell
+--   4. On the player's Always sell list            Sell, unless Equipment
+--      says it is an upgrade to wear now          Look at it
 --   4b. Ammo for the hunter's bow or gun           Keep
 --   5. Equipment: an upgrade now or later, a tool  Keep
 --   6. Farmer: a goal of this character needs it   Keep
@@ -238,6 +239,12 @@ function Verdicts:Decide(entry, noAlt)
     end
 
     if choice == "sell" then
+        -- Always sell gives way to one thing: gear Equipment says is an
+        -- upgrade to wear now. It is not sold on a list made when it was junk.
+        local eq = Sisters:Ask("equipment", entry)
+        if eq and eq.upgrade == "now" then
+            return "look", L["On your Always sell list, but it's an upgrade for you"], unit, unit ~= nil
+        end
         return "sell", L["On your Always sell list"], unit, unit ~= nil
     end
 
