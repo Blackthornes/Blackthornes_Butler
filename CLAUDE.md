@@ -313,7 +313,11 @@ Tradeskills' `UI/QueueMailPanel.lua` reads it.
   wide, never rename it; the right-click menu and `reset confirm` cover it).
 - **Take from bank** brings out what this character's own queued crafts
   want, `_G.BlackthornesTS.Butler:FromBank()`, smallest stacks first until
-  each count is covered.
+  each count is covered. It also brings out bank gear Equipment's
+  `Advise` calls an upgrade to wear now (the owner asked 2026-10-13;
+  `Errands:BankUpgrades`, the best for each slot, two for rings and
+  trinkets), read only while the bank is open and kept until `Bags.version`
+  moves or `PLAYERBANKSLOTS_CHANGED`.
 
 Both bank moves use `C_Container.UseContainerItem` (the selling test found
 it works from addon code), one stack every `Errands.STEP`, each slot read
