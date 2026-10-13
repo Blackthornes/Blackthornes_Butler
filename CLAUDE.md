@@ -625,6 +625,10 @@ is Butler's own button on UIParent, anchored to the game's item button
 the cursor holds something. "Trash can when full" on the General page
 (`trashCan`, account wide, on unless unticked, never rename it) and
 `/bbutler trash`. Tested in `tools/test_trash.lua`. Not yet seen in game.
+Farmer has the same can by its own prices (its `UI/Trash.lua`, same art
+and tool) and stands down while `_G.BlackthornesButler.Trash` exists, so
+only one shows; keep `ns.Trash` on the global, or change Farmer's
+`Trash.ButlerHasIt` too.
 
 ## Butler's voice
 
