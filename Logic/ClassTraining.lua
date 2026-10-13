@@ -583,7 +583,7 @@ end
 
 --- Copper as gold, silver and copper, through the addon's own formatter.
 function CT.Money(copper)
-    local format = (ns.Items and ns.Items.FormatMoney) or (ns.Theme and ns.Theme.FormatMoney) or ns.FormatMoney
+    local format = (ns.Items and ns.Items.FormatMoney) or (ns.Finder and ns.Finder.Money) or ns.FormatMoney
     if type(format) == "function" then
         local ok, text = pcall(format, copper)
         if ok and text then return text end
