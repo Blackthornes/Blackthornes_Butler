@@ -433,6 +433,12 @@ L["Still needs %s first."] = "Braucht zuerst noch %s."
 L["%s %s has it."] = "%s %s hat es."
 L["For %s. Mail it over once it's made."] = "Für %s. Schick es hinüber, sobald es hergestellt ist."
 L["For your own queue."] = "Für deine eigene Herstellungsliste."
+L["Get your mail"] = "Hol deine Post ab"
+L["%s for your crafts is in your mailbox. Take it out before you craft."] =
+    "%s für deine Herstellungen liegt in deinem Briefkasten. Nimm es heraus, bevor du herstellst."
+L["%s was sent to you and is waiting in your mailbox."] =
+    "%s wurde dir geschickt und wartet in deinem Briefkasten."
+L["get %s from the mailbox"] = "hol %s aus dem Briefkasten"
 L["mail %s to %s"] = "%s an %s schicken"
 L["craft %s"] = "%s herstellen"
 L["%s, then mail it to %s"] = "%s, dann an %s schicken"

@@ -308,6 +308,38 @@ suite.check("away from the mailbox the button goes", next(UI.fillRows) == nil)
 UI:Hide()
 _G.BlackthornesTS.Butler.Advise = function() return nil end
 
+-- Mail waiting (the owner, 2026-10-13): a mailbox visit for something
+-- sent to a character goes up the list.
+_G.BlackthornesTS.Butler.Jobs = function() return jobs end
+local MIA = { name = "Mia Thorn", steps = {
+    { kind = "craft", recipeID = 13, itemID = 8, name = "Other", count = 1, forNames = {}, ready = true, missing = {} },
+    { kind = "pickup", items = { { itemID = 2319, count = 20 } }, forCraft = true },
+} }
+plan = Fresh({ ANA, CY, WITHER, MIA })
+suite.check("a character with mail waiting for its crafts is next", plan.nextJob.name == "Mia Thorn",
+    plan.nextJob.name)
+suite.check("its mailbox is its first step", plan.nextJob.steps[1].kind == "pickup")
+suite.check("its line says so", Jobs.Summary(plan.nextJob):find("^Get 20 ") ~= nil, Jobs.Summary(plan.nextJob))
+local FEEDER = { name = "Dee Tanner", steps = {
+    { kind = "mail", to = "Ana Blackthorne", items = { { itemID = 2996, count = 2 } }, forCraft = true },
+} }
+plan = Fresh({ ANA, MIA, FEEDER })
+suite.check("one whose mail unblocks a craft here still comes before", plan.nextJob.name == "Dee Tanner")
+local WAITING_HERE = { name = "Ana Blackthorne", isCurrent = true, steps = {
+    { kind = "craft", recipeID = 11, itemID = 4238, name = "Linen Bag", count = 1, forNames = {},
+      ready = true, missing = {} },
+    { kind = "pickup", items = { { itemID = 7001, count = 1 } } },
+} }
+plan = Fresh({ WAITING_HERE, WITHER })
+suite.check("here, the mailbox comes before the craft", plan.here.steps[1].kind == "pickup")
+suite.check("and keeps this character here", plan.goFirst == false)
+local title, detail = Jobs.StepText(plan.here.steps[1])
+suite.check("it says to get the mail", title == "Get your mail" and detail:find("sent to you", 1, true) ~= nil,
+    tostring(title) .. " / " .. tostring(detail))
+title, detail = Jobs.StepText(MIA.steps[2])
+suite.check("for crafts, it says to take it out first", detail:find("before you craft", 1, true) ~= nil, detail)
+suite.check("an empty pickup is left out", #Jobs.Clean({ { name = "Z", steps = { { kind = "pickup", items = {} } } } }) == 0)
+
 -- 8. Wrong shapes and errors.
 local clean = Jobs.Clean({ { name = "X", steps = { { kind = "craft" }, { kind = "mail", to = "Y", items = {} },
     "junk", { kind = "dance" } } }, "junk", { steps = {} } })
