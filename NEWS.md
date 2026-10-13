@@ -15,6 +15,16 @@ the thanks line: `python tools/make_whatsnew.py` writes them into
 Core/WhatsNewText.lua for the in-game What's New window. Run it after
 writing a section; the release check refuses a tag while it is behind.
 
+## 0.5.0
+
+- Your bags now has a search box.
+- Gear in your equipment sets is always kept.
+- Mailing upgrades to your other characters is now off until you turn it on.
+- Fill mail sends everything a job needs, herbs too.
+- The scroll bar moves the right way now.
+
+Thanks Voldar and Ezmode for the ideas and reports!
+
 ## 0.4.0
 
 - Fill mail, Sell and the bank buttons now sit right on the line they work on.

@@ -4,6 +4,29 @@ Versions follow [semantic versioning](https://semver.org): the middle number
 moves for new behaviour, the last for fixes alone. The newest version goes at
 the top; a release is refused if its version has no section here.
 
+## 0.5.0
+
+For WoW: Forever (interface 16001). No files were added, so `/reload` is
+enough after updating.
+
+- **Search Your bags:** the same search box as All characters. Typing
+  shows only the items whose name or item ID matches, under their group
+  headings, even folded ones.
+- **Equipment sets are kept:** anything in one of your equipment sets
+  shows under Keep ("In your Tank equipment set") before any other rule,
+  so nothing sells, mails or breaks it.
+- **Mailing upgrades to your characters is off unless ticked:** tick "Mail
+  upgrades to your characters" under Upgrades for your characters on the
+  Selling page, or type `/bbutler altupgrades`, to have that gear go under
+  Mail again.
+- **Fill mail:** puts in every item a Jobs mail line names, and an alt's
+  queued craft now beats a Farmer goal here, so herbs it needs get mailed.
+  Items bought to disenchant are never offered as upgrades for an alt.
+- **Scroll bar:** dragging it now moves the list the same way, and a click
+  above or below the thumb jumps there.
+- **Settings:** the Window style box on the General page fits its words,
+  and its Reload button sits under it.
+
 ## 0.4.0
 
 For WoW: Forever (interface 16001). No files were added, so `/reload` is
