@@ -4,6 +4,58 @@ Versions follow [semantic versioning](https://semver.org): the middle number
 moves for new behaviour, the last for fixes alone. The newest version goes at
 the top; a release is refused if its version has no section here.
 
+## 0.6.0
+
+For WoW: Forever (interface 16001). Files were added, so restart fully
+after updating; `/reload` is not enough.
+
+- **Class spells to train:** the Jobs list leads with "Train N new spells".
+  At a class trainer, Train all learns what your gold pays for, one spell
+  at a time; anywhere else, Show the way points to the trainer (through
+  TomTom when it is installed). Spells for the next level, and the other
+  characters' training, wait in a Later group near the bottom. The window
+  comes up by itself at a class trainer when something can be trained, and
+  the gold fund keeps back what your spells cost. Turn it off with "Class
+  training" on the Gold page or `/bbutler training off`.
+- **Gold goals:** at the bottom of the window, your gold is split across
+  class spells, profession training and riding, with a bar for each: ready,
+  saving, or levels away. All characters shows the same for every
+  character. Turn it off with "Gold goals" on the Gold page or `/bbutler
+  goals off`.
+- **Trash can:** when your bags are full, a small gold can sits on the
+  item worth the least among the things Butler would sell, auction or
+  disenchant. A click picks the item up; drop it outside your bags, where
+  the game asks first. Butler never deletes anything. Turn it off with
+  "Trash can when full" on the General page or `/bbutler trash`.
+- **Butler on item tooltips:** the last line of the tooltip of an item in
+  your bags says what Butler would do with it, such as "Butler: Sell", with
+  what one is worth on the right. Turn it off with "Butler on tooltips" on
+  the General page or `/bbutler tooltip`.
+- **Free bag space:** the number on the backpack now shows when the game's
+  own number there is something else, such as a hunter's ammo count. The
+  ammo bag shows its ammo count.
+- **Jobs in a better order:** mail waiting for a character goes first on its
+  line. After that come the materials to buy from a vendor, then those to
+  buy at the auction house or gather, then parts that other crafts need,
+  then the crafts. A craft in a druid's form or a shaman's Ghost Wolf
+  shows a Leave form button first.
+- **Level Enchanting with your own greens:** a green you didn't craft that
+  breaks into a material your Enchanting still lacks goes under
+  Disenchant, with the recipe that needs it, until you have enough.
+- **Bank upgrades:** at the bank, Take from bank also brings out gear
+  Equipment calls an upgrade for you.
+- **Wait for a better price:** items to auction fold away into a Wait group
+  while the auction house pays well under their usual price, or while
+  Tradeskills would refuse to list them at a loss.
+- **Mail overflow:** what didn't fit in one mail (12 stacks) is filled into
+  the next mail to the same character, cheap materials first.
+- **Always sell and upgrades:** an item on your Always sell list that is
+  an upgrade you can wear now shows under Look at it instead, and goes back
+  to Sell once it is no upgrade.
+- **About page:** Settings has an About page with the version, the Discord
+  invite, how to report a bug and the other Blackthornes addons. Addons can
+  also show one-time cards in What's New.
+
 ## 0.5.0
 
 For WoW: Forever (interface 16001). No files were added, so `/reload` is

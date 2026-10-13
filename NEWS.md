@@ -23,6 +23,24 @@ tell a friend: no hype, no questions to the reader, no exclamation marks
 outside the thanks line, no dashes as punctuation, no "now you can". The
 tool prints a note for a shipped line that reads like an advert.
 
+## 0.6.0
+
+- This is the largest AddOn update so far across the whole suite of Blackthornes addons.
+- Butler tells you which class spells you can train, and has a Train all button at the trainer.
+- Gold goals at the bottom show how close you are to your spells, trainers and riding.
+- A little trash can shows on the cheapest item when your bags are full.
+- The last line on an item's tooltip says what Butler would do with it.
+- Your Jobs list puts mail, buying and parts first, so crafts come in the right order.
+
+Fixes and changes:
+
+- Greens that help level Enchanting go under Disenchant.
+- Bank upgrades come out when you open the bank.
+- Items wait for a better price when the auction house pays low.
+- Mail that didn't fit goes in the next mail to the same alt.
+- Always sell leaves out an upgrade you can wear.
+- The backpack shows free slots even when the game shows another number.
+
 ## 0.5.0
 
 - Your bags has a search box.
