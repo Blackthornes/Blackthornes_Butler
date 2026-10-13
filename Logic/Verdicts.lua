@@ -761,6 +761,14 @@ function Verdicts:Best(entry, unit, said)
     end
 
     if best == "auction" then
+        -- Tradeskills won't list it: the price it would list at is under
+        -- what one costs to make, and selling at a loss is off there.
+        -- Wait, as its Sell list does, rather than say Auction.
+        local cost = Number(ts, "belowCost")
+        if cost then
+            return "wait", L.Format("Costs about %s to make, more than it sells for now",
+                Items.FormatMoney(cost)), auctionWorth
+        end
         -- Today's price is well under the usual one: hold it back, folded
         -- away under Wait for a better price (the owner asked 2026-10-13).
         local now = Number(ts, "auctionNow")

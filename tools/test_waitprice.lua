@@ -12,6 +12,8 @@ env.FakeBags({
     { bag = 0, slot = 2, id = 602, name = "Iron Ore", quality = 1, price = 50 },
     { bag = 0, slot = 3, id = 603, name = "Mageweave Cloth", quality = 1, price = 60 },
     { bag = 0, slot = 4, id = 604, name = "Wool Cloth", quality = 1, price = 1200 },
+    { bag = 0, slot = 5, id = 605, name = "Phoenix Gloves", quality = 2, price = 300 },
+    { bag = 0, slot = 6, id = 606, name = "Runecloth Belt", quality = 2, price = 300 },
 })
 env.Enable(ns)
 
@@ -48,6 +50,8 @@ _G.BlackthornesTS = { Butler = { Advise = function(_, id)
     if id == 602 then return { auction = 1000, auctionNow = 900 } end  -- a little under is normal
     if id == 603 then return { auction = 1000 } end                    -- no fresh scan
     if id == 604 then return { auction = 1000, auctionNow = 100 } end  -- the vendor pays more anyway
+    if id == 605 then return { auction = 19355, belowCost = 21706 } end -- Tradeskills won't list it
+    if id == 606 then return { auction = 19355, belowCost = 21706, disenchant = 30000, canDisenchant = true } end
 end } }
 Look()
 
@@ -59,6 +63,14 @@ suite.check("still worth its usual price", silk.unit == 1000, silk.unit)
 suite.check("a little under is still Auction", Find("Iron Ore").verdict == "auction")
 suite.check("no price for today is still Auction", Find("Mageweave Cloth").verdict == "auction")
 suite.check("only items to auction wait", Find("Wool Cloth").verdict ~= "wait", Find("Wool Cloth").verdict)
+
+-- Tradeskills' Sell list calls it a loss: its price is under what it costs
+-- to make. Butler agrees and holds it back instead of saying Auction.
+local gloves = Find("Phoenix Gloves")
+suite.check("under what it costs to make: Wait", gloves.verdict == "wait", gloves.verdict)
+suite.check("the reason names the cost", gloves.reason:find("to make", 1, true) ~= nil, gloves.reason)
+suite.check("still worth its auction price", gloves.unit == 19355, gloves.unit)
+suite.check("a better way still wins", Find("Runecloth Belt").verdict == "disenchant", Find("Runecloth Belt").verdict)
 
 -- Folded at first, also on a character whose folds were saved before.
 ns.charDB.folded = { keep = true }
