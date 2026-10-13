@@ -37,7 +37,7 @@ Trash.FREE = 3
 Trash.SETTLE = 0.2
 Trash.ART = [[Interface\AddOns\Blackthornes_Butler\Media\Trash\TrashCan]]
 -- The can's side, as a share of the item button's.
-Trash.SHARE = 0.45
+Trash.SHARE = 0.6
 
 -- The verdicts an item can be thrown away from.
 Trash.FROM = { sell = true, auction = true, disenchant = true }
@@ -200,6 +200,29 @@ function Trash:Can()
     icon:SetAllPoints(can)
     icon:SetTexture(self.ART)
     can.icon = icon
+    -- A slow pulse (size and glow) so it is easy to spot among the icons.
+    pcall(function()
+        local group = can:CreateAnimationGroup()
+        group:SetLooping("BOUNCE")
+        local fade = group:CreateAnimation("Alpha")
+        fade:SetFromAlpha(1)
+        fade:SetToAlpha(0.5)
+        fade:SetDuration(0.6)
+        fade:SetSmoothing("IN_OUT")
+        local grow = group:CreateAnimation("Scale")
+        grow:SetScaleFrom(1, 1)
+        grow:SetScaleTo(1.3, 1.3)
+        grow:SetDuration(0.6)
+        grow:SetSmoothing("IN_OUT")
+        grow:SetOrigin("CENTER", 0, 0)
+        can.pulse = group
+    end)
+    can:SetScript("OnShow", function(owner)
+        if owner.pulse then pcall(owner.pulse.Play, owner.pulse) end
+    end)
+    can:SetScript("OnHide", function(owner)
+        if owner.pulse then pcall(owner.pulse.Stop, owner.pulse) end
+    end)
     can:SetScript("OnClick", function() Trash:Take() end)
     can:SetScript("OnEnter", function(owner) Trash:ShowTooltip(owner) end)
     can:SetScript("OnLeave", function() if GameTooltip then GameTooltip:Hide() end end)
