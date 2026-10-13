@@ -94,7 +94,8 @@ skipped, and a field of the wrong type counts as not given.
 ```lua
 _G.BlackthornesTS.Butler:Advise(itemID)
   -- { auction (net copper each after the cut and deposit; nil for greys
-  --   and bind on pickup), fast (true, false, or nil for middling),
+  --   and bind on pickup), auctionNow (the same at today's cheapest
+  --   listing by someone else, from a fresh scan only), fast (true, false, or nil for middling),
   --   disenchant, canDisenchant, enchanter, need, mailTo, mailCount,
   --   bought (how many the account bought to disenchant), disenchanter
   --   (the disenchanter typed in its Settings, when its Mail page sends
@@ -159,6 +160,17 @@ Disenchant, and casts once a click: its PreClick aims the spell at the next
 slot (bought first) through `target-bag`/`target-slot`, re-reading the slot
 and its verdict first, never a "/use" macro (that equips when the cast does
 not start). Hidden, its aim emptied, in combat. Not yet seen in game.
+
+## Wait for a better price
+
+The owner asked (2026-10-13) for items to auction to be folded away while
+the auction house pays well under their usual price. In `Verdicts:Best`,
+an Auction verdict becomes `wait` ("Wait for a better price") when
+Tradeskills' `auctionNow` is under `Verdicts.LOW_NOW` (0.85) of `auction`;
+the row keeps its usual worth. The group sits after Look at it and starts
+folded on every character (`UI.FOLDED_AT_FIRST`, `UI.IsFolded`): an
+opened one is saved as `folded.wait = false`. Nothing is sold or deleted.
+Tested in `tools/test_waitprice.lua`. Not yet seen in game.
 
 ## Tradeskills' disenchanter
 
