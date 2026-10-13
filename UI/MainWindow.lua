@@ -262,6 +262,17 @@ function UI:BuildHeader()
     search:Hide()
     self.search = search
 
+    -- Your bags' own search (the owner said yes, 2026-10-13), the same box
+    -- in the same place, its words kept apart so each view keeps its own.
+    local bagSearch = Widgets.CreateSearchBox(header, L["Search your bags"], function()
+        UI:Refresh()
+    end)
+    bagSearch:SetPoint("LEFT", header, "LEFT", 48, -2)
+    bagSearch:SetWidth(230)
+    bagSearch:SetShown(self.view ~= "all")
+    subtitle:Hide()
+    self.bagSearch = bagSearch
+
     -- Below the close gem on the corner.
     local settings = Widgets.CreateButton(header, L["Settings"], function()
         if ns.SettingsUI then ns.SettingsUI:Toggle() end
@@ -285,9 +296,11 @@ function UI:SetView(view)
     if not self.frame then return end
 
     local all = view == "all"
-    self.subtitle:SetShown(not all)
+    -- Each view's search sits where the line on what is shown sat.
+    self.subtitle:Hide()
     self.search:SetShown(all)
-    if not all then self.search:ClearFocus() end
+    self.bagSearch:SetShown(not all)
+    if all then self.bagSearch:ClearFocus() else self.search:ClearFocus() end
     self.viewButton:SetText(all and L["Your bags"] or L["All characters"])
     self.viewButton.tooltipText = all and L["What to do with each item in your bags"]
         or L["Every character's items, and where each one is"]
@@ -537,9 +550,46 @@ end
 
 --- The rows to show: each group's heading, then its items unless folded.
 --- Groups with nothing in them are left out.
+--- What the Your bags search asks for, trimmed and lower case; "" for none.
+function UI:BagSearch()
+    local text = self.bagSearch and self.bagSearch:GetText() or ""
+    return (text:lower():gsub("^%s+", ""):gsub("%s+$", ""))
+end
+
+--- Does an item row match the Your bags search? By name, as All
+--- characters does (Everyone.Matches), or by item ID.
+function UI.RowMatches(row, search)
+    if search == "" then return true end
+    local name = type(row.name) == "string" and row.name:lower() or ""
+    return name:find(search, 1, true) ~= nil or tostring(row.itemID) == search
+end
+
 function UI:Lines()
     local lines = {}
     local folded = self:Folded()
+    -- A search shows only the items it matches, under their groups, open
+    -- whether folded or not; the ammo, jobs and gold lines wait.
+    local search = self:BagSearch()
+    if search ~= "" then
+        self.matched = 0
+        for _, group in ipairs(ns.Verdicts:Groups()) do
+            local rows, worth = {}, 0
+            for _, row in ipairs(group.rows) do
+                if UI.RowMatches(row, search) then
+                    rows[#rows + 1] = row
+                    worth = worth + (row.worth or 0)
+                end
+            end
+            if #rows > 0 then
+                local shown = setmetatable({ count = #rows, worth = worth }, { __index = group })
+                lines[#lines + 1] = { type = "header", group = shown, folded = false }
+                for _, row in ipairs(rows) do lines[#lines + 1] = row end
+                self.matched = self.matched + #rows
+            end
+        end
+        self:PlaceMail(lines)
+        return lines
+    end
     -- At a vendor, filling a hunter's quiver or pouch comes first
     -- (Logic/Ammo.lua).
     local offer = ns.Ammo and ns.Ammo:Offer()
@@ -1016,13 +1066,15 @@ function UI:Refresh(force)
     if self.view == "all" then return self:RefreshAll(force) end
 
     if ns.Ammo then ns.Ammo:Offer() end
-    local key = ("%d:%d:%d:%d:%s:%s:%s"):format(ns.Bags.version, ns.Verdicts.version,
+    local search = self:BagSearch()
+    local key = ("%d:%d:%d:%d:%s:%s:%s:%s"):format(ns.Bags.version, ns.Verdicts.version,
         ns.Funds and ns.Funds.version or 0, ns.Jobs and ns.Jobs.version or 0, tostring(ns.Errands.mailOpen),
-        tostring(ns.Selling and ns.Selling.merchantOpen), tostring(ns.Ammo and ns.Ammo.offerKey))
+        tostring(ns.Selling and ns.Selling.merchantOpen), tostring(ns.Ammo and ns.Ammo.offerKey), search)
     if force or key ~= self.drawnKey then
-        local first = self.drawnKey == nil
-        self.drawnKey = key
-        self.list:SetData(self:Lines(), not first)
+        -- The same search keeps its place; a new one starts at the top.
+        local keep = self.drawnKey ~= nil and search == self.drawnBagSearch
+        self.drawnKey, self.drawnBagSearch = key, search
+        self.list:SetData(self:Lines(), keep)
         -- The jobs may have moved: the footer's words with them.
         if ns.Jobs then self:FootRoom() end
     end
@@ -1035,6 +1087,8 @@ function UI:Refresh(force)
         self.emptyLabel:SetText(L["Reading your bags..."])
     elseif total == 0 then
         self.emptyLabel:SetText(L["Your bags are empty."])
+    elseif search ~= "" and (self.matched or 0) == 0 then
+        self.emptyLabel:SetText(L.Format('Nothing matches "%s".', self.bagSearch:GetText()))
     else
         self.emptyLabel:SetText("")
     end

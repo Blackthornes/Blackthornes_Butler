@@ -206,6 +206,7 @@ L["Puts your Always bank items in the bank, a stack at a time"] = "Bringt deine 
 L["Take from bank"] = "Aus der Bank holen"
 L["Takes out what your craft queue still needs, in whole stacks"] = "Holt heraus, was deine Herstellungsliste noch braucht, in ganzen Stapeln"
 L["Search all characters"] = "Alle Charaktere durchsuchen"
+L["Search your bags"] = "Deine Taschen durchsuchen"
 L["Every character's items, and where each one is"] = "Die Gegenstände aller Charaktere, und wo jeder liegt"
 L["Your bags"] = "Deine Taschen"
 L["What to do with each item in your bags"] = "Was mit jedem Gegenstand in deinen Taschen zu tun ist"
