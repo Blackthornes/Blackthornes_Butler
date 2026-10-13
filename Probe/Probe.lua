@@ -205,6 +205,7 @@ function Probe:Run()
     if ns.FreeSpace then Line("free bag space", ns.FreeSpace:ProbeText()) end
     if ns.WhoHas then Line("who has it", ns.WhoHas:ProbeText()) end
     if ns.VerdictTip then Line("verdict on tooltips", ns.VerdictTip:ProbeText()) end
+    if ns.Trash then Line("trash can", ns.Trash:ProbeText()) end
     if ns.Ammo then Line("ammo", ns.Ammo:ProbeText()) end
     if ns.ClassTraining then Line("class training", ns.ClassTraining:ProbeText()) end
     if ns.GoldGoals then Line("gold goals", ns.GoldGoals:ProbeText()) end

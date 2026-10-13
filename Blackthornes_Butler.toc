@@ -44,6 +44,7 @@ UI\MainWindow.lua
 UI\FreeSpace.lua
 UI\WhoHas.lua
 UI\VerdictTip.lua
+UI\Trash.lua
 
 Logic\Selling.lua
 Logic\Disenchanting.lua

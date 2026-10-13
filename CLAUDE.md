@@ -680,6 +680,31 @@ the General page (`verdictTip`, account wide, on unless unticked, never
 rename it) and `/bbutler tooltip`. Tested in `tools/test_verdicttip.lua`.
 Not yet seen in game.
 
+## The trash can
+
+The owner asked (2026-10-13) for a small can on the item worth the least
+when a player's bags are full. `UI/Trash.lua`: while a bag window is open
+and the bags that take anything are down to `Trash.FREE` (3, when the
+backpack number turns red) free slots or fewer, a gold can
+(`Media/Trash/TrashCan.tga`, drawn by `tools/make_trash_art.py`; rerun it,
+never edit the TGA) sits on the top right of the stack worth the least
+(`Trash:Pick`: the verdict's `unit` times the stack) among items Butler
+would Sell, Auction or Disenchant anyway (`Trash.FROM`), priced, not
+locked, not a quest item. Keep, Mail, Bank, Wait and Look at it never get
+it. Butler never deletes: a click picks the item up
+(`C_Container.PickupContainerItem`, after reading the slot again) and says
+to drop it outside the bags, where the game's own box asks first. The can
+is Butler's own button on UIParent, anchored to the game's item button
+(found as Equipment's `BagIcons` does); the bag windows are only hooked
+(`UpdateItems`, `OnShow`, `OnHide`). Hidden in combat, at a vendor and while
+the cursor holds something. "Trash can when full" on the General page
+(`trashCan`, account wide, on unless unticked, never rename it) and
+`/bbutler trash`. Tested in `tools/test_trash.lua`. Not yet seen in game.
+Farmer has the same can by its own prices (its `UI/Trash.lua`, same art
+and tool) and stands down while `_G.BlackthornesButler.Trash` exists, so
+only one shows; keep `ns.Trash` on the global, or change Farmer's
+`Trash.ButlerHasIt` too.
+
 ## Butler's voice
 
 The owner asked (2026-10-11) for Moroes, Karazhan's butler, to answer when
