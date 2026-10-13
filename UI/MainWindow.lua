@@ -485,8 +485,10 @@ function UI.UpdateJobRow(row, data)
     row.reason:SetText(detail)
     if step.kind == "craft" and not step.ready then row.reason:SetTextColor(Theme.Unpack("accent")) end
     row.worth:SetText("")
-    if (step.kind == "craft" and step.ready) or (step.kind == "cooldown" and step.recipeID) then
-        row.action:SetText(L["Craft"])
+    if ns.Jobs.Craftable(step) then
+        -- In a form that stops a craft, the secure Leave form button
+        -- (Jobs:UpdateLeaveForm) covers the first of these.
+        row.action:SetText(ns.Jobs.InBlockingForm() and L["Leave form"] or L["Craft"])
         row.action:Show()
     end
 end
@@ -1429,6 +1431,8 @@ function UI:FootRoom()
     if disenchant > 0 then room = room + (room > 0 and 6 or 0) + disenchant end
     -- The Log out button sits on the next character's row.
     if ns.Jobs then ns.Jobs:UpdateLogout() end
+    -- Leave form sits over the first Craft button while in one.
+    if ns.Jobs then ns.Jobs:UpdateLeaveForm() end
     self.versionLabel:SetShown(room == 0)
     self.footer:SetPoint("RIGHT", self.frame, "RIGHT", -(PADDING + (room > 0 and room + 12 or 90)), 0)
 end

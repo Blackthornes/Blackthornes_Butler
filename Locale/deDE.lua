@@ -807,3 +807,6 @@ L["the trash can no longer shows when your bags are full."] =
 -- Levelling Enchanting with your own greens
 L["To level Enchanting: %s needs %s"] = "Für Verzauberkunst: %s braucht %s"
 L["To level Enchanting: %s needs what it gives"] = "Für Verzauberkunst: %s braucht, was es ergibt"
+L["Leave form"] = "Gestalt verlassen"
+L["You can't craft in this form. Click to leave it, then click Craft. Not in combat."] = "In dieser Gestalt kannst du nicht herstellen. Klick, um sie zu verlassen, dann auf Herstellen. Nicht im Kampf."
+L["leave your form first, then click Craft for %s again."] = "verlass zuerst deine Gestalt, dann klick noch einmal auf Herstellen für %s."
