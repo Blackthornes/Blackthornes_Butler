@@ -397,7 +397,11 @@ end
 --- other character with work, the next one first. Empty with no jobs.
 function Jobs:Lines()
     local plan = self:Plan()
-    local rows = self:TrainingLines()
+    -- Only spells to train now lead; the rest waits under Later.
+    local rows = {}
+    for _, row in ipairs(self:TrainingLines()) do
+        if row.type == "train" then rows[#rows + 1] = row end
+    end
     -- Nothing here can be done yet: the one who can goes first.
     if plan.goFirst then
         rows[#rows + 1] = { type = "jobnext", job = plan.nextJob, isNext = true, isFirst = true }
@@ -409,6 +413,17 @@ function Jobs:Lines()
         if not (plan.goFirst and index == 1) then
             rows[#rows + 1] = { type = "jobnext", job = job, isNext = index == 1 }
         end
+    end
+    return rows
+end
+
+--- The Later group's rows, at the foot of the list by Gold goals (the
+--- owner, 2026-10-13: what can be done now goes at the top): spells at
+--- the next level and other characters' spells to train.
+function Jobs:LaterLines()
+    local rows = {}
+    for _, row in ipairs(self:TrainingLines()) do
+        if row.type ~= "train" then rows[#rows + 1] = row end
     end
     return rows
 end

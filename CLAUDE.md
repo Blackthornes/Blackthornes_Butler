@@ -556,9 +556,12 @@ never rename it) and `/bbutler training [on|off]`.
 
 In Butler: the Jobs group leads with "Train N new spells" (Train all at a
 class trainer, one spell every `ClassTraining.GAP`, only what the purse
-pays for; Show the way elsewhere, through TomTom or the game's map pin),
-the next level's spells and a "Then:" line for each other character
-(`Jobs:TrainingLines`, `UI.UpdateTrainRow`). The window comes up at a
+pays for; Show the way elsewhere, through TomTom or the game's map pin).
+The next level's spells and a "Then:" line for each other character wait
+in a Later group at the foot of the list, right above Gold goals (the
+owner, 2026-10-13: what can be done now goes at the top;
+`Jobs:LaterLines`, folded in `folded.later`; `Jobs:TrainingLines`,
+`UI.UpdateTrainRow`). The window comes up at a
 class trainer with something to train (`Jobs:AtTrainer`). The gold fund
 keeps back the playing character's `ReadyCost()` and tops another
 character up by its `Other(guid).cost` (`Funds:Plan`). Tested in
