@@ -692,8 +692,8 @@ Not yet seen in game.
 
 The owner asked (2026-10-13) for a small can on the item worth the least
 when a player's bags are full. `UI/Trash.lua`: while a bag window is open
-and the bags that take anything are down to `Trash.FREE` (3, when the
-backpack number turns red) free slots or fewer, a gold can
+and the bags that take anything have no free slot (`Trash.FREE`, 0; the owner
+asked, 2026-10-13, for it to go when a slot frees), a gold can
 (`Media/Trash/TrashCan.tga`, drawn by `tools/make_trash_art.py`; rerun it,
 never edit the TGA) sits on the top right of the stack worth the least
 (`Trash:Pick`: the verdict's `unit` times the stack) among items Butler
