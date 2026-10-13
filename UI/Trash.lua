@@ -310,6 +310,31 @@ function Trash:Take()
     return true
 end
 
+--- Where the can sits against its button, for the probe: the button's
+--- window, its strata and level, and the can's own size, scale, alpha and
+--- whether the art file gave it a texture.
+function Trash:ButtonText(button)
+    local parent = Ask(button, "GetParent")
+    local parts = { ("button in %s (%s)"):format(tostring(Ask(parent, "GetName") or "?"),
+        Ask(parent, "IsVisible") and "visible" or "not visible") }
+    parts[#parts + 1] = ("button strata %s level %s"):format(tostring(Ask(button, "GetFrameStrata")),
+        tostring(Ask(button, "GetFrameLevel")))
+    local can = self.can
+    if can then
+        parts[#parts + 1] = ("can %s strata %s level %s size %s scale %s alpha %s %s"):format(
+            Ask(can, "IsVisible") and "visible" or "not visible",
+            tostring(Ask(can, "GetFrameStrata")), tostring(Ask(can, "GetFrameLevel")),
+            tostring(Ask(can, "GetWidth")), tostring(Ask(can, "GetScale")),
+            tostring(Ask(can, "GetAlpha")), can.icon and Ask(can.icon, "GetTexture") and "art set" or "no art")
+        local left, bottom = Ask(can, "GetLeft"), Ask(can, "GetBottom")
+        parts[#parts + 1] = ("can at %s,%s; button at %s,%s"):format(tostring(left), tostring(bottom),
+            tostring(Ask(button, "GetLeft")), tostring(Ask(button, "GetBottom")))
+    else
+        parts[#parts + 1] = "no can made yet"
+    end
+    return table.concat(parts, "; ")
+end
+
 --- One line for /bbutler probe: why the can is or is not up right now.
 function Trash:ProbeText()
     local frames = #self:Frames()
@@ -328,6 +353,7 @@ function Trash:ProbeText()
                 tostring(pick.row.name or pick.row.itemID or "?"))
             local found = self:FindButton(self:ShownFrames(), pick.entry.bag, pick.entry.slot)
             parts[#parts + 1] = found and "its button was found" or "its button was NOT found"
+            if found then parts[#parts + 1] = self:ButtonText(found) end
         else
             local counts = {}
             for _, group in ipairs(ns.Verdicts:Groups()) do
