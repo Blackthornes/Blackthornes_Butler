@@ -499,6 +499,13 @@ function SettingsUI:BuildPages()
     end, true)
     controls.freeSpace:SetPoint("TOPLEFT", CONTROL_X, -2)
 
+    local trashRow = pages:Row("general", 1, L["Trash can when full"],
+        L["When your bags are down to 3 free slots or fewer, a small gold can sits on the item worth the least that Butler would sell anyway. Click it to pick the item up, then drop it outside your bags; the game asks before anything is destroyed. Also /bbutler trash."])
+    controls.trashCan = Widgets.CreateCheckbox(trashRow, L["Show it"], function(checked)
+        if ns.Trash then ns.Trash:SetEnabled(checked) end
+    end, true)
+    controls.trashCan:SetPoint("TOPLEFT", CONTROL_X, -2)
+
     local whoRow = pages:Row("general", 1, L["Who has it"],
         L["Item tooltips list which of your characters have that item and where: bags, bank or mail. Needs Blackthornes Tradeskills, which remembers your other characters. Also /bbutler whohas."])
     controls.whoHas = Widgets.CreateCheckbox(whoRow, L["Show it"], function(checked)
@@ -611,6 +618,7 @@ function SettingsUI:Refresh()
     controls.jobsAtLogin:SetChecked(ns.db.jobsAtLogin ~= false)
     controls.openAtBank:SetChecked(ns.db.openAtBank ~= false)
     controls.freeSpace:SetChecked(ns.db.freeSpace ~= false)
+    controls.trashCan:SetChecked(ns.db.trashCan ~= false)
     controls.whoHas:SetChecked(ns.db.whoHas ~= false)
     controls.verdictTip:SetChecked(ns.db.verdictTip ~= false)
     controls.voice:SetChecked(ns.db.voice ~= false)

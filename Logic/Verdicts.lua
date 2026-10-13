@@ -951,6 +951,7 @@ end
 function Verdicts:Redraw()
     if ns.UI then ns.UI:Refresh() end
     if ns.Selling then ns.Selling:Update() end
+    if ns.Trash then ns.Trash:Changed() end
 end
 
 --------------------------------------------------------------------------------
