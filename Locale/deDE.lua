@@ -803,3 +803,7 @@ L["the trash can shows on the item worth the least when your bags are full."] =
     "Bei vollen Taschen liegt der Mülleimer auf dem Gegenstand mit dem geringsten Wert."
 L["the trash can no longer shows when your bags are full."] =
     "Der Mülleimer wird bei vollen Taschen nicht mehr angezeigt."
+
+-- Levelling Enchanting with your own greens
+L["To level Enchanting: %s needs %s"] = "Für Verzauberkunst: %s braucht %s"
+L["To level Enchanting: %s needs what it gives"] = "Für Verzauberkunst: %s braucht, was es ergibt"
