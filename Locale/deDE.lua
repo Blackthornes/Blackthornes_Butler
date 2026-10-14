@@ -659,6 +659,14 @@ L["Gear that is no use here but an upgrade for another of your characters goes u
     "Ausrüstung, die hier nichts bringt, aber für einen deiner anderen Charaktere eine Verbesserung ist, kommt unter Post an ihn, damit Post füllen sie mitschickt. Aus, bis du es ankreuzt. Braucht Blackthornes Equipment. Auch /bbutler altupgrades."
 L["turn offering to mail upgrades to your other characters on or off"] = "Angebot, Verbesserungen an deine anderen Charaktere zu schicken, ein- oder ausschalten"
 L["Butler offers to mail gear to the character it's an upgrade for."] = "Butler bietet an, Ausrüstung an den Charakter zu schicken, für den sie eine Verbesserung ist."
+L["DISENCHANTING"] = "ENTZAUBERN"
+L["Disenchant greens here"] = "Grüne hier entzaubern"
+L["On the character set as your disenchanter in Tradeskills, every green it can break goes under Disenchant, whatever it would sell for. Crafted greens keep their usual advice, and upgrades and anything a goal or your craft queue needs are still kept. Off unless you tick it. Needs Blackthornes Tradeskills. Also /bbutler greens."] = "Auf dem Charakter, der in Tradeskills als dein Entzauberer eingetragen ist, kommt jeder grüne Gegenstand, den er entzaubern kann, unter Entzaubern, egal was er beim Verkauf bringen würde. Hergestellte grüne Gegenstände bekommen ihren üblichen Rat, und Verbesserungen und alles, was ein Ziel oder deine Herstellungsliste braucht, wird weiter behalten. Aus, bis du es ankreuzt. Braucht Blackthornes Tradeskills. Auch /bbutler greens."
+L["You disenchant greens on this character, about %s"] = "Auf diesem Charakter entzauberst du grüne Gegenstände, etwa %s"
+L["You disenchant greens on this character"] = "Auf diesem Charakter entzauberst du grüne Gegenstände"
+L["turn disenchanting every green on your disenchanter on or off"] = "Entzaubern aller grünen Gegenstände auf deinem Entzauberer ein- oder ausschalten"
+L["On your disenchanter, Butler says to disenchant every green it can break."] = "Auf deinem Entzauberer rät Butler, jeden grünen Gegenstand zu entzaubern, den er entzaubern kann."
+L["Butler judges greens on your disenchanter by what they're worth again."] = "Butler beurteilt grüne Gegenstände auf deinem Entzauberer wieder nach ihrem Wert."
 L["Butler no longer offers to mail upgrades to your other characters."] = "Butler bietet nicht mehr an, Verbesserungen an deine anderen Charaktere zu schicken."
 
 -- ======================================================================

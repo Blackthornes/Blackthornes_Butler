@@ -411,6 +411,16 @@ function SettingsUI:BuildPages()
     end, true)
     controls.openAtBank:SetPoint("TOPLEFT", CONTROL_X, -2)
 
+    -- The owner asked 2026-10-14: on the disenchanter, break every green.
+    pages:Section("selling", 1, L["DISENCHANTING"])
+
+    local greensRow = pages:Row("selling", 1, L["Disenchant greens here"],
+        L["On the character set as your disenchanter in Tradeskills, every green it can break goes under Disenchant, whatever it would sell for. Crafted greens keep their usual advice, and upgrades and anything a goal or your craft queue needs are still kept. Off unless you tick it. Needs Blackthornes Tradeskills. Also /bbutler greens."])
+    controls.disenchantGreens = Widgets.CreateCheckbox(greensRow, L["On"], function(checked)
+        ns.Verdicts:SetDisenchantGreens(checked)
+    end)
+    controls.disenchantGreens:SetPoint("TOPLEFT", CONTROL_X, -2)
+
     -- Asked 2026-10-11: anything worth less than this joins Sell. It only
     -- ever adds to Sell; nothing sells until the player clicks.
     pages:Section("selling", 2, L["JUNK"])
@@ -749,6 +759,7 @@ function SettingsUI:Refresh()
     controls.openAtMailbox:SetChecked(ns.db.openAtMailbox ~= false)
     controls.fillNext:SetChecked(ns.db.fillNext ~= false)
     controls.altUpgrades:SetChecked(ns.Verdicts:AltUpgradesOn())
+    controls.disenchantGreens:SetChecked(ns.Verdicts:DisenchantGreensOn())
     controls.jobsAtLogin:SetChecked(ns.db.jobsAtLogin ~= false)
     controls.questItems:SetChecked(ns.Quests:IsOn())
     controls.openAtBank:SetChecked(ns.db.openAtBank ~= false)

@@ -328,6 +328,12 @@ local DEFAULTS = {
     -- the owner asked 2026-10-13 for it off by default). Never rename it.
     altUpgrades = false,
 
+    -- On the character Tradeskills names as the disenchanter, every green
+    -- it can break goes under Disenchant, whatever it is worth
+    -- (Verdicts:GreensHere; the owner asked 2026-10-14 for it off by
+    -- default). Never rename it.
+    disenchantGreens = false,
+
     -- The free bag space number on the backpack button (UI/FreeSpace.lua,
     -- asked 2026-10-11).
     freeSpace = true,
