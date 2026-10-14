@@ -37,6 +37,8 @@ local TITLE = "Blackthornes Butler"
 local PAGES = {
     { key = "selling", text = L["ERRANDS"],
       tip = L["Selling at a vendor, mail and the bank, and your Always keep, sell and bank lists"] },
+    { key = "bankalt", text = L["BANK ALT"],
+      tip = L["One of your characters that takes whole kinds of items by mail"] },
     { key = "gold", text = L["GOLD"],
       tip = L["A gold fund: how much each of your characters keeps, topped up by mail"] },
     { key = "general", text = L["GENERAL"],
@@ -278,6 +280,15 @@ function SettingsUI.CharacterPicker(row, x, onChange)
         return self.names[self.index]
     end
 
+    --- Show this name, or the first when it is nil or not there.
+    function picker:Select(name)
+        self.index = 1
+        for index, each in ipairs(self.names) do
+            if name ~= nil and each == name then self.index = index end
+        end
+        Show()
+    end
+
     Show()
     return picker
 end
@@ -302,6 +313,39 @@ function SettingsUI:SyncHeld()
     local count = name and #ns.Verdicts:HeldItems(name) or 0
     controls.heldItems:SetText(count > 0 and L.Format("Undo %d", count) or L["None"])
     controls.heldItems:SetLabelColor(count == 0 and "dim" or nil)
+end
+
+--- The bank alt page: who, when, which list and the kinds, as saved.
+function SettingsUI:SyncBankAlt()
+    local controls = self.controls
+    if not (controls and controls.bankAltPick) then return end
+    local BankAlt = ns.BankAlt
+    local picked = BankAlt:Name()
+    local names, seen = { L["Nobody"] }, {}
+    local playing = ns.Errands:PlayingName()
+    for _, name in ipairs(ns.Errands:Characters()) do seen[name] = true end
+    if playing then seen[playing] = true end
+    if picked then seen[picked] = true end
+    local sorted = {}
+    for name in pairs(seen) do sorted[#sorted + 1] = name end
+    table.sort(sorted)
+    for _, name in ipairs(sorted) do names[#names + 1] = name end
+    controls.bankAltPick:SetNames(names)
+    controls.bankAltPick:Select(picked)
+
+    local lists = { L["None"] }
+    for _, name in ipairs(BankAlt:ListNames()) do lists[#lists + 1] = name end
+    local list = BankAlt:ListName()
+    local known = false
+    for _, name in ipairs(lists) do known = known or name == list end
+    if list and not known then lists[#lists + 1] = list end
+    controls.bankAltList:SetNames(lists)
+    controls.bankAltList:Select(list)
+
+    for index, when in ipairs(BankAlt.WHEN) do
+        if when == BankAlt:When() then controls.bankAltWhen:SetValue(index, true) end
+    end
+    for key, box in pairs(controls.bankAltKinds) do box:SetChecked(BankAlt:KindOn(key)) end
 end
 
 function SettingsUI:BuildPages()
@@ -434,6 +478,55 @@ function SettingsUI:BuildPages()
         L["Lists in chat every upgrade you hold back, and from whom. Same as /bbutler upgrademail."],
         L["List them"], "upgrademail")
     controls.heldList = heldButton
+
+    -- Bank alt (Logic/BankAlt.lua, a player asked, the owner said build it
+    -- 2026-10-14): who, where it sits among the verdicts and which list on
+    -- the left, the kinds of items on the right.
+    pages:Section("bankalt", 1, L["BANK ALT"])
+
+    local altRow = pages:Row("bankalt", 1, L["Send to"],
+        L["One of your characters on this realm and side. What you tick goes under Mail to them, so Fill mail sends it and you press Send. Quest items, your goals, your craft queue, upgrades, pet food, soulbound items and your own Always lists always come first, and greys still sell. Also /bbutler bankalt Full Name."])
+    controls.bankAltPick = SettingsUI.CharacterPicker(altRow, CONTROL_X, function()
+        local picker = controls.bankAltPick
+        ns.BankAlt:SetName(picker.index > 1 and picker:GetName() or nil)
+    end)
+
+    local whenRow = pages:Row("bankalt", 1, L["Send it"],
+        L["Before selling: everything you tick goes to the bank alt, even what would sell well. Before a vendor: the auction house and a disenchant still win, and the rest goes. Only leftovers: just what Butler would leave for you to look at. Also /bbutler bankalt first, vendor or leftovers."])
+    controls.bankAltWhen = Widgets.CreateStepper(whenRow, {
+        min = 1, max = #ns.BankAlt.WHEN, step = 1,
+        format = function(value) return ns.BankAlt.WHEN_LABELS[ns.BankAlt.WHEN[value]] end,
+        onChange = function(value) ns.BankAlt:SetWhen(ns.BankAlt.WHEN[value]) end,
+    })
+    ns.SettingsPages.FitStepper(controls.bankAltWhen, ns.BankAlt.WHEN_LABELS)
+    controls.bankAltWhen:SetPoint("TOPLEFT", CONTROL_X, -2)
+
+    local listRow = pages:Row("bankalt", 1, L["A shopping list"],
+        L["Everything on one of the shopping lists you made at the auction house goes to the bank alt too, whatever its kind. Needs Blackthornes Tradeskills."])
+    controls.bankAltList = SettingsUI.CharacterPicker(listRow, CONTROL_X, function()
+        local picker = controls.bankAltList
+        ns.BankAlt:SetList(picker.index > 1 and picker:GetName() or nil)
+    end)
+
+    local _, bankAltButton = CommandRow(pages, "bankalt", 1, L["What goes there"],
+        L["Says in chat who your bank alt is and what it takes. Same as /bbutler bankalt."],
+        L["List it"], "bankalt")
+    controls.bankAltReport = bankAltButton
+
+    pages:Section("bankalt", 2, L["WHAT GOES THERE"])
+    controls.bankAltKinds = {}
+    for _, kind in ipairs(ns.BankAlt.KINDS) do
+        local key = kind.key
+        local description = key == "boe"
+            and L["Green or better weapons and armor that bind when worn and aren't an upgrade for you."]
+            or L["Tick to mail these to the bank alt, untick to leave them to Butler's other rules."]
+        local row = pages:Row("bankalt", 2, kind.label, description)
+        local box = Widgets.CreateCheckbox(row, L["Send"], function(checked)
+            ns.BankAlt:SetKind(key, checked)
+        end, true)
+        box:SetPoint("TOPLEFT", CONTROL_X, -2)
+        controls.bankAltKinds[key] = box
+    end
 
     -- Gold: the gold fund (the owner asked 2026-10-11). The usual amount on
     -- the left, one character's own on the right. Logic/Funds.lua.
@@ -689,6 +782,7 @@ function SettingsUI:Refresh()
     table.sort(heldNames)
     controls.heldPick:SetNames(heldNames)
     self:SyncHeld()
+    self:SyncBankAlt()
     controls.textSize:Sync()
     controls.windowStyle:Sync()
     self.pages:Refresh()

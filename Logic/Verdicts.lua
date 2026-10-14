@@ -39,6 +39,10 @@
 --      ... Auction, but today's cheapest listing
 --      is well under its usual price               Wait for a better price
 --  13. Anything else                               Look at it
+--  14. The bank alt, when the player picked one and ticked the item's kind
+--      or listed it (Logic/BankAlt.lua): what step 12 or 13 said becomes
+--      Mail to the bank alt, all of it, or only Sell and Look at it, or
+--      only Look at it, as the player picked.  Mail
 --
 -- Steps 5 to 8, 11 and 12 ask the other four addons (Logic/Sisters.lua); a
 -- sister that is not loaded is skipped. "Look at it" is never sold for the
@@ -327,6 +331,13 @@ function Verdicts:Decide(entry, noAlt)
     end
 
     verdict, reason, worth, extra = self:Best(entry, unit, said)
+    -- The bank alt (Logic/BankAlt.lua) takes what the player's pick says
+    -- from here on: everything, or only what a vendor would get, or only
+    -- what is left to look at.
+    if ns.BankAlt then
+        local bank, why, to = ns.BankAlt:Verdict(entry, verdict)
+        if bank then return bank, why, worth, true, to end
+    end
     return verdict, reason, worth, true, extra
 end
 
