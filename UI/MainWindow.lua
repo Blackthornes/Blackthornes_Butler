@@ -354,8 +354,8 @@ function UI.CreateRow(row)
     row.reason:SetPoint("RIGHT", row.worth, "LEFT", -8, 0)
     row.reason:SetWordWrap(true)
 
-    -- The Ammo row's Fill button and a job's Craft button sit where the
-    -- worth goes (Logic/Ammo.lua, Logic/Jobs.lua).
+    -- The Ammo row's Fill button and a job's Craft or Buy button sit where
+    -- the worth goes (Logic/Ammo.lua, Logic/Jobs.lua).
     row.action = Widgets.CreateButton(row, L["Fill"], function() UI.RowAction(row.data) end, {
         primary = true, width = 80, height = 22,
     })
@@ -373,6 +373,8 @@ function UI.RowAction(data)
         if message then ns.Print(message) end
     elseif data.type == "ammo" then
         ns.Ammo:Buy()
+    elseif data.type == "job" and data.step and data.step.kind == "buy" then
+        ns.Jobs:BuyAtVendor()
     elseif data.type == "job" then
         ns.Jobs:Craft(data.step)
     elseif data.type == "train" then
@@ -485,7 +487,17 @@ function UI.UpdateJobRow(row, data)
     row.reason:SetText(detail)
     if step.kind == "craft" and not step.ready then row.reason:SetTextColor(Theme.Unpack("accent")) end
     row.worth:SetText("")
-    if ns.Jobs.Craftable(step) then
+    -- At a vendor, Buy from a vendor says what this one has, with Buy.
+    local atVendor = ns.Jobs.VendorText(step)
+    if atVendor then
+        row.reason:SetText(atVendor)
+        if not ns.Jobs.Buyable(step) then row.reason:SetTextColor(Theme.Unpack("accent")) end
+    end
+    if ns.Jobs.Buyable(step) then
+        row.action:SetText(ns.Jobs.offer.buying and L["Buying..."] or L["Buy"])
+        row.action.tooltipText = ns.Jobs.BuyTooltip()
+        row.action:Show()
+    elseif ns.Jobs.Craftable(step) then
         -- In a form that stops a craft, the secure Leave form button
         -- (Jobs:UpdateLeaveForm) covers the first of these.
         row.action:SetText(ns.Jobs.InBlockingForm() and L["Leave form"] or L["Craft"])
@@ -1232,11 +1244,13 @@ function UI:Refresh(force)
     if self.view == "all" then return self:RefreshAll(force) end
 
     if ns.Ammo then ns.Ammo:Offer() end
+    if ns.Jobs and ns.Jobs.VendorOffer then ns.Jobs:VendorOffer() end
     local search = self:BagSearch()
-    local key = ("%d:%d:%d:%d:%d:%s:%s:%s:%s"):format(ns.ClassTraining and ns.ClassTraining.version or 0,
+    local key = ("%d:%d:%d:%d:%d:%s:%s:%s:%s:%s"):format(ns.ClassTraining and ns.ClassTraining.version or 0,
         ns.Bags.version, ns.Verdicts.version,
         ns.Funds and ns.Funds.version or 0, ns.Jobs and ns.Jobs.version or 0, tostring(ns.Errands.mailOpen),
-        tostring(ns.Selling and ns.Selling.merchantOpen), tostring(ns.Ammo and ns.Ammo.offerKey), search)
+        tostring(ns.Selling and ns.Selling.merchantOpen), tostring(ns.Ammo and ns.Ammo.offerKey),
+        ns.Jobs and ns.Jobs.vendorKey or "", search)
     if force or key ~= self.drawnKey then
         -- The same search keeps its place; a new one starts at the top.
         local keep = self.drawnKey ~= nil and search == self.drawnBagSearch
