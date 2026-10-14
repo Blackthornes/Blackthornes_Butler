@@ -114,6 +114,9 @@ _G.BlackthornesTS.Butler:Craft(recipeID)
 _G.BlackthornesTS.Butler:SearchAuctions(items)
   -- { { itemID, count } }: true and "all" or "one", or false and why
   --   (see "Items for your quests")
+_G.BlackthornesTS.Butler:Lists()
+  -- { { name, items = { [itemID] = want } } } and its version: the
+  --   player's shopping lists, for the bank alt (see "The bank alt")
 _G.BlackthornesEquipment.Butler:Advise(link, bag, slot)
   -- { upgrade = "now" | "later" | nil, gain, sell (its bag coin), tool,
   --   alt = { key (a GUID), gain, level } when it is an upgrade for
@@ -222,6 +225,29 @@ copy and the character playing never get it. With nobody typed there,
 Tradeskills picks the alt with the most Enchanting (more than the
 character playing; its "Pick one for me", 2026-10-11), so Advise names
 that one; with that unticked too, nothing changes. Tested in `tools/test_disenchantermail.lua`.
+
+## The bank alt
+
+A player asked, the owner said build it (2026-10-14): whole kinds of items
+mailed to one of the player's characters, to sort out later.
+`Logic/BankAlt.lua`: the player picks the character (`bankAlt`, full name,
+nil off) and ticks kinds read from the game's own item types
+(`GetItemInfoInstant` class 7 and its subclass: cloth, leather, ore and
+stone, herbs, meat, elemental, enchanting, other trade goods; and green
+or better gear that binds when worn, `bindType` 2), kept in
+`bankAltKinds[kind] = false` for each one unticked. With Tradeskills,
+everything on one shopping list goes too (`bankAltList`, its name;
+Tradeskills' `Butler:Lists()`, read once per `Verdicts.version`).
+`bankAltWhen` is where it sits: "first" (Before selling: whatever step 12
+or 13 says), "vendor" (Before a vendor: only Sell and Look at it) or
+"leftovers" (only Look at it). `Verdicts:Decide` asks `BankAlt:Verdict`
+after `Best`, so the player's lists, sets, quest items, the sisters'
+Keep, an alt's queued crafts and every other mail come first; greys
+still sell, soulbound stays, and nothing goes to the character playing.
+The rows are Mail to the bank alt, so Fill mail sends them. All account
+wide, never rename them. A BANK ALT page in Settings and `/bbutler
+bankalt [Full Name|off|first|vendor|leftovers]`. Tested in
+`tools/test_bankalt.lua`.
 
 ## All characters
 
