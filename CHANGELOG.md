@@ -4,6 +4,19 @@ Versions follow [semantic versioning](https://semver.org): the middle number
 moves for new behaviour, the last for fixes alone. The newest version goes at
 the top; a release is refused if its version has no section here.
 
+## 0.8.0
+
+For WoW: Forever (interface 16001). A file was added and the TOC changed, so
+restart the game fully after updating (`/reload` is not enough).
+
+- **Bank alt:** pick one of your characters and tick the kinds of items to
+  send it: cloth, leather, ore and stone, herbs, meat, elemental, enchanting
+  materials, other trade goods, and green or better gear that binds when
+  worn. With Tradeskills, everything on one of your shopping lists can go
+  too. You choose where it sits in Butler's order: before selling, before a
+  vendor, or only for what is left. The items show under Mail, so Fill mail
+  sends them. A BANK ALT page in Settings and `/bbutler bankalt`.
+
 ## 0.7.0
 
 For WoW: Forever (interface 16001). Files were added, so restart the game

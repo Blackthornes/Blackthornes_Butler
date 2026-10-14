@@ -5,6 +5,9 @@
 local _, ns = ...
 
 ns.WHATS_NEW = {
+    { version = "0.8.0", lines = {
+        "Pick a character as your bank alt, and Butler mails it whole kinds of items, like all your cloth or herbs.",
+    } },
     { version = "0.7.0", lines = {
         "Butler keeps the items your open quests need and can search the auction house for the ones you still lack.",
         "At a vendor, Butler shows what it has for your crafts and can buy it.",
@@ -16,9 +19,5 @@ ns.WHATS_NEW = {
         "A little trash can shows on the cheapest item when your bags are full.",
         "The last line on an item's tooltip says what Butler would do with it.",
         "Your Jobs list puts mail, buying and parts first, so crafts come in the right order.",
-    } },
-    { version = "0.5.0", lines = {
-        "Your bags has a search box.",
-        "Gear in your equipment sets is always kept.",
     } },
 }
