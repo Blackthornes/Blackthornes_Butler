@@ -368,6 +368,13 @@ function SettingsUI:BuildPages()
     controls.sellTest = testButton
     controls.sellTestRow = testRow
 
+    local buyRow = pages:Row("selling", 1, L["Buy more"],
+        L["Shift-click an item at a vendor to buy any amount of it at once, like 200. Butler shows what it comes to first, and buys a stack at a time after you click Buy. It stops if your bags fill, your gold runs out or the vendor sells out. Also /bbutler buy 200 water, or /bbutler buy on or off."])
+    controls.buyMany = Widgets.CreateCheckbox(buyRow, L["On"], function(checked)
+        ns.BuyMany:SetOn(checked)
+    end, true)
+    controls.buyMany:SetPoint("TOPLEFT", CONTROL_X, -2)
+
     pages:Section("selling", 1, L["MAIL AND BANK"])
 
     local mailRow = pages:Row("selling", 1, L["Open at a mailbox"],
@@ -765,6 +772,7 @@ function SettingsUI:Refresh()
     controls.openAtBank:SetChecked(ns.db.openAtBank ~= false)
     controls.freeSpace:SetChecked(ns.db.freeSpace ~= false)
     controls.trashCan:SetChecked(ns.db.trashCan ~= false)
+    controls.buyMany:SetChecked(ns.BuyMany:IsOn())
     controls.whoHas:SetChecked(ns.db.whoHas ~= false)
     controls.verdictTip:SetChecked(ns.db.verdictTip ~= false)
     controls.voice:SetChecked(ns.db.voice ~= false)

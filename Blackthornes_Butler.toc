@@ -54,6 +54,8 @@ Logic\Disenchanting.lua
 Logic\Errands.lua
 Logic\Funds.lua
 Logic\Ammo.lua
+Logic\BuyMany.lua
+UI\BuyMany.lua
 Logic\Learning.lua
 Logic\Jobs.lua
 Logic\ClassTraining.lua

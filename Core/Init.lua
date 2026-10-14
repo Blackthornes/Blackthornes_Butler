@@ -346,6 +346,10 @@ local DEFAULTS = {
     -- A small can on the item worth the least while the bags are full
     -- (UI/Trash.lua, the owner asked 2026-10-13). Never rename it.
     trashCan = true,
+    -- Shift-click at a vendor opens the Buy more box, for any amount of an
+    -- item at once (UI/BuyMany.lua, the owner asked 2026-10-14). Never
+    -- rename it.
+    buyMany = true,
     -- Moroes's "You rang?" and "Now, where was I?" when the player opens and
     -- closes the window (the owner asked 2026-10-11).
     voice = true,
