@@ -101,7 +101,8 @@ _G.BlackthornesTS.Butler:Advise(itemID)
   --   disenchant, canDisenchant, enchanter, need, mailTo, mailCount,
   --   bought (how many the account bought to disenchant), disenchanter
   --   (the disenchanter typed in its Settings, when its Mail page sends
-  --   this gear there) }
+  --   this gear there), youDisenchant (the character playing is that
+  --   disenchanter), crafted (a green some recipe makes, asked only then) }
 _G.BlackthornesTS.Butler:SetBoughtToDisenchant(itemID, on, count)
   -- true, or false and why: the right-click menu's mark
 _G.BlackthornesTS.Butler:FillMail(name, items, money)
@@ -210,6 +211,21 @@ greens picked so far should give `short` (`yield` each), `Verdicts:Groups`
 judges the rest again without it (`Judge(entry, true)`), so it stops at
 enough. The player still clicks Disenchant. Tested in
 `tools/test_levelenchanting.lua`.
+
+## Disenchant greens here
+
+The owner asked (2026-10-14) for an option, off unless ticked, that on the
+character set as the disenchanter says Disenchant for every green,
+whatever it is worth. `Verdicts:GreensHere`, step 8be after Bought to
+disenchant and Levelling Enchanting: with "Disenchant greens here" ticked
+(Selling page, DISENCHANTING; `disenchantGreens`, account wide, never
+rename it; `/bbutler greens [on|off]`), a green this character can break
+goes under Disenchant when Tradeskills' Advise says `youDisenchant` (the
+character playing is the one its Mail page names, typed or picked) and
+not `crafted`. Everything kept before it (sets, lists, quest items,
+upgrades and tools, goals, the craft queue, an alt's craft, pet food)
+still wins; other characters keep the usual verdicts. Tested in
+`tools/test_disenchantgreens.lua`.
 
 ## Tradeskills' disenchanter
 

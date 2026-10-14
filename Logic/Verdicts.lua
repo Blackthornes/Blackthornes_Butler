@@ -24,6 +24,10 @@
 --   8bb. Tradeskills: a green, not crafted, that
 --      gives a material this character's
 --      Enchanting still lacks for a sure point     Disenchant
+--   8be. "Disenchant greens here" ticked, and this
+--      character is the disenchanter (Tradeskills'
+--      Mail page): a green it can break, not
+--      crafted, whatever it would sell for         Disenchant
 --   8c. Tradeskills: gear its Mail page sends to
 --      the disenchanter typed in its Settings      Mail to the disenchanter
 --   8d. Learned: the player mails it to one of
@@ -306,6 +310,9 @@ function Verdicts:Decide(entry, noAlt)
         verdict, reason, worth, extra = self:ForEnchanting(entry, said)
         if verdict then return verdict, reason, worth or unit, unit ~= nil, extra end
     end
+
+    verdict, reason, worth, extra = self:GreensHere(entry, said)
+    if verdict then return verdict, reason, worth or unit, unit ~= nil, extra end
 
     verdict, reason, worth, extra = self:ForDisenchanter(entry, said)
     if verdict then return verdict, reason, worth or unit, unit ~= nil, extra end
@@ -741,6 +748,39 @@ function Verdicts:ForEnchanting(entry, said)
         { enchanting = material, short = short, yield = Number(wanted, "yield") or 1 }
 end
 
+--- Step 8be: "Disenchant greens here" (the owner asked 2026-10-14). On the
+--- character Tradeskills' Mail page names as the disenchanter (its
+--- `youDisenchant`), every green it can break goes under Disenchant,
+--- whatever a vendor or the auction house pays. Off unless ticked
+--- (`disenchantGreens`, account wide, never rename it). Never crafted
+--- greens, which are made to sell; everything kept before this step (sets,
+--- the player's lists, quest items, upgrades and tools, goals, the craft
+--- queue, an alt's craft, pet food) is still kept. Returns verdict, reason
+--- and worth; or nil.
+function Verdicts:GreensHere(entry, said)
+    if not self:DisenchantGreensOn() then return nil end
+    if (entry.quality or 0) ~= 2 then return nil end
+    local Number, True = Sisters.Number, Sisters.True
+    local ts = said.ts
+    if not (True(ts, "youDisenchant") and True(ts, "canDisenchant")) then return nil end
+    if True(ts, "crafted") then return nil end
+    local value = Number(ts, "disenchant")
+    return "disenchant", value and L.Format("You disenchant greens on this character, about %s",
+        Items.FormatMoney(value)) or L["You disenchant greens on this character"], value
+end
+
+--- Whether "Disenchant greens here" is ticked: off unless the player ticks
+--- it (the owner, 2026-10-14).
+function Verdicts:DisenchantGreensOn()
+    return ns.db ~= nil and ns.db.disenchantGreens == true
+end
+
+function Verdicts:SetDisenchantGreens(on)
+    if not ns.db then return end
+    ns.db.disenchantGreens = on and true or false
+    self:Changed(true)
+end
+
 --- Step 8c: Tradeskills' disenchanter (the owner asked 2026-10-11: Butler
 --- follows that setting). Gear its Mail page would send there (green up
 --- to the quality picked, can be disenchanted, never crafted, bind on
@@ -1107,6 +1147,16 @@ local function ItemName(itemID)
     if not itemName then Items:RequestLoad(itemID) end
     return link or itemName or L.Format("item %d", itemID)
 end
+
+ns.RegisterCommand("greens", L["turn disenchanting every green on your disenchanter on or off"], function(arg)
+    arg = (arg or ""):lower():match("^%s*(.-)%s*$")
+    local on
+    if arg == "on" then on = true elseif arg == "off" then on = false
+    else on = not Verdicts:DisenchantGreensOn() end
+    Verdicts:SetDisenchantGreens(on)
+    ns.Print(on and L["On your disenchanter, Butler says to disenchant every green it can break."]
+        or L["Butler judges greens on your disenchanter by what they're worth again."])
+end)
 
 -- Upgrades held back from a character (right-click a Mail upgrade row).
 -- Undo lets them go again; nothing else is deleted.
