@@ -211,6 +211,7 @@ function Probe:Run()
     if ns.GoldGoals then Line("gold goals", ns.GoldGoals:ProbeText()) end
     Line("forever tables", ForeverTables())
     if ns.Jobs then Line("jobs", ns.Jobs:ProbeText()) end
+    if ns.Quests then Line("quest items", ns.Quests:ProbeText()) end
 end
 
 ns.RegisterCommand("probe", "check what this client supports for bags, vendors and mail (reads only)", function()

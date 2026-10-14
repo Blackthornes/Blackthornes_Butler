@@ -375,6 +375,8 @@ function UI.RowAction(data)
         ns.Ammo:Buy()
     elseif data.type == "job" and data.step and data.step.kind == "buy" then
         ns.Jobs:BuyAtVendor()
+    elseif data.type == "job" and data.step and data.step.kind == "quest" then
+        if ns.Quests:Search(data.step.items) then UI:Refresh(true) end
     elseif data.type == "job" then
         ns.Jobs:Craft(data.step)
     elseif data.type == "train" then
@@ -493,7 +495,11 @@ function UI.UpdateJobRow(row, data)
         row.reason:SetText(atVendor)
         if not ns.Jobs.Buyable(step) then row.reason:SetTextColor(Theme.Unpack("accent")) end
     end
-    if ns.Jobs.Buyable(step) then
+    if ns.Jobs.Searchable(step) then
+        row.action:SetText(ns.Jobs.SearchLabel(step))
+        row.action.tooltipText = ns.Jobs.SearchTooltip(step)
+        row.action:Show()
+    elseif ns.Jobs.Buyable(step) then
         row.action:SetText(ns.Jobs.offer.buying and L["Buying..."] or L["Buy"])
         row.action.tooltipText = ns.Jobs.BuyTooltip()
         row.action:Show()
@@ -1250,7 +1256,8 @@ function UI:Refresh(force)
     if ns.Ammo then ns.Ammo:Offer() end
     if ns.Jobs and ns.Jobs.VendorOffer then ns.Jobs:VendorOffer() end
     local search = self:BagSearch()
-    local key = ("%d:%d:%d:%d:%d:%s:%s:%s:%s:%s"):format(ns.ClassTraining and ns.ClassTraining.version or 0,
+    local key = ("%d:%s:%d:%d:%d:%d:%d:%s:%s:%s:%s:%s"):format(ns.Quests and ns.Quests.version or 0,
+        tostring(ns.Quests and ns.Quests.auctionOpen), ns.ClassTraining and ns.ClassTraining.version or 0,
         ns.Bags.version, ns.Verdicts.version,
         ns.Funds and ns.Funds.version or 0, ns.Jobs and ns.Jobs.version or 0, tostring(ns.Errands.mailOpen),
         tostring(ns.Selling and ns.Selling.merchantOpen), tostring(ns.Ammo and ns.Ammo.offerKey),

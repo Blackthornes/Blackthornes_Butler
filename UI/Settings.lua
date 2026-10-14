@@ -349,6 +349,14 @@ function SettingsUI:BuildPages()
     end, true)
     controls.jobsAtLogin:SetPoint("TOPLEFT", CONTROL_X, -2)
 
+    -- Items for your quests (Logic/Quests.lua, a player asked 2026-10-14).
+    local questRow = pages:Row("selling", 1, L["Items for your quests"],
+        L["Keeps the items your open quests ask you to collect, and lists the ones still to find at the top of the window. At the auction house, with Blackthornes Tradeskills, its Search button looks them up. Also /bbutler quests."])
+    controls.questItems = Widgets.CreateCheckbox(questRow, L["On"], function(checked)
+        ns.Quests:SetOn(checked)
+    end, true)
+    controls.questItems:SetPoint("TOPLEFT", CONTROL_X, -2)
+
     CommandRow(pages, "selling", 1, L["Every character's jobs"],
         L["Lists in chat what each of your characters has to craft or mail for Tradeskills' craft queue. Also /bbutler jobs."], L["List"], "jobs")
 
@@ -649,6 +657,7 @@ function SettingsUI:Refresh()
     controls.fillNext:SetChecked(ns.db.fillNext ~= false)
     controls.altUpgrades:SetChecked(ns.Verdicts:AltUpgradesOn())
     controls.jobsAtLogin:SetChecked(ns.db.jobsAtLogin ~= false)
+    controls.questItems:SetChecked(ns.Quests:IsOn())
     controls.openAtBank:SetChecked(ns.db.openAtBank ~= false)
     controls.freeSpace:SetChecked(ns.db.freeSpace ~= false)
     controls.trashCan:SetChecked(ns.db.trashCan ~= false)

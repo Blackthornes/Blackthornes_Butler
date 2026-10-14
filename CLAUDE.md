@@ -111,6 +111,9 @@ _G.BlackthornesTS.Butler:Jobs()
   --   characters")
 _G.BlackthornesTS.Butler:Craft(recipeID)
   -- true and "crafting" or "opened", or false and why
+_G.BlackthornesTS.Butler:SearchAuctions(items)
+  -- { { itemID, count } }: true and "all" or "one", or false and why
+  --   (see "Items for your quests")
 _G.BlackthornesEquipment.Butler:Advise(link, bag, slot)
   -- { upgrade = "now" | "later" | nil, gain, sell (its bag coin), tool,
   --   alt = { key (a GUID), gain, level } when it is an upgrade for
@@ -590,6 +593,38 @@ rename it; `/bbutler joblogin`). Once the last step here is gone,
 Smooth play: Tradeskills is asked only while the window draws the list,
 again only when `Bags.version` or `Jobs.version` (moved as the window
 opens) moves; no timer. Tested in `tools/test_jobs.lua`.
+
+## Items for your quests
+
+A player asked (2026-10-14, the owner said build it) to buy what open
+quests need on the auction house. `Logic/Quests.lua` reads the quest log
+(`C_QuestLog.GetQuestObjectives`, else `GetQuestLogLeaderBoard`, in a
+pcall) for "collect N" objectives. The log gives a name and counts, never
+an ID, so the ID comes from `Data/QuestItems.lua` (`ns.QUEST_ITEMS[questID]
+= { itemID, ... }`, Classic's quest objectives kept only when the Forever
+client's game tables say the item trades; written by
+`tools/make_quest_items.py <pfQuest> <tables folder>`, never by hand), else
+an item in the bags with that name, else `GetItemInfoInstant(name)`.
+Forever's own quests work by name; one nothing names is looked at again
+when the bags or the item come in.
+
+- Every item an open quest collects is Keep (`Verdicts:Decide` step 2,
+  `Quests:Reason`: "Westfall Stew needs 5 more", "For Westfall Stew" once
+  there are enough for the hand-in), Always sell or not.
+- Jobs leads with "For your quests" (`Quests:Step`, kind `quest`): what is
+  still to find and trades (bind on pickup and quest-only items never),
+  most needed first. At the auction house (`AUCTION_HOUSE_SHOW`) with
+  Tradeskills it has a Search button (`Quests:Search`), which calls
+  `_G.BlackthornesTS.Butler:SearchAuctions(items)`: every item at once,
+  or, where the game takes one a search, "Next 2/5" a click.
+- Quest events only mark the log stale; one read follows `Quests.SETTLE`
+  later, and the items are judged again only when the signature moved.
+- "Items for your quests" on the Selling page (`questItems`, account wide,
+  on unless unticked, never rename it) and `/bbutler quests [on|off]`
+  (alone it lists them). `/bbutler probe` has a "quest items" line.
+
+Tested in `tools/test_quests.lua`. If `SearchAuctions` changes in
+Tradeskills, change `Quests:Search` too.
 
 ## Class training
 
