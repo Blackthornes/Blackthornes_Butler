@@ -289,6 +289,7 @@ function Trash:Refresh()
     local bags = {}
     for _, entry in ipairs(read.bags) do bags[entry.bag] = true end
     self.free = read.free
+    ns.Verdicts:ForgetIfOld()
     self.waiting = true
     ns.Bags:Fresh(function() Trash:Place(frames, bags) end)
 end

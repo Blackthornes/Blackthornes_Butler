@@ -118,6 +118,7 @@ end
 function VerdictTip:Line(itemID, tooltip)
     local entry = itemID and self:Entry(itemID, tooltip)
     if not entry then return nil end
+    ns.Verdicts:ForgetIfOld()
     local verdict, unit, to
     local row = KeptRow(entry)
     if row then

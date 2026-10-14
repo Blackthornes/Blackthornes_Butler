@@ -151,7 +151,11 @@ function Errands:Recipients()
                 -- Postage is per item attached: the plan set aside one
                 -- mail's, so the rest comes off the gold, or the purse can
                 -- fall short of the stamps and the Send fail.
-                local stamps = math.min(Errands.ATTACHMENTS, #recipient.items) - 1
+                local stacks = 0
+                for _, item in ipairs(recipient.items) do
+                    stacks = stacks + (Errands.Stacks(item.itemID, item.count) or 1)
+                end
+                local stamps = math.min(Errands.ATTACHMENTS, stacks) - 1
                 local money = entry.amount - math.max(0, stamps) * (ns.Funds.POSTAGE or 30)
                 recipient.money = money >= 1 and money or nil
             end

@@ -409,11 +409,22 @@ end
 function GG.Fill(goals, purse)
     local left = math.max(0, purse or 0)
     local met = 0
-    for _, goal in ipairs(goals) do
+    -- Goals that can be paid now are filled first, in order; one levels
+    -- away takes only what they leave, so it never makes one you can
+    -- afford today read as saving.
+    local function Take(goal)
         local cost = math.max(0, goal.cost or 0)
         goal.have = math.min(left, cost)
         left = left - goal.have
         goal.short = cost - goal.have
+    end
+    for _, goal in ipairs(goals) do
+        if not goal.level then Take(goal) end
+    end
+    for _, goal in ipairs(goals) do
+        if goal.level then Take(goal) end
+    end
+    for _, goal in ipairs(goals) do
         if goal.level then
             goal.state = "far"
         elseif goal.short <= 0 then
@@ -645,6 +656,14 @@ function GG:Report()
             or goal.state == "far" and L.Format("at level %d", goal.level)
             or L.Format("%s to go", money(goal.short))
         ns.PrintRaw(("   %s: %s / %s, %s"):format(goal.label, money(goal.have), money(goal.cost), state))
+    end
+    local ok, everyone = pcall(self.Everyone, self)
+    if ok and type(everyone) == "table" and #everyone > 1 then
+        ns.PrintRaw(L["   Your other characters:"])
+        for index = 2, #everyone do
+            local entry = everyone[index]
+            ns.PrintRaw(L.Format("      %s: %d of %d goals met", entry.name or "?", entry.met or 0, #(entry.goals or {})))
+        end
     end
 end
 

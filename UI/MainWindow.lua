@@ -816,6 +816,9 @@ function UI:Clicked(data, button)
         return
     end
     if data.type == "header" then
+        -- A search shows every group open, so a click would change a fold
+        -- the player can't see.
+        if self:BagSearch() ~= "" then return end
         local folded = self:Folded()
         local verdict = data.group.verdict
         local fold = not UI.IsFolded(folded, verdict)

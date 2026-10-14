@@ -208,6 +208,14 @@ ns.HandleSlash("goals on")
 suite.check("on again", GoalsUI.panel:IsShown())
 ns.HandleSlash("goals")
 suite.check("the command lists them", env.ChatText():find("Expert Tailoring and 9 recipes", 1, true) ~= nil)
+-- A goal levels away takes only what the goals you can buy now leave.
+local filled = { { cost = 2 * G, level = 20 }, { cost = 45 * 100 }, { cost = 100 * G, level = 40 } }
+local filledMet = GG.Fill(filled, 2 * G + 20 * 100)
+suite.check("a goal you can pay now is ready though a far one comes first",
+    filled[2].state == "ready" and filled[2].have == 45 * 100 and filledMet == 1)
+suite.check("the far one gets the rest", filled[1].state == "far" and filled[1].have == 2 * G + 20 * 100 - 45 * 100)
+suite.check("and the one after it nothing", filled[3].have == 0)
+
 UI:Hide()
 
 for name, value in pairs(saved) do _G[name] = value end

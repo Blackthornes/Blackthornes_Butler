@@ -562,6 +562,10 @@ function CT:TrainAll()
     self.run = (self.run or 0) + 1
     local run = self.run
     local bought, spent = 0, 0
+    -- Spells this run has bought already: a slow server can leave one
+    -- "available" past the next step, and a buy the game quietly refuses
+    -- would otherwise be tried every step until the trainer closes.
+    local tried = {}
     if type(self.OnChanged) == "function" then pcall(self.OnChanged) end
 
     local function Done(why)
@@ -579,15 +583,20 @@ function CT:TrainAll()
     local function Step()
         if CT.run ~= run or not CT.trainerOpen or InCombat() then return Done() end
         local purse = Number(Call("GetMoney")) or 0
-        local pick
+        local pick, untried = nil, 0
         for _, service in ipairs(CT:Buyable()) do
-            if (service.cost or 0) <= purse then pick = service break end
+            local id = service.entry and service.entry[1]
+            if not tried[id] then
+                untried = untried + 1
+                if not pick and (service.cost or 0) <= purse then pick = service end
+            end
         end
         if not pick then
-            return Done(#CT:Buyable() > 0 and L["you can't pay for the next spell yet."] or nil)
+            return Done(untried > 0 and L["you can't pay for the next spell yet."] or nil)
         end
         local ok = pcall(BuyTrainerService, pick.index)
         if not ok then return Done(L["the game wouldn't train it from here. Click Train in the trainer's window."]) end
+        if pick.entry and pick.entry[1] ~= nil then tried[pick.entry[1]] = true end
         bought = bought + 1
         spent = spent + (pick.cost or 0)
         C_Timer.After(CT.GAP, Step)
