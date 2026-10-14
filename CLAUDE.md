@@ -169,7 +169,10 @@ The owner asked (2026-10-13) that an item on the Always sell list that is
 gear Equipment calls an upgrade to wear now (`upgrade == "now"`) is not
 sold: `Verdicts:Decide` shows it as Look at it, "On your Always sell list,
 but it's an upgrade for you", and the list keeps it. Back to Sell once it is
-no upgrade. Tested in `tools/test_sellupgrade.lua`.
+no upgrade. It keeps what a Farmer goal or this character's craft queue
+still needs too (the owner, 2026-10-14), "On your Always sell list, but
+your goal needs N more" or "... your craft queue needs N", and sells
+again once nothing does. Tested in `tools/test_sellupgrade.lua`.
 
 ## Wait for a better price
 

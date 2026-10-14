@@ -262,6 +262,20 @@ function Verdicts:Decide(entry, noAlt)
         if eq and eq.upgrade == "now" then
             return "look", L["On your Always sell list, but it's an upgrade for you"], unit, unit ~= nil
         end
+        -- Nor what a Farmer goal or this character's craft queue still
+        -- needs (the owner, 2026-10-14): the list is kept, and it sells
+        -- again once nothing needs it.
+        local goal = Sisters:Ask("farmer", entry)
+        local goalNeed = Sisters.Number(goal, "need")
+        if goalNeed and goalNeed > 0 then
+            return "keep", L.Format("On your Always sell list, but your goal needs %d more", goalNeed),
+                unit, unit ~= nil
+        end
+        local queued = Sisters.Number(Sisters:Ask("ts", entry), "need")
+        if queued and queued > 0 then
+            return "keep", L.Format("On your Always sell list, but your craft queue needs %d", queued),
+                unit, unit ~= nil
+        end
         return "sell", L["On your Always sell list"], unit, unit ~= nil
     end
 
@@ -1006,6 +1020,25 @@ function Verdicts:Forget()
     -- Sets read again too: at login the client can answer before it has them.
     setItems = nil
     self.version = self.version + 1
+    local clock = rawget(_G, "GetTime")
+    self.forgotAt = type(clock) == "function" and clock() or nil
+end
+
+-- How long verdicts are trusted while the window is closed.
+Verdicts.FRESH_FOR = 30
+
+--- The trash can and the tooltip line judge while the window is closed,
+--- when a craft queued or a goal set since the window was last open would
+--- go unseen: ask the other addons again once the verdicts are older than
+--- FRESH_FOR. Never while the window shows (opening it asked them) and at
+--- most once in that time, so a burst of hovers stays one read.
+function Verdicts:ForgetIfOld()
+    if ns.UI and ns.UI.IsShown and ns.UI:IsShown() then return end
+    local clock = rawget(_G, "GetTime")
+    if type(clock) ~= "function" then return end
+    local now = clock()
+    if self.forgotAt and now - self.forgotAt < self.FRESH_FOR then return end
+    self:Forget()
 end
 
 --- The bags changed (Bags.version moved).

@@ -157,6 +157,12 @@ suite.check("bought one at a time, cheapest level first, while the purse pays",
 suite.check("and says so", env.ChatText():find("trained 2 spells", 1, true) ~= nil)
 suite.check("the rest waits", #CT:Plan().ready == 1 and CT:Plan().ready[1].id == 4, #CT:Plan().ready .. " " .. tostring(CT:Plan().ready[1] and CT:Plan().ready[1].id))
 fake.money = 100 * G
+-- A buy the game quietly refuses is tried once, not every step.
+local realBuy, refused = _G.BuyTrainerService, 0
+_G.BuyTrainerService = function() refused = refused + 1 end
+CT:TrainAll()
+_G.BuyTrainerService = realBuy
+suite.check("a refused buy is tried once a run", refused == 1 and not CT.buying, refused)
 CT:TrainAll()
 suite.check("the next click trains the last", known[4] == true and #CT:Plan().ready == 0)
 env.Fire("TRAINER_CLOSED")

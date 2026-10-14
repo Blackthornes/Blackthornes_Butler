@@ -370,7 +370,7 @@ function Jobs:Plan()
     local function Rank(job)
         local rank = 0
         for _, step in ipairs(job.steps) do
-            if step.kind == "mail" and step.forCraft and here and step.to == here.name then return 3 end
+            if step.kind == "mail" and step.forCraft and here and Jobs.SameName(step.to, here.name) then return 3 end
             if step.kind == "craft" and step.ready and step.itemID and wantedHere[step.itemID] then return 3 end
             if step.kind == "pickup" then rank = math.max(rank, step.forCraft and 2 or 1) end
         end
@@ -1081,7 +1081,9 @@ function Jobs:OnEnable()
         local inForm = Jobs.InBlockingForm()
         if inForm == Jobs.lastInForm then return end
         Jobs.lastInForm = inForm
-        if ns.UI and ns.UI.IsShown and ns.UI:IsShown() then ns.UI:Refresh() end
+        -- Forced: the form is not in the window's redraw key, so a plain
+        -- Refresh drew nothing and left the Leave form button where it was.
+        if ns.UI and ns.UI.IsShown and ns.UI:IsShown() then ns.UI:Refresh(true) end
     end)
 end
 

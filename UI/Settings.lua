@@ -533,7 +533,7 @@ function SettingsUI:BuildPages()
     controls.freeSpace:SetPoint("TOPLEFT", CONTROL_X, -2)
 
     local trashRow = pages:Row("general", 1, L["Trash can when full"],
-        L["When your bags are down to 3 free slots or fewer, a small gold can sits on the item worth the least that Butler would sell anyway. Click it to pick the item up, then drop it outside your bags; the game asks before anything is destroyed. Also /bbutler trash."])
+        L["When your bags are full, a small gold can sits on the item worth the least that Butler would sell anyway. Click it to pick the item up, then drop it outside your bags; the game asks before anything is destroyed. Also /bbutler trash."])
     controls.trashCan = Widgets.CreateCheckbox(trashRow, L["Show it"], function(checked)
         if ns.Trash then ns.Trash:SetEnabled(checked) end
     end, true)
