@@ -532,6 +532,12 @@ rank: a `forCraft` mail that unblocks a craft here, then mail waiting for
 its crafts, then any mail waiting, then the first that can get on with
 it. Tested in `tools/test_jobs.lua`.
 
+A mail of materials says why (the owner, 2026-10-14): `Jobs.NoteWhy`
+finds the crafts on the receiver's line still missing an item the mail
+carries (`step.forSteps`), and the row reads "6 Wool Cloth, so NAME can
+make 2 Bolt of Woolen Cloth.", with how Fill mail works moved to the
+tooltip (`StepText`'s third return). Tested in `tools/test_jobs.lua`.
+
 Materials and parts first (the owner, 2026-10-13: "collecting all vendor
 materials and subcrafts should go to the top of the list", then "missing
 materials too that need to be purchased or gathered"): `Jobs.Order` lays

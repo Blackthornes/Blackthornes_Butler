@@ -852,9 +852,10 @@ function UI:Enter(row, data)
     end
     if data.type == "job" then
         local step = data.step
-        local title, detail = ns.Jobs.StepText(step)
+        local title, detail, hint = ns.Jobs.StepText(step)
         GameTooltip:AddLine(title, Theme.Unpack("accent"))
         GameTooltip:AddLine(detail, 1, 1, 1, true)
+        if hint then GameTooltip:AddLine(hint, Theme.Unpack("muted")) end
         if step.kind == "craft" or (step.kind == "cooldown" and step.recipeID) then
             GameTooltip:AddLine((step.ready or step.kind == "cooldown") and L["Craft makes it with your profession open; Tradeskills opens it otherwise."]
                 or L["The Craft button comes once you have the materials."], Theme.Unpack("muted"))
