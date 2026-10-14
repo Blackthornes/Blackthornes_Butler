@@ -879,7 +879,7 @@ function UI:Enter(row, data)
         GameTooltip:AddLine(detail, 1, 1, 1, true)
         if hint then GameTooltip:AddLine(hint, Theme.Unpack("muted")) end
         if step.kind == "craft" or (step.kind == "cooldown" and step.recipeID) then
-            GameTooltip:AddLine((step.ready or step.kind == "cooldown") and L["Craft makes it with your profession open; Tradeskills opens it otherwise."]
+            GameTooltip:AddLine((step.ready or step.kind == "cooldown") and L["Craft makes it if your profession is open. If not, Tradeskills opens it for you."]
                 or L["The Craft button comes once you have the materials."], Theme.Unpack("muted"))
         end
         GameTooltip:Show()
@@ -891,8 +891,8 @@ function UI:Enter(row, data)
     if data.type == "trainalt" then
         local other = data.other
         GameTooltip:AddLine(other.name or "", Theme.Unpack("accent"))
-        GameTooltip:AddLine(other.count == 1 and L["1 spell to train, as of when they last played."]
-            or L.Format("%d spells to train, as of when they last played.", other.count), 1, 1, 1, true)
+        GameTooltip:AddLine(other.count == 1 and L["1 spell to train the last time they played."]
+            or L.Format("%d spells to train the last time they played.", other.count), 1, 1, 1, true)
         GameTooltip:AddLine(ns.ClassTraining.CostText(other.cost, other.unknown, other.count), 1, 1, 1)
         GameTooltip:Show()
         return
@@ -914,7 +914,7 @@ function UI:Enter(row, data)
         GameTooltip:AddLine(L.Format("Gold for %s", entry.to), Theme.Unpack("accent"))
         GameTooltip:AddLine(ns.Funds.Reason(entry), 1, 1, 1, true)
         GameTooltip:AddLine(L.Format("Fill mail sends %s. You press Send.", Items.FormatMoney(entry.amount)), 1, 1, 1, true)
-        GameTooltip:AddLine(L["Gold is as last seen when they played. Set the amounts in Settings, Gold."],
+        GameTooltip:AddLine(L["This is their gold from the last time they played. You can set the amounts on the Gold page in Settings."],
             Theme.Unpack("muted"))
         GameTooltip:Show()
         return
@@ -970,7 +970,7 @@ function UI:EnterTraining(data)
             GameTooltip:AddLine(L.Format("You're %s short.", Items.FormatMoney(cost - purse)), 1, 0.72, 0.29, true)
         end
         if training.trainerOpen and training.atClassTrainer then
-            GameTooltip:AddLine(L["Train all trains them one at a time, the ones you can pay for."], Theme.Unpack("muted"))
+            GameTooltip:AddLine(L["Train all trains them one at a time, as many as you can pay for."], Theme.Unpack("muted"))
         elseif training:Nearest() then
             GameTooltip:AddLine(L["Show the way puts a pin on the map to your trainer."], Theme.Unpack("muted"))
         end
@@ -1349,8 +1349,8 @@ function UI:RefreshAll(force)
     if #everyone.sorted == 0 and (everyone.building or ns.Bags.scanning or everyone:IsStale()) then
         text = L["Reading every character's items..."]
     elseif #everyone.sorted == 0 then
-        text = everyone:FromTradeskills() and L["No items on record yet."]
-            or L["Your bags are empty. Blackthornes Tradeskills keeps your other characters' items."]
+        text = everyone:FromTradeskills() and L["No items seen yet."]
+            or L["Your bags are empty. Blackthornes Tradeskills remembers your other characters' items."]
     elseif (self.shownItems or 0) == 0 then
         text = L.Format('Nothing matches "%s".', search)
     end
@@ -1368,7 +1368,7 @@ function UI:UpdateFooter()
         if not everyone:FromTradeskills() then
             text = L["Only your bags. Load Blackthornes Tradeskills to add your other characters."]
         else
-            text = L.Format("%s on %s. Bank and mail as each last saw them.",
+            text = L.Format("%s on %s. Bank and mail are from the last time each one looked.",
                 Plural(#everyone.sorted, L["item"], L["items"]),
                 Plural(everyone:Holders(), L["character"], L["characters"]))
         end
@@ -1829,7 +1829,7 @@ function UI:BuildSizeGrip()
         GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
         GameTooltip:SetText(UI.ScaleText(frame:GetScale()), Theme.Unpack("accentHi"))
         GameTooltip:AddLine(L["Drag to make the window bigger or smaller."], 1, 1, 1, true)
-        GameTooltip:AddLine(L["Right-click: back to the normal size."], 1, 1, 1, true)
+        GameTooltip:AddLine(L["Right-click to go back to the normal size."], 1, 1, 1, true)
         GameTooltip:Show()
     end)
     grip:SetScript("OnLeave", function()

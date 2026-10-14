@@ -1047,7 +1047,7 @@ function Jobs:Report()
         return
     end
     if #list == 0 then
-        ns.Print(L["no jobs: nothing in the craft queue needs a character."])
+        ns.Print(L["no jobs right now. Nothing in the craft queue needs one of your characters."])
         return
     end
     for _, job in ipairs(list) do

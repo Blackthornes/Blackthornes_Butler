@@ -293,12 +293,12 @@ function Funds.KeepsText(entry)
     if (entry.sent or 0) > 0 then
         local sent = Items.FormatMoney(entry.sent)
         if seen ~= "" then
-            return L.Format("Has %s (seen %s) with %s on its way, keeps %s", have, seen, sent, keeps)
+            return L.Format("Has %s as of %s, with %s on its way. Keeps %s", have, seen, sent, keeps)
         end
-        return L.Format("Has %s with %s on its way, keeps %s", have, sent, keeps)
+        return L.Format("Has %s, with %s on its way. Keeps %s", have, sent, keeps)
     end
-    if seen ~= "" then return L.Format("Has %s (seen %s), keeps %s", have, seen, keeps) end
-    return L.Format("Has %s, keeps %s", have, keeps)
+    if seen ~= "" then return L.Format("Has %s as of %s. Keeps %s", have, seen, keeps) end
+    return L.Format("Has %s. Keeps %s", have, keeps)
 end
 
 --------------------------------------------------------------------------------
@@ -357,7 +357,7 @@ end
 function Funds:Report()
     local characters = self:Characters()
     if #characters == 0 then
-        ns.Print(L["the gold fund needs Blackthornes Tradeskills, which keeps your characters' gold."])
+        ns.Print(L["the gold fund needs Blackthornes Tradeskills, which remembers your characters' gold."])
         return
     end
     local usual = self:Minimum()
