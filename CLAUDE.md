@@ -179,6 +179,11 @@ no upgrade. It keeps what a Farmer goal or this character's craft queue
 still needs too (the owner, 2026-10-14), "On your Always sell list, but
 your goal needs N more" or "... your craft queue needs N", and sells
 again once nothing does. Tested in `tools/test_sellupgrade.lua`.
+Another character's queued craft gets its share first (`Verdicts:AltCraftShare`,
+Tradeskills' `mailTo`/`mailCount`), from the Always sell list, a learned
+keep and an item no vendor buys alike (a player's alchemist was never sent
+its materials, 2026-10-14); soulbound and the character playing never.
+Tested in `tools/test_altcraftfirst.lua`.
 
 ## Wait for a better price
 

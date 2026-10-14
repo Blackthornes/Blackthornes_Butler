@@ -242,6 +242,12 @@ function Verdicts:Decide(entry, noAlt)
     local learned, learnedTo
     if not choice and ns.Learning then learned, learnedTo = ns.Learning:Get(itemID) end
     if learned == "keep" then
+        -- A buyback keeps it here, but an alt's queued craft still gets
+        -- its share, as the Always keep list gives it.
+        local verdict, reason, extra = self:ForAltCraft(entry)
+        if verdict then
+            return verdict, reason, Items:SellPrice(itemID), true, extra
+        end
         return "keep", ns.Learning.Reason("keep"), nil, true
     end
 
@@ -257,13 +263,17 @@ function Verdicts:Decide(entry, noAlt)
         return "keep", forQuest, nil, true
     end
 
-    if entry.noValue then
-        return "keep", L["Vendors won't buy it"], nil, true
-    end
-
     local unit = Items:SellPrice(itemID)
-    if unit == 0 then
-        return "keep", L["Vendors won't buy it"], 0, true
+    if entry.noValue or unit == 0 then
+        -- No vendor pays for it, but an alt's queued craft may need it:
+        -- that share still goes in the mail (a player's alchemist was
+        -- never sent its materials, 2026-10-14).
+        local share = self:AltCraftShare(entry)
+        if share then
+            return "mail", L.Format("Mail %d to %s for their crafts", share.count, share.to),
+                (not entry.noValue) and 0 or nil, true, share
+        end
+        return "keep", L["Vendors won't buy it"], (not entry.noValue) and 0 or nil, true
     end
 
     if choice == "sell" then
@@ -272,6 +282,13 @@ function Verdicts:Decide(entry, noAlt)
         local eq = Sisters:Ask("equipment", entry)
         if eq and eq.upgrade == "now" then
             return "look", L["On your Always sell list, but it's an upgrade for you"], unit, unit ~= nil
+        end
+        -- Nor what another character's queued craft needs: its share goes
+        -- in the mail first, as from the Always keep list (2026-10-14).
+        local share = self:AltCraftShare(entry)
+        if share then
+            return "mail", L.Format("Mail %d to %s for their crafts", share.count, share.to),
+                unit, unit ~= nil, share
         end
         -- Nor what a Farmer goal or this character's craft queue still
         -- needs (the owner, 2026-10-14): the list is kept, and it sells
@@ -413,13 +430,21 @@ end
 --- crafts want some of an item on the Always keep list (only what
 --- this character's own crafts can spare); nil otherwise.
 function Verdicts:ForAltCraft(entry)
+    local share = self:AltCraftShare(entry)
+    if not share then return nil end
+    return "mail", L.Format("Mail %d to %s for their crafts, keep the rest", share.count, share.to), share
+end
+
+--- { to, count } when Tradeskills says another character's queued crafts
+--- want some of this item and this character's own crafts can spare it;
+--- nil for soulbound, the character playing, or nothing to send.
+function Verdicts:AltCraftShare(entry)
     if entry.bound then return nil end
     local ts = Sisters:Ask("ts", entry)
     local mailTo = Sisters.String(ts, "mailTo")
     local count = Sisters.Number(ts, "mailCount")
     if not mailTo or self:IsMe(mailTo) or not (count and count > 0) then return nil end
-    return "mail", L.Format("Mail %d to %s for their crafts, keep the rest", count, mailTo),
-        { to = mailTo, count = count }
+    return { to = mailTo, count = count }
 end
 
 --- The short name of the character playing, as Tradeskills gives it (the
