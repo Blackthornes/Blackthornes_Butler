@@ -33,7 +33,7 @@ Fixes and changes:
 - Always mail keeps what your queued crafts need and mails only the rest.
 - Always sell holds back what a goal or your craft queue still needs.
 - A mail of materials says what they are for.
-- Train all no longer buys a spell twice.
+- Several bug fixes for Train all, gold goals and the trash can.
 
 ## 0.6.0
 

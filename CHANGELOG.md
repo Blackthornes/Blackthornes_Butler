@@ -21,12 +21,8 @@ fully after updating (`/reload` is not enough).
 - **Always sell:** it keeps what a Farmer goal or your craft queue still
   needs.
 - **Mail lines:** a mail of materials says what they are for.
-- **Fixes:** the Jobs rows and Leave form button follow a form change; Train
-  all no longer buys a spell twice or keeps retrying a refused one; a gold
-  goal levels away no longer takes gold from one you can pay today; a gold
-  top-up counts postage per stack; the trash can and tooltip line read fresh
-  verdicts; a heading click during a bag search no longer changes a fold you
-  cannot see; `/bbutler goals` lists the other characters too.
+- **Bug fixes:** several fixes for Jobs, Train all, gold goals, gold top-ups,
+  the trash can, the tooltip line, bag search and `/bbutler goals`.
 
 ## 0.6.0
 
