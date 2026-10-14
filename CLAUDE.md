@@ -351,7 +351,10 @@ Tradeskills' `UI/QueueMailPanel.lua` reads it.
   (`alwaysMail`, `[itemID]` = the character's full name, account wide,
   never rename it; one saved as "Ana S." before names were whole is read
   as the full name by `Errands:FullName`, and left as saved):
-  it goes under Mail addressed to them, all of it. The characters are
+  it goes under Mail addressed to them, all of it, less what this
+  character's own queued crafts need (Tradeskills' `need`; the owner,
+  2026-10-14): with the queue needing it all it is Keep, otherwise only
+  the rest is mailed (`tools/test_alwaysmailqueue.lua`). The characters are
   Tradeskills' `Holdings()` on the same realm and side
   (`Errands:Characters`), so the choice shows only with Tradeskills;
   soulbound items are never offered and are kept if already listed.
