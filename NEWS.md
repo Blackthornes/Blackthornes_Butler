@@ -23,6 +23,10 @@ tell a friend: no hype, no questions to the reader, no exclamation marks
 outside the thanks line, no dashes as punctuation, no "now you can". The
 tool prints a note for a shipped line that reads like an advert.
 
+## 0.8.0
+
+- Pick a character as your bank alt, and Butler mails it whole kinds of items, like all your cloth or herbs.
+
 ## 0.7.0
 
 - Butler keeps the items your open quests need and can search the auction house for the ones you still lack.
