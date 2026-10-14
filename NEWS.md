@@ -23,6 +23,18 @@ tell a friend: no hype, no questions to the reader, no exclamation marks
 outside the thanks line, no dashes as punctuation, no "now you can". The
 tool prints a note for a shipped line that reads like an advert.
 
+## 0.7.0
+
+- Butler keeps the items your open quests need and can search the auction house for the ones you still lack.
+- At a vendor, Butler shows what it has for your crafts and can buy it.
+
+Fixes and changes:
+
+- Always mail keeps what your queued crafts need and mails only the rest.
+- Always sell holds back what a goal or your craft queue still needs.
+- A mail of materials says what they are for.
+- Several bug fixes for Train all, gold goals and the trash can.
+
 ## 0.6.0
 
 - This is the largest AddOn update so far across the whole suite of Blackthornes addons.

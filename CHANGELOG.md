@@ -4,6 +4,26 @@ Versions follow [semantic versioning](https://semver.org): the middle number
 moves for new behaviour, the last for fixes alone. The newest version goes at
 the top; a release is refused if its version has no section here.
 
+## 0.7.0
+
+For WoW: Forever (interface 16001). Files were added, so restart the game
+fully after updating (`/reload` is not enough).
+
+- **Items for your quests:** every item an open quest collects is kept, even
+  on the Always sell list. Jobs leads with a "For your quests" line naming
+  what is still to find and trade. At the auction house, with Tradeskills
+  loaded, it has a Search button that looks them all up. "Items for your
+  quests" on the Selling page and `/bbutler quests [on|off]`.
+- **Buy from a vendor:** at a vendor the step says what it has for your
+  crafts and what that costs, with a Buy button.
+- **Always mail:** it holds back what your own queued crafts need and mails
+  only the rest.
+- **Always sell:** it keeps what a Farmer goal or your craft queue still
+  needs.
+- **Mail lines:** a mail of materials says what they are for.
+- **Bug fixes:** several fixes for Jobs, Train all, gold goals, gold top-ups,
+  the trash can, the tooltip line, bag search and `/bbutler goals`.
+
 ## 0.6.0
 
 For WoW: Forever (interface 16001). Files were added, so restart fully

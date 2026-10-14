@@ -5,6 +5,10 @@
 local _, ns = ...
 
 ns.WHATS_NEW = {
+    { version = "0.7.0", lines = {
+        "Butler keeps the items your open quests need and can search the auction house for the ones you still lack.",
+        "At a vendor, Butler shows what it has for your crafts and can buy it.",
+    } },
     { version = "0.6.0", lines = {
         "This is the largest AddOn update so far across the whole suite of Blackthornes addons.",
         "Butler tells you which class spells you can train, and has a Train all button at the trainer.",
@@ -16,9 +20,5 @@ ns.WHATS_NEW = {
     { version = "0.5.0", lines = {
         "Your bags has a search box.",
         "Gear in your equipment sets is always kept.",
-    } },
-    { version = "0.3.0", lines = {
-        "Ready transmutes and other cooldowns show in your Jobs list.",
-        "Butler knows what vendors pay for most items from the start, so fewer items say \"price still loading\".",
     } },
 }
