@@ -147,6 +147,7 @@ function UI:Build()
     end
 
     self.frame = frame
+    self:WatchRaise()
     self:BuildHeader()
 
     -- The list's well, sunk into the window like Pets' and Equipment's.
@@ -1428,6 +1429,53 @@ function UI.PlaceOnLine(button, row)
     button:ClearAllPoints()
     button:SetPoint("RIGHT", UIParent, "BOTTOMLEFT", right - UI.LINE_BUTTON_RIGHT, (top + bottom) / 2)
     return true
+end
+
+--- The secure buttons (Sell, Disenchant, Log out, Leave form) are children
+--- of UIParent, so the window stays free to move and close in combat. They
+--- sit in the window's own layer, just above it, so another window brought
+--- in front (Farmer's, say) covers them as it covers the window; a layer of
+--- their own showed them through every window (the owner, 2026-10-14).
+UI.BUTTON_LIFT = 30
+
+--- In a fight, when secure buttons are locked.
+function UI.InFight()
+    return type(InCombatLockdown) == "function" and InCombatLockdown() == true
+end
+
+--- One secure button put just above the window. Never in combat, when the
+--- game will not let a secure button's layer change.
+function UI:LiftButton(button)
+    local frame = self.frame
+    if not (button and frame) or UI.InFight() then return end
+    local level = frame:GetFrameLevel() or 1
+    button:SetFrameStrata(frame:GetFrameStrata() or "DIALOG")
+    if button:GetFrameLevel() ~= level + UI.BUTTON_LIFT then
+        button:SetFrameLevel(level + UI.BUTTON_LIFT)
+    end
+end
+
+--- Every secure button lifted again: the window was brought to the front,
+--- which puts it above them.
+function UI:LiftButtons()
+    self:LiftButton(ns.Selling and ns.Selling.button)
+    self:LiftButton(ns.Disenchanting and ns.Disenchanting.button)
+    self:LiftButton(ns.Jobs and ns.Jobs.button)
+    self:LiftButton(ns.Jobs and ns.Jobs.formButton)
+    self.liftedAt = self.frame and self.frame:GetFrameLevel()
+end
+
+--- The window is raised when it shows or is clicked, and the game says
+--- nothing when it is. A small frame inside it looks at the window's level
+--- each frame while it is up (one number) and lifts the buttons only when
+--- it moved.
+function UI:WatchRaise()
+    local watcher = CreateFrame("Frame", nil, self.frame)
+    watcher:SetScript("OnUpdate", function()
+        local level = UI.frame:GetFrameLevel()
+        if level ~= UI.liftedAt and not UI.InFight() then UI:LiftButtons() end
+    end)
+    self.raiseWatcher = watcher
 end
 
 --- Every button that sits on a line, placed again: after the list is drawn

@@ -52,7 +52,10 @@ rows. A heading's button ends `UI.LINE_BUTTON_RIGHT` in from the right, so
 the group's worth stays in sight; the secure ones (Sell, Disenchant) are
 placed over it by screen position (`UI.PlaceOnLine`), the others anchored
 to it (`UI:PlaceErrands`), all again whenever the list draws or scrolls
-(`UI:PlaceButtons`). One whose line is out of sight waits at the window's
+(`UI:PlaceButtons`). The secure ones sit in the window's own layer (DIALOG), `UI.BUTTON_LIFT`
+levels above it (`UI:LiftButton`), lifted again when the window is
+raised (`UI:WatchRaise`), so another window in front covers them; a layer
+of their own showed Log out through Farmer's window (2026-10-14). One whose line is out of sight waits at the window's
 foot. A new button goes by its line too.
 `UI/MainWindow.lua` draws the groups with `Widgets.CreateRowList` (Farmer's,
 with the dark glass rows) and Butler's own right-click menu. The list's scroll bar is drawn and dragged by hand (`CreateScrollbar` in `UI/Widgets.lua`, the thumb following the cursor), not the game's Slider, which ran backwards on Forever (the owner, 2026-10-13); tested in `tools/test_scrollbar.lua`. Rows are two lines tall so a long reason or name wraps rather than

@@ -31,8 +31,23 @@ Selling:Update()
 local button = Selling.button
 suite.check("with the Sell button", button and button:IsShown())
 suite.check("over the window's foot, not anchored to it", button._point[2] == UIParent)
-suite.check("in a layer above the window, so the window never covers it",
-    button:GetFrameStrata() == "FULLSCREEN_DIALOG" and UI.frame:GetFrameStrata() == "DIALOG")
+suite.check("in the window's layer, just above it, so another window in front covers it",
+    button:GetFrameStrata() == "DIALOG" and UI.frame:GetFrameStrata() == "DIALOG"
+    and button:GetFrameLevel() == UI.frame:GetFrameLevel() + UI.BUTTON_LIFT)
+
+-- Clicked, the window is raised over the button; the next frame lifts it.
+UI.frame:SetFrameLevel(40)
+UI.raiseWatcher._scripts.OnUpdate(UI.raiseWatcher, 0)
+suite.check("lifted again once the window is raised", button:GetFrameLevel() == 40 + UI.BUTTON_LIFT,
+    button:GetFrameLevel())
+local lockdown = InCombatLockdown
+InCombatLockdown = function() return true end
+UI.frame:SetFrameLevel(60)
+UI.raiseWatcher._scripts.OnUpdate(UI.raiseWatcher, 0)
+suite.check("but never in a fight", button:GetFrameLevel() == 40 + UI.BUTTON_LIFT)
+InCombatLockdown = lockdown
+UI.raiseWatcher._scripts.OnUpdate(UI.raiseWatcher, 0)
+suite.check("and once the fight ends", button:GetFrameLevel() == 60 + UI.BUTTON_LIFT)
 suite.check("which names the stack it sells", button.label:GetText() == "Sell Junk 1", button.label:GetText())
 suite.check("and the version label makes room", not UI.versionLabel:IsShown())
 

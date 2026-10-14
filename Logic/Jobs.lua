@@ -854,8 +854,9 @@ function Jobs:CreateLogout()
         width = BUTTON_WIDTH, height = BUTTON_HEIGHT, primary = true,
     })
     button:Hide()
-    button:SetFrameStrata("FULLSCREEN_DIALOG")
-    button:SetFrameLevel(10)
+    -- In the window's layer, just above it (UI:LiftButton), so a window
+    -- in front covers it too.
+    button:SetFrameStrata("DIALOG")
     button:RegisterForClicks("AnyUp")
     button:SetAttribute("useOnKeyDown", false)
     button:SetAttribute("type", "macro")
@@ -917,6 +918,7 @@ function Jobs:UpdateLogout()
     button:SetScale(scale)
     button:ClearAllPoints()
     button:SetPoint("RIGHT", UIParent, "BOTTOMLEFT", right - 8, (top + bottom) / 2)
+    ui:LiftButton(button)
     button:Show()
 end
 
@@ -959,8 +961,9 @@ function Jobs:CreateLeaveForm()
         width = 80, height = 22, primary = true,
     })
     button:Hide()
-    button:SetFrameStrata("FULLSCREEN_DIALOG")
-    button:SetFrameLevel(10)
+    -- In the window's layer, just above it (UI:LiftButton), so a window
+    -- in front covers it too.
+    button:SetFrameStrata("DIALOG")
     button:RegisterForClicks("AnyUp")
     button:SetAttribute("useOnKeyDown", false)
     button:SetAttribute("type", "macro")
@@ -1004,6 +1007,7 @@ function Jobs:UpdateLeaveForm()
     button:SetScale(scale)
     button:ClearAllPoints()
     button:SetPoint("RIGHT", UIParent, "BOTTOMLEFT", right - 8, (top + bottom) / 2)
+    ui:LiftButton(button)
     button:Show()
 end
 
