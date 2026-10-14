@@ -243,6 +243,38 @@ function Jobs.Order(steps, made)
     return ordered
 end
 
+--- What each mail of materials is for (the owner, 2026-10-14: a player
+--- thought Wool Cloth a craft here needed was being mailed away, when it
+--- went to the alt who makes the Bolt of Woolen Cloth for it): the crafts
+--- on the receiver's line still missing an item the mail carries, kept on
+--- the step as `forSteps`. Finished crafts sent back say nothing more.
+function Jobs.NoteWhy(list)
+    for _, job in ipairs(list) do
+        for _, step in ipairs(job.steps) do
+            if step.kind == "mail" and not step.crafts then
+                local carried = {}
+                for _, item in ipairs(step.items) do carried[item.itemID] = true end
+                local forSteps = {}
+                for _, other in ipairs(list) do
+                    if other ~= job and Jobs.SameName(other.name, step.to) then
+                        for _, craft in ipairs(other.steps) do
+                            if craft.kind == "craft" then
+                                for _, need in ipairs(craft.missing) do
+                                    if carried[need.itemID] then
+                                        forSteps[#forSteps + 1] = craft
+                                        break
+                                    end
+                                end
+                            end
+                        end
+                    end
+                end
+                if #forSteps > 0 then step.forSteps = forSteps end
+            end
+        end
+    end
+end
+
 --- Tradeskills' list with anything of the wrong shape left out.
 function Jobs.Clean(answer)
     local list, made = {}, {}
@@ -263,6 +295,7 @@ function Jobs.Clean(answer)
             end
         end
     end
+    Jobs.NoteWhy(list)
     -- Ordered once every line is read, so a part another character makes
     -- is never sent out to be bought or gathered.
     for _, job in ipairs(list) do job.steps = Jobs.Order(job.steps, made) end
@@ -407,7 +440,16 @@ function Jobs.ItemsText(items)
     return text
 end
 
---- A step as a title and a line under it.
+--- "2 Bolt of Woolen Cloth", two crafts joined, or the first and how many more.
+function Jobs.CraftsText(steps)
+    local function One(step) return Amount(step.count, Jobs.ItemName(step.itemID, step.name)) end
+    if #steps == 2 then return L.Format("%s and %s", One(steps[1]), One(steps[2])) end
+    if #steps > 2 then return L.Format("%s and %d more", One(steps[1]), #steps - 1) end
+    return One(steps[1])
+end
+
+--- A step as a title and a line under it, and for some a hint the
+--- tooltip adds.
 function Jobs.StepText(step)
     if step.kind == "cooldown" then
         if step.recipeID then
@@ -440,6 +482,17 @@ function Jobs.StepText(step)
         local banked = {}
         for _, item in ipairs(step.items) do
             if item.bank then banked[#banked + 1] = { itemID = item.itemID, count = math.min(item.bank, item.count) } end
+        end
+        -- Why it goes: the crafts the receiver makes with it. How Fill mail
+        -- works then moves to the tooltip, so the row keeps to two lines.
+        if step.forSteps then
+            local made = Jobs.CraftsText(step.forSteps)
+            local why = L.Format("%s, so %s can make %s.", what, step.to, made)
+            if #banked > 0 then
+                why = L.Format("%s, so %s can make %s. Take %s out of the bank first.",
+                    what, step.to, made, Jobs.ItemsText(banked))
+            end
+            return L.Format("Mail to %s", step.to), why, L["At a mailbox, Fill mail adds it."]
         end
         if #banked > 0 then
             return L.Format("Mail to %s", step.to),

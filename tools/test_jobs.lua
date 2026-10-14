@@ -435,6 +435,33 @@ suite.check("one who can make a part a craft here waits on is next", plan.nextJo
     plan.nextJob.name)
 suite.check("a part another character makes is not bought or gathered", plan.here.steps[1].kind == "craft")
 
+-- A mail of materials says what the receiver makes with them (the owner,
+-- 2026-10-14: Wool Cloth looked mailed away from a craft here).
+_G.C_Item.GetItemNameByID = function(id)
+    return ({ [2592] = "Wool Cloth", [2997] = "Bolt of Woolen Cloth", [2318] = "Light Leather" })[id]
+end
+plan = Fresh({ { name = "Ana Blackthorne", isCurrent = true, steps = {
+    { kind = "mail", to = "Bo Smith", items = { { itemID = 2592, count = 6 } }, forCraft = true },
+    { kind = "mail", to = "Bo Smith", items = { { itemID = 2318, count = 2 } }, crafts = true } } },
+    { name = "Bo Smith", steps = {
+        { kind = "craft", recipeID = 2964, itemID = 2997, name = "Bolt of Woolen Cloth", count = 2,
+          forNames = { "Ana Blackthorne" }, ready = false,
+          missing = { { itemID = 2592, count = 6, from = "Ana Blackthorne" } } } } } })
+local wool = plan.here.steps[1]
+title, detail = Jobs.StepText(wool)
+local _, _, hint = Jobs.StepText(wool)
+suite.check("a mail of materials says what they make",
+    detail == "6 Wool Cloth, so Bo Smith can make 2 Bolt of Woolen Cloth.", detail)
+suite.check("how Fill mail works goes in the tooltip", hint == "At a mailbox, Fill mail adds it.", hint)
+_, detail = Jobs.StepText(plan.here.steps[2])
+suite.check("finished crafts sent back keep their line",
+    detail == "2 Light Leather. At a mailbox, Fill mail adds it.", detail)
+wool.items[1].bank = 2
+_, detail = Jobs.StepText(wool)
+suite.check("banked materials still say to take them out",
+    detail == "6 Wool Cloth, so Bo Smith can make 2 Bolt of Woolen Cloth. Take 2 Wool Cloth out of the bank first.",
+    detail)
+
 -- 8. Wrong shapes and errors.
 local clean = Jobs.Clean({ { name = "X", steps = { { kind = "craft" }, { kind = "mail", to = "Y", items = {} },
     "junk", { kind = "dance" } } }, "junk", { steps = {} } })
