@@ -349,8 +349,11 @@ suite.check("a pick puts it on the Always mail list", choice == "mail" and to ==
 UI:ShowMenu({ itemID = 404, name = "Copper Ore" })
 suite.check("and the menu says who", UI.menu.mail.label:GetText() == "Always mail to Bob")
 UI:HideMenu()
-local verdict, reason, _, _, extra = ns.Verdicts:Decide({ itemID = 404, count = 1 })
+local verdict, reason, _, _, extra = ns.Verdicts:Decide({ itemID = 404, count = 10 })
 suite.check("it goes under Mail, to Bob", verdict == "mail" and extra and extra.to == "Bob", reason)
+suite.check("less the 4 this character's queue needs", extra and extra.count == 6, extra and extra.count)
+suite.check("all of it kept while the queue needs it all",
+    (ns.Verdicts:Decide({ itemID = 404, count = 1 })) == "keep")
 suite.check("bound to this character it is kept instead",
     (ns.Verdicts:Decide({ itemID = 404, count = 1, bound = true })) == "keep")
 UI:ShowMenu({ itemID = 405, name = "Bound thing", bound = true })
