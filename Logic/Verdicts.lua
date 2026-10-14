@@ -262,6 +262,20 @@ function Verdicts:Decide(entry, noAlt)
         if eq and eq.upgrade == "now" then
             return "look", L["On your Always sell list, but it's an upgrade for you"], unit, unit ~= nil
         end
+        -- Nor what a Farmer goal or this character's craft queue still
+        -- needs (the owner, 2026-10-14): the list is kept, and it sells
+        -- again once nothing needs it.
+        local goal = Sisters:Ask("farmer", entry)
+        local goalNeed = Sisters.Number(goal, "need")
+        if goalNeed and goalNeed > 0 then
+            return "keep", L.Format("On your Always sell list, but your goal needs %d more", goalNeed),
+                unit, unit ~= nil
+        end
+        local queued = Sisters.Number(Sisters:Ask("ts", entry), "need")
+        if queued and queued > 0 then
+            return "keep", L.Format("On your Always sell list, but your craft queue needs %d", queued),
+                unit, unit ~= nil
+        end
         return "sell", L["On your Always sell list"], unit, unit ~= nil
     end
 

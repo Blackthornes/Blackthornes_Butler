@@ -43,4 +43,33 @@ UI:Show()
 boots = Find("Thendal Boots")
 suite.check("no longer an upgrade: Sell again", boots.verdict == "sell", boots.verdict)
 
+-- Nor what a Farmer goal or the craft queue still needs (2026-10-14).
+local goalNeed, queueNeed = 3, 0
+_G.BlackthornesFarmer = { Butler = { Advise = function(_, id)
+    if id == 702 and goalNeed > 0 then return { goal = "Old Boots", have = 1, target = 4, need = goalNeed } end
+end } }
+_G.BlackthornesTS = { Butler = { Advise = function(_, id)
+    if id == 702 and queueNeed > 0 then return { need = queueNeed } end
+end } }
+Verdicts:Changed(true)
+UI:Hide()
+UI:Show()
+local old = Find("Old Boots")
+suite.check("a goal's item on Always sell is kept", old.verdict == "keep" and old.reason:find("goal", 1, true) ~= nil,
+    old.verdict .. " " .. tostring(old.reason))
+goalNeed, queueNeed = 0, 2
+Verdicts:Changed(true)
+UI:Hide()
+UI:Show()
+old = Find("Old Boots")
+suite.check("so is what the craft queue needs", old.verdict == "keep"
+    and old.reason:find("craft queue", 1, true) ~= nil, old.verdict .. " " .. tostring(old.reason))
+queueNeed = 0
+Verdicts:Changed(true)
+UI:Hide()
+UI:Show()
+suite.check("nothing needs it: Sell again", Find("Old Boots").verdict == "sell", Find("Old Boots").verdict)
+suite.check("and the list kept it all along", ns.db.alwaysSell[702] == true)
+_G.BlackthornesFarmer, _G.BlackthornesTS = nil, nil
+
 suite.done()
