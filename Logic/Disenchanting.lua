@@ -116,9 +116,9 @@ function Disenchanting:Create()
         primary = true, width = BUTTON_WIDTH, height = BUTTON_HEIGHT,
     })
     button:Hide()
-    -- Above the window (DIALOG), as the Sell button is.
-    button:SetFrameStrata("FULLSCREEN_DIALOG")
-    button:SetFrameLevel(10)
+    -- In the window's layer, just above it (UI:LiftButton), so a window
+    -- in front covers it too.
+    button:SetFrameStrata("DIALOG")
     button:RegisterForClicks("AnyUp")
     button:SetAttribute("useOnKeyDown", false)
     button:SetAttribute("spell", self.SPELL)
@@ -202,6 +202,7 @@ function Disenchanting:Update(room)
     -- asked 2026-10-12), else at the window's foot.
     local row = ns.UI:HeaderRow("disenchant")
     if row and ns.UI.PlaceOnLine(button, row) then
+        ns.UI:LiftButton(button)
         button:Show()
         return 0
     end
@@ -217,6 +218,7 @@ function Disenchanting:Update(room)
     button:ClearAllPoints()
     local inset = ns.UI.SELL_INSET_X + ((room or 0) > 0 and room + GAP or 0)
     button:SetPoint("BOTTOMRIGHT", UIParent, "BOTTOMLEFT", right - inset, bottom + ns.UI.SELL_INSET_Y)
+    ns.UI:LiftButton(button)
     button:Show()
     return button:GetWidth() or BUTTON_WIDTH
 end

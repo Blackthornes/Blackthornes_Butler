@@ -174,11 +174,9 @@ function Selling:Create()
         primary = true, width = BUTTON_WIDTH, height = BUTTON_HEIGHT,
     })
     button:Hide()
-    -- A layer above the window's (DIALOG): in the same layer the window,
-    -- raised on top when shown or clicked, drew over the button and hid it
-    -- (seen in game 2026-10-10).
-    button:SetFrameStrata("FULLSCREEN_DIALOG")
-    button:SetFrameLevel(10)
+    -- In the window's layer, just above it (UI:LiftButton), so a window
+    -- in front covers it too.
+    button:SetFrameStrata("DIALOG")
     button:RegisterForClicks("AnyUp")
     button:SetAttribute("useOnKeyDown", false)
 
@@ -327,6 +325,7 @@ function Selling:Update()
         ns.UI:SellShown(false)
         return
     end
+    ns.UI:LiftButton(button)
     button:Show()
     ns.UI:SellShown(true, not self.onLine and button:GetWidth() or nil)
 end
