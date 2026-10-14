@@ -556,6 +556,20 @@ one, or true) on a craft's `missing` items is Tradeskills' to give;
 without it every material to get shows under Buy or gather. Tested in
 `tools/test_jobs.lua`.
 
+Buy at the vendor (the owner, 2026-10-14: Tradeskills' Buy materials
+button, over the vendor window, in Butler too): at a vendor the Buy from a
+vendor row says what this one has for the queue and what it costs, or that
+it sells none of it (or the auction house has it for less), and has a Buy
+button. Tradeskills works it out and buys, inside a pcall:
+`_G.BlackthornesTS.Butler:VendorOffer()` (`{ count, cost, items,
+cheaperElsewhere, buying }`, nil away from a vendor) and
+`:BuyFromVendor()` (its own button's click: the same checks, a stack a
+step). `Jobs:VendorOffer` reads it on each `UI:Refresh` while a vendor is
+open (`Jobs.vendorKey` is in the redraw key), once more 0.5 s after
+`MERCHANT_SHOW`, and `Jobs:WatchBuying` redraws every `BUY_LOOK` seconds
+while the run goes. Without Tradeskills the row is as before. Tested in
+`tools/test_vendorbuy.lua`.
+
 Profession cooldowns (the owner said yes, 2026-10-12): Tradeskills'
 `Jobs()` also gives each character's ready cooldown as a step, `{ kind =
 "cooldown", name (its group, "Transmute"), craft, recipeID or itemID }`

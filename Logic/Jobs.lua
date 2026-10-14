@@ -661,6 +661,143 @@ function Jobs:Craft(step)
 end
 
 --------------------------------------------------------------------------------
+-- Buying materials at a vendor
+--------------------------------------------------------------------------------
+
+-- The owner asked (2026-10-14) for Tradeskills' Buy materials button, the
+-- one over the vendor window, on the Buy from a vendor row too. Tradeskills
+-- works out what this vendor has for the queue and buys it, inside a pcall:
+--
+--   _G.BlackthornesTS.Butler:VendorOffer()     -- { count, cost, items, cheaperElsewhere, buying }
+--   _G.BlackthornesTS.Butler:BuyFromVendor()   -- true, or false and why
+--
+-- Read only while a vendor is open, each time the window is drawn
+-- (UI:Refresh), so the row redraws only when the offer moves (vendorKey).
+
+-- How often the row looks again while a run is buying, and for how long.
+Jobs.BUY_LOOK = 0.5
+Jobs.BUY_LOOKS = 60
+
+Jobs.vendorKey = ""
+
+local function Money(value)
+    value = tonumber(value)
+    if value and value == value and value >= 0 then return math.floor(value) end
+    return 0
+end
+
+--- What the open vendor sells for the queue, kept as `Jobs.offer`; nil
+--- away from a vendor, without Tradeskills or before it has read the
+--- vendor's list.
+function Jobs:VendorOffer()
+    local offer
+    local ts = ns.Selling and ns.Selling.merchantOpen and Tradeskills("VendorOffer")
+    if ts then
+        local ok, answer = pcall(ts.VendorOffer, ts)
+        if ok and type(answer) == "table" then
+            local items = {}
+            for _, item in ipairs(type(answer.items) == "table" and answer.items or {}) do
+                local itemID = type(item) == "table" and Count(item.itemID)
+                local amount = type(item) == "table" and Count(item.amount)
+                if itemID and amount then
+                    items[#items + 1] = { itemID = itemID, count = amount, cost = Money(item.cost),
+                        short = item.short == true or nil }
+                end
+            end
+            offer = { count = #items, cost = Money(answer.cost), items = items,
+                cheaperElsewhere = Count(answer.cheaperElsewhere) or 0, buying = answer.buying == true }
+        end
+    end
+    self.offer = offer
+    self.vendorKey = offer and ("%d:%d:%d:%s"):format(offer.count, offer.cost, offer.cheaperElsewhere,
+        tostring(offer.buying)) or ""
+    return offer
+end
+
+--- Does this step get the Buy button? A Buy from a vendor step, at a
+--- vendor that has something for the queue, or while it is buying.
+function Jobs.Buyable(step)
+    local offer = Jobs.offer
+    return step ~= nil and step.kind == "buy" and offer ~= nil and (offer.buying or offer.count > 0)
+end
+
+--- The Buy from a vendor line at a vendor: what this one has for the
+--- queue, or why it has nothing. nil away from a vendor.
+function Jobs.VendorText(step)
+    local offer = Jobs.offer
+    if not (step and step.kind == "buy" and offer) then return nil end
+    if offer.buying then return L["Buying what your crafts need from this vendor..."] end
+    if offer.count > 0 then
+        return L.Format("This vendor has %s for your crafts, %s in all.",
+            Jobs.ItemsText(offer.items), Items.FormatMoney(offer.cost))
+    end
+    if offer.cheaperElsewhere > 0 then
+        return L.Format("%s for your crafts. This vendor has it, but the auction house sells it for less.",
+            Jobs.ItemsText(step.items))
+    end
+    return L.Format("%s for your crafts. This vendor doesn't sell it.", Jobs.ItemsText(step.items))
+end
+
+--- The Buy button's tooltip: each material and its cost.
+function Jobs.BuyTooltip()
+    local offer = Jobs.offer
+    if not offer then return nil end
+    if offer.buying then return L["Buying..."] end
+    local lines = { L.Format("Buys what your crafts need from this vendor, %s in all:", Items.FormatMoney(offer.cost)) }
+    for index = 1, math.min(#offer.items, 10) do
+        local item = offer.items[index]
+        local line = ("  %s  %s"):format(Amount(item.count, Jobs.ItemName(item.itemID)), Items.FormatMoney(item.cost))
+        if item.short then line = line .. "  " .. L["(the vendor has only so many)"] end
+        lines[#lines + 1] = line
+    end
+    if #offer.items > 10 then lines[#lines + 1] = "  " .. L.Format("and %d more", #offer.items - 10) end
+    return table.concat(lines, "\n")
+end
+
+--- The Buy click: Tradeskills' Buy materials run, one stack at a time, each
+--- checked again first. The row looks again every BUY_LOOK seconds until
+--- the run is over, so it says Buying... and then what is left.
+function Jobs:BuyAtVendor()
+    if InCombat() then
+        ns.Print(L["buying waits until the fight is over."])
+        return false
+    end
+    local ts = Tradeskills("BuyFromVendor")
+    if not ts then
+        ns.Print(L["buying from here needs Blackthornes Tradeskills."])
+        return false
+    end
+    local ok, started, why = pcall(ts.BuyFromVendor, ts)
+    if not ok then
+        ns.Print(L["couldn't buy from this vendor."])
+        return false
+    end
+    -- Tradeskills says in chat why when it buys nothing; a reason it hands
+    -- back instead is said here.
+    if not started and type(why) == "string" and why ~= "" then ns.Print(why) end
+    self:WatchBuying()
+    return started == true
+end
+
+--- Redraw the window until Tradeskills' run is over. One look at a time.
+function Jobs:WatchBuying()
+    if not (C_Timer and C_Timer.After) then return end
+    self.buyRun = (self.buyRun or 0) + 1
+    local run, looks = self.buyRun, 0
+    local function Look()
+        if Jobs.buyRun ~= run then return end
+        looks = looks + 1
+        local ui = ns.UI
+        if not (ui and ui.IsShown and ui:IsShown()) then return end
+        ui:Refresh()
+        if looks < Jobs.BUY_LOOKS and Jobs.offer and Jobs.offer.buying then
+            C_Timer.After(Jobs.BUY_LOOK, Look)
+        end
+    end
+    C_Timer.After(Jobs.BUY_LOOK, Look)
+end
+
+--------------------------------------------------------------------------------
 -- Log out
 --------------------------------------------------------------------------------
 
@@ -929,6 +1066,14 @@ function Jobs:OnEnable()
     ns.RegisterEvent(self, "PLAYER_REGEN_ENABLED", function()
         Jobs.fighting = false
         if ns.UI and ns.UI.frame then ns.UI:FootRoom() end
+    end)
+    -- Tradeskills reads the vendor's list a moment after it opens; the Buy
+    -- from a vendor row looks once more after that.
+    ns.RegisterEvent(self, "MERCHANT_SHOW", function()
+        if not (C_Timer and C_Timer.After) then return end
+        C_Timer.After(0.5, function()
+            if ns.UI and ns.UI.IsShown and ns.UI:IsShown() then ns.UI:Refresh() end
+        end)
     end)
     -- Into or out of a form: the craft lines say Leave form or Craft. Only
     -- on the change itself, and only while the window shows.
