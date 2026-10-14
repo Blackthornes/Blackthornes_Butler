@@ -58,5 +58,7 @@ Logic\Learning.lua
 Logic\Jobs.lua
 Logic\ClassTraining.lua
 Logic\GoldGoals.lua
+Logic\Ask.lua
+UI\Ask.lua
 
 Probe\Probe.lua

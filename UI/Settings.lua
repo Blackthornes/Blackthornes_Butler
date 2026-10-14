@@ -617,6 +617,11 @@ function SettingsUI:BuildPages()
         L["Show them"], "all")
     controls.all = allButton
 
+    local _, askButton = CommandRow(pages, "general", 1, L["Ask Butler"],
+        L["Type a question, such as what an item is worth, who has it, or what to do next, and Butler answers from what your Blackthornes addons know. Same as /bbutler ask."],
+        L["Ask"], "ask")
+    controls.ask = askButton
+
     local minimapRow = pages:Row("general", 1, L["Minimap button"],
         L["Click it for the Butler window, right-click for this page. Drag it to move it. Also /bbutler minimap."])
 

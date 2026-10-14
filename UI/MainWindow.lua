@@ -295,6 +295,14 @@ function UI:BuildHeader()
     view:SetPoint("RIGHT", settings, "LEFT", -6, 0)
     view.tooltipText = L["Every character's items, and where each one is"]
     self.viewButton = view
+
+    -- Ask Butler (UI/Ask.lua): a question typed in plain words.
+    local ask = Widgets.CreateButton(header, L["Ask"], function()
+        ns.HandleSlash("ask")
+    end, { width = 50, height = 20 })
+    ask:SetPoint("RIGHT", view, "LEFT", -6, 0)
+    ask.tooltipText = L["Ask Butler about your items, jobs and gold"]
+    self.askButton = ask
 end
 
 --- Show one list or the other: "bags" or "all".
