@@ -626,6 +626,28 @@ when the bags or the item come in.
 Tested in `tools/test_quests.lua`. If `SearchAuctions` changes in
 Tradeskills, change `Quests:Search` too.
 
+## Ask Butler
+
+The owner said build it (2026-10-14), and keep it out of releases until he
+says go: it lives on its own branch and draft PR, unmerged. A typed
+question, answered from code, not an AI (addons cannot reach the
+internet). `Logic/Ask.lua` matches it against `Ask.INTENTS` (whole words,
+English and a few German ones) and an item (a link, else the longest name
+Butler knows from the bags and Tradeskills' `Holdings()`, else a run of
+words the client knows), and each shape has its answer: next (Jobs and the
+Sell group), gold goals, class training, worth (vendor, and Tradeskills'
+`auction`, `auctionNow`, `disenchant`), who has it (`Holdings()`), upgrade
+(Equipment's Advise), pet food (Pets'), a Farmer goal (Farmer's), where to
+farm (a button that runs Farmer's own `/farm <name>` search), and Butler's
+verdict for an item alone. Every sister read is its existing Butler call,
+inside a pcall; nothing new is asked of them. Not understood shows the
+examples. `UI/Ask.lua` is the window (`/bbutler ask [question]`, the Butler
+window's Ask button, a Settings button): plate and close gem, dark glass
+answer lines, one button when the answer has one, the size grip. Saved,
+never renamed: `askScale`, `askPoint`, `askRelPoint`, `askX`, `askY`.
+Nothing runs until the player asks. Tested in `tools/test_ask.lua`. Not
+yet seen in game.
+
 ## Class training
 
 The owner said build it (2026-10-13), in Butler and Equipment: which class

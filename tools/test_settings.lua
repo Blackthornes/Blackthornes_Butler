@@ -177,19 +177,19 @@ suite.check("and off turns it off", ns.db.goldMinimum == nil and goldBox:GetValu
 local ran = {}
 local realSlash = ns.HandleSlash
 ns.HandleSlash = function(text) ran[#ran + 1] = text end
-for _, key in ipairs({ "openWindow", "all", "probe", "help", "sellTest", "lists", "heldList", "goldReport", "trainingReport", "goalsReport" }) do
+for _, key in ipairs({ "openWindow", "all", "probe", "help", "sellTest", "lists", "heldList", "goldReport", "trainingReport", "goalsReport", "ask" }) do
     controls[key]:GetScript("OnClick")(controls[key])
 end
 ns.HandleSlash = realSlash
 suite.check("the command buttons run their commands",
-    table.concat(ran, ",") == "window,all,probe,help,selltest,lists,upgrademail,gold,training,goals", table.concat(ran, ","))
+    table.concat(ran, ",") == "window,all,probe,help,selltest,lists,upgrademail,gold,training,goals,ask", table.concat(ran, ","))
 
 -- Every command has a button or a control here, apart from the one that
 -- deletes the player's lists, which stays typed (a house rule).
 local covered = { tooltip = true, sisters = true, whatsnew = true, window = true, all = true, probe = true, help = true, selltest = true, lists = true,
     vendor = true, mailbox = true, bank = true, minimap = true, settings = true, reset = true,
     sellbelow = true, freespace = true, whohas = true, gold = true, goldmin = true, fillnext = true, altupgrades = true,
-    jobs = true, joblogin = true, upgrademail = true, training = true, goals = true, trash = true, quests = true }
+    jobs = true, joblogin = true, upgrademail = true, training = true, goals = true, trash = true, quests = true, ask = true }
 for _, name in ipairs(ns.commandOrder) do
     suite.check("/bbutler " .. name .. " has a place in Settings", covered[name] == true)
 end
