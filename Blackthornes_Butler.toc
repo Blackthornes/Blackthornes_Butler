@@ -31,6 +31,7 @@ Logic\Sisters.lua
 Logic\Quests.lua
 Logic\Verdicts.lua
 Logic\Everyone.lua
+Logic\BankAlt.lua
 
 UI\Theme.lua
 UI\BlizzardLook.lua
