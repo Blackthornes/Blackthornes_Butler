@@ -244,7 +244,7 @@ end
 function BankAlt:Report()
     local name = self:Name()
     if not name then
-        ns.Print(L["no bank alt. Pick one in Settings, Bank alt, or type /bbutler bankalt Full Name."])
+        ns.Print(L["no bank alt yet. Pick one on the Bank alt page in Settings, or type /bbutler bankalt Full Name."])
         return
     end
     local kinds = {}
@@ -265,14 +265,14 @@ ns.RegisterCommand("bankalt", L["mail whole kinds of items to one of your charac
     local word = rest:lower()
     if word == "off" then
         BankAlt:SetName(nil)
-        ns.Print(L["no bank alt. Nothing is mailed by kind."])
+        ns.Print(L["no bank alt, so nothing is mailed by kind."])
     elseif TAKES[word] then
         BankAlt:SetWhen(word)
         ns.Print(L.Format("the bank alt is now set to: %s.", BankAlt.WHEN_LABELS[word]))
     else
         BankAlt:SetName(rest)
         if ns.Verdicts:IsMe(BankAlt:Name()) then
-            ns.Print(L.Format("%s is your bank alt. On this character nothing is mailed to it.", BankAlt:Name()))
+            ns.Print(L.Format("%s is your bank alt. You're playing it, so nothing gets mailed to it from here.", BankAlt:Name()))
         else
             ns.Print(L.Format("%s is your bank alt.", BankAlt:Name()))
         end

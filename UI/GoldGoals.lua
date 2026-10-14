@@ -423,7 +423,7 @@ function GoalsUI:Enter(row)
         end
         if #(data.goals or {}) == 0 then GameTooltip:AddLine(L["nothing to save for"], Theme.Unpack("muted")) end
         if not data.isCurrent then
-            GameTooltip:AddLine(L["As that character last saw it."], Theme.Muted(true))
+            GameTooltip:AddLine(L["From the last time that character played."], Theme.Muted(true))
         end
         GameTooltip:Show()
         return

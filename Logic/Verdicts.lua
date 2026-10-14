@@ -1180,7 +1180,7 @@ ns.RegisterCommand("greens", L["turn disenchanting every green on your disenchan
     else on = not Verdicts:DisenchantGreensOn() end
     Verdicts:SetDisenchantGreens(on)
     ns.Print(on and L["On your disenchanter, Butler says to disenchant every green it can break."]
-        or L["Butler judges greens on your disenchanter by what they're worth again."])
+        or L["On your disenchanter, Butler goes back to judging greens by what they're worth."])
 end)
 
 -- Upgrades held back from a character (right-click a Mail upgrade row).

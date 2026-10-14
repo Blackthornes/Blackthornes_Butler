@@ -211,7 +211,7 @@ function VerdictTip:OnEnable()
     end)
 end
 
-ns.RegisterCommand("tooltip", L["show or hide Butler's verdict on the tooltips of items in your bags"], function()
+ns.RegisterCommand("tooltip", L["show or hide Butler's advice on the tooltips of items in your bags"], function()
     VerdictTip:SetEnabled(not VerdictTip:Enabled())
     ns.Print(VerdictTip:Enabled() and L["item tooltips show what Butler would do with them."]
         or L["item tooltips no longer show what Butler would do with them."])

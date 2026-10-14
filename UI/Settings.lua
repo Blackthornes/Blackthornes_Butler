@@ -38,7 +38,7 @@ local PAGES = {
     { key = "selling", text = L["ERRANDS"],
       tip = L["Selling at a vendor, mail and the bank, and your Always keep, sell and bank lists"] },
     { key = "bankalt", text = L["BANK ALT"],
-      tip = L["One of your characters that takes whole kinds of items by mail"] },
+      tip = L["Mail whole kinds of items to one of your characters"] },
     { key = "gold", text = L["GOLD"],
       tip = L["A gold fund: how much each of your characters keeps, topped up by mail"] },
     { key = "general", text = L["GENERAL"],
@@ -363,7 +363,7 @@ function SettingsUI:BuildPages()
     controls.openAtVendor:SetPoint("TOPLEFT", CONTROL_X, -2)
 
     local testRow, testButton = CommandRow(pages, "selling", 1, L["Test selling"],
-        L["At a vendor, sells your cheapest grey item from Butler's own code to see whether the game allows it. If it does, Sell sells up to 12 a click; if not, one stack a click. Same as /bbutler selltest."],
+        L["At a vendor, Butler sells your cheapest grey item by itself to see whether the game allows it. If it does, each click on Sell sells up to 12. If not, it sells one stack a click. Same as /bbutler selltest."],
         L["Test it"], "selltest")
     controls.sellTest = testButton
     controls.sellTestRow = testRow
@@ -371,7 +371,7 @@ function SettingsUI:BuildPages()
     pages:Section("selling", 1, L["MAIL AND BANK"])
 
     local mailRow = pages:Row("selling", 1, L["Open at a mailbox"],
-        L["The Butler window opens at every mailbox in place of Tradeskills' mail panel; close it to get the panel back. Fill mail, on each character's line, fills the game's Send Mail page for that character, and you press Send. Needs Blackthornes Tradeskills. Also /bbutler mailbox."])
+        L["The Butler window opens at every mailbox in place of Tradeskills' mail panel. Close it and the panel comes back. The Fill mail button on each character's line fills the game's Send Mail page for that character, and you press Send. Needs Blackthornes Tradeskills. Also /bbutler mailbox."])
     controls.openAtMailbox = Widgets.CreateCheckbox(mailRow, L["On"], function(checked)
         ns.db.openAtMailbox = checked
     end, true)
@@ -387,7 +387,7 @@ function SettingsUI:BuildPages()
     -- Jobs for the craft queue on other characters (Logic/Jobs.lua, asked
     -- 2026-10-11).
     local jobRow = pages:Row("selling", 1, L["Jobs at login"],
-        L["Logging in on a character with a job for Tradeskills' craft queue (craft this, mail that) brings the Butler window up on its steps. Also /bbutler joblogin."])
+        L["When you log in on a character that has a job in Tradeskills' craft queue (craft this, mail that), the Butler window comes up with its steps. Also /bbutler joblogin."])
     controls.jobsAtLogin = Widgets.CreateCheckbox(jobRow, L["On"], function(checked)
         ns.db.jobsAtLogin = checked
     end, true)
@@ -426,7 +426,7 @@ function SettingsUI:BuildPages()
     pages:Section("selling", 2, L["JUNK"])
 
     local belowRow = pages:Row("selling", 2, L["Sell below"],
-        L["Anything worth less than this goes under Sell, by the most a vendor, the auction house or a disenchant would give for it. Never quest items, upgrades, goal or craft materials, pet food, soulbound green or better gear, or your Always keep, bank and mail items. Nothing sells until you click Sell. Needs Blackthornes Tradeskills for auction prices. 0 is off. Also /bbutler sellbelow 50s."])
+        L["Anything worth less than this goes under Sell, going by the best a vendor, the auction house or disenchanting would get you. Never quest items, upgrades, goal or craft materials, pet food, soulbound green or better gear, or your Always keep, bank and mail items. Nothing sells until you click Sell. Needs Blackthornes Tradeskills for auction prices. 0 turns it off. Also /bbutler sellbelow 50s."])
     controls.sellBelow = Widgets.CreateMoneyBox(belowRow, function(copper)
         ns.Verdicts:SetSellBelow(copper)
     end)
@@ -452,7 +452,7 @@ function SettingsUI:BuildPages()
     pages:Section("selling", 2, L["UPGRADES FOR YOUR CHARACTERS"])
 
     local altRow = pages:Row("selling", 2, L["Mail upgrades to your characters"],
-        L["Gear that is no use here but an upgrade for another of your characters goes under Mail to them, so Fill mail sends it. Off unless you tick it. Needs Blackthornes Equipment. Also /bbutler altupgrades."])
+        L["Gear that isn't an upgrade for this character but is for another of yours goes under Mail to them, so Fill mail sends it. Off unless you tick it. Needs Blackthornes Equipment. Also /bbutler altupgrades."])
     controls.altUpgrades = Widgets.CreateCheckbox(altRow, L["On"], function(checked)
         ns.Verdicts:SetAltUpgrades(checked)
     end)
@@ -502,7 +502,7 @@ function SettingsUI:BuildPages()
     end)
 
     local whenRow = pages:Row("bankalt", 1, L["Send it"],
-        L["Before selling: everything you tick goes to the bank alt, even what would sell well. Before a vendor: the auction house and a disenchant still win, and the rest goes. Only leftovers: just what Butler would leave for you to look at. Also /bbutler bankalt first, vendor or leftovers."])
+        L["Before selling sends everything you tick to the bank alt, even things that would sell well. Before a vendor lets the auction house and disenchanting go first, then sends the rest. Only leftovers sends only what Butler would leave for you to look at. Also /bbutler bankalt first, vendor or leftovers."])
     controls.bankAltWhen = Widgets.CreateStepper(whenRow, {
         min = 1, max = #ns.BankAlt.WHEN, step = 1,
         format = function(value) return ns.BankAlt.WHEN_LABELS[ns.BankAlt.WHEN[value]] end,
@@ -543,14 +543,14 @@ function SettingsUI:BuildPages()
     pages:Section("gold", 1, L["GOLD FUND"])
 
     local minRow = pages:Row("gold", 1, L["Keep at least"],
-        L["Every character keeps this much gold. At a mailbox, a character with more can send gold to each one below it, without dropping under its own amount. Fill mail fills it; you press Send. Needs Blackthornes Tradeskills, which keeps your characters' gold as last seen. 0 is off. Also /bbutler goldmin 50g."])
+        L["Every character keeps at least this much gold. At a mailbox, a character with more can send gold to anyone below it, without going under its own amount. Fill mail fills it in and you press Send. Needs Blackthornes Tradeskills, which remembers each character's gold from the last time they played. 0 turns it off. Also /bbutler goldmin 50g."])
     controls.goldMinimum = Widgets.CreateMoneyBox(minRow, function(copper)
         ns.Funds:SetMinimum(copper)
     end)
     controls.goldMinimum:SetPoint("TOPLEFT", CONTROL_X, 0)
 
     local _, goldButton = CommandRow(pages, "gold", 1, L["Everyone's gold"],
-        L["Lists in chat each character's gold as last seen, what it keeps and what the fund would send it. Same as /bbutler gold."],
+        L["Lists in chat each character's gold from the last time they played, how much they keep and what the fund would send them. Same as /bbutler gold."],
         L["List it"], "gold")
     controls.goldReport = goldButton
 
@@ -559,7 +559,7 @@ function SettingsUI:BuildPages()
     pages:Section("gold", 1, L["CLASS TRAINING"])
 
     local trainingRow = pages:Row("gold", 1, L["Class training"],
-        L["Spells you can train lead the Jobs list with what they cost, Train all shows at your class trainer, and a level up says in chat what's new. The gold fund keeps that gold back. Prices and the trainer's place are kept the first time you open a class trainer. Also /bbutler training on or off."])
+        L["Spells you can train go at the top of the Jobs list with what they cost, Train all shows up at your class trainer, and when you level up, chat tells you what's new. The gold fund holds that gold back. Butler learns the prices and where your trainer stands the first time you open a class trainer. Also /bbutler training on or off."])
     controls.classTraining = Widgets.CreateCheckbox(trainingRow, L["On"], function(checked)
         ns.ClassTraining:SetOn(checked)
         ns.Funds:Changed()
@@ -576,7 +576,7 @@ function SettingsUI:BuildPages()
     pages:Section("gold", 1, L["GOLD GOALS"])
 
     local goalsRow = pages:Row("gold", 1, L["Gold goals"],
-        L["The bottom of the window shows what your gold is for next: class spells, profession training and riding, each with a bar of your purse against its price. Gold the gold fund sets aside for your other characters isn't counted. Also /bbutler goals on or off."])
+        L["The bottom of the window shows what your gold is for next: class spells, profession training and riding, each with a bar showing your gold next to its price. Gold the gold fund sets aside for your other characters doesn't count. Also /bbutler goals on or off."])
     controls.goldGoals = Widgets.CreateCheckbox(goalsRow, L["On"], function(checked)
         ns.GoldGoals:SetOn(checked)
     end, true)
@@ -733,7 +733,7 @@ function SettingsUI:BuildPages()
     controls.whatsNewMotion:SetPoint("TOPLEFT", CONTROL_X, -2)
 
     local _, probeButton = CommandRow(pages, "general", 2, L["Client check"],
-        L["Lists in chat which bag, vendor and mail calls this client has, and which Blackthornes addons are loaded. It only reads. Same as /bbutler probe."],
+        L["Lists in chat what the game lets Butler do with bags, vendors and mail, and which Blackthornes addons are loaded. It doesn't change anything. Same as /bbutler probe."],
         L["Check"], "probe")
     controls.probe = probeButton
 
