@@ -459,6 +459,15 @@ function Jobs.StepText(step)
         return L.Format("%s is ready", step.name),
             L.Format("Your %s cooldown is up. Use it from your bags.", step.name)
     end
+    if step.kind == "quest" then
+        local what = Jobs.ItemsText(step.items)
+        if ns.Quests.CanSearch() then
+            return L["For your quests"], L.Format("%s. Search finds them on the auction house.", what)
+        end
+        return L["For your quests"],
+            L.Format("%s. Buy them on the auction house or find them out in the world.", what),
+            L["At the auction house, with Blackthornes Tradeskills, this line has a Search button."]
+    end
     if step.kind == "pickup" then
         local what = Jobs.ItemsText(step.items)
         if step.forCraft then
@@ -518,6 +527,9 @@ end
 
 --- A step in one line, for the line about another character.
 function Jobs.Short(step)
+    if step.kind == "quest" then
+        return L.Format("get %s for your quests", Jobs.ItemsText(step.items))
+    end
     if step.kind == "cooldown" then
         return L.Format("use the %s cooldown, it's ready", step.name)
     end
@@ -555,7 +567,7 @@ end
 
 function Jobs.Icon(step)
     if step.kind == "mail" or step.kind == "pickup" then return [[Interface\Icons\INV_Letter_15]] end
-    if step.kind == "buy" or step.kind == "gather" then
+    if step.kind == "buy" or step.kind == "gather" or step.kind == "quest" then
         return ItemIcon(step.items[1] and step.items[1].itemID) or [[Interface\Icons\INV_Misc_Coin_01]]
     end
     if step.kind == "cooldown" then
@@ -577,6 +589,9 @@ function Jobs:Lines()
     for _, row in ipairs(self:TrainingLines()) do
         if row.type == "train" then rows[#rows + 1] = row end
     end
+    -- What the open quests still want that can be bought (Logic/Quests.lua).
+    local quest = ns.Quests and ns.Quests:Step()
+    if quest then rows[#rows + 1] = { type = "job", step = quest } end
     -- Nothing here can be done yet: the one who can goes first.
     if plan.goFirst then
         rows[#rows + 1] = { type = "jobnext", job = plan.nextJob, isNext = true, isFirst = true }
@@ -721,6 +736,32 @@ function Jobs.Buyable(step)
     return step ~= nil and step.kind == "buy" and offer ~= nil and (offer.buying or offer.count > 0)
 end
 
+--- Does this step get the Search button? The quest line, at the auction
+--- house, with Tradeskills loaded.
+function Jobs.Searchable(step)
+    return step ~= nil and step.kind == "quest" and ns.Quests ~= nil and ns.Quests.CanSearch()
+end
+
+--- The Search button's words: "Search", or "Next 2/5" while the game
+--- takes one item a search.
+function Jobs.SearchLabel(step)
+    local pos, total = ns.Quests:SearchPlace(step.items)
+    if pos then return L.Format("Next %d/%d", pos, total) end
+    return L["Search"]
+end
+
+--- The Search button's tooltip: each item, how many, and for which quest.
+function Jobs.SearchTooltip(step)
+    local lines = { L["Looks these up on the auction house, with how many your quests still need:"] }
+    for index = 1, math.min(#step.items, 10) do
+        local item = step.items[index]
+        lines[#lines + 1] = L.Format("  %s for %s", Amount(item.count, Jobs.ItemName(item.itemID)),
+            table.concat(item.quests or {}, ", "))
+    end
+    if #step.items > 10 then lines[#lines + 1] = "  " .. L.Format("and %d more", #step.items - 10) end
+    return table.concat(lines, "\n")
+end
+
 --- The Buy from a vendor line at a vendor: what this one has for the
 --- queue, or why it has nothing. nil away from a vendor.
 function Jobs.VendorText(step)
@@ -840,6 +881,8 @@ end
 --- its part: the footer says so.
 function Jobs:DoneHere()
     local plan = self:Plan()
+    -- Items to get for the quests are something to do here too.
+    if ns.Quests and ns.Quests:Step() then return false end
     return plan.nextJob ~= nil and (plan.here == nil or plan.goFirst == true)
 end
 

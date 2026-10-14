@@ -8,6 +8,7 @@
 --      ... or Always bank list                     Bank
 --      ... or learned: bought back after Butler sold it   Keep
 --   2. A quest item, or one that starts one        Keep
+--      ... or one an open quest collects           Keep
 --   3. A vendor won't buy it                       Keep
 --   4. On the player's Always sell list            Sell, unless Equipment
 --      says it is an upgrade to wear now          Look at it
@@ -244,6 +245,12 @@ function Verdicts:Decide(entry, noAlt)
         return "keep", L["Starts a quest"], nil, true
     elseif entry.quest == "item" then
         return "keep", L["Quest item"], nil, true
+    end
+    -- An item an open quest collects, Murloc Eyes and the like, which the
+    -- game does not mark as a quest item (Logic/Quests.lua).
+    local forQuest = ns.Quests and ns.Quests:Reason(itemID)
+    if forQuest then
+        return "keep", forQuest, nil, true
     end
 
     if entry.noValue then
