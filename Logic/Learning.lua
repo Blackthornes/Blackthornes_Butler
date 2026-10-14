@@ -50,6 +50,7 @@ Learning.MAILS = 2
 -- player's habit.
 Learning.ADDON_SUBJECTS = {
     ["From Blackthornes Butler"] = true,
+    ["Gold from Blackthornes Butler"] = true,
     ["Crafts for your queue"] = true,
     ["Gear to disenchant"] = true,
     ["Materials for the craft queue"] = true,
