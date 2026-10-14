@@ -553,14 +553,21 @@ function Errands:OnSendMail(recipient, subject)
     end
     local money = tonumber((Items.Call({ "GetSendMailMoney" })))
     self.sendCall = {
-        butler = okSubject and said == Errands.SUBJECT,
+        butler = okSubject and Errands.SUBJECTS[said] == true,
         ids = ids,
         money = money,
     }
 end
 
--- The subject Tradeskills' FillMail gives the mail Butler fills.
+-- The subjects Tradeskills' FillMail gives the mail Butler fills: gold on
+-- its own goes as "Gold from ...", so a gold top-up counted as a mail sent
+-- by hand, was never written down and was offered again straight away.
 Errands.SUBJECT = "From Blackthornes Butler"
+Errands.GOLD_SUBJECT = "Gold from Blackthornes Butler"
+Errands.SUBJECTS = {
+    [Errands.SUBJECT] = true,
+    [Errands.GOLD_SUBJECT] = true,
+}
 
 --- The mail did not go: it can be filled again.
 function Errands:SendFailed()

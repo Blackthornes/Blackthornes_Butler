@@ -112,6 +112,21 @@ suite.check("so Ana is not offered it again", Funds:For("Ana Ash") == nil)
 UI.mailButton:GetScript("OnClick")(UI.mailButton)
 suite.check("gold alone is a mail", filled[2] and filled[2].name == "Bob Stone"
     and filled[2].money == 45 * G and #filled[2].items == 0)
+-- Gold alone goes under its own subject: with the SendMail hook in place
+-- it must still count as the mail Butler filled, or Bob is offered the
+-- same gold again the moment it goes.
+local hooked = Errands.hookedSend
+Errands.hookedSend = true
+_G.GetSendMailMoney = function() return 45 * G end
+Errands:OnSendMail("Bob Stone", Errands.GOLD_SUBJECT)
+fake.money = fake.money - 45 * G - Funds.POSTAGE
+env.Fire("PLAYER_MONEY")
+env.Fire("MAIL_SEND_SUCCESS")
+suite.check("gold sent alone is written down", ns.db.goldSent["Bob Stone"]
+    and ns.db.goldSent["Bob Stone"][1].amount == 45 * G)
+suite.check("so Bob is not offered it again", Funds:For("Bob Stone") == nil)
+_G.GetSendMailMoney = nil
+Errands.hookedSend = hooked
 env.Fire("MAIL_CLOSED")
 
 -- Ana logs in without taking the mail: still on its way.
