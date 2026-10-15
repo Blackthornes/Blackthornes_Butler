@@ -329,6 +329,12 @@ end
 -- Rows
 --------------------------------------------------------------------------------
 
+-- The worth column is WORTH_WIDTH wide and grows, up to WORTH_MOST, for
+-- a longer text ("8s 00c, 1 not priced yet"), measured as the game draws
+-- it; the note beside it gives way and wraps. Past WORTH_MOST it wraps too.
+UI.WORTH_WIDTH = 96
+UI.WORTH_MOST = 200
+
 --- A row's pieces, built once: the item's icon and name, the reason, and
 --- what the stack is worth. A group's heading uses the same pieces.
 function UI.CreateRow(row)
@@ -348,7 +354,8 @@ function UI.CreateRow(row)
 
     row.worth = Theme.CreateLabel(row, "small", "text", "RIGHT")
     row.worth:SetPoint("RIGHT", -6, 0)
-    row.worth:SetWidth(96)
+    row.worth:SetWidth(UI.WORTH_WIDTH)
+    row.worth:SetWordWrap(true)
 
     row.reason = Theme.CreateLabel(row, "small", "muted")
     row.reason:SetPoint("LEFT", row.name, "RIGHT", 8, 0)
@@ -401,9 +408,19 @@ end
 UI.fillRows = setmetatable({}, { __mode = "k" })
 UI.mailOnRows = {}
 
+function UI.FitWorth(row)
+    local text = row.worth:GetText()
+    local width = UI.WORTH_WIDTH
+    if type(text) == "string" and text ~= "" then
+        width = math.max(width, math.ceil(Theme.TextWidth("small", text)) + 4)
+    end
+    row.worth:SetWidth(math.min(width, UI.WORTH_MOST))
+end
+
 function UI.UpdateRow(row, data)
     if row.action then row.action.tooltipText = nil end
     UI.DrawRow(row, data)
+    UI.FitWorth(row)
     local to = row.action and UI.fillRows[data]
     if to then
         -- The button takes the worth column's place, so the note keeps the
