@@ -20,9 +20,10 @@
 --   * Never in combat: the button hides as combat starts (its aim emptied
 --     while that can still be done) and comes back when it ends.
 --
--- Like the Sell button, it is parented to UIParent and placed over the
--- window's foot by screen position, left of the Sell or errand buttons, so
--- the window stays free to move and close in combat. It shows while the
+-- Like the Sell button, it sits inside the window out of combat
+-- (UI:Dock), on the Disenchant line or at the foot left of the Sell or
+-- errand buttons, and goes back to UIParent as a fight starts, so the
+-- window stays free to move and close in combat. It shows while the
 -- window is up on Your bags, not moving, and the Disenchant group has
 -- something in it. Only Tradeskills puts items there, and only when it
 -- says this character can break them, so the button trusts that rather
@@ -149,8 +150,8 @@ function Disenchanting:Create()
         primary = true, width = BUTTON_WIDTH, height = BUTTON_HEIGHT,
     })
     button:Hide()
-    -- In the window's layer, just above it (UI:LiftButton), so a window
-    -- in front covers it too.
+    -- Inside the window out of combat (UI:Dock), so it comes to the front
+    -- with it and a window in front covers it too.
     button:SetFrameStrata("DIALOG")
     button:RegisterForClicks("AnyUp")
     button:SetAttribute("useOnKeyDown", false)
@@ -234,23 +235,16 @@ function Disenchanting:Update(room)
     -- asked 2026-10-12), else at the window's foot.
     local row = ns.UI:HeaderRow("disenchant")
     if row and ns.UI.PlaceOnLine(button, row) then
-        ns.UI:LiftButton(button)
         button:Show()
         return 0
     end
-    local right, bottom = window:GetRight(), window:GetBottom()
-    if not (right and bottom) then
+    if not ns.UI:Dock(button) then
         button:Hide()
         return 0
     end
-    -- Drawn at the window's size, so the button's own units are the
-    -- window's, as the Sell button's are (Selling:Place).
-    local scale = (window:GetEffectiveScale() or 1) / (UIParent:GetEffectiveScale() or 1)
-    button:SetScale(scale)
     button:ClearAllPoints()
     local inset = ns.UI.SELL_INSET_X + ((room or 0) > 0 and room + GAP or 0)
-    button:SetPoint("BOTTOMRIGHT", UIParent, "BOTTOMLEFT", right - inset, bottom + ns.UI.SELL_INSET_Y)
-    ns.UI:LiftButton(button)
+    button:SetPoint("BOTTOMRIGHT", window, "BOTTOMRIGHT", -inset, ns.UI.SELL_INSET_Y)
     button:Show()
     return button:GetWidth() or BUTTON_WIDTH
 end
@@ -279,26 +273,61 @@ function Disenchanting:ProbeText()
         .. self:ProbePlace()
 end
 
---- Where the button is drawn, against the window and its line: layer,
---- level, place, size and how see-through.
+--- Where the button is drawn, against the window and its line: parent,
+--- layer, level (and how far the game brought each to the front), place,
+--- size, anchors, how see-through, whether each parent shows, and its face.
 function Disenchanting:ProbePlace()
     local button, ui = self.button, ns.UI
     if not (button and ui and ui.frame) then return "" end
-    local function N(fn, frame)
-        local ok, value = pcall(fn, frame)
-        if ok and type(value) == "number" then return ("%.0f"):format(value) end
-        return ok and tostring(value) or "?"
+    local function Ask(fn, frame, ...)
+        if type(fn) ~= "function" then return nil end
+        local ok, a, b, c, d, e = pcall(fn, frame, ...)
+        if ok then return a, b, c, d, e end
+    end
+    local function N(value)
+        if type(value) == "number" then return ("%.0f"):format(value) end
+        return tostring(value)
+    end
+    local function Name(frame)
+        if frame == nil then return "nil" end
+        if frame == UIParent then return "UIParent" end
+        if frame == ui.frame then return "window" end
+        local name = Ask(frame.GetName, frame)
+        return type(name) == "string" and name or "?"
     end
     local row = ui.HeaderRow and ui:HeaderRow("disenchant")
-    return (", strata %s/%s, level %s (window %s, line %s, inside %s), at %s,%s size %sx%s, alpha %s, scale %s"):format(
+
+    local anchors = {}
+    for index = 1, Ask(button.GetNumPoints, button) or 0 do
+        local point, relative, relativePoint, x, y = Ask(button.GetPoint, button, index)
+        local to = relative == row and "line" or Name(relative)
+        anchors[#anchors + 1] = ("%s %s %s %s,%s"):format(tostring(point), to, tostring(relativePoint), N(x), N(y))
+    end
+
+    local chain = {}
+    local parent = Ask(button.GetParent, button)
+    while parent and #chain < 6 do
+        chain[#chain + 1] = ("%s %s"):format(Name(parent), Ask(parent.IsVisible, parent) and "seen" or "unseen")
+        parent = Ask(parent.GetParent, parent)
+    end
+
+    local face = button.background
+    local faceText = face and ("%s a%.2f"):format(Ask(face.IsShown, face) and "shown" or "hidden",
+        Ask(face.GetAlpha, face) or -1) or "none"
+    local label = button.label
+    local labelText = label and ("%s a%.2f"):format(Ask(label.IsShown, label) and "shown" or "hidden",
+        Ask(label.GetAlpha, label) or -1) or "none"
+
+    return (", visible %s, parent %s, strata %s/%s, level %s (window %s, line %s, inside %s), "
+        .. "at %s,%s size %sx%s, alpha %s, scale %s, anchors [%s], parents [%s], face %s, label %s"):format(
+        tostring(Ask(button.IsVisible, button) or false), Name(Ask(button.GetParent, button)),
         tostring(button:GetFrameStrata()), tostring(ui.frame:GetFrameStrata()),
-        N(button.GetFrameLevel, button), N(ui.frame.GetFrameLevel, ui.frame),
-        row and N(row.GetFrameLevel, row) or "none", tostring(ui.InnerTop and ui:InnerTop()),
-        N(button.GetLeft, button), N(button.GetBottom, button), N(button.GetWidth, button), N(button.GetHeight, button),
-        tostring(button.GetEffectiveAlpha and button:GetEffectiveAlpha() or "?"),
-        tostring(button.GetEffectiveScale and button:GetEffectiveScale() or "?"))
-        .. (", front %s/%s"):format(tostring(ui.Standing and ui.Standing(button)),
-            tostring(ui.Standing and ui.Standing(ui.frame)))
+        ui.Standing(button), ui.Standing(ui.frame),
+        row and ui.Standing(row) or "none", tostring(ui.InnerTop and ui:InnerTop()),
+        N(Ask(button.GetLeft, button)), N(Ask(button.GetBottom, button)),
+        N(Ask(button.GetWidth, button)), N(Ask(button.GetHeight, button)),
+        tostring(Ask(button.GetEffectiveAlpha, button)), tostring(Ask(button.GetEffectiveScale, button)),
+        table.concat(anchors, "; "), table.concat(chain, " > "), faceText, labelText)
 end
 
 --------------------------------------------------------------------------------

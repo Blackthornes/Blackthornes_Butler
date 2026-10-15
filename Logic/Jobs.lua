@@ -852,8 +852,8 @@ function Jobs:CreateLogout()
         width = BUTTON_WIDTH, height = BUTTON_HEIGHT, primary = true,
     })
     button:Hide()
-    -- In the window's layer, just above it (UI:LiftButton), so a window
-    -- in front covers it too.
+    -- Inside the window out of combat (UI:Dock), so it comes to the front
+    -- with it and a window in front covers it too.
     button:SetFrameStrata("DIALOG")
     button:RegisterForClicks("AnyUp")
     button:SetAttribute("useOnKeyDown", false)
@@ -895,7 +895,8 @@ function Jobs.NextRow(list)
 end
 
 --- Put the Log out button on the next character's row, while it is on
---- screen. Placed by screen position, as the Sell button is, so the window
+--- screen. Inside the window out of combat, as the Sell button is
+--- (UI:Dock), and handed back to UIParent as a fight starts, so the window
 --- stays free to move and close in combat; hidden in combat, while the
 --- window moves and in All characters. Called each time the list is drawn
 --- or scrolled, so it follows its row.
@@ -912,11 +913,12 @@ function Jobs:UpdateLogout()
     end
     local button = self:CreateLogout()
     button.tooltipText = Tip(row.data.job)
-    local scale = (row:GetEffectiveScale() or 1) / (UIParent:GetEffectiveScale() or 1)
-    button:SetScale(scale)
+    if not ui:Dock(button) then
+        button:Hide()
+        return
+    end
     button:ClearAllPoints()
-    button:SetPoint("RIGHT", UIParent, "BOTTOMLEFT", right - 8, (top + bottom) / 2)
-    ui:LiftButton(button)
+    button:SetPoint("RIGHT", row, "RIGHT", -8, 0)
     button:Show()
 end
 
@@ -950,8 +952,8 @@ function Jobs.Craftable(step)
         or (step.kind == "cooldown" and step.recipeID ~= nil))
 end
 
---- The Leave form button: a secure button outside the window, as Log out
---- is, laid over the Craft button of the first craft line on screen.
+--- The Leave form button: a secure button, as Log out is, laid over the
+--- Craft button of the first craft line on screen.
 function Jobs:CreateLeaveForm()
     if self.formButton then return self.formButton end
     local button = ns.Widgets.CreateButton(UIParent, L["Leave form"], nil, {
@@ -959,8 +961,8 @@ function Jobs:CreateLeaveForm()
         width = 80, height = 22, primary = true,
     })
     button:Hide()
-    -- In the window's layer, just above it (UI:LiftButton), so a window
-    -- in front covers it too.
+    -- Inside the window out of combat (UI:Dock), so it comes to the front
+    -- with it and a window in front covers it too.
     button:SetFrameStrata("DIALOG")
     button:RegisterForClicks("AnyUp")
     button:SetAttribute("useOnKeyDown", false)
@@ -1001,11 +1003,12 @@ function Jobs:UpdateLeaveForm()
         return
     end
     local button = self:CreateLeaveForm()
-    local scale = (row:GetEffectiveScale() or 1) / (UIParent:GetEffectiveScale() or 1)
-    button:SetScale(scale)
+    if not ui:Dock(button) then
+        button:Hide()
+        return
+    end
     button:ClearAllPoints()
-    button:SetPoint("RIGHT", UIParent, "BOTTOMLEFT", right - 8, (top + bottom) / 2)
-    ui:LiftButton(button)
+    button:SetPoint("RIGHT", row, "RIGHT", -8, 0)
     button:Show()
 end
 

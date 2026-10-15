@@ -144,7 +144,8 @@ local leave = Jobs.formButton
 suite.check("Leave form shows over the Craft button", leave and leave:IsShown())
 suite.check("it runs /cancelform and nothing else", leave:GetAttribute("type") == "macro"
     and leave:GetAttribute("macrotext") == "/cancelform" and leave:GetAttribute("spell") == nil)
-suite.check("at the Craft button's place", leave._point[4] == 692 and leave._point[5] == 485)
+suite.check("at the Craft button's place", leave._point[1] == "RIGHT" and leave._point[2] == UI.list.rows[2]
+    and leave._point[4] == -8 and leave._point[5] == 0 and leave:GetParent() == UI.frame)
 env.Fire("PLAYER_REGEN_DISABLED")
 suite.check("combat hides it", not leave:IsShown())
 env.Fire("PLAYER_REGEN_ENABLED")
@@ -186,8 +187,9 @@ suite.check("it is the game's own /logout", button:GetAttribute("type") == "macr
 suite.check("its tooltip names who to pick", button.tooltipText:find("Blackthornes Wither", 1, true) ~= nil)
 suite.check("it sits on that character's row", Jobs.NextRow(UI.list).data.job.name == "Blackthornes Wither")
 local point = button._point
-suite.check("at the row's right end, level with it", point[1] == "RIGHT" and point[4] == 692 and point[5] == 485,
-    tostring(point[4]) .. "," .. tostring(point[5]))
+suite.check("at the row's right end, level with it", point[1] == "RIGHT" and point[2] == Jobs.NextRow(UI.list)
+    and point[3] == "RIGHT" and point[4] == -8 and point[5] == 0, tostring(point[4]) .. "," .. tostring(point[5]))
+suite.check("inside the window", button:GetParent() == UI.frame)
 suite.check("work here, the footer doesn't say it's all done", not Jobs:DoneHere())
 UI.list.rows = { Row(shown[1]), Row(shown[2]) }
 Jobs:UpdateLogout()
