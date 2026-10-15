@@ -407,7 +407,7 @@ local buy = plan.here.steps[2]
 suite.check("the vendor step adds up what every craft is short",
     #buy.items == 1 and buy.items[1].itemID == 2321 and buy.items[1].count == 4)
 title, detail = Jobs.StepText(buy)
-suite.check("it says to buy them", title == "Buy from a vendor" and detail:find("Buy materials", 1, true) ~= nil,
+suite.check("it says to buy them", title == "Buy from a vendor" and detail:find("Tradeskills Vendor", 1, true) ~= nil,
     tostring(title) .. " / " .. tostring(detail))
 suite.check("a vendor run counts as a step to do now", Jobs.Ready({ steps = { buy } }))
 plan = Fresh({ { name = "Ana Blackthorne", isCurrent = true, steps = {

@@ -478,12 +478,11 @@ function Jobs.StepText(step)
     end
     if step.kind == "buy" then
         return L["Buy from a vendor"],
-            L.Format("%s for your crafts. At a vendor that sells them, Tradeskills' Buy materials button gets them.",
-                Jobs.ItemsText(step.items))
+            L.Format("Buy %s at the Tradeskills Vendor.", Jobs.ItemsText(step.items))
     end
     if step.kind == "gather" then
         return L["Buy or gather"],
-            L.Format("%s for your crafts. Buy it on the auction house or gather it.", Jobs.ItemsText(step.items))
+            L.Format("Buy %s at the auction house, or gather it.", Jobs.ItemsText(step.items))
     end
     if step.kind == "mail" then
         local what = Jobs.ItemsText(step.items)
@@ -769,14 +768,13 @@ function Jobs.VendorText(step)
     if not (step and step.kind == "buy" and offer) then return nil end
     if offer.buying then return L["Buying what your crafts need from this vendor..."] end
     if offer.count > 0 then
-        return L.Format("This vendor has %s for your crafts, %s in all.",
+        return L.Format("Buy %s here for %s.",
             Jobs.ItemsText(offer.items), Items.FormatMoney(offer.cost))
     end
     if offer.cheaperElsewhere > 0 then
-        return L.Format("%s for your crafts. This vendor has it, but the auction house sells it for less.",
-            Jobs.ItemsText(step.items))
+        return L.Format("Buy %s at the auction house. It's cheaper there.", Jobs.ItemsText(step.items))
     end
-    return L.Format("%s for your crafts. This vendor doesn't sell it.", Jobs.ItemsText(step.items))
+    return L.Format("This vendor doesn't sell %s.", Jobs.ItemsText(step.items))
 end
 
 --- The Buy button's tooltip: each material and its cost.
