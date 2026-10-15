@@ -66,14 +66,14 @@ local KEEPS = {
     gun = L["Ammo for your gun"],
 }
 local NO_BAG = {
-    bow = L["Put on a quiver and Butler fills it with these for your bow"],
-    crossbow = L["Put on a quiver and Butler fills it with these for your crossbow"],
-    gun = L["Put on an ammo pouch and Butler fills it with these for your gun"],
+    bow = L["Put on a quiver to fill it with these"],
+    crossbow = L["Put on a quiver to fill it with these"],
+    gun = L["Put on an ammo pouch to fill it with these"],
 }
 local MISMATCH = {
-    bow = L["Your bow fires arrows, but your ammo pouch can't hold them. Put on a quiver to fill it here"],
-    crossbow = L["Your crossbow fires arrows, but your ammo pouch can't hold them. Put on a quiver to fill it here"],
-    gun = L["Your gun fires bullets, but your quiver can't hold them. Put on an ammo pouch to fill it here"],
+    bow = L["Your bow needs a quiver, not an ammo pouch"],
+    crossbow = L["Your crossbow needs a quiver, not an ammo pouch"],
+    gun = L["Your gun needs an ammo pouch, not a quiver"],
 }
 
 -- The ranged slot, then the main hand (a client that moved ranged weapons
@@ -419,10 +419,10 @@ function Ammo.Reason(offer)
         return MISMATCH[weapon.word]
     elseif offer.state == "poor" then
         if quiver then
-            return L.Format("Your quiver has room for %s (%s), but you can't pay for one lot yet",
+            return L.Format("Room for %s (%s), but not enough gold yet",
                 Thousands(offer.full), Items.FormatMoney(offer.fullCost))
         end
-        return L.Format("Your ammo pouch has room for %s (%s), but you can't pay for one lot yet",
+        return L.Format("Room for %s (%s), but not enough gold yet",
             Thousands(offer.full), Items.FormatMoney(offer.fullCost))
     end
     local text

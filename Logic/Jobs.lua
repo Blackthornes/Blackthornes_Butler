@@ -766,7 +766,7 @@ end
 function Jobs.VendorText(step)
     local offer = Jobs.offer
     if not (step and step.kind == "buy" and offer) then return nil end
-    if offer.buying then return L["Buying what your crafts need from this vendor..."] end
+    if offer.buying then return L["Buying..."] end
     if offer.count > 0 then
         return L.Format("Buy %s here for %s.",
             Jobs.ItemsText(offer.items), Items.FormatMoney(offer.cost))
@@ -782,11 +782,11 @@ function Jobs.BuyTooltip()
     local offer = Jobs.offer
     if not offer then return nil end
     if offer.buying then return L["Buying..."] end
-    local lines = { L.Format("Buys what your crafts need from this vendor, %s in all:", Items.FormatMoney(offer.cost)) }
+    local lines = { L.Format("Buy for your crafts, %s:", Items.FormatMoney(offer.cost)) }
     for index = 1, math.min(#offer.items, 10) do
         local item = offer.items[index]
         local line = ("  %s  %s"):format(Amount(item.count, Jobs.ItemName(item.itemID)), Items.FormatMoney(item.cost))
-        if item.short then line = line .. "  " .. L["(the vendor has only so many)"] end
+        if item.short then line = line .. "  " .. L["(limited stock)"] end
         lines[#lines + 1] = line
     end
     if #offer.items > 10 then lines[#lines + 1] = "  " .. L.Format("and %d more", #offer.items - 10) end
