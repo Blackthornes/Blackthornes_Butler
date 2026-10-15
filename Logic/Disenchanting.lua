@@ -276,6 +276,27 @@ function Disenchanting:ProbeText()
         tostring(ui and ui.frame and ui:IsShown() or false), tostring(ui and ui.view),
         tostring(self.fighting or false), tostring(ui and ui.HeaderRow and ui:HeaderRow("disenchant") ~= nil),
         button and (button:IsShown() and "shown" or "hidden") or "not made")
+        .. self:ProbePlace()
+end
+
+--- Where the button is drawn, against the window and its line: layer,
+--- level, place, size and how see-through.
+function Disenchanting:ProbePlace()
+    local button, ui = self.button, ns.UI
+    if not (button and ui and ui.frame) then return "" end
+    local function N(fn, frame)
+        local ok, value = pcall(fn, frame)
+        if ok and type(value) == "number" then return ("%.0f"):format(value) end
+        return ok and tostring(value) or "?"
+    end
+    local row = ui.HeaderRow and ui:HeaderRow("disenchant")
+    return (", strata %s/%s, level %s (window %s, line %s, inside %s), at %s,%s size %sx%s, alpha %s, scale %s"):format(
+        tostring(button:GetFrameStrata()), tostring(ui.frame:GetFrameStrata()),
+        N(button.GetFrameLevel, button), N(ui.frame.GetFrameLevel, ui.frame),
+        row and N(row.GetFrameLevel, row) or "none", tostring(ui.InnerTop and ui:InnerTop()),
+        N(button.GetLeft, button), N(button.GetBottom, button), N(button.GetWidth, button), N(button.GetHeight, button),
+        tostring(button.GetEffectiveAlpha and button:GetEffectiveAlpha() or "?"),
+        tostring(button.GetEffectiveScale and button:GetEffectiveScale() or "?"))
 end
 
 --------------------------------------------------------------------------------

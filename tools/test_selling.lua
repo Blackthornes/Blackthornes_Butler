@@ -48,6 +48,19 @@ suite.check("but never in a fight", button:GetFrameLevel() == 40 + UI.BUTTON_LIF
 InCombatLockdown = lockdown
 UI.raiseWatcher._scripts.OnUpdate(UI.raiseWatcher, 0)
 suite.check("and once the fight ends", button:GetFrameLevel() == 60 + UI.BUTTON_LIFT)
+
+-- Rows drawn far above the window itself: the button goes over them too.
+local deep = { GetFrameLevel = function() return 60 + UI.BUTTON_LIFT + 15 end,
+    GetChildren = function() end }
+local frameChildren = UI.frame.GetChildren
+UI.frame.GetChildren = function() return deep end
+UI.innerTop = nil
+UI:LiftButtons()
+suite.check("above the rows inside the window", button:GetFrameLevel() == 60 + UI.BUTTON_LIFT + 17,
+    button:GetFrameLevel())
+UI.frame.GetChildren = frameChildren
+UI.innerTop = nil
+UI:LiftButtons()
 suite.check("which names the stack it sells", button.label:GetText() == "Sell Junk 1", button.label:GetText())
 suite.check("and the version label makes room", not UI.versionLabel:IsShown())
 

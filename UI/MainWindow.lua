@@ -1466,10 +1466,37 @@ function UI:LiftButton(button)
     local frame = self.frame
     if not (button and frame) or UI.InFight() then return end
     local level = frame:GetFrameLevel() or 1
+    -- Above everything drawn inside the window too: its rows can sit more
+    -- than BUTTON_LIFT levels over the window itself, which hid the
+    -- Disenchant button under its own line (2026-10-15).
+    local target = math.max(level + UI.BUTTON_LIFT, self:InnerTop() + 2)
     button:SetFrameStrata(frame:GetFrameStrata() or "DIALOG")
-    if button:GetFrameLevel() ~= level + UI.BUTTON_LIFT then
-        button:SetFrameLevel(level + UI.BUTTON_LIFT)
+    if button:GetFrameLevel() ~= target then
+        button:SetFrameLevel(target)
     end
+end
+
+--- The highest frame level inside the window, kept until the window's own
+--- level or its row count moves (rows are only added, never taken away).
+function UI:InnerTop()
+    local frame = self.frame
+    local level = frame:GetFrameLevel() or 1
+    local rows = self.list and self.list.rows and #self.list.rows or 0
+    if self.innerTop and self.innerTopAt == level and self.innerTopRows == rows then
+        return self.innerTop
+    end
+    local top = level
+    local function Walk(parent, depth)
+        if depth > 12 or type(parent.GetChildren) ~= "function" then return end
+        for _, child in ipairs({ parent:GetChildren() }) do
+            local ok, at = pcall(child.GetFrameLevel, child)
+            if ok and type(at) == "number" and at > top then top = at end
+            Walk(child, depth + 1)
+        end
+    end
+    Walk(frame, 1)
+    self.innerTop, self.innerTopAt, self.innerTopRows = top, level, rows
+    return top
 end
 
 --- Every secure button lifted again: the window was brought to the front,
