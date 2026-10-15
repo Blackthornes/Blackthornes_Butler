@@ -253,7 +253,7 @@ function BuyMany.Describe(plan)
     local item = plan.item
     local count = ns.Ammo.Thousands
     if plan.state == "extended" then
-        return "", L["Butler only buys items priced in gold. Use the vendor's own window for this one."]
+        return "", L["Butler only buys with gold. Use the vendor's window for this one."]
     elseif plan.state == "cantbuy" then
         return "", L["The vendor won't sell you this one."]
     elseif plan.state == "none" then

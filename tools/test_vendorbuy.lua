@@ -65,7 +65,7 @@ Jobs:VendorOffer()
 suite.check("the offer is read", Jobs.offer and Jobs.offer.count == 1 and Jobs.offer.cost == 40)
 suite.check("Buy shows", Jobs.Buyable(step))
 local text = Jobs.VendorText(step)
-suite.check("the line says what this vendor has", text:find("This vendor has 4 Fine Thread", 1, true) ~= nil, text)
+suite.check("the line says what this vendor has", text:find("Buy 4 Fine Thread here", 1, true) ~= nil, text)
 local tip = Jobs.BuyTooltip()
 suite.check("the tooltip lists each material", tip:find("4 Fine Thread", 1, true) ~= nil, tip)
 local key = Jobs.vendorKey

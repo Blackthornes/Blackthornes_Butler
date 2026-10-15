@@ -151,7 +151,7 @@ suite.check("saying why", Ammo.Reason(offer):find("all you can pay for now", 1, 
 fake.money = 50
 offer = Fresh()
 suite.check("not enough for one lot: no button", offer.state == "poor"
-    and Ammo.Reason(offer):find("can't pay for one lot", 1, true) ~= nil, Ammo.Reason(offer))
+    and Ammo.Reason(offer):find("not enough gold yet", 1, true) ~= nil, Ammo.Reason(offer))
 Ammo:Buy()
 suite.check("and nothing bought", #bought == 0)
 fake.money = 50000
@@ -160,7 +160,7 @@ fake.money = 50000
 ranged = 2508
 offer = Fresh()
 suite.check("a gun with a quiver: says so", offer.state == "mismatch" and offer.ammo.itemID == 2516
-    and Ammo.Reason(offer):find("gun fires bullets, but your quiver", 1, true) ~= nil, offer and Ammo.Reason(offer))
+    and Ammo.Reason(offer):find("gun needs an ammo pouch, not a quiver", 1, true) ~= nil, offer and Ammo.Reason(offer))
 Ammo:Buy()
 suite.check("and buys nothing", #bought == 0)
 family = 2
