@@ -605,6 +605,12 @@ rank: a `forCraft` mail that unblocks a craft here, then mail waiting for
 its crafts, then any mail waiting, then the first that can get on with
 it. Tested in `tools/test_jobs.lua`.
 
+Crafts freeing bag space (the owner asked 2026-10-15): a craft step for the
+character playing carries `slots` (Tradeskills' `Crafting:SlotsFreed`, nil
+while "Craft what frees bag space first" is off there), and `Jobs.Order`
+sorts the plain crafts by it, most first, ties and other steps staying put.
+Tested in `tools/test_jobs.lua`.
+
 A mail of materials says why (the owner, 2026-10-14): `Jobs.NoteWhy`
 finds the crafts on the receiver's line still missing an item the mail
 carries (`step.forSteps`), and the row reads "6 Wool Cloth, so NAME can
