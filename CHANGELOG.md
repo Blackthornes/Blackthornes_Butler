@@ -4,6 +4,16 @@ Versions follow [semantic versioning](https://semver.org): the middle number
 moves for new behaviour, the last for fixes alone. The newest version goes at
 the top; a release is refused if its version has no section here.
 
+## 0.10.0
+
+For WoW: Forever (interface 16001). `/reload` is enough.
+
+- **Craft:** the Craft button opens the profession window first when it is
+  closed, and the next click crafts.
+- **Bag space:** crafts that free the most bag space come first, when
+  Tradeskills' option for it is on.
+- **Random suffixes:** your copy of suffix gear is priced by its own suffix.
+
 ## 0.9.0
 
 For WoW: Forever (interface 16001). Files were added and the TOC changed, so
