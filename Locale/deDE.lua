@@ -833,6 +833,8 @@ L["To level Enchanting: %s needs what it gives"] = "Für Verzauberkunst: %s brau
 L["Leave form"] = "Gestalt verlassen"
 L["You can't craft in this form. Click to leave it, then click Craft. Not in combat."] = "In dieser Gestalt kannst du nicht herstellen. Klick, um sie zu verlassen, dann auf Herstellen. Nicht im Kampf."
 L["leave your form first, then click Craft for %s again."] = "verlass zuerst deine Gestalt, dann klick noch einmal auf Herstellen für %s."
+L["Open %s"] = "%s öffnen"
+L["Opens %s. Click Craft after that to make it."] = "Öffnet %s. Klick danach auf Herstellen."
 
 -- Items for your quests
 L["For your quests"] = "Für deine Quests"

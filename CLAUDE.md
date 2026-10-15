@@ -570,6 +570,14 @@ Log out button (the header and gold foot ones are gone); once nothing is
 left here the footer says "Everything here is done" (`Jobs:DoneHere`).
 Not yet seen in game; `/bbutler probe` has a jobs line (`Logout`,
 `SLASH_LOGOUT1`).
+Craft opens the profession when its window is closed (the owner,
+2026-10-15, as Tradeskills' own craft button does): Tradeskills'
+`Butler:Profession(recipeID)` gives `{ name, spell, open }`, and while the
+first craft line on screen has `open` false, `Jobs:UpdateOpenProfession`
+lays a secure button (`BlackthornesButlerOpenProfession`, type spell, inside
+the window like Leave form, which wins in a form) reading "Open NAME" over
+its Craft button. That click opens the window; the next Craft crafts.
+`TRADE_SKILL_SHOW`/`CLOSE` redraw the lines. Tested in `tools/test_jobs.lua`.
 When nothing here can be done yet and the next character can (the owner,
 2026-10-11: "a sub craft on another character needs to go to a top step
 if they already have the materials"), `Jobs:Plan`'s `goFirst` puts that
