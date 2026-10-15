@@ -203,6 +203,7 @@ function Probe:Run()
     Line("buyback", Read("GetNumBuybackItems"))
     if ns.Selling then Line("sell from Butler", ns.Selling:ProbeText()) end
     if ns.Disenchanting then Line("disenchant", ns.Disenchanting:ProbeText()) end
+    if ns.Opening then Line("open", ns.Opening:ProbeText()) end
     if ns.FreeSpace then Line("free bag space", ns.FreeSpace:ProbeText()) end
     if ns.WhoHas then Line("who has it", ns.WhoHas:ProbeText()) end
     if ns.VerdictTip then Line("verdict on tooltips", ns.VerdictTip:ProbeText()) end

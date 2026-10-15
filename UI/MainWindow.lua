@@ -1566,6 +1566,9 @@ function UI:FootRoom()
     -- The Disenchant button goes left of those.
     local disenchant = ns.Disenchanting and ns.Disenchanting:Update(room) or 0
     if disenchant > 0 then room = room + (room > 0 and 6 or 0) + disenchant end
+    -- The Open button goes left of those.
+    local open = ns.Opening and ns.Opening:Update(room) or 0
+    if open > 0 then room = room + (room > 0 and 6 or 0) + open end
     -- The Log out button sits on the next character's row.
     if ns.Jobs then ns.Jobs:UpdateLogout() end
     -- Leave form sits over the first Craft button while in one.

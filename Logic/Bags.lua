@@ -21,7 +21,7 @@ Bags.BUDGET = 40
 Bags.SETTLE = 0.2
 
 -- ["bag:slot"] = { bag, slot, itemID, link, count, quality, locked, noValue,
--- bound, icon, quest, key }
+-- bound, icon, loot, quest, key }
 Bags.slots = {}
 Bags.version = 0
 Bags.stale = true
@@ -62,6 +62,8 @@ function Bags.ReadSlot(bag, slot)
             noValue = info.hasNoValue and true or false,
             bound = info.isBound and true or false,
             icon = info.iconFileID,
+            -- A clam, sack or lockbox with something in it (Logic/Opening.lua).
+            loot = info.hasLoot and true or false,
             key = ("%s:%d:%s"):format(tostring(link or info.itemID), count, locked and "l" or ""),
         }
     end)

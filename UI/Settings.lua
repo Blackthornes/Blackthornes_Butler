@@ -699,6 +699,29 @@ function SettingsUI:BuildPages()
         L["Titanforged is the house look, with a gold rim and glowing edges. Blizzard uses the game's own frames, red buttons and tick boxes. Takes effect after /reload."])
     controls.windowStyle = SettingsUI.WindowStyleControl(styleRow, CONTROL_X)
 
+    -- The Open button and opening after loot (Logic/Opening.lua, the owner
+    -- asked 2026-10-15).
+    pages:Section("general", 2, L["CLAMS AND SACKS"])
+
+    local openRow = pages:Row("general", 2, L["Open button"],
+        L["A button at the foot of the window opens your clams, sacks and lockboxes, one a click. It leaves alone anything a goal, quest or craft needs, anything on your Always keep list and locked lockboxes. Also /bbutler openbutton."])
+    controls.openButton = Widgets.CreateCheckbox(openRow, L["Show it"], function(checked)
+        ns.Opening:SetOn(checked)
+    end, true)
+    controls.openButton:SetPoint("TOPLEFT", CONTROL_X, -2)
+
+    local _, openTestButton = CommandRow(pages, "general", 2, L["Test opening"],
+        L["Butler opens one clam, sack or lockbox by itself to see whether the game allows it. If it does, Open after loot can work. Same as /bbutler opentest."],
+        L["Test it"], "opentest")
+    controls.openTest = openTestButton
+
+    local autoRow = pages:Row("general", 2, L["Open after loot"],
+        L["Each time you close a loot window, Butler opens the next clam, sack or lockbox, never in a fight or at a vendor, bank or mailbox. Works once Test opening says the game allows it. Also /bbutler autoopen."])
+    controls.autoOpen = Widgets.CreateCheckbox(autoRow, L["On"], function(checked)
+        ns.Opening:SetAuto(checked)
+    end, false)
+    controls.autoOpen:SetPoint("TOPLEFT", CONTROL_X, -2)
+
     pages:Section("general", 2, L["ADVANCED"])
 
     local debugRow = pages:Row("general", 2, L["Debug output"],
@@ -773,6 +796,8 @@ function SettingsUI:Refresh()
     controls.freeSpace:SetChecked(ns.db.freeSpace ~= false)
     controls.trashCan:SetChecked(ns.db.trashCan ~= false)
     controls.buyMany:SetChecked(ns.BuyMany:IsOn())
+    controls.openButton:SetChecked(ns.Opening:IsOn())
+    controls.autoOpen:SetChecked(ns.Opening:AutoOn())
     controls.whoHas:SetChecked(ns.db.whoHas ~= false)
     controls.verdictTip:SetChecked(ns.db.verdictTip ~= false)
     controls.voice:SetChecked(ns.db.voice ~= false)

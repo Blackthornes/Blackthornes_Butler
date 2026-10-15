@@ -350,6 +350,12 @@ local DEFAULTS = {
     -- item at once (UI/BuyMany.lua, the owner asked 2026-10-14). Never
     -- rename it.
     buyMany = true,
+    -- The Open button for clams, sacks and lockboxes, and opening them by
+    -- itself after loot once /bbutler opentest found it may (off unless
+    -- ticked; Logic/Opening.lua, the owner asked 2026-10-15). What the test
+    -- found is kept in openTest. Never rename any of them.
+    openButton = true,
+    autoOpen = false,
     -- Moroes's "You rang?" and "Now, where was I?" when the player opens and
     -- closes the window (the owner asked 2026-10-11).
     voice = true,

@@ -51,6 +51,7 @@ UI\Trash.lua
 
 Logic\Selling.lua
 Logic\Disenchanting.lua
+Logic\Opening.lua
 Logic\Errands.lua
 Logic\Funds.lua
 Logic\Ammo.lua

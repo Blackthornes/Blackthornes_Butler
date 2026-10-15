@@ -884,6 +884,29 @@ and tool) and stands down while `_G.BlackthornesButler.Trash` exists, so
 only one shows; keep `ns.Trash` on the global, or change Farmer's
 `Trash.ButlerHasIt` too.
 
+## The Open button
+
+The owner asked (2026-10-15) for one click to open clams, sacks and
+lockboxes, "just the button with hover text that say Open".
+`Logic/Opening.lua`: a secure icon button (`BlackthornesButlerOpen`, the
+next item's icon, how many are left in its corner, "Open" on hover) at the
+window's foot left of the Disenchant button, inside the window out of
+combat like the other secure buttons. Each click aims a `/use bag slot`
+macro at the next slot with `hasLoot` (`Bags.ReadSlot`'s `loot`), read
+again first, and empties it after. Left shut: the Always keep, bank and
+mail lists, a buyback keep, sets, quest items and what open quests
+collect, a Farmer goal's or either queue's need (`need`, `mailCount`),
+a lockbox whose tooltip says `LOCKED`. Hidden in combat, on All
+characters and at a vendor, bank, mailbox, auction house or trade, where a
+/use does something else. "Open after loot" (`autoOpen`, off unless
+ticked) opens the next one from addon code each `LOOT_CLOSED`, out of
+combat, away from NPCs, with a free slot, only once `/bbutler opentest`
+saved `openTest.result = "works"`; one that stayed shut is left for the
+session (`Opening.tried`). `openButton` (on unless unticked), `autoOpen`
+and `openTest` are account wide; never rename them. General page, CLAMS
+AND SACKS; `/bbutler openbutton`, `opentest`, `autoopen`; a probe line
+("open"). Tested in `tools/test_opening.lua`. Not yet seen in game.
+
 ## Butler's voice
 
 The owner asked (2026-10-11) for Moroes, Karazhan's butler, to answer when
