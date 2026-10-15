@@ -297,6 +297,8 @@ function Disenchanting:ProbePlace()
         N(button.GetLeft, button), N(button.GetBottom, button), N(button.GetWidth, button), N(button.GetHeight, button),
         tostring(button.GetEffectiveAlpha and button:GetEffectiveAlpha() or "?"),
         tostring(button.GetEffectiveScale and button:GetEffectiveScale() or "?"))
+        .. (", front %s/%s"):format(tostring(ui.Standing and ui.Standing(button)),
+            tostring(ui.Standing and ui.Standing(ui.frame)))
 end
 
 --------------------------------------------------------------------------------

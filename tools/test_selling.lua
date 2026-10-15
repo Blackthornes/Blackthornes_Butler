@@ -61,6 +61,23 @@ suite.check("above the rows inside the window", button:GetFrameLevel() == 60 + U
 UI.frame.GetChildren = frameChildren
 UI.innerTop = nil
 UI:LiftButtons()
+
+-- The game brings the window to the front without moving its level (only
+-- GetRaisedFrameLevel says so): the button is brought to the front after
+-- it, once each time.
+local raised, raises = 0, 0
+UI.frame.GetRaisedFrameLevel = function() return raised end
+button.Raise = function() raises = raises + 1 end
+UI.raiseWatcher._scripts.OnUpdate(UI.raiseWatcher, 0)
+suite.check("brought to the front when the window first is", raises == 1, raises)
+UI.raiseWatcher._scripts.OnUpdate(UI.raiseWatcher, 0)
+Selling:Update()
+suite.check("and not again while the window stays put", raises == 1, raises)
+raised = 7
+UI.raiseWatcher._scripts.OnUpdate(UI.raiseWatcher, 0)
+suite.check("again once the window is brought forward", raises == 2, raises)
+button.Raise = nil
+UI.frame.GetRaisedFrameLevel = nil
 suite.check("which names the stack it sells", button.label:GetText() == "Sell Junk 1", button.label:GetText())
 suite.check("and the version label makes room", not UI.versionLabel:IsShown())
 

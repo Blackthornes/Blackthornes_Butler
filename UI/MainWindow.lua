@@ -1474,6 +1474,27 @@ function UI:LiftButton(button)
     if button:GetFrameLevel() ~= target then
         button:SetFrameLevel(target)
     end
+    -- The game draws a window it brought to the front (shown or clicked)
+    -- over frames of a higher level in its layer, and says so only in
+    -- GetRaisedFrameLevel; the window's level stays 1. So each button is
+    -- brought to the front too, once each time the window was (the
+    -- Disenchant button sat hidden under its line, 2026-10-15).
+    if UI.raiseMark and button.raisedFor ~= UI.raiseMark and type(button.Raise) == "function" then
+        pcall(button.Raise, button)
+        button.raisedFor = UI.raiseMark
+    end
+end
+
+--- Where the window stands in its layer: its level, and how far the game
+--- brought it to the front, where the client says.
+function UI.Standing(frame)
+    local level = frame:GetFrameLevel() or 1
+    local raised
+    if type(frame.GetRaisedFrameLevel) == "function" then
+        local ok, value = pcall(frame.GetRaisedFrameLevel, frame)
+        if ok and type(value) == "number" then raised = value end
+    end
+    return raised and (level .. ":" .. raised) or tostring(level)
 end
 
 --- The highest frame level inside the window, kept until the window's own
@@ -1506,18 +1527,21 @@ function UI:LiftButtons()
     self:LiftButton(ns.Disenchanting and ns.Disenchanting.button)
     self:LiftButton(ns.Jobs and ns.Jobs.button)
     self:LiftButton(ns.Jobs and ns.Jobs.formButton)
-    self.liftedAt = self.frame and self.frame:GetFrameLevel()
+    self.liftedAt = self.frame and UI.Standing(self.frame)
 end
 
 --- The window is raised when it shows or is clicked, and the game says
---- nothing when it is. A small frame inside it looks at the window's level
---- each frame while it is up (one number) and lifts the buttons only when
---- it moved.
+--- nothing when it is. A small frame inside it looks at where the window
+--- stands each frame while it is up (two numbers) and lifts the buttons
+--- only when that moved.
 function UI:WatchRaise()
     local watcher = CreateFrame("Frame", nil, self.frame)
     watcher:SetScript("OnUpdate", function()
-        local level = UI.frame:GetFrameLevel()
-        if level ~= UI.liftedAt and not UI.InFight() then UI:LiftButtons() end
+        local standing = UI.Standing(UI.frame)
+        if standing ~= UI.liftedAt and not UI.InFight() then
+            UI.raiseMark = (UI.raiseMark or 0) + 1
+            UI:LiftButtons()
+        end
     end)
     self.raiseWatcher = watcher
 end
