@@ -167,8 +167,11 @@ The Disenchant button (`Logic/Disenchanting.lua`) is a secure button like
 Sell, outside the window and placed by screen position on the Disenchant
 heading, or at the foot left of the Sell or errand buttons when that is out
 of sight (`UI:FootRoom` calls `Disenchanting:Update(room)`). It shows
-on Your bags while the character knows Disenchant and something is under
-Disenchant, and casts once a click: its PreClick aims the spell at the next
+on Your bags while something is under Disenchant (only Tradeskills puts
+it there, for a character that can break it; Forever's spell checks can
+say no for one that can, 2026-10-15), casts the spell by its client name
+(`Disenchanting:SpellName`), and `/bbutler probe`'s "disenchant" line says
+why it shows or not, and casts once a click: its PreClick aims the spell at the next
 slot (bought first) through `target-bag`/`target-slot`, re-reading the slot
 and its verdict first, never a "/use" macro (that equips when the cast does
 not start). Hidden, its aim emptied, in combat. Not yet seen in game.

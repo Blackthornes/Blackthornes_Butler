@@ -22,9 +22,13 @@
 --
 -- Like the Sell button, it is parented to UIParent and placed over the
 -- window's foot by screen position, left of the Sell or errand buttons, so
--- the window stays free to move and close in combat. It shows only while
--- the window is up on Your bags, not moving, and the character knows
--- Disenchant. It never touches a Blizzard frame.
+-- the window stays free to move and close in combat. It shows while the
+-- window is up on Your bags, not moving, and the Disenchant group has
+-- something in it. Only Tradeskills puts items there, and only when it
+-- says this character can break them, so the button trusts that rather
+-- than a spell check of its own: on Forever the spell checks can all say
+-- no for a character that disenchants (2026-10-15). It never touches a
+-- Blizzard frame.
 
 local _, ns = ...
 local L = ns.L
@@ -42,6 +46,22 @@ local GAP = 6
 
 local function InCombat()
     return type(InCombatLockdown) == "function" and InCombatLockdown() and true or false
+end
+
+--- The spell's name in the client's language, so the button casts it by
+--- name and a Forever spell ID that differs from Classic's still works.
+function Disenchanting:SpellName()
+    local spell = rawget(_G, "C_Spell")
+    if type(spell) == "table" and type(spell.GetSpellName) == "function" then
+        local ok, name = pcall(spell.GetSpellName, self.SPELL)
+        if ok and type(name) == "string" and name ~= "" then return name end
+    end
+    local info = rawget(_G, "GetSpellInfo")
+    if type(info) == "function" then
+        local ok, name = pcall(info, self.SPELL)
+        if ok and type(name) == "string" and name ~= "" then return name end
+    end
+    return self.SPELL
 end
 
 --- Does the character playing know Disenchant? nil when the client won't say.
@@ -134,7 +154,7 @@ function Disenchanting:Create()
     button:SetFrameStrata("DIALOG")
     button:RegisterForClicks("AnyUp")
     button:SetAttribute("useOnKeyDown", false)
-    button:SetAttribute("spell", self.SPELL)
+    button:SetAttribute("spell", self:SpellName())
 
     button:HookScript("OnEnter", function(frame)
         if frame.tooltipText then
@@ -156,7 +176,7 @@ function Disenchanting:Create()
             return
         end
         frame:SetAttribute("type", "spell")
-        frame:SetAttribute("spell", Disenchanting.SPELL)
+        frame:SetAttribute("spell", Disenchanting:SpellName())
         frame:SetAttribute("target-bag", item.bag)
         frame:SetAttribute("target-slot", item.slot)
     end)
@@ -194,7 +214,6 @@ function Disenchanting:Update(room)
 
     local window = ns.UI and ns.UI.frame
     local show = window and ns.UI:IsShown() and not ns.UI.dragging and ns.UI.view ~= "all"
-        and self:Knows() ~= false
     local button = self.button
     if not show then
         if button then button:Hide() end
@@ -234,6 +253,29 @@ function Disenchanting:Update(room)
     ns.UI:LiftButton(button)
     button:Show()
     return button:GetWidth() or BUTTON_WIDTH
+end
+
+--- One line for /bbutler probe: why the button shows or not.
+function Disenchanting:ProbeText()
+    local function Ask(fn, ...)
+        if type(fn) ~= "function" then return "none" end
+        local ok, value = pcall(fn, ...)
+        if not ok then return "error" end
+        local shown, text = pcall(tostring, value)
+        return shown and text or "(secret)"
+    end
+    local book = rawget(_G, "C_SpellBook")
+    local _, _, total = self:Words()
+    local button = self.button
+    local ui = ns.UI
+    return ("name %s, IsPlayerSpell %s, IsSpellKnown %s, C_SpellBook %s, knows %s, items %d, "
+        .. "window %s, view %s, fighting %s, on its line %s, button %s"):format(
+        tostring(self:SpellName()),
+        Ask(rawget(_G, "IsPlayerSpell"), self.SPELL), Ask(rawget(_G, "IsSpellKnown"), self.SPELL),
+        Ask(type(book) == "table" and book.IsSpellKnown, self.SPELL), tostring(self:Knows()), total,
+        tostring(ui and ui.frame and ui:IsShown() or false), tostring(ui and ui.view),
+        tostring(self.fighting or false), tostring(ui and ui.HeaderRow and ui:HeaderRow("disenchant") ~= nil),
+        button and (button:IsShown() and "shown" or "hidden") or "not made")
 end
 
 --------------------------------------------------------------------------------
