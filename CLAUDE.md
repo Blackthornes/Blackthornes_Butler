@@ -49,17 +49,19 @@ the Sell group's heading, Disenchant on Disenchant's, Move to bank on
 Bank's, Take from bank on the Jobs heading, Fill mail on each character's
 mail line, Log out on the next character's line, Craft and Fill on their
 rows. A heading's button ends `UI.LINE_BUTTON_RIGHT` in from the right, so
-the group's worth stays in sight; the secure ones (Sell, Disenchant) are
-placed over it by screen position (`UI.PlaceOnLine`), the others anchored
-to it (`UI:PlaceErrands`), all again whenever the list draws or scrolls
-(`UI:PlaceButtons`). The secure ones sit in the window's own layer (DIALOG), `UI.BUTTON_LIFT`
-levels above it and always over the highest frame inside it
-(`UI:InnerTop`; rows sat above the old lift and hid Disenchant under its
-own line, 2026-10-15) (`UI:LiftButton`), lifted again when the window is
-raised (`UI:WatchRaise`, which reads `UI.Standing`: the game brings a
-window to the front without moving its level, saying so only in
-`GetRaisedFrameLevel`, so each button is `Raise`d once after it), so another window in front covers them; a layer
-of their own showed Log out through Farmer's window (2026-10-14). One whose line is out of sight waits at the window's
+the group's worth stays in sight; every button is anchored to its line
+(`UI.PlaceOnLine` for the secure ones, `UI:PlaceErrands` for the others),
+all again whenever the list draws or scrolls (`UI:PlaceButtons`). The
+secure ones (Sell, Disenchant, Log out, Leave form) live inside the window
+out of combat (`UI:Dock`, above `UI:InnerTop`), and as a fight starts
+(`PLAYER_REGEN_DISABLED`, `UI:Undock`, `UI.fighting`) they are hidden and
+handed back to UIParent, so the window can still move and close in
+combat. The game brings a window to the front when it shows or is clicked
+and draws it over every frame outside it in its layer, whatever their
+level, so a secure button kept outside sat under the window and could not
+be seen (2026-10-15), and one in a layer of its own showed through
+Farmer's window (2026-10-14). Never put them back outside the window. One
+whose line is out of sight waits at the window's
 foot. A new button goes by its line too.
 `UI/MainWindow.lua` draws the groups with `Widgets.CreateRowList` (Farmer's,
 with the dark glass rows) and Butler's own right-click menu. The list's scroll bar is drawn and dragged by hand (`CreateScrollbar` in `UI/Widgets.lua`, the thumb following the cursor), not the game's Slider, which ran backwards on Forever (the owner, 2026-10-13); tested in `tools/test_scrollbar.lua`. Rows are two lines tall so a long reason or name wraps rather than
@@ -168,7 +170,7 @@ right-click menu's "Bought to disenchant" marks or unmarks through
 `Sisters:MarkBought` (shown only with Tradeskills).
 
 The Disenchant button (`Logic/Disenchanting.lua`) is a secure button like
-Sell, outside the window and placed by screen position on the Disenchant
+Sell, inside the window out of combat (`UI:Dock`) on the Disenchant
 heading, or at the foot left of the Sell or errand buttons when that is out
 of sight (`UI:FootRoom` calls `Disenchanting:Update(room)`). It shows
 on Your bags while something is under Disenchant (only Tradeskills puts
@@ -559,8 +561,8 @@ The **Log out** button (`BlackthornesButlerLogout`) is a secure button
 running the game's own `/logout` as a macro (addon code may not log out by
 itself). It sits on the next character's row ("First:" or "Next:"), where
 a craft's Craft button sits (the owner asked 2026-10-11: "the log out
-button should be next to the step that needs the logout"), placed by
-screen position over that row (`Jobs:UpdateLogout`, `Jobs.NextRow`, called
+button should be next to the step that needs the logout"), anchored to
+that row inside the window (`UI:Dock`, `Jobs:UpdateLogout`, `Jobs.NextRow`, called
 from the list's `onRefresh` so it follows a scroll, and from
 `UI:FootRoom`). It shows only while that row is on screen, and hides in
 combat, while the window moves and in All characters. There is no other

@@ -19,10 +19,10 @@
 -- just before the click runs, only while a vendor is open. If /bbutler
 -- selltest finds the game lets addon code sell, one click sells the next 12.
 --
--- The secure button is parented to UIParent and placed over the Butler
--- window's foot by screen position, never anchored to it, so the window
--- stays free to move and close in combat. It is hidden in combat, where
--- nothing is sold anyway.
+-- The secure button sits inside the Butler window out of combat
+-- (UI:Dock), on the Sell line or at the window's foot, and goes back to
+-- UIParent as a fight starts, so the window stays free to move and close
+-- in combat. It is hidden in combat, where nothing is sold anyway.
 
 local _, ns = ...
 local L = ns.L
@@ -174,8 +174,8 @@ function Selling:Create()
         primary = true, width = BUTTON_WIDTH, height = BUTTON_HEIGHT,
     })
     button:Hide()
-    -- In the window's layer, just above it (UI:LiftButton), so a window
-    -- in front covers it too.
+    -- Inside the window out of combat (UI:Dock), so it comes to the front
+    -- with it and a window in front covers it too.
     button:SetFrameStrata("DIALOG")
     button:RegisterForClicks("AnyUp")
     button:SetAttribute("useOnKeyDown", false)
@@ -290,15 +290,9 @@ function Selling:Place()
     local row = ns.UI:HeaderRow("sell")
     self.onLine = row ~= nil and ns.UI.PlaceOnLine(button, row)
     if self.onLine then return true end
-    local right, bottom = window:GetRight(), window:GetBottom()
-    if not (right and bottom) then return false end
-    -- Drawn at the window's size (its grip makes it bigger or smaller), so
-    -- the button's own units are the window's.
-    local scale = (window:GetEffectiveScale() or 1) / (UIParent:GetEffectiveScale() or 1)
-    button:SetScale(scale)
+    if not ns.UI:Dock(button) then return false end
     button:ClearAllPoints()
-    button:SetPoint("BOTTOMRIGHT", UIParent, "BOTTOMLEFT",
-        right - ns.UI.SELL_INSET_X, bottom + ns.UI.SELL_INSET_Y)
+    button:SetPoint("BOTTOMRIGHT", window, "BOTTOMRIGHT", -ns.UI.SELL_INSET_X, ns.UI.SELL_INSET_Y)
     return true
 end
 
@@ -325,7 +319,6 @@ function Selling:Update()
         ns.UI:SellShown(false)
         return
     end
-    ns.UI:LiftButton(button)
     button:Show()
     ns.UI:SellShown(true, not self.onLine and button:GetWidth() or nil)
 end

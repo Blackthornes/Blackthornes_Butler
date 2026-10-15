@@ -77,7 +77,8 @@ suite.check("the cleaver is still disenchanted on its worth", Find("Ridge Cleave
 ns.Selling:Update()
 local button = Disenchanting.button
 suite.check("the Disenchant button shows", button and button:IsShown())
-suite.check("placed by screen position", button._point[2] == UIParent)
+suite.check("inside the window, so it comes to the front with it", button:GetParent() == UI.frame
+    and button._point[2] ~= UIParent)
 -- On the Disenchant line while it is on screen (the owner, 2026-10-12).
 local realRows = UI.list.rows
 local function Line(verdict, shown)
@@ -86,10 +87,22 @@ local function Line(verdict, shown)
         GetRight = function() return 700 end, GetTop = function() return 300 end,
         GetBottom = function() return 270 end, GetEffectiveScale = function() return 1 end }
 end
-UI.list.rows = { Line("sell"), Line("disenchant") }
+local lines = { Line("sell"), Line("disenchant") }
+UI.list.rows = lines
 ns.Selling:Update()
 suite.check("it sits on the Disenchant line", button:IsShown() and button._point[1] == "RIGHT"
-    and button._point[4] == 700 - UI.LINE_BUTTON_RIGHT and button._point[5] == 285)
+    and button._point[2] == lines[2] and button._point[3] == "RIGHT"
+    and button._point[4] == -UI.LINE_BUTTON_RIGHT and button._point[5] == 0)
+suite.check("above everything drawn in the window", button:GetFrameLevel() == UI:InnerTop() + 2
+    and button:GetFrameStrata() == UI.frame:GetFrameStrata())
+-- A fight locks secure buttons: just before, it leaves the window, so the
+-- window stays free to move and close.
+env.Fire("PLAYER_REGEN_DISABLED")
+suite.check("a fight hands it back to UIParent, hidden", button:GetParent() == UIParent
+    and not button:IsShown())
+env.Fire("PLAYER_REGEN_ENABLED")
+suite.check("and it is back on its line after", button:IsShown() and button:GetParent() == UI.frame
+    and button._point[2] == lines[2])
 UI.list.rows = { Line("disenchant", false) }
 ns.Selling:Update()
 suite.check("its line out of sight, at the foot", button:IsShown() and button._point[1] == "BOTTOMRIGHT")

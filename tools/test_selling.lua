@@ -30,56 +30,38 @@ Place(UI.frame)
 Selling:Update()
 local button = Selling.button
 suite.check("with the Sell button", button and button:IsShown())
-suite.check("over the window's foot, not anchored to it", button._point[2] == UIParent)
-suite.check("in the window's layer, just above it, so another window in front covers it",
-    button:GetFrameStrata() == "DIALOG" and UI.frame:GetFrameStrata() == "DIALOG"
-    and button:GetFrameLevel() == UI.frame:GetFrameLevel() + UI.BUTTON_LIFT)
+suite.check("inside the window, so it comes to the front with it", button:GetParent() == UI.frame
+    and button._point[2] ~= UIParent)
+suite.check("in the window's layer, so another window in front covers it",
+    button:GetFrameStrata() == UI.frame:GetFrameStrata())
 
--- Clicked, the window is raised over the button; the next frame lifts it.
-UI.frame:SetFrameLevel(40)
-UI.raiseWatcher._scripts.OnUpdate(UI.raiseWatcher, 0)
-suite.check("lifted again once the window is raised", button:GetFrameLevel() == 40 + UI.BUTTON_LIFT,
-    button:GetFrameLevel())
-local lockdown = InCombatLockdown
-InCombatLockdown = function() return true end
-UI.frame:SetFrameLevel(60)
-UI.raiseWatcher._scripts.OnUpdate(UI.raiseWatcher, 0)
-suite.check("but never in a fight", button:GetFrameLevel() == 40 + UI.BUTTON_LIFT)
-InCombatLockdown = lockdown
-UI.raiseWatcher._scripts.OnUpdate(UI.raiseWatcher, 0)
-suite.check("and once the fight ends", button:GetFrameLevel() == 60 + UI.BUTTON_LIFT)
-
--- Rows drawn far above the window itself: the button goes over them too.
-local deep = { GetFrameLevel = function() return 60 + UI.BUTTON_LIFT + 15 end,
-    GetChildren = function() end }
+-- Rows drawn far above the window itself: the button goes over them too,
+-- and never counts itself as one of them.
+local deep = { GetFrameLevel = function() return 45 end, GetChildren = function() end }
 local frameChildren = UI.frame.GetChildren
-UI.frame.GetChildren = function() return deep end
+UI.frame.GetChildren = function() return deep, button end
 UI.innerTop = nil
-UI:LiftButtons()
-suite.check("above the rows inside the window", button:GetFrameLevel() == 60 + UI.BUTTON_LIFT + 17,
-    button:GetFrameLevel())
+Selling:Update()
+suite.check("above the rows inside the window", button:GetFrameLevel() == 47, button:GetFrameLevel())
+UI.innerTop = nil
+Selling:Update()
+suite.check("and stays there, however often it is placed", button:GetFrameLevel() == 47, button:GetFrameLevel())
 UI.frame.GetChildren = frameChildren
 UI.innerTop = nil
-UI:LiftButtons()
 
--- The game brings the window to the front without moving its level (only
--- GetRaisedFrameLevel says so): the button is brought to the front after
--- it, once each time.
-local raised, raises = 0, 0
-UI.frame.GetRaisedFrameLevel = function() return raised end
-button.Raise = function() raises = raises + 1 end
-UI.raiseWatcher._scripts.OnUpdate(UI.raiseWatcher, 0)
-suite.check("brought to the front when the window first is", raises == 1, raises)
-UI.raiseWatcher._scripts.OnUpdate(UI.raiseWatcher, 0)
-Selling:Update()
-suite.check("and not again while the window stays put", raises == 1, raises)
-raised = 7
-UI.raiseWatcher._scripts.OnUpdate(UI.raiseWatcher, 0)
-suite.check("again once the window is brought forward", raises == 2, raises)
-button.Raise = nil
-UI.frame.GetRaisedFrameLevel = nil
+-- A fight locks secure buttons: just before it, the button leaves the
+-- window, so the window can still move and close; it comes back after.
+env.Fire("PLAYER_REGEN_DISABLED")
+suite.check("a fight hands it back to UIParent, hidden", button:GetParent() == UIParent
+    and not button:IsShown())
+local lockdown = InCombatLockdown
+InCombatLockdown = function() return true end
+suite.check("and nothing puts it back in the window during it", not UI:Dock(button)
+    and button:GetParent() == UIParent)
+InCombatLockdown = lockdown
+env.Fire("PLAYER_REGEN_ENABLED")
+suite.check("after the fight it is back in the window", button:IsShown() and button:GetParent() == UI.frame)
 suite.check("which names the stack it sells", button.label:GetText() == "Sell Junk 1", button.label:GetText())
-suite.check("and the version label makes room", not UI.versionLabel:IsShown())
 
 -- On the Sell line while it is on screen (the owner asked 2026-10-12: the
 -- buttons go by the action they take).
@@ -94,13 +76,14 @@ UI.list.rows = { Line("jobs"), Line("sell") }
 Selling:Update()
 local onLine = button._point
 suite.check("the Sell button sits on the Sell line", button:IsShown() and onLine[1] == "RIGHT"
-    and onLine[4] == 700 - UI.LINE_BUTTON_RIGHT and onLine[5] == 485,
+    and onLine[2] == UI.list.rows[2] and onLine[4] == -UI.LINE_BUTTON_RIGHT and onLine[5] == 0,
     tostring(onLine[4]) .. "," .. tostring(onLine[5]))
 suite.check("and leaves the foot to the words", UI.sellRoom == nil and UI.versionLabel:IsShown())
 UI.list.rows = { Line("jobs"), Line("sell", false) }
 Selling:Update()
 suite.check("its line scrolled away, it waits at the foot", button:IsShown()
-    and button._point[1] == "BOTTOMRIGHT" and UI.sellRoom ~= nil)
+    and button._point[1] == "BOTTOMRIGHT" and button._point[2] == UI.frame and UI.sellRoom ~= nil)
+suite.check("and the version label makes room", not UI.versionLabel:IsShown())
 UI.list.rows = realRows
 Selling:Update()
 

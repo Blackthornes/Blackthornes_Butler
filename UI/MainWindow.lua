@@ -112,8 +112,8 @@ function UI:Build()
         Theme.Border(frame, "borderLit")
     end
 
-    -- The Sell button is placed by screen position, so it hides while the
-    -- window moves and comes back where the window lands.
+    -- The secure buttons hide while the window moves and come back where
+    -- it lands.
     frame:SetScript("OnDragStart", function(self)
         UI.dragging = true
         if ns.Selling then ns.Selling:Update() end
@@ -147,7 +147,6 @@ function UI:Build()
     end
 
     self.frame = frame
-    self:WatchRaise()
     self:BuildHeader()
 
     -- The list's well, sunk into the window like Pets' and Equipment's.
@@ -1436,57 +1435,63 @@ function UI:HeaderRow(verdict)
     return nil
 end
 
---- Put a button (a secure one is a child of UIParent) on a line by screen
---- position, at the line's size. True when placed.
+--- Put a secure button on a line, inside the window (UI:Dock). True when
+--- placed.
 function UI.PlaceOnLine(button, row)
-    local right, top, bottom = row:GetRight(), row:GetTop(), row:GetBottom()
-    if not (right and top and bottom) then return false end
-    local scale = (row:GetEffectiveScale() or 1) / (UIParent:GetEffectiveScale() or 1)
-    button:SetScale(scale)
+    if not (row and row:IsShown()) or not UI:Dock(button) then return false end
     button:ClearAllPoints()
-    button:SetPoint("RIGHT", UIParent, "BOTTOMLEFT", right - UI.LINE_BUTTON_RIGHT, (top + bottom) / 2)
+    button:SetPoint("RIGHT", row, "RIGHT", -UI.LINE_BUTTON_RIGHT, 0)
     return true
 end
 
---- The secure buttons (Sell, Disenchant, Log out, Leave form) are children
---- of UIParent, so the window stays free to move and close in combat. They
---- sit in the window's own layer, just above it, so another window brought
---- in front (Farmer's, say) covers them as it covers the window; a layer of
---- their own showed them through every window (the owner, 2026-10-14).
-UI.BUTTON_LIFT = 30
+--- The secure buttons (Sell, Disenchant, Log out, Leave form) live inside
+--- the window out of combat. The game brings a window to the front when it
+--- shows or is clicked and draws it over every frame outside it in its
+--- layer, whatever their level: a button kept outside the window sat
+--- under it and could not be seen (2026-10-15), and a button in a layer of
+--- its own showed through every window in front (2026-10-14). Inside, a
+--- button comes to the front with the window and another window in front
+--- covers it, as it covers the window.
+---
+--- A fight locks secure buttons, and a window holding one could not be
+--- moved or closed then. So just before it starts (PLAYER_REGEN_DISABLED,
+--- UI:Undock) each one is hidden and handed back to UIParent, and the next
+--- look after the fight puts it back.
+UI.docked = setmetatable({}, { __mode = "k" })
 
---- In a fight, when secure buttons are locked.
+--- In a fight, when secure buttons are locked, or one is starting.
 function UI.InFight()
+    if UI.fighting then return true end
     return type(InCombatLockdown) == "function" and InCombatLockdown() == true
 end
 
---- One secure button put just above the window. Never in combat, when the
---- game will not let a secure button's layer change.
-function UI:LiftButton(button)
+--- Put one secure button inside the window, above everything drawn there.
+--- Never in a fight. True when it is in.
+function UI:Dock(button)
     local frame = self.frame
-    if not (button and frame) or UI.InFight() then return end
-    local level = frame:GetFrameLevel() or 1
-    -- Above everything drawn inside the window too: its rows can sit more
-    -- than BUTTON_LIFT levels over the window itself, which hid the
-    -- Disenchant button under its own line (2026-10-15).
-    local target = math.max(level + UI.BUTTON_LIFT, self:InnerTop() + 2)
+    if not (button and frame) or UI.InFight() then return false end
+    UI.docked[button] = true
+    if button:GetParent() ~= frame then button:SetParent(frame) end
+    -- Its parent's size, so its own units are the window's.
+    button:SetScale(1)
     button:SetFrameStrata(frame:GetFrameStrata() or "DIALOG")
-    if button:GetFrameLevel() ~= target then
-        button:SetFrameLevel(target)
-    end
-    -- The game draws a window it brought to the front (shown or clicked)
-    -- over frames of a higher level in its layer, and says so only in
-    -- GetRaisedFrameLevel; the window's level stays 1. So each button is
-    -- brought to the front too, once each time the window was (the
-    -- Disenchant button sat hidden under its line, 2026-10-15).
-    if UI.raiseMark and button.raisedFor ~= UI.raiseMark and type(button.Raise) == "function" then
-        pcall(button.Raise, button)
-        button.raisedFor = UI.raiseMark
+    local target = self:InnerTop() + 2
+    if button:GetFrameLevel() ~= target then button:SetFrameLevel(target) end
+    return true
+end
+
+--- Every secure button hidden and handed back to UIParent, so the window
+--- stays free to move and close in a fight.
+function UI:Undock()
+    for button in pairs(UI.docked) do
+        button:Hide()
+        button:ClearAllPoints()
+        button:SetParent(UIParent)
     end
 end
 
---- Where the window stands in its layer: its level, and how far the game
---- brought it to the front, where the client says.
+--- Where a frame stands in its layer: its level, and how far the game
+--- brought it to the front, where the client says. For the probe.
 function UI.Standing(frame)
     local level = frame:GetFrameLevel() or 1
     local raised
@@ -1497,8 +1502,9 @@ function UI.Standing(frame)
     return raised and (level .. ":" .. raised) or tostring(level)
 end
 
---- The highest frame level inside the window, kept until the window's own
---- level or its row count moves (rows are only added, never taken away).
+--- The highest frame level inside the window, the secure buttons left out,
+--- kept until the window's own level or its row count moves (rows are only
+--- added, never taken away).
 function UI:InnerTop()
     local frame = self.frame
     local level = frame:GetFrameLevel() or 1
@@ -1510,9 +1516,11 @@ function UI:InnerTop()
     local function Walk(parent, depth)
         if depth > 12 or type(parent.GetChildren) ~= "function" then return end
         for _, child in ipairs({ parent:GetChildren() }) do
-            local ok, at = pcall(child.GetFrameLevel, child)
-            if ok and type(at) == "number" and at > top then top = at end
-            Walk(child, depth + 1)
+            if not UI.docked[child] then
+                local ok, at = pcall(child.GetFrameLevel, child)
+                if ok and type(at) == "number" and at > top then top = at end
+                Walk(child, depth + 1)
+            end
         end
     end
     Walk(frame, 1)
@@ -1520,30 +1528,18 @@ function UI:InnerTop()
     return top
 end
 
---- Every secure button lifted again: the window was brought to the front,
---- which puts it above them.
-function UI:LiftButtons()
-    self:LiftButton(ns.Selling and ns.Selling.button)
-    self:LiftButton(ns.Disenchanting and ns.Disenchanting.button)
-    self:LiftButton(ns.Jobs and ns.Jobs.button)
-    self:LiftButton(ns.Jobs and ns.Jobs.formButton)
-    self.liftedAt = self.frame and UI.Standing(self.frame)
-end
-
---- The window is raised when it shows or is clicked, and the game says
---- nothing when it is. A small frame inside it looks at where the window
---- stands each frame while it is up (two numbers) and lifts the buttons
---- only when that moved.
-function UI:WatchRaise()
-    local watcher = CreateFrame("Frame", nil, self.frame)
-    watcher:SetScript("OnUpdate", function()
-        local standing = UI.Standing(UI.frame)
-        if standing ~= UI.liftedAt and not UI.InFight() then
-            UI.raiseMark = (UI.raiseMark or 0) + 1
-            UI:LiftButtons()
-        end
+function UI:OnEnable()
+    -- Fires just before a fight locks secure buttons, while they can still
+    -- be hidden and moved. Other handlers of the same event may run after
+    -- this one, so nothing docks a button again until the fight is over.
+    ns.RegisterEvent(self, "PLAYER_REGEN_DISABLED", function()
+        UI.fighting = true
+        UI:Undock()
     end)
-    self.raiseWatcher = watcher
+    ns.RegisterEvent(self, "PLAYER_REGEN_ENABLED", function()
+        UI.fighting = false
+        if UI.frame and UI:IsShown() then UI:PlaceButtons() end
+    end)
 end
 
 --- Every button that sits on a line, placed again: after the list is drawn
