@@ -433,7 +433,7 @@ function SettingsUI:BuildPages()
     pages:Section("selling", 2, L["JUNK"])
 
     local belowRow = pages:Row("selling", 2, L["Sell below"],
-        L["Anything worth less than this goes under Sell, going by the best a vendor, the auction house or disenchanting would get you. Never quest items, upgrades, goal or craft materials, pet food, soulbound green or better gear, or your Always keep, bank and mail items. Nothing sells until you click Sell. Needs Blackthornes Tradeskills for auction prices. 0 turns it off. Also /bbutler sellbelow 50s."])
+        L["Anything worth less than this goes under Sell. Butler never puts quest items, upgrades, things your goals or crafts need, pet food, bound green or better gear, or anything on your Always lists there. Nothing sells until you click Sell. Needs Blackthornes Tradeskills. 0 turns it off. Also /bbutler sellbelow 50s."])
     controls.sellBelow = Widgets.CreateMoneyBox(belowRow, function(copper)
         ns.Verdicts:SetSellBelow(copper)
     end)
@@ -442,7 +442,7 @@ function SettingsUI:BuildPages()
     pages:Section("selling", 2, L["YOUR LISTS"])
 
     local learnRow = pages:Row("selling", 2, L["Learn from what you do"],
-        L["Butler learns from what you do. Buy back something it sold and it keeps it from then on. Sell an item yourself at a vendor on two visits and it goes under Sell. Mail an item to the same character twice and it goes under Mail to them. Your own right-click choices always win, and right-click shows Forget what Butler learned. Nothing is sold or sent without your click."])
+        L["Butler learns from what you do. If you buy back something it sold, it keeps it. If you sell an item yourself twice, or mail it to the same character twice, Butler puts it under Sell or Mail next time. Your right-click choices always win. Nothing is sold or sent until you click."])
     controls.learn = Widgets.CreateCheckbox(learnRow, L["On"], function(checked)
         ns.db.learn = checked
         ns.Verdicts:Changed(true)
@@ -696,7 +696,7 @@ function SettingsUI:BuildPages()
     -- the windows matched the rest of their screen. Read at login, so it
     -- waits for /reload as Text size does. See UI/BlizzardLook.lua.
     local styleRow = pages:Row("general", 1, L["Window style"],
-        L["Titanforged is the house look, with a gold rim and glowing edges. Blizzard uses the game's own frames, red buttons and tick boxes. Takes effect after /reload."])
+        L["Titanforged has a gold rim and glowing edges. Blizzard looks like the game's own windows. Type /reload to see the change."])
     controls.windowStyle = SettingsUI.WindowStyleControl(styleRow, CONTROL_X)
 
     pages:Section("general", 2, L["ADVANCED"])
@@ -712,7 +712,7 @@ function SettingsUI:BuildPages()
     -- Core/SisterNote.lua: one chat line, once, naming the Blackthornes
     -- addons the player does not have. Off here is off in all of them.
     local sistersRow = pages:Row("general", 2, L["Sister addons"],
-        L["Once, a few seconds after login, says in chat which Blackthornes addons you don't have and what each adds. Turning it off here turns it off in all of them. Same as /bbutler sisters."])
+        L["A few seconds after you log in, chat lists the Blackthornes addons you don't have yet and what each one does. It only happens once. Turning it off here turns it off in all of them. Same as /bbutler sisters."])
     controls.sisters = Widgets.CreateCheckbox(sistersRow, L["Mention them"], function(checked)
         ns.SisterNote:SetOn(checked)
     end, true)

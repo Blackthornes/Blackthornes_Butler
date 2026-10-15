@@ -73,12 +73,12 @@ L["The Butler window comes up at the bank when there is something to move: Move 
     "Das Butler-Fenster öffnet sich an der Bank, wenn es etwas zu räumen gibt: In die Bank legt deine Gegenstände für Immer in die Bank weg, und Aus der Bank holen holt, was deine Herstellungsliste braucht. Auch /bbutler bank."
 L["JUNK"] = "PLUNDER"
 L["Sell below"] = "Verkaufen unter"
-L["Anything worth less than this goes under Sell, going by the best a vendor, the auction house or disenchanting would get you. Never quest items, upgrades, goal or craft materials, pet food, soulbound green or better gear, or your Always keep, bank and mail items. Nothing sells until you click Sell. Needs Blackthornes Tradeskills for auction prices. 0 turns it off. Also /bbutler sellbelow 50s."] =
-    "Alles, was weniger wert ist, kommt unter Verkaufen, gemessen am Besten, was dir ein Händler, das Auktionshaus oder Entzaubern bringen würde. Nie Questgegenstände, Verbesserungen, Material für Ziele oder die Herstellung, Begleiterfutter, seelengebundene grüne oder bessere Ausrüstung oder deine Gegenstände unter Immer behalten, einlagern und verschicken. Verkauft wird erst, wenn du auf Verkaufen klickst. Braucht Blackthornes Tradeskills für Auktionspreise. 0 schaltet es aus. Auch /bbutler sellbelow 50s."
+L["Anything worth less than this goes under Sell. Butler never puts quest items, upgrades, things your goals or crafts need, pet food, bound green or better gear, or anything on your Always lists there. Nothing sells until you click Sell. Needs Blackthornes Tradeskills. 0 turns it off. Also /bbutler sellbelow 50s."] =
+    "Alles, was weniger wert ist, kommt unter Verkaufen. Butler legt nie Questgegenstände, Verbesserungen, Dinge für deine Ziele oder Herstellungen, Begleiterfutter, gebundene grüne oder bessere Ausrüstung oder etwas von deinen Immer-Listen dorthin. Verkauft wird erst, wenn du auf Verkaufen klickst. Braucht Blackthornes Tradeskills. 0 schaltet es aus. Auch /bbutler sellbelow 50s."
 L["YOUR LISTS"] = "DEINE LISTEN"
 L["Learn from what you do"] = "Von dir lernen"
-L["Butler learns from what you do. Buy back something it sold and it keeps it from then on. Sell an item yourself at a vendor on two visits and it goes under Sell. Mail an item to the same character twice and it goes under Mail to them. Your own right-click choices always win, and right-click shows Forget what Butler learned. Nothing is sold or sent without your click."] =
-    "Butler lernt aus dem, was du tust. Kaufst du etwas zurück, das er verkauft hat, behält er es von da an. Verkaufst du einen Gegenstand bei zwei Besuchen selbst beim Händler, kommt er unter Verkaufen. Schickst du einen Gegenstand zweimal an denselben Charakter, kommt er unter Post an ihn. Deine eigene Wahl per Rechtsklick gewinnt immer, und der Rechtsklick zeigt Vergessen, was Butler gelernt hat. Ohne deinen Klick wird nichts verkauft oder verschickt."
+L["Butler learns from what you do. If you buy back something it sold, it keeps it. If you sell an item yourself twice, or mail it to the same character twice, Butler puts it under Sell or Mail next time. Your right-click choices always win. Nothing is sold or sent until you click."] =
+    "Butler lernt aus dem, was du tust. Kaufst du etwas zurück, das er verkauft hat, behält er es. Verkaufst du einen Gegenstand zweimal selbst oder schickst ihn zweimal an denselben Charakter, legt Butler ihn beim nächsten Mal unter Verkaufen oder Post. Deine Wahl per Rechtsklick gewinnt immer. Verkauft oder verschickt wird erst, wenn du klickst."
 L["Keep, sell, bank, mail"] = "Behalten, verkaufen, Bank, Post"
 L["Right-click an item in the Butler window to always keep it, sell it, bank it or mail it to one of your characters. This lists all four in chat, and what Butler learned from you. To empty them, type /bbutler reset confirm. Same as /bbutler lists."] =
     "Rechtsklick auf einen Gegenstand im Butler-Fenster, um ihn immer zu behalten, zu verkaufen, in die Bank zu legen oder an einen deiner Charaktere zu verschicken. Dies listet alle vier im Chat, und was Butler von dir gelernt hat. Zum Leeren tippe /bbutler reset confirm. Wie /bbutler lists."
@@ -131,16 +131,16 @@ L["Text size"] = "Textgröße"
 L["Large and Larger add a point or two to all of this addon's text. Takes effect after /reload."] =
     "Groß und Größer machen den ganzen Text dieses Addons ein bis zwei Punkte größer. Wirkt nach /reload."
 L["Window style"] = "Fensterstil"
-L["Titanforged is the house look, with a gold rim and glowing edges. Blizzard uses the game's own frames, red buttons and tick boxes. Takes effect after /reload."] =
-    "Titanforged ist der Hausstil, mit goldenem Rand und leuchtenden Kanten. Blizzard nutzt die eigenen Fenster, roten Knöpfe und Kästchen des Spiels. Wirkt nach /reload."
+L["Titanforged has a gold rim and glowing edges. Blizzard looks like the game's own windows. Type /reload to see the change."] =
+    "Titanforged hat einen goldenen Rand und leuchtende Kanten. Blizzard sieht aus wie die Fenster des Spiels. Tipp /reload, um die Änderung zu sehen."
 L["ADVANCED"] = "ERWEITERT"
 L["Debug output"] = "Debug-Ausgabe"
 L["Extra messages in chat, to help track down a problem."] =
     "Zusätzliche Meldungen im Chat, um einem Problem auf die Spur zu kommen."
 L["Enabled"] = "Aktiviert"
 L["Sister addons"] = "Schwester-Addons"
-L["Once, a few seconds after login, says in chat which Blackthornes addons you don't have and what each adds. Turning it off here turns it off in all of them. Same as /bbutler sisters."] =
-    "Sagt einmal, ein paar Sekunden nach dem Einloggen, im Chat, welche Blackthornes-Addons dir fehlen und was jedes bietet. Hier aus heißt in allen aus. Wie /bbutler sisters."
+L["A few seconds after you log in, chat lists the Blackthornes addons you don't have yet and what each one does. It only happens once. Turning it off here turns it off in all of them. Same as /bbutler sisters."] =
+    "Ein paar Sekunden nach dem Einloggen nennt der Chat die Blackthornes-Addons, die dir noch fehlen, und was jedes macht. Das passiert nur einmal. Hier aus heißt in allen aus. Wie /bbutler sisters."
 L["Mention them"] = "Erwähnen"
 L["Client check"] = "Spiel prüfen"
 L["Lists in chat what the game lets Butler do with bags, vendors and mail, and which Blackthornes addons are loaded. It doesn't change anything. Same as /bbutler probe."] =
