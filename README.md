@@ -133,7 +133,6 @@ inside it. If they differ, the client ignores the folder and says nothing.
 /bbutler help      list every command
 /bbutler probe     check what this client supports for bags, vendors and mail; it only reads
 /bbutler settings  open the settings window (so does right-clicking the minimap button)
-/bbutler minimap   show or hide the minimap button
 /bbutler vendor    turn the window coming up at a vendor on or off
 /bbutler mailbox   turn the window coming up at a mailbox on or off
 /bbutler bank      turn the window coming up at the bank on or off

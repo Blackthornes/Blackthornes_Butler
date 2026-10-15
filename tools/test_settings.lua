@@ -52,14 +52,8 @@ SettingsUI:Show()
 
 local controls = SettingsUI.controls
 
--- The minimap checkbox.
-local minimapBox = controls.minimap
-suite.check("the minimap box starts ticked", minimapBox:GetChecked())
-minimapBox:GetScript("OnClick")(minimapBox)
-suite.check("unticking hides the button",
-    ns.db.minimapHidden == true and not ns.MinimapButton.button:IsShown())
-ns.HandleSlash("minimap")
-suite.check("/bbutler minimap ticks it again", minimapBox:GetChecked())
+-- The minimap button always shows, so it has no box here.
+suite.check("there is no minimap box", controls.minimap == nil)
 
 -- Debug.
 controls.debug:GetScript("OnClick")(controls.debug)
@@ -92,9 +86,10 @@ suite.check("/bbutler vendor turns it back on, and the box follows",
     ns.db.openAtVendor == true and controls.openAtVendor:GetChecked())
 
 -- What a setting does is a tooltip until Show descriptions is ticked.
-local minimapRow
+local minimapRow, styleRow
 for _, row in ipairs(pages.pages.general.rows) do
-    if row.labelText == "Minimap button" then minimapRow = row end
+    if row.labelText == "Free Bag Space:" then minimapRow = row end
+    if row.labelText == "Window Style:" then styleRow = row end
 end
 suite.check("descriptions start hidden", ns.db.settingsDescriptions == false
     and not minimapRow.hint:IsShown())
@@ -102,11 +97,15 @@ GameTooltip._lines = {}
 minimapRow:GetScript("OnEnter")(minimapRow)
 suite.check("a row lights under the mouse", minimapRow.hover:IsShown())
 suite.check("and says what it does in a tooltip", GameTooltip._lines[1] and
-    GameTooltip._lines[1]:find("Butler window") ~= nil)
+    GameTooltip._lines[1]:find("backpack button") ~= nil)
+GameTooltip._lines = {}
+styleRow:GetScript("OnEnter")(styleRow)
+suite.check("a row with nothing to say shows no tooltip", #GameTooltip._lines == 0)
 local before = SettingsUI.frame:GetHeight()
 pages.describe:GetScript("OnClick")(pages.describe)
 suite.check("Show descriptions is saved", ns.db.settingsDescriptions == true)
 suite.check("and puts the words under the rows", minimapRow.hint:IsShown())
+suite.check("but nothing under a row with nothing to say", (styleRow.hint:GetText() or "") == "")
 suite.check("and the window grows to fit them", SettingsUI.frame:GetHeight() > before)
 pages.describe:GetScript("OnClick")(pages.describe)
 suite.check("unticked, the window goes back", SettingsUI.frame:GetHeight() == before)
@@ -177,27 +176,34 @@ suite.check("and off turns it off", ns.db.goldMinimum == nil and goldBox:GetValu
 local ran = {}
 local realSlash = ns.HandleSlash
 ns.HandleSlash = function(text) ran[#ran + 1] = text end
-for _, key in ipairs({ "openWindow", "all", "probe", "help", "sellTest", "lists", "heldList", "goldReport", "trainingReport", "goalsReport", "bankAltReport" }) do
+for _, key in ipairs({ "openWindow", "all", "probe", "sellTest" }) do
     controls[key]:GetScript("OnClick")(controls[key])
 end
 ns.HandleSlash = realSlash
 suite.check("the command buttons run their commands",
-    table.concat(ran, ",") == "window,all,probe,help,selltest,lists,upgrademail,gold,training,goals,bankalt", table.concat(ran, ","))
+    table.concat(ran, ",") == "window,all,probe,selltest", table.concat(ran, ","))
 
 -- Every command has a button or a control here, apart from the one that
 -- deletes the player's lists, which stays typed (a house rule).
-local covered = { tooltip = true, sisters = true, whatsnew = true, window = true, all = true, probe = true, help = true, selltest = true, lists = true,
-    vendor = true, mailbox = true, bank = true, minimap = true, settings = true, reset = true,
-    sellbelow = true, freespace = true, whohas = true, gold = true, goldmin = true, fillnext = true, altupgrades = true,
-    jobs = true, joblogin = true, upgrademail = true, training = true, goals = true, trash = true, quests = true, bankalt = true, greens = true, buy = true }
+local covered = { tooltip = true, sisters = true, whatsnew = true, window = true, all = true, probe = true, selltest = true,
+    vendor = true, mailbox = true, bank = true, settings = true, reset = true,
+    sellbelow = true, freespace = true, whohas = true, goldmin = true, fillnext = true, altupgrades = true,
+    joblogin = true, trash = true, quests = true, bankalt = true, greens = true, buy = true }
+-- Chat-only commands are typed only (the owner, 2026-10-15): they print a
+-- list in chat, so they have no button here. Their settings parts (training
+-- on|off, goals on|off, upgrademail undo) still have controls.
+local CHAT_ONLY = { help = true, jobs = true, lists = true, upgrademail = true, gold = true, training = true, goals = true }
+for name in pairs(CHAT_ONLY) do covered[name] = true end
 for _, name in ipairs(ns.commandOrder) do
     suite.check("/bbutler " .. name .. " has a place in Settings", covered[name] == true)
 end
 
 -- Position.
 ns.db.settingsX = 400
+ns.db.x = 200
 SettingsUI:ResetPositions()
 suite.check("putting it back forgets where it was dragged", ns.db.settingsX == nil)
+suite.check("and where the Butler window was", ns.db.x == nil)
 
 -- A client with neither options API still loads.
 local ns2 = env.Load()

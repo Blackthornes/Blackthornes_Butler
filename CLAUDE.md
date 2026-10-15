@@ -977,10 +977,18 @@ a setting", and Text size (`textSize` normal/large/larger adds 0/1/2 to
 /reload). The window fits its fullest page, so no page scrolls. Add a
 setting with `pages:Row(page, column, label, description)` and
 `pages:Section(page, column, "HEADING")` in `UI/Settings.lua`; every
-`/bbutler` command has a button there, but never one that deletes data.
-Butler has Selling and General so far; the plan's other pages (Verdicts,
-Pet & craft, Window) come with their features. `reset confirm`, which
-empties the player's lists, stays typed.
+`/bbutler` command that changes a setting has a control there, but never
+one that deletes data. Chat-only commands that only list things in chat
+(help, jobs, lists, upgrademail, gold, training, goals) are typed only
+(the owner, 2026-10-15; `CHAT_ONLY` in `tools/test_settings.lua`). The
+owner's standard for rows (2026-10-15): Title Case labels ending ":",
+one-word controls ("On", "Show", "Open"), and a hover only when it is
+needed (a row given nil shows no tooltip and nothing under it). The
+minimap button always shows: no row, no `/bbutler minimap`, and a saved
+`minimapHidden` is kept but not read. Butler has Errands, Bank alt, Gold
+and General so far; the plan's other pages (Verdicts, Pet & craft,
+Window) come with their features. `reset confirm`, which empties the
+player's lists, stays typed.
 
 ## The house frame (Titanforged)
 

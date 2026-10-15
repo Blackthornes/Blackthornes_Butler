@@ -72,17 +72,13 @@ MB:Reposition()
 suite.check("a larger minimap pushes it further out", OrbitDistance() > defaultDistance)
 Minimap._width = 140
 
--- Hiding it.
-ns.HandleSlash("minimap")
-suite.check("/bbutler minimap hides it", not button:IsShown())
-suite.check("and the choice is saved", ns.db.minimapHidden == true)
-ns.HandleSlash("minimap")
-suite.check("/bbutler minimap brings it back", button:IsShown())
-
--- Hidden has to survive a reload: the button is rebuilt at every login.
+-- It always shows (the owner, 2026-10-15): there is no command or box to
+-- hide it, and a save that hid it before is kept but not read.
+suite.check("there is no /bbutler minimap", ns.commands.minimap == nil)
 ns.db.minimapHidden = true
 MB.button = nil
 MB:Build()
-suite.check("a hidden button stays hidden after a reload", not MB.button:IsShown())
+suite.check("a button hidden before shows after a reload", MB.button:IsShown())
+suite.check("and the saved flag is left as it was", ns.db.minimapHidden == true)
 
 suite.done()

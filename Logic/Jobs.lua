@@ -770,7 +770,7 @@ end
 
 --- The Search button's tooltip: each item, how many, and for which quest.
 function Jobs.SearchTooltip(step)
-    local lines = { L["Looks these up on the auction house, with how many your quests still need:"] }
+    local lines = { L["Finds these on the auction house for your quests:"] }
     for index = 1, math.min(#step.items, 10) do
         local item = step.items[index]
         lines[#lines + 1] = L.Format("  %s for %s", Amount(item.count, Jobs.ItemName(item.itemID)),
@@ -891,7 +891,7 @@ function Jobs:CreateLogout()
 end
 
 local function Tip(nextJob)
-    return L.Format("Log out for %s. %s\nLogs you out to the character list, where you pick %s. Addons can't pick a character for you.",
+    return L.Format("Log out for %s. %s\nThen pick %s on the character list.",
         nextJob.name, Jobs.Summary(nextJob), nextJob.name)
 end
 
@@ -987,7 +987,7 @@ function Jobs:CreateLeaveForm()
     button:SetAttribute("useOnKeyDown", false)
     button:SetAttribute("type", "macro")
     button:SetAttribute("macrotext", "/cancelform")
-    button.tooltipText = L["You can't craft in this form. Click to leave it, then click Craft. Not in combat."]
+    button.tooltipText = L["You can't craft in this form. Click to leave it, then click Craft."]
     button:HookScript("OnEnter", function(frame)
         GameTooltip:SetOwner(frame, "ANCHOR_BOTTOM")
         GameTooltip:SetText(frame.tooltipText, 1, 1, 1, 1, true)
@@ -1112,7 +1112,7 @@ function Jobs:UpdateOpenProfession()
         button:SetAttribute("spell", profession.spell)
     end
     button:SetText(L.Format("Open %s", profession.name))
-    button.tooltipText = L.Format("Opens %s. Click Craft after that to make it.", profession.name)
+    button.tooltipText = L.Format("Opens %s. Then click Craft.", profession.name)
     button:ClearAllPoints()
     button:SetPoint("RIGHT", row, "RIGHT", -8, 0)
     button:Show()

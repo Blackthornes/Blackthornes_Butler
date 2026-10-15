@@ -165,25 +165,12 @@ function MinimapButton:Reposition()
     self.lastMinimapWidth = Minimap and Minimap:GetWidth()
 end
 
+--- The button always shows (the owner, 2026-10-15). A saved minimapHidden
+--- from before is kept in the save but no longer read.
 function MinimapButton:ApplyVisibility()
     local button = self.button
     if not button then return end
-
-    if ns.db and ns.db.minimapHidden then
-        button:Hide()
-    else
-        button:Show()
-    end
-end
-
---- Show or hide the button. Returns true when it ends up visible.
-function MinimapButton:Toggle()
-    if ns.db then
-        ns.db.minimapHidden = not ns.db.minimapHidden
-    end
-
-    self:ApplyVisibility()
-    return not (ns.db and ns.db.minimapHidden)
+    button:Show()
 end
 
 function MinimapButton:OnEnable()
@@ -204,11 +191,3 @@ function MinimapButton:OnEnable()
         end)
     end
 end
-
-ns.RegisterCommand("minimap", L["show or hide the minimap button"], function()
-    if MinimapButton:Toggle() then
-        ns.Print(L["minimap button shown."])
-    else
-        ns.Print(L["minimap button hidden. /bbutler minimap brings it back."])
-    end
-end)
