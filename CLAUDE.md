@@ -53,7 +53,9 @@ the group's worth stays in sight; the secure ones (Sell, Disenchant) are
 placed over it by screen position (`UI.PlaceOnLine`), the others anchored
 to it (`UI:PlaceErrands`), all again whenever the list draws or scrolls
 (`UI:PlaceButtons`). The secure ones sit in the window's own layer (DIALOG), `UI.BUTTON_LIFT`
-levels above it (`UI:LiftButton`), lifted again when the window is
+levels above it and always over the highest frame inside it
+(`UI:InnerTop`; rows sat above the old lift and hid Disenchant under its
+own line, 2026-10-15) (`UI:LiftButton`), lifted again when the window is
 raised (`UI:WatchRaise`), so another window in front covers them; a layer
 of their own showed Log out through Farmer's window (2026-10-14). One whose line is out of sight waits at the window's
 foot. A new button goes by its line too.
