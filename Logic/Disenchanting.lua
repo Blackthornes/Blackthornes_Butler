@@ -202,8 +202,8 @@ function Disenchanting:Words()
         lines[#lines + 1] = first.bought and L.Format("Next: %s, bought to disenchant.", first.name)
             or L.Format("Next: %s.", first.name)
     end
-    lines[#lines + 1] = L["Each click casts Disenchant once, on the next item under Disenchant."]
-    lines[#lines + 1] = L["Items you bought to disenchant go first. Never in combat."]
+    lines[#lines + 1] = L["Each click breaks the next item under Disenchant."]
+    lines[#lines + 1] = L["Items you bought to disenchant go first."]
     return text, table.concat(lines, "\n"), total
 end
 

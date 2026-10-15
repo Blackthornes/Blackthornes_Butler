@@ -398,10 +398,10 @@ end
 
 function GoalsUI:EnterHead()
     GameTooltip:AddLine(L["Gold goals"], 1, 1, 1)
-    GameTooltip:AddLine(L["Your purse fills the goals in order: class spells, then profession training, then riding. Each bar shows what's left after the goals above it."], Theme.Muted(true))
+    GameTooltip:AddLine(L["Your gold fills these goals in order, from the top."], Theme.Muted(true))
     local result = self.result
     if result and (result.aside or 0) > 0 then
-        GameTooltip:AddLine(L.Format("The gold fund keeps %s for your other characters.", Money(result.aside)),
+        GameTooltip:AddLine(L.Format("%s is set aside for your other characters.", Money(result.aside)),
             Theme.Muted(true))
     end
     if (self.more or 0) > 0 then
@@ -454,7 +454,7 @@ function GoalsUI:Enter(row)
     end
     GameTooltip:AddDoubleLine(L["In all"], Money(goal.cost), 1, 0.82, 0, 1, 1, 1)
     if goal.guessed or (goal.unknown or 0) > 0 then
-        GameTooltip:AddLine(L["Prices and skills may update when you visit your trainer for the first time."],
+        GameTooltip:AddLine(L["Prices may change once you visit your trainer."],
             Theme.Muted(true))
     end
     if goal.state == "ready" then

@@ -213,18 +213,18 @@ function UI:Build()
         end,
         { width = MAIL_WIDTH, height = 24, primary = true })
     self.mailButton:SetPoint("BOTTOMRIGHT", -UI.SELL_INSET_X, UI.SELL_INSET_Y)
-    self.mailButton.tooltipText = L["Fills the game's Send Mail page. Check it, then press Send."]
+    self.mailButton.tooltipText = L["Fills in the mail for you. Check it, then press Send."]
     self.mailButton:Hide()
 
     self.bankButton = Widgets.CreateButton(frame, L["Move to bank"], Run(ns.Errands.MoveToBank),
         { width = ERRAND_WIDTH, height = 24, primary = true })
     self.bankButton:SetPoint("BOTTOMRIGHT", -UI.SELL_INSET_X, UI.SELL_INSET_Y)
-    self.bankButton.tooltipText = L["Puts your Always bank items in the bank, a stack at a time"]
+    self.bankButton.tooltipText = L["Puts your Always bank items in the bank."]
     self.bankButton:Hide()
 
     self.takeButton = Widgets.CreateButton(frame, L["Take from bank"], Run(ns.Errands.TakeFromBank),
         { width = ERRAND_WIDTH, height = 24 })
-    self.takeButton.tooltipText = L["Takes out upgrades you can wear now and what your craft queue still needs"]
+    self.takeButton.tooltipText = L["Takes out upgrades to wear and what your crafts still need."]
     self.takeButton:Hide()
 
     self:BuildSizeGrip()
@@ -428,7 +428,7 @@ function UI.UpdateRow(row, data)
         -- 2026-10-12). The worth is still on the row's tooltip.
         row.worth:SetText("")
         row.action:SetText(L["Fill mail"])
-        row.action.tooltipText = L.Format("Fills the game's Send Mail page for %s. Check it, then press Send.", to)
+        row.action.tooltipText = L.Format("Fills in a mail to %s. Check it, then press Send.", to)
         if (data.worth or 0) > 0 then
             row.action.tooltipText = row.action.tooltipText .. "\n"
                 .. L.Format("What it's worth: %s", Items.FormatMoney(data.worth))
@@ -870,7 +870,7 @@ function UI:Enter(row, data)
     if data.type == "header" then
         GameTooltip:AddLine(data.group.label, Theme.Unpack("accent"))
         if data.group.verdict == "wait" then
-            GameTooltip:AddLine(L["The auction house pays a lot less than usual for these today. Hold on to them and post them when the price comes back."], 1, 1, 1, true)
+            GameTooltip:AddLine(L["These sell for a lot less than usual today. Hold on to them until the price comes back."], 1, 1, 1, true)
         end
         GameTooltip:AddLine(data.folded and L["Click to show these"] or L["Click to fold these away"], 1, 1, 1, true)
         GameTooltip:Show()
@@ -894,9 +894,8 @@ function UI:Enter(row, data)
         GameTooltip:AddLine(title, Theme.Unpack("accent"))
         GameTooltip:AddLine(detail, 1, 1, 1, true)
         if hint then GameTooltip:AddLine(hint, Theme.Unpack("muted")) end
-        if step.kind == "craft" or (step.kind == "cooldown" and step.recipeID) then
-            GameTooltip:AddLine((step.ready or step.kind == "cooldown") and L["Craft makes it if your profession is open. If not, Tradeskills opens it for you."]
-                or L["The Craft button comes once you have the materials."], Theme.Unpack("muted"))
+        if step.kind == "craft" and not step.ready then
+            GameTooltip:AddLine(L["You can craft it once you have the materials."], Theme.Unpack("muted"))
         end
         GameTooltip:Show()
         return
@@ -920,7 +919,7 @@ function UI:Enter(row, data)
             local line = ns.Jobs.Short(step)
             GameTooltip:AddLine(line:sub(1, 1):upper() .. line:sub(2), 1, 1, 1, true)
         end
-        GameTooltip:AddLine(data.isNext and L["Log out on this line to switch to them."]
+        GameTooltip:AddLine(data.isNext and L["Click Log out to switch to them."]
             or L["Do the steps above first."], Theme.Unpack("muted"))
         GameTooltip:Show()
         return
@@ -930,7 +929,7 @@ function UI:Enter(row, data)
         GameTooltip:AddLine(L.Format("Gold for %s", entry.to), Theme.Unpack("accent"))
         GameTooltip:AddLine(ns.Funds.Reason(entry), 1, 1, 1, true)
         GameTooltip:AddLine(L.Format("Fill mail sends %s. You press Send.", Items.FormatMoney(entry.amount)), 1, 1, 1, true)
-        GameTooltip:AddLine(L["This is their gold from the last time they played. You can set the amounts on the Gold page in Settings."],
+        GameTooltip:AddLine(L["Their gold from the last time they played. Set the amounts on the Gold page in Settings."],
             Theme.Unpack("muted"))
         GameTooltip:Show()
         return
@@ -974,7 +973,7 @@ function UI:EnterTraining(data)
     local cost, unknown, guessed = training.Sum(list)
     GameTooltip:AddDoubleLine(L["In all"], training.CostText(cost, unknown, count), 1, 0.82, 0, 1, 1, 1)
     if unknown > 0 or guessed > 0 then
-        GameTooltip:AddLine(L["Prices and skills may update when you visit your trainer for the first time."],
+        GameTooltip:AddLine(L["Prices may change once you visit your trainer."],
             Theme.Muted(true))
     end
     if data.type == "train" then
@@ -986,7 +985,7 @@ function UI:EnterTraining(data)
             GameTooltip:AddLine(L.Format("You're %s short.", Items.FormatMoney(cost - purse)), 1, 0.72, 0.29, true)
         end
         if training.trainerOpen and training.atClassTrainer then
-            GameTooltip:AddLine(L["Train all trains them one at a time, as many as you can pay for."], Theme.Unpack("muted"))
+            GameTooltip:AddLine(L["Train all trains as many as you can pay for."], Theme.Unpack("muted"))
         elseif training:Nearest() then
             GameTooltip:AddLine(L["Show the way puts a pin on the map to your trainer."], Theme.Unpack("muted"))
         end
