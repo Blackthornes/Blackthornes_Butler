@@ -863,16 +863,16 @@ function UI:Clicked(data, button)
 end
 
 function UI:Enter(row, data)
+    -- A heading's +/- already says a click folds it, so only Wait for a
+    -- better price, which needs saying why, has a hover (the owner, 2026-10-15).
+    if data.type == "header" and data.group.verdict ~= "wait" then return end
     GameTooltip:SetOwner(row, "ANCHOR_RIGHT")
     if data.type == "everyone" or data.type == "holder" then
         return self:EnterEveryone(data)
     end
     if data.type == "header" then
         GameTooltip:AddLine(data.group.label, Theme.Unpack("accent"))
-        if data.group.verdict == "wait" then
-            GameTooltip:AddLine(L["These sell for a lot less than usual today. Hold on to them until the price comes back."], 1, 1, 1, true)
-        end
-        GameTooltip:AddLine(data.folded and L["Click to show these"] or L["Click to fold these away"], 1, 1, 1, true)
+        GameTooltip:AddLine(L["These sell for a lot less than usual today. Hold on to them until the price comes back."], 1, 1, 1, true)
         GameTooltip:Show()
         return
     end
