@@ -45,14 +45,27 @@ local function InCombat()
 end
 
 --- Does the character playing know Disenchant? nil when the client won't say.
+--- Any check saying yes is a yes, as Tradeskills asks (its
+--- Disenchanter:Knows): on Forever IsPlayerSpell can say no for a spell
+--- the spellbook knows, which hid the button while Tradeskills, and so
+--- the Disenchant group, said this character can break the items.
 function Disenchanting:Knows()
+    local asked = false
     for _, name in ipairs({ "IsPlayerSpell", "IsSpellKnown" }) do
         local fn = rawget(_G, name)
         if type(fn) == "function" then
+            asked = true
             local ok, known = pcall(fn, self.SPELL)
-            if ok and type(known) == "boolean" then return known end
+            if ok and known == true then return true end
         end
     end
+    local book = rawget(_G, "C_SpellBook")
+    if type(book) == "table" and type(book.IsSpellKnown) == "function" then
+        asked = true
+        local ok, known = pcall(book.IsSpellKnown, self.SPELL)
+        if ok and known == true then return true end
+    end
+    if asked then return false end
     return nil
 end
 
@@ -181,7 +194,7 @@ function Disenchanting:Update(room)
 
     local window = ns.UI and ns.UI.frame
     local show = window and ns.UI:IsShown() and not ns.UI.dragging and ns.UI.view ~= "all"
-        and self:Knows() == true
+        and self:Knows() ~= false
     local button = self.button
     if not show then
         if button then button:Hide() end

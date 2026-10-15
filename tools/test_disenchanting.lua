@@ -133,6 +133,12 @@ suite.check("back after", button:IsShown())
 _G.IsPlayerSpell = function() return false end
 ns.Selling:Update()
 suite.check("no button without Disenchant", not button:IsShown())
+
+-- One check saying no while the spellbook says yes (Forever) still shows it.
+_G.IsSpellKnown = function(spell) return spell == 13262 end
+ns.Selling:Update()
+suite.check("shown when the spellbook knows it", button:IsShown())
+_G.IsSpellKnown = nil
 _G.IsPlayerSpell = function(spell) return spell == 13262 end
 
 -- 2. A character that can't: mail it to the enchanter, or wait.
