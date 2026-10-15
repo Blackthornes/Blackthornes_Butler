@@ -136,6 +136,19 @@ suite.check("200 comes to 200 for 10s", Box.plan.state == "buy" and Box.plan.cou
 suite.check("the box says so", Box.total:GetText():find("200 for", 1, true) ~= nil, Box.total:GetText())
 suite.check("nothing bought yet", #calls == 0)
 
+-- The whole price shows: the box grows to fit it, never "200 for 7s...".
+local function Need(text)
+    return 18 + ns.Theme.TextWidth("normal", "How many?") + 10 + 70 + 10 + ns.Theme.TextWidth("normal", text) + 4 + 18
+end
+suite.check("the box is wide enough for the price", Box.frame:GetWidth() >= Need(Box.total:GetText()),
+    Box.frame:GetWidth())
+Box:FitTotal("9999 for 999g 99s 99c")
+suite.check("a long price widens the box", Box.frame:GetWidth() > 280 and Box.frame:GetWidth() >= Need("9999 for 999g 99s 99c"),
+    Box.frame:GetWidth())
+Box:FitTotal("")
+suite.check("and it goes back to its usual size", Box.frame:GetWidth() == 280, Box.frame:GetWidth())
+Box:Replan()
+
 -- 3. Room: 15 slots free of 20 and 5 more on the stack of 15 = 305.
 local plan = BuyMany:Plan(1, 400)
 suite.check("never more than the bags hold", plan.count == 305 and plan.short.room == 305, plan.count)

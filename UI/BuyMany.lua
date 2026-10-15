@@ -25,6 +25,7 @@ local BuyMany = ns.BuyMany
 
 local WIDTH, HEIGHT = 280, 196
 local PAD = 18
+local BOX_WIDTH = 70
 local MAX_BUTTONS = 12
 
 local function Field(object, key)
@@ -95,7 +96,7 @@ function BuyManyUI:Build()
 
     local box = Widgets.CreateSearchBox(frame, "", function() BuyManyUI:Replan() end,
         function() BuyManyUI:Buy() end, { plain = true })
-    box:SetWidth(70)
+    box:SetWidth(BOX_WIDTH)
     box:SetPoint("LEFT", ask, "RIGHT", 10, 0)
     local edit = box.editBox
     edit:SetMaxLetters(4)
@@ -184,15 +185,25 @@ function BuyManyUI:Replan()
     self.plan = plan
     if not plan then
         self.total:SetText("")
+        self:FitTotal("")
         self.note:SetText(L["The vendor's list changed. Shift-click the item again."])
         self:SetBuyEnabled(false)
         return
     end
     local main, note = BuyMany.Describe(plan)
     self.total:SetText(main)
+    self:FitTotal(main)
     self.note:SetText(note)
     self.buyButton:SetText(L["Buy"])
     self:SetBuyEnabled(plan.state == "buy")
+end
+
+--- Grow the box so the whole price shows beside the amount, measured as
+--- the game draws it: the font runs wider than any width picked by eye.
+function BuyManyUI:FitTotal(text)
+    local need = PAD + Theme.TextWidth("normal", L["How many?"]) + 10 + BOX_WIDTH + 10
+        + Theme.TextWidth("normal", text or "") + 4 + PAD
+    self.frame:SetWidth(math.max(WIDTH, math.ceil(need)))
 end
 
 function BuyManyUI:SetBuyEnabled(on)
