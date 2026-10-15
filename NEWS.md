@@ -23,6 +23,15 @@ tell a friend: no hype, no questions to the reader, no exclamation marks
 outside the thanks line, no dashes as punctuation, no "now you can". The
 tool prints a note for a shipped line that reads like an advert.
 
+## 0.10.0
+
+- The Craft button opens the profession window first when it's closed.
+
+Fixes and changes:
+
+- Crafts that free the most bag space come first.
+- Gear with a random suffix is priced by its own suffix.
+
 ## 0.9.0
 
 - Shift-click an item at a vendor and type how many you want. Butler buys them all for you.
