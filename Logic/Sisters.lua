@@ -42,7 +42,10 @@ end
 function Sisters:Ask(key, entry)
     local butler = Sisters.Butler(key)
     if not butler then return nil end
-    local arg = Sisters.LIST[key].byLink and (entry.link or entry.itemID) or entry.itemID
+    -- Tradeskills takes the link too once it says so (TAKES_LINK), so a
+    -- random suffix ("of the Monkey") is priced as that suffix sells.
+    local byLink = Sisters.LIST[key].byLink or rawget(butler, "TAKES_LINK") == true
+    local arg = byLink and (entry.link or entry.itemID) or entry.itemID
     if arg == nil then return nil end
     local ok, answer
     if key == "equipment" then
