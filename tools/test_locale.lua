@@ -26,15 +26,15 @@ local ns = env.Load()
 local L = ns.L
 suite.check("English shows English", L["Sell"] == "Sell")
 suite.check("a group's title in English", ns.Verdicts.LABELS.sell == "Sell")
-suite.check("the settings rows in English", SettingsLabels(ns)["Free bag space"] == true)
+suite.check("the settings rows in English", SettingsLabels(ns)["Free Bag Space:"] == true)
 
 -- A German client.
 ns = env.Load("deDE")
 L = ns.L
 suite.check("a group's title in Deutsch", ns.Verdicts.LABELS.sell == "Verkaufen", ns.Verdicts.LABELS.sell)
 local labels = SettingsLabels(ns)
-suite.check("the settings rows speak Deutsch", labels["Freier Taschenplatz"] == true)
-suite.check("and none is left in English", labels["Free bag space"] == nil)
+suite.check("the settings rows speak Deutsch", labels["Freier Taschenplatz:"] == true)
+suite.check("and none is left in English", labels["Free Bag Space:"] == nil)
 suite.check("a word with no German line falls back to English",
     L["A string nobody translated"] == "A string nobody translated")
 suite.check("and formats in English", L.Format("%d stacks, %s", 3, "grey") == "3 stacks, grey")
