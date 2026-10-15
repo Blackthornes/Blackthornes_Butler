@@ -1570,6 +1570,8 @@ function UI:FootRoom()
     if ns.Jobs then ns.Jobs:UpdateLogout() end
     -- Leave form sits over the first Craft button while in one.
     if ns.Jobs then ns.Jobs:UpdateLeaveForm() end
+    -- Open sits over the first Craft button whose profession is closed.
+    if ns.Jobs then ns.Jobs:UpdateOpenProfession() end
     self.versionLabel:SetShown(room == 0)
     self.footer:SetPoint("RIGHT", self.frame, "RIGHT", -(PADDING + (room > 0 and room + 12 or 90)), 0)
 end

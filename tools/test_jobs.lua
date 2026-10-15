@@ -163,6 +163,42 @@ UI.list.rows = formRows
 _G.UnitClass, _G.GetShapeshiftForm = nil, nil
 suite.check("a client without the calls is never in a form", not Jobs.InBlockingForm())
 
+-- 4c. A closed profession (the owner asked 2026-10-15): Open, a secure
+-- button set to the profession's spell, sits over the first Craft button
+-- whose window is closed; once it opens, Craft is back and crafts.
+local professionOpen = false
+_G.BlackthornesTS.Butler.Profession = function(_, recipeID)
+    if recipeID ~= plan.here.steps[1].recipeID then return nil end
+    return { name = "Tailoring", spell = "Tailoring", open = professionOpen }
+end
+UI.list.rows = { FormRow({ type = "header" }), FormRow({ type = "job", step = plan.here.steps[1] }) }
+Jobs:UpdateOpenProfession()
+local open = Jobs.openButton
+suite.check("Open shows over a closed profession's Craft", open and open:IsShown())
+suite.check("it casts the profession and nothing else", open:GetAttribute("type") == "spell"
+    and open:GetAttribute("spell") == "Tailoring" and open:GetAttribute("macrotext") == nil)
+suite.check("named for it", open.label:GetText() == "Open Tailoring")
+suite.check("at the Craft button's place", open._point[1] == "RIGHT" and open._point[2] == UI.list.rows[2]
+    and open:GetParent() == UI.frame)
+env.Fire("PLAYER_REGEN_DISABLED")
+suite.check("combat hides Open", not open:IsShown())
+env.Fire("PLAYER_REGEN_ENABLED")
+professionOpen = true
+Jobs:UpdateOpenProfession()
+suite.check("an open profession has no Open, Craft crafts", not open:IsShown())
+professionOpen = false
+_G.UnitClass, _G.GetShapeshiftForm = function() return "Ana", "DRUID" end, function() return 1 end
+Jobs:UpdateOpenProfession()
+suite.check("Leave form comes first in a form", not open:IsShown())
+_G.UnitClass, _G.GetShapeshiftForm = nil, nil
+_G.BlackthornesTS.Butler.Profession = function() error("boom") end
+Jobs:UpdateOpenProfession()
+suite.check("a Tradeskills error shows no Open", not open:IsShown())
+_G.BlackthornesTS.Butler.Profession = nil
+Jobs:UpdateOpenProfession()
+suite.check("an older Tradeskills shows no Open", not open:IsShown())
+UI.list.rows = formRows
+
 -- 5. Log out, on the next character's row (the owner asked 2026-10-11:
 -- "the log out button should be next to the step that needs the logout").
 local realRows = UI.list.rows

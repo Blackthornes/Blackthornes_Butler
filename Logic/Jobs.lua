@@ -1013,6 +1013,102 @@ function Jobs:UpdateLeaveForm()
 end
 
 --------------------------------------------------------------------------------
+-- Opening the profession
+--------------------------------------------------------------------------------
+
+-- The owner asked (2026-10-15) for Craft to open the profession window when
+-- it is closed, as Tradeskills' own craft button does, and to craft once it
+-- is open. Opening one is a cast, which only the player's click on a secure
+-- button may do, so the Open button is a secure button set to the spell
+-- Tradeskills names (its Butler:Profession), laid over the Craft button of
+-- the first craft line whose window is not open. Its click opens the
+-- window; the line's Craft then crafts. Never both in one click.
+
+--- The profession a craft step is made in: { name, spell, open }, or nil.
+function Jobs.Profession(step)
+    if not (step and step.recipeID) then return nil end
+    local ts = Tradeskills("Profession")
+    if not ts then return nil end
+    local ok, info = pcall(ts.Profession, ts, step.recipeID)
+    if not ok or type(info) ~= "table" or not Text(info.spell) then return nil end
+    return { name = Text(info.name) or info.spell, spell = info.spell, open = info.open == true }
+end
+
+--- The first craft line on screen whose profession window is not open, and
+--- that profession.
+function Jobs.OpenRow(list)
+    for _, row in ipairs((list and list.rows) or {}) do
+        local data = row.data
+        if row:IsShown() and data and data.type == "job" and Jobs.Craftable(data.step) then
+            local profession = Jobs.Profession(data.step)
+            if profession and not profession.open then return row, profession end
+        end
+    end
+end
+
+function Jobs:CreateOpenButton()
+    if self.openButton then return self.openButton end
+    local button = ns.Widgets.CreateButton(UIParent, L["Craft"], nil, {
+        name = "BlackthornesButlerOpenProfession", template = "SecureActionButtonTemplate",
+        width = 80, height = 22, primary = true,
+    })
+    button:Hide()
+    -- Inside the window out of combat (UI:Dock), as Leave form is.
+    button:SetFrameStrata("DIALOG")
+    button:RegisterForClicks("AnyUp")
+    button:SetAttribute("useOnKeyDown", false)
+    button:SetAttribute("type", "spell")
+    button:HookScript("OnEnter", function(frame)
+        if not frame.tooltipText then return end
+        GameTooltip:SetOwner(frame, "ANCHOR_BOTTOM")
+        GameTooltip:SetText(frame.tooltipText, 1, 1, 1, 1, true)
+        GameTooltip:Show()
+    end)
+    button:HookScript("OnLeave", function() GameTooltip:Hide() end)
+    self.openButton = button
+    return button
+end
+
+--- Put Open over the first craft line whose window is closed. Leave form
+--- wins while in a form. Hidden in combat, while the window moves and in
+--- All characters; called each time the list is drawn or scrolled.
+function Jobs:UpdateOpenProfession()
+    if self.fighting or InCombat() then return end
+    local ui = ns.UI
+    local list = ui and ui.list
+    local show = list and ui:IsShown() and not ui.dragging and ui.view ~= "all" and not Jobs.InBlockingForm()
+    local row, profession
+    if show then row, profession = Jobs.OpenRow(list) end
+    local right, top, bottom = row and row:GetRight(), row and row:GetTop(), row and row:GetBottom()
+    if not (right and top and bottom) then
+        if self.openButton then self.openButton:Hide() end
+        return
+    end
+    local button = self:CreateOpenButton()
+    if not ui:Dock(button) then
+        button:Hide()
+        return
+    end
+    if button:GetAttribute("spell") ~= profession.spell then
+        button:SetAttribute("spell", profession.spell)
+    end
+    button:SetText(L.Format("Open %s", profession.name))
+    button.tooltipText = L.Format("Opens %s. Click Craft after that to make it.", profession.name)
+    button:ClearAllPoints()
+    button:SetPoint("RIGHT", row, "RIGHT", -8, 0)
+    button:Show()
+end
+
+--- The profession window opened or closed: a moment later, once
+--- Tradeskills has read it, the lines say Open or Craft again.
+function Jobs:WindowChanged()
+    if not (C_Timer and C_Timer.After) then return end
+    C_Timer.After(0.3, function()
+        if ns.UI and ns.UI.IsShown and ns.UI:IsShown() then ns.UI:Refresh(true) end
+    end)
+end
+
+--------------------------------------------------------------------------------
 -- Speaking up
 --------------------------------------------------------------------------------
 
@@ -1110,6 +1206,7 @@ function Jobs:OnEnable()
         Jobs.fighting = true
         if Jobs.button then Jobs.button:Hide() end
         if Jobs.formButton then Jobs.formButton:Hide() end
+        if Jobs.openButton then Jobs.openButton:Hide() end
     end)
     ns.RegisterEvent(self, "PLAYER_REGEN_ENABLED", function()
         Jobs.fighting = false
@@ -1123,6 +1220,8 @@ function Jobs:OnEnable()
             if ns.UI and ns.UI.IsShown and ns.UI:IsShown() then ns.UI:Refresh() end
         end)
     end)
+    ns.RegisterEvent(self, "TRADE_SKILL_SHOW", function() Jobs:WindowChanged() end)
+    ns.RegisterEvent(self, "TRADE_SKILL_CLOSE", function() Jobs:WindowChanged() end)
     -- Into or out of a form: the craft lines say Leave form or Craft. Only
     -- on the change itself, and only while the window shows.
     ns.RegisterEvent(self, "UPDATE_SHAPESHIFT_FORM", function()
