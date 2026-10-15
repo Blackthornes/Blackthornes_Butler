@@ -7,7 +7,7 @@
 --      enchanter it waits under Look at it. An upgrade still says Keep.
 --   3. The Disenchant button aims at one slot just before the click, bought
 --      items first, and only at rows judged Disenchant; nothing stays aimed.
---   4. Never in combat, and never without the spell.
+--   4. Never in combat.
 --   5. The right-click menu marks and unmarks through Tradeskills.
 
 local env = dofile(lfs_cwd .. "/tools/testenv.lua")
@@ -129,10 +129,11 @@ _G.InCombatLockdown = nil
 env.Fire("PLAYER_REGEN_ENABLED")
 suite.check("back after", button:IsShown())
 
--- Without the spell, no button.
+-- The spell checks saying no don't hide it: Tradeskills only puts items
+-- under Disenchant for a character that can break them (Forever, 2026-10-15).
 _G.IsPlayerSpell = function() return false end
 ns.Selling:Update()
-suite.check("no button without Disenchant", not button:IsShown())
+suite.check("shown while the spell checks say no", button:IsShown())
 
 -- One check saying no while the spellbook says yes (Forever) still shows it.
 _G.IsSpellKnown = function(spell) return spell == 13262 end
@@ -140,6 +141,12 @@ ns.Selling:Update()
 suite.check("shown when the spellbook knows it", button:IsShown())
 _G.IsSpellKnown = nil
 _G.IsPlayerSpell = function(spell) return spell == 13262 end
+
+-- It casts by the client's own name for the spell, when it gives one.
+_G.C_Spell = { GetSpellName = function(id) return id == 13262 and "Entzaubern" or nil end }
+suite.check("cast by the spell's name", ns.Disenchanting:SpellName() == "Entzaubern")
+suite.check("the probe says why", ns.Disenchanting:ProbeText():find("items", 1, true) ~= nil)
+_G.C_Spell = nil
 
 -- 2. A character that can't: mail it to the enchanter, or wait.
 can, enchanter = false, "Ana Stoneheart"
