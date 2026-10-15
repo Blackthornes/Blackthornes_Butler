@@ -215,12 +215,6 @@ function SettingsUI.WindowStyleControl(row, x)
         if ReloadUI then ReloadUI() end
     end, { width = 60, height = 20 })
     ns.SettingsPages.ReloadUnder(row, stepper, reload)
-    reload:HookScript("OnEnter", function(self)
-        GameTooltip:SetOwner(self, "ANCHOR_TOP")
-        GameTooltip:AddLine(L["Reload the interface so the new window style shows (/reload)"], 1, 1, 1, true)
-        GameTooltip:Show()
-    end)
-    reload:HookScript("OnLeave", function() GameTooltip:Hide() end)
     reload:Hide()
     stepper.reload = reload
 
