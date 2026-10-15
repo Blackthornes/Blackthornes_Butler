@@ -112,6 +112,8 @@ _G.BlackthornesTS.Butler:Advise(itemID)
   --   (the disenchanter typed in its Settings, when its Mail page sends
   --   this gear there), youDisenchant (the character playing is that
   --   disenchanter), crafted (a green some recipe makes, asked only then) }
+  -- Asked with the bag copy's link when its Butler.TAKES_LINK is true
+  --   (2026-10-15), so a random suffix ("of the Monkey") is priced as it sells
 _G.BlackthornesTS.Butler:SetBoughtToDisenchant(itemID, on, count)
   -- true, or false and why: the right-click menu's mark
 _G.BlackthornesTS.Butler:FillMail(name, items, money)
