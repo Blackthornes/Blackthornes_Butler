@@ -23,6 +23,16 @@ tell a friend: no hype, no questions to the reader, no exclamation marks
 outside the thanks line, no dashes as punctuation, no "now you can". The
 tool prints a note for a shipped line that reads like an advert.
 
+## 0.9.0
+
+- Shift-click an item at a vendor and type how many you want. Butler buys them all for you.
+- A new option has Butler send every green to Disenchant on your disenchanter.
+
+Fixes and changes:
+
+- Materials for another character's crafts go to Mail before they get sold.
+- Several bug fixes for the Disenchant button, Butler's buttons and gold top-ups.
+
 ## 0.8.0
 
 - Pick a character as your bank alt, and Butler mails it whole kinds of items, like all your cloth or herbs.

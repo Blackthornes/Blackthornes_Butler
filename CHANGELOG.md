@@ -4,6 +4,28 @@ Versions follow [semantic versioning](https://semver.org): the middle number
 moves for new behaviour, the last for fixes alone. The newest version goes at
 the top; a release is refused if its version has no section here.
 
+## 0.9.0
+
+For WoW: Forever (interface 16001). Files were added and the TOC changed, so
+restart the game fully after updating (`/reload` is not enough).
+
+- **Buy more:** Shift-click an item at a vendor and a box comes up beside
+  the vendor window. Type how many, up to 9999, and it shows the price and
+  says when your bags, gold or the vendor's stock allow fewer. Nothing is
+  spent until you click Buy. It buys a stack at a time, with a Stop button,
+  and stops if your bags fill, your gold runs out, the vendor sells out or a
+  fight starts. "Buy more" in Settings, on unless unticked, and
+  `/bbutler buy 200 water`.
+- **Disenchant greens here:** with this ticked, every green the character
+  set as your disenchanter can break goes under Disenchant, whatever it
+  would sell for. Off unless ticked. Selling page, DISENCHANTING, and
+  `/bbutler greens`. Needs the Tradeskills update.
+- **Alt crafts:** materials another character's queued crafts need now go
+  under Mail first, even when they are on your Always sell list, kept by a
+  habit Butler learned, or something no vendor buys.
+- Several bug fixes for the Disenchant button, Butler's buttons in front of
+  the window and gold top-ups.
+
 ## 0.8.0
 
 For WoW: Forever (interface 16001). A file was added and the TOC changed, so
