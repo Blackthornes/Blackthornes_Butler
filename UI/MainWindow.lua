@@ -224,7 +224,7 @@ function UI:Build()
 
     self.takeButton = Widgets.CreateButton(frame, L["Take from bank"], Run(ns.Errands.TakeFromBank),
         { width = ERRAND_WIDTH, height = 24 })
-    self.takeButton.tooltipText = L["Takes out gear you can wear now that beats what you have on, and what your craft queue still needs"]
+    self.takeButton.tooltipText = L["Takes out upgrades you can wear now and what your craft queue still needs"]
     self.takeButton:Hide()
 
     self:BuildSizeGrip()
@@ -870,7 +870,7 @@ function UI:Enter(row, data)
     if data.type == "header" then
         GameTooltip:AddLine(data.group.label, Theme.Unpack("accent"))
         if data.group.verdict == "wait" then
-            GameTooltip:AddLine(L["The auction house is paying well under the usual price for these today. Hold on to them and post them when the price comes back."], 1, 1, 1, true)
+            GameTooltip:AddLine(L["The auction house pays a lot less than usual for these today. Hold on to them and post them when the price comes back."], 1, 1, 1, true)
         end
         GameTooltip:AddLine(data.folded and L["Click to show these"] or L["Click to fold these away"], 1, 1, 1, true)
         GameTooltip:Show()
