@@ -34,8 +34,8 @@ L["ERRANDS"] = "BESORGUNGEN"
 L["Selling at a vendor, mail and the bank, and your Always keep, sell and bank lists"] =
     "Verkaufen beim Händler, Post und Bank, und deine Listen für Immer behalten, verkaufen und in die Bank"
 L["GOLD"] = "GOLD"
-L["A gold fund: how much each of your characters keeps, topped up by mail"] =
-    "Eine Goldkasse: wie viel jeder deiner Charaktere behält, per Post aufgefüllt"
+L["How much gold each of your characters keeps, topped up by mail"] =
+    "Wie viel Gold jeder deiner Charaktere behält, aufgefüllt per Post"
 L["GENERAL"] = "ALLGEMEIN"
 L["The minimap button, window position, text size and debug output"] =
     "Minikartenknopf, Fensterposition, Textgröße und Debug-Ausgabe"
@@ -51,26 +51,26 @@ L["The Butler window opens at every vendor and closes when you leave. Nothing se
     "Das Butler-Fenster öffnet sich bei jedem Händler und schließt sich, wenn du gehst. Nichts wird verkauft, bevor du auf Verkaufen klickst. Auch /bbutler vendor."
 L["On"] = "An"
 L["Test selling"] = "Verkaufen testen"
-L["At a vendor, Butler sells your cheapest grey item by itself to see whether the game allows it. If it does, each click on Sell sells up to 12. If not, it sells one stack a click. Same as /bbutler selltest."] =
-    "Beim Händler verkauft Butler selbst deinen billigsten grauen Gegenstand, um zu sehen, ob das Spiel das erlaubt. Wenn ja, verkauft jeder Klick auf Verkaufen bis zu 12. Wenn nicht, einen Stapel pro Klick. Wie /bbutler selltest."
+L["At a vendor, Butler sells your cheapest grey item on its own to see what the game allows. If it works, each click on Sell sells up to 12. If not, it sells one stack a click. Same as /bbutler selltest."] =
+    "Beim Händler verkauft Butler von sich aus deinen billigsten grauen Gegenstand, um zu sehen, was das Spiel erlaubt. Klappt es, verkauft jeder Klick auf Verkaufen bis zu 12. Wenn nicht, einen Stapel pro Klick. Wie /bbutler selltest."
 L["Test it"] = "Testen"
 L["MAIL AND BANK"] = "POST UND BANK"
 L["Open at a mailbox"] = "Am Briefkasten öffnen"
-L["The Butler window opens at every mailbox in place of Tradeskills' mail panel. Close it and the panel comes back. The Fill mail button on each character's line fills the game's Send Mail page for that character, and you press Send. Needs Blackthornes Tradeskills. Also /bbutler mailbox."] =
-    "Das Butler-Fenster öffnet sich an jedem Briefkasten anstelle von Tradeskills' Postfenster. Schließ es, und das Postfenster ist wieder da. Der Knopf Post füllen in der Zeile jedes Charakters füllt die Seite Post verschicken des Spiels für diesen Charakter, und du drückst Senden. Braucht Blackthornes Tradeskills. Auch /bbutler mailbox."
+L["The Butler window opens at every mailbox in place of Tradeskills' mail panel. Close it and the panel comes back. Click Fill mail on a character's line to fill in the game's Send Mail page for them, then press Send. Needs Blackthornes Tradeskills. Also /bbutler mailbox."] =
+    "Das Butler-Fenster öffnet sich an jedem Briefkasten anstelle von Tradeskills' Postfenster. Schließ es, und das Postfenster ist wieder da. Klick in der Zeile eines Charakters auf Post füllen, dann füllt Butler die Seite „Brief verschicken“ für ihn aus. Danach drückst du Senden. Braucht Blackthornes Tradeskills. Auch /bbutler mailbox."
 L["Fill the next mail"] = "Nächste Post füllen"
 L["After you send a mail Butler filled, it fills the next character's mail. You still press Send each time. Also /bbutler fillnext."] =
     "Hast du eine Post verschickt, die Butler gefüllt hat, füllt er die für den nächsten Charakter. Senden drückst du jedes Mal selbst. Auch /bbutler fillnext."
 L["Jobs at login"] = "Aufgaben beim Einloggen"
-L["When you log in on a character that has a job in Tradeskills' craft queue (craft this, mail that), the Butler window comes up with its steps. Also /bbutler joblogin."] =
-    "Wenn du dich mit einem Charakter einloggst, der eine Aufgabe in Tradeskills' Herstellungsliste hat (dies herstellen, das verschicken), öffnet sich das Butler-Fenster mit den Schritten. Auch /bbutler joblogin."
+L["When you log in on a character with a job from Tradeskills' craft queue, like something to craft or mail, the Butler window comes up with the steps. Also /bbutler joblogin."] =
+    "Wenn du dich mit einem Charakter einloggst, der eine Aufgabe aus Tradeskills' Herstellungsliste hat, etwa etwas herzustellen oder zu verschicken, öffnet sich das Butler-Fenster mit den Schritten. Auch /bbutler joblogin."
 L["Every character's jobs"] = "Aufgaben aller Charaktere"
 L["Lists in chat what each of your characters has to craft or mail for Tradeskills' craft queue. Also /bbutler jobs."] =
     "Listet im Chat, was jeder deiner Charaktere für die Herstellungsliste von Tradeskills herstellen oder verschicken muss. Auch /bbutler jobs."
 L["List"] = "Auflisten"
 L["Open at the bank"] = "An der Bank öffnen"
-L["The Butler window comes up at the bank when there is something to move: Move to bank puts your Always bank items away, and Take from bank brings out what your craft queue needs. Also /bbutler bank."] =
-    "Das Butler-Fenster öffnet sich an der Bank, wenn es etwas zu räumen gibt: In die Bank legt deine Gegenstände für Immer in die Bank weg, und Aus der Bank holen holt, was deine Herstellungsliste braucht. Auch /bbutler bank."
+L["The Butler window comes up at the bank when there's something to move. Move to bank puts your Always bank items away. Take from bank brings out what your craft queue needs. Also /bbutler bank."] =
+    "Das Butler-Fenster öffnet sich an der Bank, wenn es etwas zu räumen gibt. In die Bank legt deine Gegenstände für Immer in die Bank weg. Aus der Bank holen holt, was deine Herstellungsliste braucht. Auch /bbutler bank."
 L["JUNK"] = "PLUNDER"
 L["Sell below"] = "Verkaufen unter"
 L["Anything worth less than this goes under Sell. Butler never puts quest items, upgrades, things your goals or crafts need, pet food, bound green or better gear, or anything on your Always lists there. Nothing sells until you click Sell. Needs Blackthornes Tradeskills. 0 turns it off. Also /bbutler sellbelow 50s."] =
@@ -85,8 +85,8 @@ L["Right-click an item in the Butler window to always keep it, sell it, bank it 
 L["List them"] = "Auflisten"
 L["GOLD FUND"] = "GOLDKASSE"
 L["Keep at least"] = "Mindestens behalten"
-L["Every character keeps at least this much gold. At a mailbox, a character with more can send gold to anyone below it, without going under its own amount. Fill mail fills it in and you press Send. Needs Blackthornes Tradeskills, which remembers each character's gold from the last time they played. 0 turns it off. Also /bbutler goldmin 50g."] =
-    "Jeder Charakter behält mindestens so viel Gold. Am Briefkasten kann ein Charakter mit mehr jedem darunter Gold schicken, ohne unter seinen eigenen Betrag zu fallen. Post füllen trägt es ein, und du drückst Senden. Braucht Blackthornes Tradeskills, das sich das Gold jedes Charakters vom letzten Spielen merkt. 0 schaltet es aus. Auch /bbutler goldmin 50g."
+L["Every character keeps at least this much gold. At a mailbox, a character with more can send gold to one with less, without dropping below its own amount. Fill mail fills it in and you press Send. Needs Blackthornes Tradeskills, which remembers each character's gold. 0 turns it off. Also /bbutler goldmin 50g."] =
+    "Jeder Charakter behält mindestens so viel Gold. Am Briefkasten kann ein Charakter mit mehr einem mit weniger Gold schicken, ohne unter seinen eigenen Betrag zu fallen. Post füllen trägt es ein, und du drückst Senden. Braucht Blackthornes Tradeskills, das sich das Gold jedes Charakters merkt. 0 schaltet es aus. Auch /bbutler goldmin 50g."
 L["Everyone's gold"] = "Gold aller Charaktere"
 L["Lists in chat each character's gold from the last time they played, how much they keep and what the fund would send them. Same as /bbutler gold."] =
     "Listet im Chat das Gold jedes Charakters vom letzten Spielen, wie viel er behält und was die Kasse ihm schicken würde. Wie /bbutler gold."
@@ -115,8 +115,8 @@ L["Click it for the Butler window, right-click for this page. Drag it to move it
     "Klick öffnet das Butler-Fenster, Rechtsklick diese Seite. Ziehen verschiebt ihn. Auch /bbutler minimap."
 L["Show it"] = "Anzeigen"
 L["Free bag space"] = "Freier Taschenplatz"
-L["How many bag slots are free, as a number on the backpack button of your bag bar: white, amber at 8 or fewer, red at 3 or fewer. Hover the button for each bag. Profession and reagent bags are listed but not counted. Also /bbutler freespace."] =
-    "Wie viele Taschenplätze frei sind, als Zahl auf dem Rucksackknopf deiner Taschenleiste: weiß, bernsteinfarben bei 8 oder weniger, rot bei 3 oder weniger. Fahr mit der Maus über den Knopf für jede Tasche. Berufs- und Reagenzientaschen werden aufgeführt, aber nicht gezählt. Auch /bbutler freespace."
+L["Shows how many bag slots are free on the backpack button of your bag bar. The number turns amber at 8 or fewer and red at 3 or fewer. Hover the button to see each bag. Profession and reagent bags are listed but not counted. Also /bbutler freespace."] =
+    "Zeigt auf dem Rucksackknopf deiner Taschenleiste, wie viele Taschenplätze frei sind. Die Zahl wird bei 8 oder weniger bernsteinfarben und bei 3 oder weniger rot. Fahr mit der Maus über den Knopf, um jede Tasche zu sehen. Berufs- und Reagenzientaschen werden aufgeführt, aber nicht gezählt. Auch /bbutler freespace."
 L["Who has it"] = "Wer hat es"
 L["Item tooltips list which of your characters have that item and where: bags, bank or mail. Needs Blackthornes Tradeskills, which remembers your other characters. Also /bbutler whohas."] =
     "Gegenstands-Tooltips zeigen, welche deiner Charaktere den Gegenstand haben und wo: Taschen, Bank oder Post. Braucht Blackthornes Tradeskills, das sich deine anderen Charaktere merkt. Auch /bbutler whohas."
@@ -198,8 +198,8 @@ L["item tooltips no longer say which of your characters have it."] =
 L["Butler: Mail to %s"] = "Butler: Per Post an %s"
 L["%s each"] = "%s pro Stück"
 L["Butler on tooltips"] = "Butler im Tooltip"
-L["The last line on the tooltip of an item in your bags says what Butler would do with it (sell, keep, disenchant, mail to one of your characters) and what one is worth. Also /bbutler tooltip."] =
-    "Die letzte Zeile im Tooltip eines Gegenstands in deinen Taschen sagt, was Butler damit tun würde (verkaufen, behalten, entzaubern, per Post an einen deiner Charaktere) und was einer wert ist. Auch /bbutler tooltip."
+L["The last line on the tooltip of an item in your bags says what Butler would do with it, like sell, keep, disenchant or mail it, and what one is worth. Also /bbutler tooltip."] =
+    "Die letzte Zeile im Tooltip eines Gegenstands in deinen Taschen sagt, was Butler damit tun würde, etwa verkaufen, behalten, entzaubern oder verschicken, und was einer wert ist. Auch /bbutler tooltip."
 L["show or hide Butler's advice on the tooltips of items in your bags"] =
     "zeigt Butlers Rat im Tooltip der Gegenstände in deinen Taschen oder blendet ihn aus"
 L["item tooltips show what Butler would do with them."] =
@@ -217,7 +217,7 @@ L["What it's worth: %s"] = "Das ist es wert: %s"
 L["Move to bank"] = "In die Bank"
 L["Puts your Always bank items in the bank, a stack at a time"] = "Bringt deine Gegenstände von „Immer in die Bank“ in die Bank, einen Stapel nach dem anderen"
 L["Take from bank"] = "Aus der Bank holen"
-L["Takes out gear you can wear now that beats what you have on, and what your craft queue still needs"] = "Holt Ausrüstung heraus, die du jetzt tragen kannst und die besser ist als deine, und was deine Herstellungsliste noch braucht"
+L["Takes out upgrades you can wear now and what your craft queue still needs"] = "Holt Verbesserungen heraus, die du jetzt tragen kannst, und was deine Herstellungsliste noch braucht"
 L["Search all characters"] = "Alle Charaktere durchsuchen"
 L["Search your bags"] = "Deine Taschen durchsuchen"
 L["Every character's items, and where each one is"] = "Die Gegenstände aller Charaktere, und wo jeder liegt"
@@ -355,7 +355,7 @@ L["Mail to %s to disenchant, about %s"] = "Zum Entzaubern an %s verschicken, etw
 L["Auction about %s each, sells slowly"] = "Auktion etwa %s pro Stück, verkauft sich langsam"
 L["Auction about %s each"] = "Auktion etwa %s pro Stück"
 L["Wait for a better price"] = "Auf einen besseren Preis warten"
-L["The auction house is paying well under the usual price for these today. Hold on to them and post them when the price comes back."] = "Im Auktionshaus bringen diese heute deutlich weniger als sonst. Behalte sie und stell sie ein, wenn der Preis wieder steigt."
+L["The auction house pays a lot less than usual for these today. Hold on to them and post them when the price comes back."] = "Im Auktionshaus bringen diese heute viel weniger als sonst. Behalte sie und stell sie ein, wenn der Preis wieder steigt."
 L["Selling for about %s right now, usually about %s"] = "Bringt gerade etwa %s, sonst etwa %s"
 L["Costs about %s to make, more than it sells for now"] = "Kostet etwa %s in der Herstellung, mehr als es gerade bringt"
 L["Sells slowly at auction (about %s after the cut), vendor pays %s each"] = "Verkauft sich langsam im Auktionshaus (etwa %s nach Gebühr), der Händler zahlt %s pro Stück"
@@ -607,7 +607,7 @@ L["Items held back"] = "Zurückgehalten"
 L["Undo %d"] = "%d freigeben"
 L["None"] = "Keine"
 L["Everyone held back"] = "Alles Zurückgehaltene"
-L["Pick one of your characters to see what you hold back from them. Right-click an upgrade under Mail to hold back that item, or every upgrade, from the character it was going to."] = "Wähle einen deiner Charaktere, um zu sehen, was du ihm vorenthältst. Rechtsklick auf eine Verbesserung unter Post hält diesen Gegenstand oder jede Verbesserung vor dem Charakter zurück, für den sie gedacht war."
+L["Pick a character to see what you're holding back from them. To hold something back, right-click an upgrade under Mail. You can stop that one item or every upgrade going to them."] = "Wähle einen Charakter, um zu sehen, was du ihm vorenthältst. Um etwas zurückzuhalten, klick mit rechts auf eine Verbesserung unter Post. Du kannst diesen einen Gegenstand oder jede Verbesserung an ihn stoppen."
 L["Untick to stop Butler offering this character any upgrades by mail. Your own Always mail picks still go to them."] = "Nimm den Haken weg, damit Butler diesem Charakter keine Verbesserungen mehr per Post anbietet. Was du selbst unter Immer verschicken gewählt hast, geht weiter an ihn."
 L["The items you said not to mail to this character. Undo lets them go as upgrades again."] = "Die Gegenstände, die du diesem Charakter nicht schicken willst. Freigeben lässt sie wieder als Verbesserungen zu."
 L["Lists in chat every upgrade you hold back, and from whom. Same as /bbutler upgrademail."] = "Listet im Chat jede zurückgehaltene Verbesserung auf und vor wem. Wie /bbutler upgrademail."
@@ -656,7 +656,7 @@ L["turn offering to mail upgrades to your other characters on or off"] = "Angebo
 L["Butler offers to mail gear to the character it's an upgrade for."] = "Butler bietet an, Ausrüstung an den Charakter zu schicken, für den sie eine Verbesserung ist."
 L["DISENCHANTING"] = "ENTZAUBERN"
 L["Disenchant greens here"] = "Grüne hier entzaubern"
-L["On the character set as your disenchanter in Tradeskills, every green it can break goes under Disenchant, whatever it would sell for. Crafted greens keep their usual advice, and upgrades and anything a goal or your craft queue needs are still kept. Off unless you tick it. Needs Blackthornes Tradeskills. Also /bbutler greens."] = "Auf dem Charakter, der in Tradeskills als dein Entzauberer eingetragen ist, kommt jeder grüne Gegenstand, den er entzaubern kann, unter Entzaubern, egal was er beim Verkauf bringen würde. Hergestellte grüne Gegenstände bekommen ihren üblichen Rat, und Verbesserungen und alles, was ein Ziel oder deine Herstellungsliste braucht, wird weiter behalten. Aus, bis du es ankreuzt. Braucht Blackthornes Tradeskills. Auch /bbutler greens."
+L["On your disenchanter from Tradeskills, every green it can break goes under Disenchant, no matter what it sells for. Crafted greens, upgrades and anything your goals or craft queue need are still kept. Off unless you tick it. Needs Blackthornes Tradeskills. Also /bbutler greens."] = "Auf deinem Entzauberer aus Tradeskills kommt jeder grüne Gegenstand, den er entzaubern kann, unter Entzaubern, egal was er beim Verkauf bringt. Hergestellte grüne Gegenstände, Verbesserungen und alles, was deine Ziele oder deine Herstellungsliste brauchen, werden weiter behalten. Aus, bis du es ankreuzt. Braucht Blackthornes Tradeskills. Auch /bbutler greens."
 L["You disenchant greens on this character, about %s"] = "Auf diesem Charakter entzauberst du grüne Gegenstände, etwa %s"
 L["You disenchant greens on this character"] = "Auf diesem Charakter entzauberst du grüne Gegenstände"
 L["turn disenchanting every green on your disenchanter on or off"] = "Entzaubern aller grünen Gegenstände auf deinem Entzauberer ein- oder ausschalten"
@@ -720,7 +720,7 @@ L["Ready at level %d, from any %s trainer"] = "Bereit auf Stufe %d, bei jedem %s
 L["Show the way"] = "Weg zeigen"
 L["Show the way puts a pin on the map to your trainer."] = "Weg zeigen setzt eine Markierung auf der Karte zu deinem Lehrer."
 L["Spells to train"] = "Zauber zum Lernen"
-L["Spells you can train go at the top of the Jobs list with what they cost, Train all shows up at your class trainer, and when you level up, chat tells you what's new. The gold fund holds that gold back. Butler learns the prices and where your trainer stands the first time you open a class trainer. Also /bbutler training on or off."] = "Zauber, die du lernen kannst, stehen mit ihren Kosten oben unter Aufgaben, Alle lernen erscheint bei deinem Klassenlehrer, und wenn du aufsteigst, sagt dir der Chat, was neu ist. Die Goldreserve hält dieses Gold zurück. Butler lernt die Preise und wo dein Lehrer steht, wenn du zum ersten Mal einen Klassenlehrer öffnest. Auch /bbutler training on oder off."
+L["Spells you can train show at the top of the Jobs list with their cost. At your class trainer, Train all learns them. When you level up, chat tells you what's new. The gold fund keeps that gold back. The first time you open a class trainer, Butler learns its prices and where it stands. Also /bbutler training on or off."] = "Zauber, die du lernen kannst, stehen mit ihren Kosten oben unter Aufgaben. Bei deinem Klassenlehrer lernt Alle lernen sie. Wenn du aufsteigst, sagt dir der Chat, was neu ist. Die Goldreserve hält dieses Gold zurück. Wenn du zum ersten Mal einen Klassenlehrer öffnest, merkt sich Butler seine Preise und wo er steht. Auch /bbutler training on oder off."
 L["Train %d new spells"] = "%d neue Zauber lernen"
 L["Train 1 new spell"] = "1 neuen Zauber lernen"
 L["Train all"] = "Alle lernen"
@@ -754,7 +754,7 @@ L["%s %s"] = "%s %s"
 L["%s (you), %d %s"] = "%s (du), %d %s"
 L["%s / %s"] = "%s / %s"
 L["%s at level %d"] = "%s ab Stufe %d"
-L["%s is set aside for your other characters by the gold fund."] = "%s legt die Goldkasse für deine anderen Charaktere zur Seite."
+L["The gold fund keeps %s for your other characters."] = "Die Goldreserve hält %s für deine anderen Charaktere zurück."
 L["%s to go"] = "noch %s"
 L["%s to go."] = "noch %s."
 L["%s to go. %d levels away."] = "noch %s. Noch %d Stufen."
@@ -787,9 +787,9 @@ L["Journeyman Riding"] = "Reiten (Geselle)"
 L["Lists in chat your gold goals and how far along each is. Same as /bbutler goals."] = "Listet im Chat deine Goldziele und wie weit du bei jedem bist. Wie /bbutler goals."
 L["Price after a trainer visit."] = "Preis nach einem Besuch beim Lehrer."
 L["Ready"] = "Bereit"
-L["The bottom of the window shows what your gold is for next: class spells, profession training and riding, each with a bar showing your gold next to its price. Gold the gold fund sets aside for your other characters doesn't count. Also /bbutler goals on or off."] = "Unten im Fenster steht, wofür dein Gold als Nächstes gebraucht wird: Klassenzauber, Berufsausbildung und Reiten, jeweils mit einem Balken, der dein Gold neben dem Preis zeigt. Gold, das die Goldkasse für deine anderen Charaktere zur Seite legt, zählt nicht mit. Auch /bbutler goals on oder off."
+L["The bottom of the window shows what your gold is for next: class spells, profession training and riding. Each one has a bar with your gold next to its price. Gold set aside for your other characters doesn't count. Also /bbutler goals on or off."] = "Unten im Fenster steht, wofür dein Gold als Nächstes gebraucht wird: Klassenzauber, Berufsausbildung und Reiten. Jedes hat einen Balken mit deinem Gold neben dem Preis. Gold, das für deine anderen Charaktere zur Seite gelegt ist, zählt nicht mit. Auch /bbutler goals on oder off."
 L["The training only, not the mount."] = "Nur die Ausbildung, nicht das Reittier."
-L["With Blackthornes Tradeskills, the trainers' recipes you can learn are counted too."] = "Mit Blackthornes Tradeskills zählen auch die Rezepte der Lehrer mit, die du lernen kannst."
+L["With Blackthornes Tradeskills, this also counts recipes you can learn from trainers."] = "Mit Blackthornes Tradeskills zählen auch Rezepte, die du bei Lehrern lernen kannst."
 L["You can train it at level %d."] = "Du kannst es ab Stufe %d lernen."
 L["You have enough gold for it."] = "Du hast genug Gold dafür."
 L["Your goals"] = "Deine Ziele"
@@ -810,8 +810,8 @@ L["      %s: %d of %d goals met"] = "      %s: %d von %d Zielen erreicht"
 L["   %s is set aside for your other characters."] = "   %s ist für deine anderen Charaktere zur Seite gelegt."
 -- The trash can on the item worth the least (UI/Trash.lua).
 L["Trash can when full"] = "Mülleimer bei vollen Taschen"
-L["When your bags are full, a small gold can sits on the item worth the least that Butler would sell anyway. Click it to pick the item up, then drop it outside your bags; the game asks before anything is destroyed. Also /bbutler trash."] =
-    "Sind deine Taschen voll, liegt ein kleiner goldener Mülleimer auf dem Gegenstand mit dem geringsten Wert, den Butler ohnehin verkaufen würde. Klick darauf, um ihn aufzunehmen, und lass ihn außerhalb deiner Taschen fallen; das Spiel fragt nach, bevor etwas zerstört wird. Auch /bbutler trash."
+L["When your bags are full, a small gold can sits on the cheapest item Butler would sell anyway. Click it to pick the item up, then drop it outside your bags. The game asks before anything is destroyed. Also /bbutler trash."] =
+    "Sind deine Taschen voll, liegt ein kleiner goldener Mülleimer auf dem billigsten Gegenstand, den Butler ohnehin verkaufen würde. Klick darauf, um ihn aufzunehmen, und lass ihn außerhalb deiner Taschen fallen. Das Spiel fragt nach, bevor etwas zerstört wird. Auch /bbutler trash."
 L["Throw away to make room"] = "Wegwerfen, um Platz zu schaffen"
 L["Worth %s in all, the least in your bags"] = "Insgesamt %s wert, das Wenigste in deinen Taschen"
 L["This is the least valuable item in your bags."] =
@@ -857,8 +857,8 @@ L["(can't be bought)"] = "(kann nicht gekauft werden)"
 L["Butler keeps and lists the items your open quests collect."] = "Butler behält die Gegenstände, die deine offenen Quests sammeln, und listet sie auf."
 L["Butler no longer keeps or lists the items your quests collect."] = "Butler behält die Gegenstände deiner Quests nicht mehr und listet sie nicht mehr auf."
 L["Items for your quests is off. /bbutler quests on turns it back on."] = "Gegenstände für deine Quests ist aus. /bbutler quests on schaltet es wieder ein."
-L["Keeps the items your open quests ask you to collect, and lists the ones still to find at the top of the window. At the auction house, with Blackthornes Tradeskills, its Search button looks them up. Also /bbutler quests."] =
-    "Behält die Gegenstände, die deine offenen Quests sammeln lassen, und listet oben im Fenster, was noch fehlt. Im Auktionshaus sucht der Knopf Suchen sie mit Blackthornes Tradeskills. Auch /bbutler quests."
+L["Keeps the items your open quests ask for, and lists the ones you still need at the top of the window. At the auction house, with Blackthornes Tradeskills, the Search button looks them up. Also /bbutler quests."] =
+    "Behält die Gegenstände, die deine offenen Quests verlangen, und listet oben im Fenster, was dir noch fehlt. Im Auktionshaus sucht der Knopf Suchen sie mit Blackthornes Tradeskills. Auch /bbutler quests."
 L["couldn't search the auction house."] = "konnte nicht im Auktionshaus suchen."
 L["list what your open quests still need, or turn the quest line on or off"] = "zeigt, was deine offenen Quests noch brauchen, oder schaltet die Questzeile ein oder aus"
 L["none of your open quests asks you to collect an item."] = "keine deiner offenen Quests lässt dich einen Gegenstand sammeln."
@@ -892,16 +892,16 @@ L["the bank alt is now set to: %s."] = "der Bankcharakter steht jetzt auf: %s."
 L["%s is your bank alt. You're playing it, so nothing gets mailed to it from here."] = "%s ist dein Bankcharakter. Du spielst ihn gerade, also wird ihm von hier aus nichts geschickt."
 L["%s is your bank alt."] = "%s ist dein Bankcharakter."
 L["Send to"] = "Schicken an"
-L["One of your characters on this realm and side. What you tick goes under Mail to them, so Fill mail sends it and you press Send. Quest items, your goals, your craft queue, upgrades, pet food, soulbound items and your own Always lists always come first, and greys still sell. Also /bbutler bankalt Full Name."] = "Einer deiner Charaktere auf diesem Realm und dieser Seite. Was du ankreuzt, kommt unter Post an ihn, also schickt Post füllen es, und du drückst Senden. Questgegenstände, deine Ziele, deine Herstellungsliste, Verbesserungen, Begleiterfutter, seelengebundene Gegenstände und deine eigenen Immer-Listen gehen immer vor, und Graues wird weiter verkauft. Auch /bbutler bankalt Vorname Nachname."
+L["Pick one of your characters on this realm and side. What you tick goes under Mail to them, so Fill mail sends it and you press Send. Quest items, goals, your craft queue, upgrades, pet food, soulbound items and your Always lists still come first. Greys still sell. Also /bbutler bankalt Full Name."] = "Wähle einen deiner Charaktere auf diesem Realm und dieser Seite. Was du ankreuzt, kommt unter Post an ihn, also schickt Post füllen es, und du drückst Senden. Questgegenstände, Ziele, deine Herstellungsliste, Verbesserungen, Begleiterfutter, seelengebundene Gegenstände und deine Immer-Listen gehen weiter vor. Graues wird weiter verkauft. Auch /bbutler bankalt Vorname Nachname."
 L["Send it"] = "Schicken"
-L["Before selling sends everything you tick to the bank alt, even things that would sell well. Before a vendor lets the auction house and disenchanting go first, then sends the rest. Only leftovers sends only what Butler would leave for you to look at. Also /bbutler bankalt first, vendor or leftovers."] = "Vor dem Verkauf schickt alles, was du ankreuzt, an den Bankcharakter, auch was sich gut verkaufen würde. Vor dem Händler lässt Auktionshaus und Entzaubern zuerst ran und schickt dann den Rest. Nur der Rest schickt nur, was Butler dir zum Ansehen lassen würde. Auch /bbutler bankalt first, vendor oder leftovers."
+L["Before selling: everything you tick goes to the bank alt, even things that would sell well. Before a vendor: the auction house and disenchanting come first, then the rest goes. Only leftovers: only what Butler would leave for you to look at goes. Also /bbutler bankalt first, vendor or leftovers."] = "Vor dem Verkauf: Alles, was du ankreuzt, geht an den Bankcharakter, auch was sich gut verkaufen würde. Vor dem Händler: Auktionshaus und Entzaubern kommen zuerst, dann geht der Rest. Nur der Rest: Es geht nur, was Butler dir zum Ansehen lassen würde. Auch /bbutler bankalt first, vendor oder leftovers."
 L["A shopping list"] = "Eine Einkaufsliste"
-L["Everything on one of the shopping lists you made at the auction house goes to the bank alt too, whatever its kind. Needs Blackthornes Tradeskills."] = "Alles auf einer der Einkaufslisten, die du im Auktionshaus angelegt hast, geht auch an den Bankcharakter, egal welcher Art. Braucht Blackthornes Tradeskills."
+L["Everything on one of your auction house shopping lists goes to the bank alt too, whatever kind it is. Needs Blackthornes Tradeskills."] = "Alles auf einer deiner Einkaufslisten aus dem Auktionshaus geht auch an den Bankcharakter, egal welcher Art. Braucht Blackthornes Tradeskills."
 L["What goes there"] = "Was dorthin geht"
 L["Says in chat who your bank alt is and what it takes. Same as /bbutler bankalt."] = "Sagt im Chat, wer dein Bankcharakter ist und was er bekommt. Wie /bbutler bankalt."
 L["WHAT GOES THERE"] = "WAS DORTHIN GEHT"
 L["Green or better weapons and armor that bind when worn and aren't an upgrade for you."] = "Grüne oder bessere Waffen und Rüstung, die beim Anlegen gebunden werden und für dich keine Verbesserung sind."
-L["Tick to mail these to the bank alt, untick to leave them to Butler's other rules."] = "Ankreuzen, um sie an den Bankcharakter zu schicken. Ohne Haken entscheiden Butlers andere Regeln."
+L["Tick to mail these to the bank alt. Untick and Butler treats them as usual."] = "Ankreuzen, um sie an den Bankcharakter zu schicken. Ohne Haken behandelt Butler sie wie sonst."
 L["Send"] = "Schicken"
 L["Nobody"] = "Niemand"
 
@@ -938,5 +938,5 @@ L["Shift-click at a vendor works as the game's own again."] = "Umschalt-Klick be
 L["Type an amount and a name, like /bbutler buy 200 water."] = "Gib eine Menge und einen Namen ein, etwa /bbutler buy 200 Wasser."
 L["Talk to a vendor first."] = "Sprich zuerst mit einem Händler."
 L["This vendor doesn't sell anything called %s."] = "Dieser Händler verkauft nichts namens %s."
-L["Shift-click an item at a vendor to buy any amount of it at once, like 200. Butler shows what it comes to first, and buys a stack at a time after you click Buy. It stops if your bags fill, your gold runs out or the vendor sells out. Also /bbutler buy 200 water, or /bbutler buy on or off."] =
-    "Klicke beim Händler mit Umschalt auf einen Gegenstand, um eine beliebige Menge auf einmal zu kaufen, etwa 200. Butler zeigt zuerst, was das kostet, und kauft nach deinem Klick auf Kaufen einen Stapel nach dem anderen. Es hält an, wenn deine Taschen voll sind, dein Gold ausgeht oder der Händler ausverkauft ist. Auch /bbutler buy 200 Wasser oder /bbutler buy on oder off."
+L["Shift-click an item at a vendor to buy as many as you like at once, like 200. Butler shows the price first, then buys a stack at a time after you click Buy. It stops if your bags fill, your gold runs out or the vendor sells out. Also /bbutler buy 200 water, or /bbutler buy on or off."] =
+    "Klicke beim Händler mit Umschalt auf einen Gegenstand, um so viele auf einmal zu kaufen, wie du willst, etwa 200. Butler zeigt zuerst den Preis und kauft dann nach deinem Klick auf Kaufen einen Stapel nach dem anderen. Es hält an, wenn deine Taschen voll sind, dein Gold ausgeht oder der Händler ausverkauft ist. Auch /bbutler buy 200 Wasser oder /bbutler buy on oder off."

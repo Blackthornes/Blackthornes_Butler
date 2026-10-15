@@ -401,7 +401,7 @@ function GoalsUI:EnterHead()
     GameTooltip:AddLine(L["Your purse fills the goals in order: class spells, then profession training, then riding. Each bar shows what's left after the goals above it."], Theme.Muted(true))
     local result = self.result
     if result and (result.aside or 0) > 0 then
-        GameTooltip:AddLine(L.Format("%s is set aside for your other characters by the gold fund.", Money(result.aside)),
+        GameTooltip:AddLine(L.Format("The gold fund keeps %s for your other characters.", Money(result.aside)),
             Theme.Muted(true))
     end
     if (self.more or 0) > 0 then
@@ -445,7 +445,7 @@ function GoalsUI:Enter(row)
                 or L.Format("%s: %d recipes", recipe.name, recipe.count), Money(recipe.cost), 1, 1, 1, 1, 1, 1)
         end
         if #(goal.recipes or {}) == 0 and not (ns.Sisters and ns.Sisters.Butler("ts")) then
-            GameTooltip:AddLine(L["With Blackthornes Tradeskills, the trainers' recipes you can learn are counted too."],
+            GameTooltip:AddLine(L["With Blackthornes Tradeskills, this also counts recipes you can learn from trainers."],
                 Theme.Muted(true))
         end
     elseif goal.kind == "riding" and goal.riding then
