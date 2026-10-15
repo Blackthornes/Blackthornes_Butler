@@ -500,6 +500,18 @@ suite.check("banked materials still say to take them out",
     detail == "6 Wool Cloth, so Bo Smith can make 2 Bolt of Woolen Cloth. Take 2 Wool Cloth out of the bank first.",
     detail)
 
+-- 7b. Plain crafts: the most bag slots freed first, other steps stay put.
+local function craftStep(id, slots)
+    return { kind = "craft", recipeID = id, itemID = 900 + id, slots = slots, missing = {}, ready = true }
+end
+local ordered = Jobs.Order({ craftStep(1, 0), { kind = "cooldown", name = "Transmute" },
+    craftStep(2, 4), craftStep(3, 4), craftStep(4, 1) }, {})
+local ids = {}
+for _, step in ipairs(ordered) do ids[#ids + 1] = step.recipeID or step.kind end
+suite.check("crafts freeing more slots come first", table.concat(ids, ",") == "2,cooldown,3,4,1", table.concat(ids, ","))
+ordered = Jobs.Order({ craftStep(1), craftStep(2) }, {})
+suite.check("with no slot counts the order stays", ordered[1].recipeID == 1 and ordered[2].recipeID == 2)
+
 -- 8. Wrong shapes and errors.
 local clean = Jobs.Clean({ { name = "X", steps = { { kind = "craft" }, { kind = "mail", to = "Y", items = {} },
     "junk", { kind = "dance" } } }, "junk", { steps = {} } })

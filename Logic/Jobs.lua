@@ -235,6 +235,25 @@ function Jobs.Order(steps, made)
         return a.index < b.index
     end)
 
+    -- The plain crafts: the ones freeing the most bag slots first (Tradeskills
+    -- gives `slots` for the character playing). They swap places among
+    -- themselves; other steps stay where they were, and ties keep order.
+    local places = {}
+    for position, step in ipairs(rest) do
+        if step.kind == "craft" and type(step.slots) == "number" then
+            places[#places + 1] = { position = position, step = step, index = #places + 1 }
+        end
+    end
+    if #places > 1 then
+        local sorted = {}
+        for i, place in ipairs(places) do sorted[i] = place end
+        table.sort(sorted, function(a, b)
+            if a.step.slots ~= b.step.slots then return a.step.slots > b.step.slots end
+            return a.index < b.index
+        end)
+        for i, place in ipairs(places) do rest[place.position] = sorted[i].step end
+    end
+
     local ordered = {}
     for _, step in ipairs(pickups) do ordered[#ordered + 1] = step end
     for _, get in ipairs(Jobs.GetSteps(steps, made)) do ordered[#ordered + 1] = get end
