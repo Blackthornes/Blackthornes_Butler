@@ -4,6 +4,19 @@ Versions follow [semantic versioning](https://semver.org): the middle number
 moves for new behaviour, the last for fixes alone. The newest version goes at
 the top; a release is refused if its version has no section here.
 
+## 0.11.0
+
+For WoW: Forever (interface 16001). `/reload` is enough after updating.
+
+- **Bank alt:** type the name of a character on your other account.
+- **Disenchanting:** a green goes to your disenchanter, or to levelling
+  Enchanting, only when breaking it pays at least what selling would.
+  "Always Disenchant:" (Selling page, off until ticked) sends it anyway.
+- **Trash can:** two short stacks of one item that fit in one slot come
+  first, and a click joins them. A trade good counts as 1.5 times its worth,
+  so close calls go to junk.
+- **Bug fixes:** various fixes to Butler.
+
 ## 0.10.0
 
 For WoW: Forever (interface 16001). `/reload` is enough.
