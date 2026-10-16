@@ -9,6 +9,8 @@
 --      gets mail.
 --   3. Keeping still wins: an upgrade here stays.
 --   4. With nobody typed in Tradeskills, nothing changes.
+--   5. With "Always Disenchant" unticked (the default), only when breaking
+--      it pays as much as selling it (a player asked, 2026-10-16).
 
 local env = dofile(lfs_cwd .. "/tools/testenv.lua")
 local suite = env.NewSuite("disenchantermail")
@@ -20,6 +22,8 @@ env.FakeBags({
     { bag = 0, slot = 3, id = 603, name = "Linen Cloth", quality = 1, price = 13, count = 20 },
 })
 env.Enable(ns)
+-- 1 to 4 tick "Always Disenchant"; 5 checks the default.
+ns.db.disenchantAnyPrice = true
 
 local Verdicts = ns.Verdicts
 
@@ -31,11 +35,11 @@ local function Find(name)
     end
 end
 
-local typed, upgrade = "Dusty Anvil", false
+local typed, upgrade, auction = "Dusty Anvil", false, 50000
 _G.BlackthornesTS = { Butler = {
     Advise = function(_, id)
         if id == 601 or id == 602 then
-            return { auction = 50000, disenchant = 900, canDisenchant = false, disenchanter = typed }
+            return { auction = auction, disenchant = 900, canDisenchant = false, disenchanter = typed }
         end
         if id == 603 then return { auction = 40 } end
     end,
@@ -74,6 +78,16 @@ upgrade = false
 typed = nil
 Verdicts:Changed(true)
 suite.check("nobody typed: no disenchanter mail", Find("Ridge Cleaver").verdict == "auction",
+    Find("Ridge Cleaver").verdict)
+
+-- 5. Unticked: the auction house pays more, so it goes to auction.
+typed = "Dusty Anvil"
+Verdicts:SetAlwaysDisenchant(false)
+suite.check("selling pays more: not mailed", Find("Ridge Cleaver").verdict == "auction",
+    Find("Ridge Cleaver").verdict)
+auction = 500
+Verdicts:Changed(true)
+suite.check("breaking it pays more: mailed", Find("Ridge Cleaver").verdict == "mail",
     Find("Ridge Cleaver").verdict)
 
 suite.done()

@@ -737,9 +737,9 @@ L["Elemental"] = "Elementar"
 L["Enchanting materials"] = "Verzauberkunstmaterial"
 L["Other trade goods"] = "Andere Handwerkswaren"
 L["Gear that binds when worn"] = "Ausrüstung, die beim Anlegen gebunden wird"
-L["Before selling"] = "Vor dem Verkauf"
-L["Before a vendor"] = "Vor dem Händler"
-L["Only leftovers"] = "Nur der Rest"
+L["Before Everything"] = "Vor allem anderen"
+L["Before a Vendor"] = "Vor dem Händler"
+L["Only Leftovers"] = "Nur der Rest"
 L["On your %s list"] = "Auf deiner Liste %s"
 L["%s, for your bank alt %s"] = "%s, für deinen Bankcharakter %s"
 L["no bank alt yet. Pick one on the Bank alt page in Settings, or type /bbutler bankalt Full Name."] = "noch kein Bankcharakter. Wähle einen in den Einstellungen auf der Seite Bankcharakter oder tippe /bbutler bankalt Vorname Nachname."
@@ -837,11 +837,21 @@ L["Items Held Back:"] = "Zurückgehalten:"
 L["Lets these items go to this character again."] =
     "Diese Gegenstände dürfen wieder an diesen Charakter gehen."
 L["Send To:"] = "Senden an:"
-L["The character that gets the kinds of items you tick. Fill Mail sends them."] =
-    "Der Charakter, der die angehakten Arten von Gegenständen bekommt. Post füllen schickt sie."
+L["The character that gets the kinds of items you tick. Fill Mail sends them. A name in amber isn't one of your characters here."] =
+    "Der Charakter, der die angehakten Arten von Gegenständen bekommt. Post füllen schickt sie. Ein Name in Bernstein ist keiner deiner Charaktere hier."
 L["When:"] = "Wann:"
-L["Before Selling sends everything ticked. Before a Vendor sells or auctions first. Only Leftovers sends what's left."] =
-    "Vor dem Verkauf schickt alles Angehakte. Vor dem Händler verkauft oder versteigert erst. Nur der Rest schickt, was übrig bleibt."
+L["Before Everything sends what you tick, even things that sell well. Before a Vendor lets the auction house and disenchanting go first. Only Leftovers sends what's left."] =
+    "Vor allem anderen schickt alles Angehakte, auch was sich gut verkauft. Vor dem Händler lässt Auktionshaus und Entzaubern zuerst. Nur der Rest schickt, was übrig bleibt."
+L["Type a Name:"] = "Name eingeben:"
+L["For a character on your other account. Type the whole name, first and last."] =
+    "Für einen Charakter auf deinem anderen Account. Gib den ganzen Namen ein, Vor- und Nachname."
+L["First Last"] = "Vorname Nachname"
+L["Type the whole name, first and last."] = "Gib den ganzen Namen ein, Vor- und Nachname."
+L["%s is your bank alt. They aren't one of your characters here, so check the spelling."] =
+    "%s ist dein Bankcharakter. Das ist keiner deiner Charaktere hier, also prüf die Schreibweise."
+L["Always Disenchant:"] = "Immer entzaubern:"
+L["Greens go to disenchanting even when selling them pays more."] =
+    "Grüne Gegenstände werden entzaubert, auch wenn Verkaufen mehr bringt."
 L["Shopping List:"] = "Einkaufsliste:"
 L["Everything on this list goes to the bank alt too."] =
     "Alles auf dieser Liste geht auch an den Bankcharakter."

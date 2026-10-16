@@ -334,6 +334,12 @@ local DEFAULTS = {
     -- default). Never rename it.
     disenchantGreens = false,
 
+    -- Levelling Enchanting and Tradeskills' disenchanter take a green even
+    -- when a vendor or the auction house pays more (Verdicts:SellsForMore;
+    -- a player asked, the owner said yes, 2026-10-16, off by default).
+    -- Never rename it.
+    disenchantAnyPrice = false,
+
     -- The free bag space number on the backpack button (UI/FreeSpace.lua,
     -- asked 2026-10-11).
     freeSpace = true,

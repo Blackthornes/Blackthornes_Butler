@@ -240,6 +240,7 @@ function SettingsUI.CharacterPicker(row, x, onChange)
     text:SetPoint("LEFT", 26, 0)
     text:SetPoint("RIGHT", -26, 0)
     text:SetWordWrap(true)
+    picker.text = text
 
     local function Show()
         local count = #picker.names
@@ -328,6 +329,7 @@ function SettingsUI:SyncBankAlt()
     for _, name in ipairs(sorted) do names[#names + 1] = name end
     controls.bankAltPick:SetNames(names)
     controls.bankAltPick:Select(picked)
+    controls.bankAltPick.text:SetTextColor(Theme.Unpack((picked and not BankAlt:IsKnown(picked)) and "warn" or "text"))
 
     local lists = { L["None"] }
     for _, name in ipairs(BankAlt:ListNames()) do lists[#lists + 1] = name end
@@ -421,6 +423,16 @@ function SettingsUI:BuildPages()
     end)
     controls.disenchantGreens:SetPoint("TOPLEFT", CONTROL_X, -2)
 
+    -- A player asked, the owner said yes (2026-10-16): your disenchanter and
+    -- levelling Enchanting take a green only when breaking it pays as much
+    -- as selling it, unless this is ticked.
+    local alwaysRow = pages:Row("selling", 1, L["Always Disenchant:"],
+        L["Greens go to disenchanting even when selling them pays more."])
+    controls.alwaysDisenchant = Widgets.CreateCheckbox(alwaysRow, L["On"], function(checked)
+        ns.Verdicts:SetAlwaysDisenchant(checked)
+    end)
+    controls.alwaysDisenchant:SetPoint("TOPLEFT", CONTROL_X, -2)
+
     -- Asked 2026-10-11: anything worth less than this joins Sell. It only
     -- ever adds to Sell; nothing sells until the player clicks.
     pages:Section("selling", 2, L["JUNK"])
@@ -484,14 +496,27 @@ function SettingsUI:BuildPages()
     pages:Section("bankalt", 1, L["BANK ALT"])
 
     local altRow = pages:Row("bankalt", 1, L["Send To:"],
-        L["The character that gets the kinds of items you tick. Fill Mail sends them."])
+        L["The character that gets the kinds of items you tick. Fill Mail sends them. A name in amber isn't one of your characters here."])
     controls.bankAltPick = SettingsUI.CharacterPicker(altRow, CONTROL_X, function()
         local picker = controls.bankAltPick
         ns.BankAlt:SetName(picker.index > 1 and picker:GetName() or nil)
     end)
 
+    -- A character on another account, typed by hand (a player asked, the
+    -- owner said yes, 2026-10-16). A name that isn't one of the player's
+    -- characters shows in amber on the Send To row, so a typo stands out.
+    local typeRow = pages:Row("bankalt", 1, L["Type a Name:"],
+        L["For a character on your other account. Type the whole name, first and last."])
+    controls.bankAltTyped = Widgets.CreateSearchBox(typeRow, L["First Last"], nil, function(text)
+        local name, why = ns.BankAlt:TypeName(text)
+        controls.bankAltTyped:SetText("")
+        if not name and why then ns.Print(why) end
+    end, { plain = true })
+    controls.bankAltTyped:SetPoint("TOPLEFT", CONTROL_X, 0)
+    controls.bankAltTyped:SetWidth(180)
+
     local whenRow = pages:Row("bankalt", 1, L["When:"],
-        L["Before Selling sends everything ticked. Before a Vendor sells or auctions first. Only Leftovers sends what's left."])
+        L["Before Everything sends what you tick, even things that sell well. Before a Vendor lets the auction house and disenchanting go first. Only Leftovers sends what's left."])
     controls.bankAltWhen = Widgets.CreateStepper(whenRow, {
         min = 1, max = #ns.BankAlt.WHEN, step = 1,
         format = function(value) return ns.BankAlt.WHEN_LABELS[ns.BankAlt.WHEN[value]] end,
@@ -728,6 +753,7 @@ function SettingsUI:Refresh()
     controls.fillNext:SetChecked(ns.db.fillNext ~= false)
     controls.altUpgrades:SetChecked(ns.Verdicts:AltUpgradesOn())
     controls.disenchantGreens:SetChecked(ns.Verdicts:DisenchantGreensOn())
+    controls.alwaysDisenchant:SetChecked(ns.Verdicts:AlwaysDisenchantOn())
     controls.jobsAtLogin:SetChecked(ns.db.jobsAtLogin ~= false)
     controls.questItems:SetChecked(ns.Quests:IsOn())
     controls.openAtBank:SetChecked(ns.db.openAtBank ~= false)

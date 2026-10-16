@@ -323,7 +323,12 @@ function Verdicts:Decide(entry, noAlt)
     verdict, reason, worth, extra = self:Bought(entry, said)
     if verdict then return verdict, reason, worth or unit, unit ~= nil, extra end
 
-    if not noAlt then
+    -- Levelling Enchanting and Tradeskills' disenchanter only take an item
+    -- that pays as much broken as sold (a player asked, the owner said
+    -- yes, 2026-10-16), unless "Always Disenchant" is ticked.
+    local breakIt = not self:SellsForMore(entry, said, unit)
+
+    if not noAlt and breakIt then
         verdict, reason, worth, extra = self:ForEnchanting(entry, said)
         if verdict then return verdict, reason, worth or unit, unit ~= nil, extra end
     end
@@ -331,8 +336,10 @@ function Verdicts:Decide(entry, noAlt)
     verdict, reason, worth, extra = self:GreensHere(entry, said)
     if verdict then return verdict, reason, worth or unit, unit ~= nil, extra end
 
-    verdict, reason, worth, extra = self:ForDisenchanter(entry, said)
-    if verdict then return verdict, reason, worth or unit, unit ~= nil, extra end
+    if breakIt then
+        verdict, reason, worth, extra = self:ForDisenchanter(entry, said)
+        if verdict then return verdict, reason, worth or unit, unit ~= nil, extra end
+    end
 
     -- A habit of mailing it to one of the player's characters: soulbound
     -- can't go, and never to the character playing.
@@ -803,6 +810,39 @@ end
 function Verdicts:SetDisenchantGreens(on)
     if not ns.db then return end
     ns.db.disenchantGreens = on and true or false
+    self:Changed(true)
+end
+
+--- Does a vendor or the auction house pay more for the item than what
+--- breaking it gives? Asked before Levelling Enchanting and Tradeskills'
+--- disenchanter (a player asked, the owner said yes, 2026-10-16), so a
+--- green that sells for more is sold instead. The auction house counts as
+--- Verdicts:Best counts it (after the cut, less when it sells slowly).
+--- False when nothing says what breaking it gives, or while "Always
+--- Disenchant" is ticked.
+function Verdicts:SellsForMore(entry, said, unit)
+    if self:AlwaysDisenchantOn() then return false end
+    local Number = Sisters.Number
+    local ts = said and said.ts
+    local disenchant = Number(ts, "disenchant")
+    if not disenchant then return false end
+    local most = unit or 0
+    local auction = not entry.bound and Number(ts, "auction") or nil
+    if auction then
+        if ts.fast == false then auction = math.floor(auction * Verdicts.SLOW) end
+        most = math.max(most, auction)
+    end
+    return most > disenchant
+end
+
+--- Whether "Always Disenchant" is ticked: off unless the player ticks it.
+function Verdicts:AlwaysDisenchantOn()
+    return ns.db ~= nil and ns.db.disenchantAnyPrice == true
+end
+
+function Verdicts:SetAlwaysDisenchant(on)
+    if not ns.db then return end
+    ns.db.disenchantAnyPrice = on and true or false
     self:Changed(true)
 end
 

@@ -10,6 +10,8 @@
 --      usual verdict.
 --   3. Keeping and the Always sell list still win.
 --   4. Not when this character can't break it, and never for a blue.
+--   5. With "Always Disenchant" unticked (the default), only greens that
+--      pay as much broken as sold (a player asked, 2026-10-16).
 
 local env = dofile(lfs_cwd .. "/tools/testenv.lua")
 local suite = env.NewSuite("levelenchanting")
@@ -22,6 +24,8 @@ env.FakeBags({
     { bag = 0, slot = 4, id = 704, name = "Silver Defias Belt", quality = 3, price = 900 },
 })
 env.Enable(ns)
+-- 1 to 4 tick "Always Disenchant"; 5 checks the default.
+ns.db.disenchantAnyPrice = true
 
 local Verdicts = ns.Verdicts
 
@@ -33,12 +37,12 @@ local function Find(name)
     end
 end
 
-local can, short, upgrade = true, 2, false
+local can, short, upgrade, auction = true, 2, false, 50000
 local wanted = { recipe = "Enchant Bracer - Minor Health", material = 10940,
     materialName = "Strange Dust", yield = 1.125 }
 _G.BlackthornesTS = { Butler = {
     Advise = function(_, id)
-        local answer = { auction = 50000, disenchant = 900, canDisenchant = can }
+        local answer = { auction = auction, disenchant = 900, canDisenchant = can }
         if id ~= 704 then
             answer.forEnchanting = { recipe = wanted.recipe, material = wanted.material,
                 materialName = wanted.materialName, yield = wanted.yield, short = short }
@@ -89,5 +93,15 @@ can = true
 short = 0
 Verdicts:Changed(true)
 suite.check("nothing short: its usual verdict", Verdict("Ridge Cleaver") == "auction", Verdict("Ridge Cleaver"))
+
+-- 5. Unticked: a green that sells for more is sold.
+short = 2
+Verdicts:SetAlwaysDisenchant(false)
+suite.check("selling pays more: its usual verdict", Verdict("Ridge Cleaver") == "auction", Verdict("Ridge Cleaver"))
+auction = 500
+Verdicts:Changed(true)
+local row = Find("Ridge Cleaver")
+suite.check("breaking it pays more: for Enchanting", row.verdict == "disenchant"
+    and row.reason:find("To level Enchanting", 1, true) ~= nil, row.reason)
 
 suite.done()

@@ -259,7 +259,12 @@ that character, whatever the auction house or a vendor pays; a soulbound
 copy and the character playing never get it. With nobody typed there,
 Tradeskills picks the alt with the most Enchanting (more than the
 character playing; its "Pick one for me", 2026-10-11), so Advise names
-that one; with that unticked too, nothing changes. Tested in `tools/test_disenchantermail.lua`.
+that one; with that unticked too, nothing changes. Since 2026-10-16 (a player asked) this and
+Levelling Enchanting take an item only when breaking it pays at least what
+a vendor or the auction house would (`Verdicts:SellsForMore`, the auction
+counted as `Best` counts it), unless "Always Disenchant" on the Selling page
+is ticked (`disenchantAnyPrice`, account wide, off unless ticked, never
+rename it). Disenchant greens here still takes every green. Tested in `tools/test_disenchantermail.lua`.
 
 ## The bank alt
 
@@ -273,13 +278,17 @@ or better gear that binds when worn, `bindType` 2), kept in
 `bankAltKinds[kind] = false` for each one unticked. With Tradeskills,
 everything on one shopping list goes too (`bankAltList`, its name;
 Tradeskills' `Butler:Lists()`, read once per `Verdicts.version`).
-`bankAltWhen` is where it sits: "first" (Before selling: whatever step 12
+`bankAltWhen` is where it sits: "first" (Before Everything: whatever step 12
 or 13 says), "vendor" (Before a vendor: only Sell and Look at it) or
 "leftovers" (only Look at it). `Verdicts:Decide` asks `BankAlt:Verdict`
 after `Best`, so the player's lists, sets, quest items, the sisters'
 Keep, an alt's queued crafts and every other mail come first; greys
 still sell, soulbound stays, and nothing goes to the character playing.
-The rows are Mail to the bank alt, so Fill mail sends them. All account
+The rows are Mail to the bank alt, so Fill mail sends them. A character on the player's other account can be typed (2026-10-16:
+"Type a Name:" on the page, or `/bbutler bankalt Full Name`;
+`BankAlt:TypeName` wants first and last unless it is one of this
+account's characters, and `BankAlt:IsKnown` turns the Send To name amber
+when it is not). All account
 wide, never rename them. A BANK ALT page in Settings and `/bbutler
 bankalt [Full Name|off|first|vendor|leftovers]`. Tested in
 `tools/test_bankalt.lua`.

@@ -15,6 +15,8 @@
 --   6. Gear that binds when worn is a kind; gear that binds on pickup isn't.
 --   7. Everything on the picked shopping list goes, whatever its kind.
 --   8. The command and Settings change the same saved values.
+--   9. A name typed for another account's character must be whole, first
+--      and last, and is known as not one of this account's characters.
 
 local env = dofile(lfs_cwd .. "/tools/testenv.lua")
 local suite = env.NewSuite("bankalt")
@@ -90,6 +92,18 @@ suite.check("saying why", linen.reason:find("Cloth, for your bank alt Banky Vaul
 suite.check("other trade goods go", ToBank("Tigerseye"))
 local recipient = ns.Errands:RecipientFor("Banky Vault")
 suite.check("Fill mail sends it", recipient ~= nil and recipient.count >= 20)
+
+-- 9. Typed names.
+suite.check("one of your characters is known", BankAlt:IsKnown("Banky Vault"))
+local kept, why = BankAlt:TypeName("Stranger")
+suite.check("a first name alone is refused", kept == nil and why ~= nil and ns.db.bankAlt == "Banky Vault",
+    tostring(ns.db.bankAlt))
+kept = BankAlt:TypeName("Otto Farside")
+suite.check("a whole name is kept", kept == "Otto Farside" and ns.db.bankAlt == "Otto Farside", tostring(kept))
+suite.check("and known as not one of yours", not BankAlt:IsKnown("Otto Farside"))
+suite.check("cloth goes to the typed name", Row("Linen Cloth").mailTo == "Otto Farside", Row("Linen Cloth").mailTo)
+suite.check("a first name of yours still works", BankAlt:TypeName("Banky") == "Banky Vault")
+suite.check("the label says Before Everything", BankAlt.WHEN_LABELS.first == "Before Everything")
 
 -- 3.
 suite.check("before selling, even what sells well at auction", ToBank("Light Leather"))
