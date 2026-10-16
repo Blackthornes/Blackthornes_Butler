@@ -62,9 +62,9 @@ end
 
 BankAlt.WHEN = { "first", "vendor", "leftovers" }
 BankAlt.WHEN_LABELS = {
-    first = L["Before selling"],
-    vendor = L["Before a vendor"],
-    leftovers = L["Only leftovers"],
+    first = L["Before Everything"],
+    vendor = L["Before a Vendor"],
+    leftovers = L["Only Leftovers"],
 }
 
 -- Which of Butler's own verdicts each pick takes over.
@@ -97,6 +97,35 @@ function BankAlt:SetName(name)
     if name and ns.Errands and ns.Errands.FullName then name = ns.Errands:FullName(name) end
     ns.db.bankAlt = name
     self:Changed()
+end
+
+--- Is the name one of the player's characters on this account (this
+--- realm and side, or the one playing)? A name typed for a character on
+--- another account is not, so Settings and chat say to check its spelling.
+function BankAlt:IsKnown(name)
+    name = Text(name)
+    if not name then return false end
+    if ns.Verdicts and ns.Verdicts:IsMe(name) then return true end
+    local lower = name:lower()
+    for _, each in ipairs(ns.Errands and ns.Errands:Characters() or {}) do
+        if each:lower() == lower then return true end
+    end
+    return false
+end
+
+--- Set a name the player typed (a character on another account, say). A
+--- name that is not one of their characters must be whole, first and
+--- last, so a first name alone never fills a stranger's mail. Returns the
+--- name kept, or nil and why.
+function BankAlt:TypeName(name)
+    name = Text(name)
+    if not name then return nil end
+    if ns.Errands and ns.Errands.FullName then name = ns.Errands:FullName(name) end
+    if not self:IsKnown(name) and not name:find("%S%s+%S") then
+        return nil, L["Type the whole name, first and last."]
+    end
+    self:SetName(name)
+    return self:Name()
 end
 
 --- "first", "vendor" or "leftovers".
@@ -270,8 +299,12 @@ ns.RegisterCommand("bankalt", L["mail whole kinds of items to one of your charac
         BankAlt:SetWhen(word)
         ns.Print(L.Format("the bank alt is now set to: %s.", BankAlt.WHEN_LABELS[word]))
     else
-        BankAlt:SetName(rest)
-        if ns.Verdicts:IsMe(BankAlt:Name()) then
+        local name, why = BankAlt:TypeName(rest)
+        if not name then
+            ns.Print(why)
+        elseif not BankAlt:IsKnown(name) then
+            ns.Print(L.Format("%s is your bank alt. They aren't one of your characters here, so check the spelling.", name))
+        elseif ns.Verdicts:IsMe(name) then
             ns.Print(L.Format("%s is your bank alt. You're playing it, so nothing gets mailed to it from here.", BankAlt:Name()))
         else
             ns.Print(L.Format("%s is your bank alt.", BankAlt:Name()))
