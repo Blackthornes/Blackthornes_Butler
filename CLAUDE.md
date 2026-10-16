@@ -880,7 +880,11 @@ asked, 2026-10-13, for it to go when a slot frees), a gold can
 never edit the TGA) sits on the top right of the stack worth the least
 (`Trash:Pick`: the verdict's `unit` times the stack) among items Butler
 would Sell, Auction or Disenchant anyway (`Trash.FROM`), priced, not
-locked, not a quest item. Keep, Mail, Bank, Wait and Look at it never get
+locked, not a quest item. A trade good counts as
+`Trash.MATERIAL_LEAN` (1.5) times its worth, so close calls go to junk;
+and two short stacks of one item that fit in one slot come first: the can
+says "Stack these to make room" and a click joins them (`Trash:Merge`,
+the owner 2026-10-16). Keep, Mail, Bank, Wait and Look at it never get
 it. Butler never deletes: a click picks the item up
 (`C_Container.PickupContainerItem`, after reading the slot again) and says
 to drop it outside the bags, where the game's own box asks first. The can

@@ -9,7 +9,13 @@
 -- craft material, pet food, anything under Keep, Mail, Bank, Wait or Look
 -- at it, and never an item Butler has no price for. The stack worth the
 -- least in all (Butler's own worth, the verdict's `unit`, times the stack)
--- gets the can.
+-- gets the can. A trade good (cloth, herbs, ore and the like) counts as
+-- `Trash.MATERIAL_LEAN` times its worth there, so when it is close the can
+-- leans to junk and leaves the material (the owner, 2026-10-16).
+--
+-- Stacking first (the owner, 2026-10-16): when two short stacks of one item
+-- fit in one slot, the can sits on the smaller one and says to stack them,
+-- whatever the item is. A click joins them; nothing has to go.
 --
 -- Nothing is ever deleted by Butler. A click on the can picks the item up
 -- and says so; the player drops it outside the bags and the game's own box
@@ -41,6 +47,11 @@ Trash.SHARE = 0.6
 
 -- The verdicts an item can be thrown away from.
 Trash.FROM = { sell = true, auction = true, disenchant = true }
+-- A trade good counts as this many times its worth when picking, so junk
+-- worth up to half as much again goes first.
+Trash.MATERIAL_LEAN = 1.5
+-- Enum.ItemClass.Tradegoods on every build.
+local TRADE_GOODS = 7
 
 local MAX_FRAMES = 13
 local MAX_BUTTONS = 36
@@ -161,8 +172,64 @@ end
 -- What to throw away
 --------------------------------------------------------------------------------
 
+--- How many of an item fit in one slot, or nil while the client does not say.
+function Trash.MaxStack(itemID)
+    local name, _, _, _, _, _, _, max = ns.Items.Call({ "C_Item.GetItemInfo", "GetItemInfo" }, itemID)
+    if not name then return nil end
+    return tonumber(max)
+end
+
+--- Two short stacks of one item that fit in one slot: { merge = true,
+--- entry, to, max }, or nil. The smaller stack (`entry`, in a bag that
+--- takes anything) goes onto the fullest stack that still has room for it.
+function Trash:Merge(bags)
+    local byItem = {}
+    for _, entry in pairs(ns.Bags.slots) do
+        if entry.itemID and not entry.locked then
+            local list = byItem[entry.itemID]
+            if not list then
+                list = {}
+                byItem[entry.itemID] = list
+            end
+            list[#list + 1] = entry
+        end
+    end
+    local function Before(a, b)
+        if (a.count or 1) ~= (b.count or 1) then return (a.count or 1) < (b.count or 1) end
+        if a.bag ~= b.bag then return a.bag < b.bag end
+        return a.slot < b.slot
+    end
+    local best
+    for itemID, list in pairs(byItem) do
+        local max = #list > 1 and self.MaxStack(itemID)
+        if max and max > 1 then
+            table.sort(list, Before)
+            for _, from in ipairs(list) do
+                if not bags or bags[from.bag] then
+                    local to
+                    for i = #list, 1, -1 do
+                        local other = list[i]
+                        if other ~= from and (from.count or 1) + (other.count or 1) <= max then
+                            to = other
+                            break
+                        end
+                    end
+                    if to then
+                        if not best or Before(from, best.entry) then
+                            best = { merge = true, entry = from, to = to, max = max }
+                        end
+                        break
+                    end
+                end
+            end
+        end
+    end
+    return best
+end
+
 --- The stack worth the least that may be thrown away: { entry, row, worth,
---- unit }, or nil. `bags` is the set of bag IDs that take anything.
+--- unit }, or nil. `bags` is the set of bag IDs that take anything. A trade
+--- good is weighed at MATERIAL_LEAN times its worth.
 function Trash:Pick(bags)
     local best
     for _, group in ipairs(ns.Verdicts:Groups()) do
@@ -173,10 +240,14 @@ function Trash:Pick(bags)
                     for _, entry in ipairs(row.slots) do
                         if not entry.locked and not entry.quest and (not bags or bags[entry.bag]) then
                             local worth = unit * (entry.count or 1)
-                            if not best or worth < best.worth
-                                or (worth == best.worth and (entry.bag < best.entry.bag
+                            local weight = worth
+                            if ns.Items.ClassID(entry.itemID) == TRADE_GOODS then
+                                weight = worth * self.MATERIAL_LEAN
+                            end
+                            if not best or weight < best.weight
+                                or (weight == best.weight and (entry.bag < best.entry.bag
                                     or (entry.bag == best.entry.bag and entry.slot < best.entry.slot))) then
-                                best = { entry = entry, row = row, worth = worth, unit = unit }
+                                best = { entry = entry, row = row, worth = worth, unit = unit, weight = weight }
                             end
                         end
                     end
@@ -244,7 +315,7 @@ end
 function Trash:Place(frames, bags)
     self.waiting = false
     if self.stale then return self:Changed() end
-    local pick = self:Pick(bags)
+    local pick = self:Merge(bags) or self:Pick(bags)
     local button = pick and self:FindButton(frames, pick.entry.bag, pick.entry.slot)
     if not button then return self:Hide() end
 
@@ -299,6 +370,17 @@ function Trash:ShowTooltip(owner)
     if not (pick and GameTooltip) then return end
     pcall(function()
         GameTooltip:SetOwner(owner, "ANCHOR_RIGHT")
+        if pick.merge then
+            local entry, to = pick.entry, pick.to
+            local name = ns.Items.NameFromLink(entry.link) or L.Format("item %s", tostring(entry.itemID))
+            GameTooltip:AddLine(L["Stack these to make room"], 1, 0.82, 0)
+            GameTooltip:AddLine(L.Format("%s x%d", name, entry.count or 1), 1, 1, 1)
+            GameTooltip:AddLine(L.Format("It fits on your other stack of %d.", to.count or 1), 1, 1, 1, true)
+            GameTooltip:AddLine(" ")
+            GameTooltip:AddLine(L["Click to stack them. Nothing is thrown away."], 0.2, 1, 0.2, true)
+            GameTooltip:Show()
+            return
+        end
         GameTooltip:AddLine(L["Throw away to make room"], 1, 0.82, 0)
         local row, count = pick.row, pick.entry.count or 1
         local name = row.name or L.Format("item %s", tostring(pick.entry.itemID))
@@ -327,10 +409,25 @@ function Trash:Take()
         self:Changed()
         return false
     end
+    if pick.merge then
+        local there = ns.Bags.ReadSlot(pick.to.bag, pick.to.slot)
+        if not there or there.key ~= pick.to.key then
+            self:Changed()
+            return false
+        end
+    end
     local cursor = rawget(_G, "GetCursorInfo")
     if type(cursor) == "function" and cursor() then
         ns.Print(L["Your cursor is already holding something. Put it down first."])
         return false
+    end
+    if pick.merge then
+        -- Pick the smaller stack up and drop it on the other: the game joins them.
+        local names = { "C_Container.PickupContainerItem", "PickupContainerItem" }
+        ns.Items.Call(names, entry.bag, entry.slot)
+        ns.Items.Call(names, pick.to.bag, pick.to.slot)
+        if GameTooltip then GameTooltip:Hide() end
+        return true
     end
     ns.Items.Call({ "C_Container.PickupContainerItem", "PickupContainerItem" }, entry.bag, entry.slot)
     if GameTooltip then GameTooltip:Hide() end
@@ -377,6 +474,11 @@ function Trash:ProbeText()
         parts[#parts + 1] = ("%d free of %d in the bags that take anything"):format(read.free, read.total)
         local bags = {}
         for _, entry in ipairs(read.bags) do bags[entry.bag] = true end
+        local merge = self:Merge(bags)
+        if merge then
+            parts[#parts + 1] = ("would stack bag %d slot %d onto bag %d slot %d"):format(merge.entry.bag,
+                merge.entry.slot, merge.to.bag, merge.to.slot)
+        end
         local pick = self:Pick(bags)
         if pick then
             parts[#parts + 1] = ("would pick bag %d slot %d, %s"):format(pick.entry.bag, pick.entry.slot,

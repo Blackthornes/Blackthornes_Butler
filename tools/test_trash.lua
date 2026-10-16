@@ -10,6 +10,9 @@
 --   5. A slot that changed, or a cursor already holding something, is left.
 --   6. Hidden in combat and at a vendor.
 --   7. Settings and /bbutler trash turn it off and on.
+--   8. A trade good only wins when it is well under the junk (MATERIAL_LEAN).
+--   9. Two short stacks of one item that fit together: the can says to
+--      stack them, and a click joins them; nothing is picked up to throw.
 
 local env = dofile(lfs_cwd .. "/tools/testenv.lua")
 local suite = env.NewSuite("trash")
@@ -146,5 +149,42 @@ local box = ns.SettingsUI.controls.trashCan
 suite.check("the Settings box shows it off", box ~= nil and not box:GetChecked())
 box:GetScript("OnClick")(box)
 suite.check("ticking it turns it back on", ns.db.trashCan == true and Showing())
+
+-- 8. A grey trade good a little cheaper than the pelt leaves the pelt.
+local function Again()
+    env.Fire("BAG_UPDATE_DELAYED")
+end
+fake.Put({ bag = 0, slot = 6, id = 710, name = "Frayed Cloth", quality = 0, price = 2, count = 2, class = 7 })
+Again()
+suite.check("cloth worth 4 against a pelt worth 5 leaves the pelt", Trash.pick and Trash.pick.entry.itemID == 702,
+    tostring(Trash.pick and Trash.pick.entry.itemID))
+fake.Put({ bag = 0, slot = 6, id = 710, name = "Frayed Cloth", quality = 0, price = 2, count = 1, class = 7 })
+Again()
+suite.check("cloth worth well under it is picked", Trash.pick and Trash.pick.entry.itemID == 710,
+    tostring(Trash.pick and Trash.pick.entry.itemID))
+fake.bags[0][6] = nil
+Again()
+
+-- 9. A second Broken Fang stack that the first fits on.
+fake.Put({ bag = 0, slot = 5, id = 701, name = "Broken Fang", quality = 0, price = 12, count = 4 })
+Again()
+suite.check("two short stacks: the can says to stack them", Trash.pick and Trash.pick.merge == true)
+suite.check("on the smaller stack", Trash.can._point and Trash.can._point[2] == buttons[1])
+GameTooltip._lines = {}
+Trash.can:GetScript("OnEnter")(Trash.can)
+lines = table.concat(GameTooltip._lines, "\n")
+suite.check("the tooltip says to stack them", lines:find("Stack these to make room", 1, true) ~= nil, lines)
+suite.check("and never to throw away", lines:find("Throw away", 1, true) == nil, lines)
+picked = {}
+Trash.can:GetScript("OnClick")(Trash.can)
+suite.check("a click picks up the small stack and drops it on the other",
+    picked[1] == "0:1" and picked[2] == "0:5", table.concat(picked, ","))
+suite.check("and nothing is deleted", deleted == 0)
+
+-- A full stack beside a short one: nothing to stack, back to throwing away.
+fake.Put({ bag = 0, slot = 5, id = 701, name = "Broken Fang", quality = 0, price = 12, count = 18, stack = 20 })
+Again()
+suite.check("stacks that don't fit together are left", Trash.pick and not Trash.pick.merge
+    and Trash.pick.entry.itemID == 702, tostring(Trash.pick and Trash.pick.entry.itemID))
 
 suite.done()
