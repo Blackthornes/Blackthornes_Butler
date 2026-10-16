@@ -230,7 +230,7 @@ function env.FakeBags(items)
         GetItemInfo = function(id)
             local item = fake.info[id]
             if not item or item.price == nil then return nil end
-            return item.name, Link(item), item.quality, 1, 1, "Misc", "Misc", 20, "", 134400, item.price,
+            return item.name, Link(item), item.quality, 1, 1, "Misc", "Misc", item.stack or 20, "", 134400, item.price,
                 item.class or 15, item.subclass or 0, item.bind or 0
         end,
         GetItemInfoInstant = function(id)
