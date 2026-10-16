@@ -23,6 +23,18 @@ tell a friend: no hype, no questions to the reader, no exclamation marks
 outside the thanks line, no dashes as punctuation, no "now you can". The
 tool prints a note for a shipped line that reads like an advert.
 
+## 0.11.0
+
+- Type the name of a character on your other account as your bank alt.
+- Greens go to your disenchanter only when breaking them pays at least what selling would. A new option sends them anyway.
+- When your bags are full, the trash can points at two short stacks you can join first, so nothing gets thrown away.
+
+Fixes and changes:
+
+- Various fixes to Butler.
+
+Thanks Ezmode for the ideas!
+
 ## 0.10.0
 
 - The Craft button opens the profession window first when it's closed.
