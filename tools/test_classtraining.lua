@@ -82,6 +82,20 @@ suite.check("Classic's price stands in until a trainer is seen", plan.cost == 15
 -- 2. The next level.
 suite.check("the next level is 14", plan.nextLevel == 14 and #plan.next == 2)
 
+-- 2b. The game can drop an older rank from the book once a newer one is
+-- learned: knowing Frostbolt Rank 2 alone means Rank 1 is known too.
+known = { [2] = true }
+CT:Changed()
+plan = CT:Plan()
+ids = {}
+for _, spell in ipairs(plan.ready) do ids[#ids + 1] = spell.id end
+suite.check("an older rank is never offered once a newer one is known",
+    table.concat(ids, ",") == "3,4,6", table.concat(ids, ","))
+suite.check("the ranks before a known one count as known", CT.KnownIn(ns.CLASS_SPELLS.MAGE)[1] == true)
+known = { [1] = true }
+CT:Changed()
+plan = CT:Plan()
+
 -- 3. At a class trainer. The list hides spells not learnable yet; the
 -- addon shows them to read prices, then hides them again.
 local filterShown = false

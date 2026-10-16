@@ -159,6 +159,27 @@ function CT.Known(spellID)
     return false
 end
 
+--- The spell IDs of the class list the character playing knows: each the
+--- client says it knows, and every rank before one it knows, since the
+--- game can take an older rank out of the spell book once a newer rank is
+--- learned (Backstab Rank 1 asked for again once Rank 2 was known).
+function CT.KnownIn(list)
+    local before, known = {}, {}
+    for _, entry in ipairs(list) do
+        if entry[6] then before[entry[1]] = entry[6] end
+    end
+    for _, entry in ipairs(list) do
+        local id = entry[1]
+        if not known[id] and CT.Known(id) then
+            while id and not known[id] do
+                known[id] = true
+                id = before[id]
+            end
+        end
+    end
+    return known
+end
+
 --- The spell's name in the client's language, else the data's English.
 function CT.SpellName(entry)
     local name = Text(Call("C_Spell.GetSpellName", entry[1]))
@@ -241,15 +262,16 @@ function CT:Work(player)
     -- Spells learned before this one, or trained in the same visit (Train
     -- all learns them in order).
     local will = {}
+    local knownIn = self.KnownIn(list)
     for _, entry in ipairs(list) do
         local id = entry[1]
         if not notTaught[id] and RaceOK(entry, player.race) then
-            local known = self.Known(id)
+            local known = knownIn[id]
             if known then
                 will[id] = true
             elseif entry[2] <= player.level then
                 local before = entry[6]
-                if not before or will[before] or self.Known(before) then
+                if not before or will[before] or knownIn[before] then
                     will[id] = true
                     plan.ready[#plan.ready + 1] = Spell(entry, prices)
                 end
@@ -501,9 +523,11 @@ function CT:ReadTrainer()
     -- A spell up to the level the list covers that it doesn't teach, and
     -- this character doesn't know, comes from somewhere else (a quest).
     if sawLater then upTo = math.huge end
-    for _, entry in ipairs(ns.CLASS_SPELLS[player.class] or {}) do
+    local classList = ns.CLASS_SPELLS[player.class] or {}
+    local knownIn = self.KnownIn(classList)
+    for _, entry in ipairs(classList) do
         if entry[2] <= upTo and not listed[entry[1]] and RaceOK(entry, player.race)
-            and not self.Known(entry[1]) then
+            and not knownIn[entry[1]] then
             data.notTaught[entry[1]] = true
         end
     end
