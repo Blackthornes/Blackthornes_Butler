@@ -1,7 +1,16 @@
 -- Blackthornes Butler -- Logic/Verdicts.lua
 -- One verdict for every item in the bags, and the reason for it.
 --
--- The first rule that applies wins, and keeping always beats selling:
+-- The first rule that applies wins, and keeping always beats selling.
+-- This is the usual order (Verdicts.DEFAULT_ORDER, the steps in
+-- Verdicts.STEPS). Since 2026-10-17 the player can move the rules between
+-- sets and quests (always first) and the best price and Look at it
+-- (always last) on Settings' Order page, and turn them off, saved account
+-- wide as ruleOrder (a list of rule ids, nil for the usual order) and
+-- rulesOff ([id] = true); never rename either. Whatever the order, an
+-- upgrade to wear now is never sold, auctioned, broken or mailed but by
+-- the player's own lists, nothing bound is mailed and nothing is mailed
+-- to the character playing (Allowed).
 --
 --   0. In one of the player's equipment sets       Keep
 --   1. On the player's Always keep list            Keep
@@ -186,81 +195,209 @@ function Verdicts:Judge(entry, noAlt)
     return verdict, reason, unit, extra
 end
 
---- The rules above, in order. The fourth return says whether the answer
---- will hold (false while the price is still loading); the fifth is who a
---- Mail row goes to and how many ({ to, count }).
-function Verdicts:Decide(entry, noAlt)
-    local itemID = entry.itemID
-    -- Gear in one of the player's equipment sets is never sold, mailed or
-    -- broken, whatever a list or a sister says (a player asked, 2026-10-13).
-    local set = self:InSet(itemID)
+--------------------------------------------------------------------------------
+-- The order the rules are asked in
+--------------------------------------------------------------------------------
+
+-- The player can drag the rules into their own order and turn some off on
+-- the Order page of Settings (the owner said build it, 2026-10-17). Two
+-- rules always come first (equipment sets and quest items), and the best
+-- price, then Look at it, always come last. Saved account wide, never
+-- renamed: ruleOrder (a list of the ids below, in the player's order) and
+-- rulesOff ([id] = true for a rule turned off). Without either, Butler
+-- judges exactly as it always has.
+Verdicts.FIRST = { "sets", "quests" }
+Verdicts.DEFAULT_ORDER = {
+    "keepList", "bankList", "mailList", "buyback", "noValue", "sellList", "ammo",
+    "upgrades", "altCrafts", "goals", "queue", "altUpgrades", "petFood",
+    "bought", "levelEnch", "greensHere", "disenchanter", "mailHabit",
+    "sellHabit", "greys", "bankAlt", "sellBelow",
+}
+Verdicts.LAST = { "best", "look" }
+
+-- Rules that are turned on and off by a setting of their own rather than
+-- rulesOff: Verdicts:RuleOn and :SetRuleOn read and write that setting.
+local OWN_SWITCH = {
+    altUpgrades = { on = function() return Verdicts:AltUpgradesOn() end,
+        set = function(on) Verdicts:SetAltUpgrades(on) end },
+    greensHere = { on = function() return Verdicts:DisenchantGreensOn() end,
+        set = function(on) Verdicts:SetDisenchantGreens(on) end },
+    -- These need an amount or a character, so their own page turns them on.
+    sellBelow = { on = function() return Verdicts:SellBelow() ~= nil end },
+    bankAlt = { on = function() return ns.BankAlt ~= nil and ns.BankAlt:Name() ~= nil end },
+}
+Verdicts.OWN_SWITCH = OWN_SWITCH
+
+local KNOWN = {}
+for _, id in ipairs(Verdicts.DEFAULT_ORDER) do KNOWN[id] = true end
+
+local orderCache, orderSaved
+
+--- The movable rules in the player's order: the saved list with any id it
+--- doesn't know dropped and any it lacks put back where the default has
+--- it (after the rule it follows there), so an update that adds a rule
+--- never loses the player's order.
+function Verdicts:Order()
+    local saved = ns.db and ns.db.ruleOrder
+    if orderCache and orderSaved == saved then return orderCache end
+    local order, seen = {}, {}
+    if type(saved) == "table" then
+        for _, id in ipairs(saved) do
+            if type(id) == "string" and KNOWN[id] and not seen[id] then
+                order[#order + 1] = id
+                seen[id] = true
+            end
+        end
+    end
+    for i, id in ipairs(self.DEFAULT_ORDER) do
+        if not seen[id] then
+            local at = 1
+            for back = i - 1, 1, -1 do
+                local before = self.DEFAULT_ORDER[back]
+                for j, have in ipairs(order) do
+                    if have == before then at = j + 1 break end
+                end
+                if at > 1 then break end
+            end
+            table.insert(order, at, id)
+            seen[id] = true
+        end
+    end
+    orderCache, orderSaved = order, saved
+    return order
+end
+
+--- Whether the order is the one Butler ships with.
+function Verdicts:IsDefaultOrder()
+    local order = self:Order()
+    for i, id in ipairs(self.DEFAULT_ORDER) do
+        if order[i] ~= id then return false end
+    end
+    return true
+end
+
+--- Save a new order (a list of ids); nil puts back the default.
+function Verdicts:SetOrder(order)
+    if not ns.db then return end
+    if order == nil then
+        ns.db.ruleOrder = nil
+    else
+        local copy = {}
+        for i, id in ipairs(order) do copy[i] = id end
+        ns.db.ruleOrder = copy
+        orderCache = nil
+        if self:IsDefaultOrder() then ns.db.ruleOrder = nil end
+    end
+    orderCache = nil
+    self:Changed(true)
+end
+
+--- Is this rule on? Rules are on unless turned off.
+function Verdicts:RuleOn(id)
+    local own = OWN_SWITCH[id]
+    if own then return own.on() == true end
+    local off = ns.db and ns.db.rulesOff
+    return not (type(off) == "table" and off[id] == true)
+end
+
+--- Turn a rule on or off. False for one that its own page turns on.
+function Verdicts:SetRuleOn(id, on)
+    if not ns.db or not KNOWN[id] then return false end
+    local own = OWN_SWITCH[id]
+    if own then
+        if not own.set then return false end
+        own.set(on)
+        return true
+    end
+    if type(ns.db.rulesOff) ~= "table" then ns.db.rulesOff = {} end
+    ns.db.rulesOff[id] = (not on) or nil
+    if next(ns.db.rulesOff) == nil then ns.db.rulesOff = nil end
+    self:Changed(true)
+    return true
+end
+
+--- Set Default: the shipped order with every rule on that rulesOff turned
+--- off. The rules with their own setting keep it.
+function Verdicts:SetDefault()
+    if not ns.db then return end
+    ns.db.ruleOrder, ns.db.rulesOff = nil, nil
+    orderCache = nil
+    self:Changed(true)
+end
+
+--------------------------------------------------------------------------------
+-- The rules
+--------------------------------------------------------------------------------
+
+-- What a rule reads, worked out once per item and only when a rule asks.
+local function Unit(c)
+    if not c.unitRead then c.unit, c.unitRead = Items:SellPrice(c.itemID), true end
+    return c.unit
+end
+
+local function Choice(c)
+    if not c.choiceRead then
+        c.choice, c.mailTo = Verdicts:Choice(c.itemID)
+        c.choiceRead = true
+    end
+    return c.choice, c.mailTo
+end
+
+-- What Butler learned from the player (Logic/Learning.lua), only for an
+-- item on none of the player's lists.
+local function Learned(c)
+    if not c.learnedRead then
+        c.learnedRead = true
+        if not Choice(c) and ns.Learning then c.learned, c.learnedTo = ns.Learning:Get(c.itemID) end
+    end
+    return c.learned, c.learnedTo
+end
+
+local function Said(c)
+    if not c.said then c.said = Sisters:AskAll(c.entry) end
+    return c.said
+end
+
+-- What Equipment says, asked once whichever rule asks first.
+local function Eq(c)
+    if c.said then return c.said.equipment end
+    if not c.eqRead then c.eq, c.eqRead = Sisters:Ask("equipment", c.entry), true end
+    return c.eq
+end
+
+-- Levelling Enchanting and Tradeskills' disenchanter only take an item
+-- that pays as much broken as sold (a player asked, the owner said yes,
+-- 2026-10-16), unless "Always Disenchant" is ticked.
+local function BreakIt(c)
+    if c.breakIt == nil then
+        c.breakIt = not Verdicts:SellsForMore(c.entry, Said(c), Unit(c))
+    end
+    return c.breakIt
+end
+
+-- A sister's answer: what one is worth falls back to the vendor's price,
+-- and it holds once that price has loaded.
+local function FromSister(c, verdict, reason, worth, extra)
+    if not verdict then return nil end
+    local unit = Unit(c)
+    return verdict, reason, worth or unit, unit ~= nil, extra
+end
+
+local STEPS = {}
+Verdicts.STEPS = STEPS
+
+-- Gear in one of the player's equipment sets is never sold, mailed or
+-- broken, whatever a list or a sister says (a player asked, 2026-10-13).
+function STEPS.sets(self, c)
+    local set = self:InSet(c.itemID)
     if set then
         return "keep", type(set) == "string" and L.Format("In your %s equipment set", set)
             or L["In one of your equipment sets"], nil, true
     end
-    local choice, mailTo = self:Choice(itemID)
+end
 
-    if choice == "keep" then
-        -- An alt's queued craft still gets its share, and the list keeps
-        -- the rest (the owner, 2026-10-11, whose leather on the
-        -- Always keep list was never offered to the alt crafting with it).
-        local verdict, reason, extra = self:ForAltCraft(entry)
-        if verdict then
-            return verdict, reason, Items:SellPrice(itemID), true, extra
-        end
-    end
-    if choice == "keep" then
-        return "keep", L["On your Always keep list"], nil, true
-    end
-    if choice == "bank" then
-        return "bank", L["On your Always bank list"], Items:SellPrice(itemID), true
-    end
-    if choice == "mail" then
-        -- Soulbound can't go in the mail, whatever the list says, and the
-        -- list is account wide, so it can name the character playing.
-        if self:IsMe(mailTo) then
-            return "keep", L.Format("On your Always mail list for %s, the character you're on", mailTo), nil, true
-        end
-        if entry.bound then
-            return "keep", L.Format("Soulbound, so it can't be mailed to %s", mailTo), nil, true
-        end
-        -- Gear Equipment says is an upgrade to wear now is not mailed away,
-        -- as on the Always sell list (the owner, 2026-10-17).
-        local eq = Sisters:Ask("equipment", entry)
-        if eq and eq.upgrade == "now" then
-            return "look", L["On your Always mail list, but it's an upgrade for you"], Items:SellPrice(itemID), true
-        end
-        -- This character's own queued crafts come first (the owner,
-        -- 2026-10-14): Tradeskills' `need` is what they still use from the
-        -- bags, so only what is left over goes in the mail.
-        local queued = Sisters.Number(Sisters:Ask("ts", entry), "need")
-        if queued and queued > 0 then
-            local spare = math.max(ns.Bags:Carried(itemID), entry.count or 1) - queued
-            if spare <= 0 then
-                return "keep", L.Format("On your Always mail list, but your craft queue needs %d", queued),
-                    nil, true
-            end
-            return "mail", L.Format("Mail %d to %s, keep %d for your craft queue", spare, mailTo, queued),
-                Items:SellPrice(itemID), true, { to = mailTo, count = spare }
-        end
-        return "mail", L.Format("On your Always mail list, to %s", mailTo), Items:SellPrice(itemID), true,
-            { to = mailTo }
-    end
-
-    -- What Butler learned from the player (Logic/Learning.lua): a buyback
-    -- keeps, here; a habit of selling or mailing waits for the sisters.
-    local learned, learnedTo
-    if not choice and ns.Learning then learned, learnedTo = ns.Learning:Get(itemID) end
-    if learned == "keep" then
-        -- A buyback keeps it here, but an alt's queued craft still gets
-        -- its share, as the Always keep list gives it.
-        local verdict, reason, extra = self:ForAltCraft(entry)
-        if verdict then
-            return verdict, reason, Items:SellPrice(itemID), true, extra
-        end
-        return "keep", ns.Learning.Reason("keep"), nil, true
-    end
-
+function STEPS.quests(self, c)
+    local entry = c.entry
     if entry.quest == "starts" then
         return "keep", L["Starts a quest"], nil, true
     elseif entry.quest == "item" then
@@ -268,114 +405,275 @@ function Verdicts:Decide(entry, noAlt)
     end
     -- An item an open quest collects, Murloc Eyes and the like, which the
     -- game does not mark as a quest item (Logic/Quests.lua).
-    local forQuest = ns.Quests and ns.Quests:Reason(itemID)
+    local forQuest = ns.Quests and ns.Quests:Reason(c.itemID)
     if forQuest then
         return "keep", forQuest, nil, true
     end
+end
 
-    local unit = Items:SellPrice(itemID)
-    if entry.noValue or unit == 0 then
-        -- No vendor pays for it, but an alt's queued craft may need it:
-        -- that share still goes in the mail (a player's alchemist was
-        -- never sent its materials, 2026-10-14).
-        local share = self:AltCraftShare(entry)
-        if share then
-            return "mail", L.Format("Mail %d to %s for their crafts", share.count, share.to),
-                (not entry.noValue) and 0 or nil, true, share
-        end
-        return "keep", L["Vendors won't buy it"], (not entry.noValue) and 0 or nil, true
+function STEPS.keepList(self, c)
+    if Choice(c) ~= "keep" then return nil end
+    -- An alt's queued craft still gets its share, and the list keeps
+    -- the rest (the owner, 2026-10-11, whose leather on the
+    -- Always keep list was never offered to the alt crafting with it).
+    local verdict, reason, extra = self:ForAltCraft(c.entry)
+    if verdict then
+        return verdict, reason, Unit(c), true, extra
     end
+    return "keep", L["On your Always keep list"], nil, true
+end
 
-    if choice == "sell" then
-        -- Always sell gives way to one thing: gear Equipment says is an
-        -- upgrade to wear now. It is not sold on a list made when it was junk.
-        local eq = Sisters:Ask("equipment", entry)
-        if eq and eq.upgrade == "now" then
-            return "look", L["On your Always sell list, but it's an upgrade for you"], unit, unit ~= nil
-        end
-        -- Nor what another character's queued craft needs: its share goes
-        -- in the mail first, as from the Always keep list (2026-10-14).
-        local share = self:AltCraftShare(entry)
-        if share then
-            return "mail", L.Format("Mail %d to %s for their crafts", share.count, share.to),
-                unit, unit ~= nil, share
-        end
-        -- Nor what a Farmer goal or this character's craft queue still
-        -- needs (the owner, 2026-10-14): the list is kept, and it sells
-        -- again once nothing needs it.
-        local goal = Sisters:Ask("farmer", entry)
-        local goalNeed = Sisters.Number(goal, "need")
-        if goalNeed and goalNeed > 0 then
-            return "keep", L.Format("On your Always sell list, but your goal needs %d more", goalNeed),
-                unit, unit ~= nil
-        end
-        local queued = Sisters.Number(Sisters:Ask("ts", entry), "need")
-        if queued and queued > 0 then
-            return "keep", L.Format("On your Always sell list, but your craft queue needs %d", queued),
-                unit, unit ~= nil
-        end
-        return "sell", L["On your Always sell list"], unit, unit ~= nil
+function STEPS.bankList(self, c)
+    if Choice(c) ~= "bank" then return nil end
+    return "bank", L["On your Always bank list"], Unit(c), true
+end
+
+function STEPS.mailList(self, c)
+    local choice, mailTo = Choice(c)
+    if choice ~= "mail" then return nil end
+    local entry, itemID = c.entry, c.itemID
+    -- Soulbound can't go in the mail, whatever the list says, and the
+    -- list is account wide, so it can name the character playing.
+    if self:IsMe(mailTo) then
+        return "keep", L.Format("On your Always mail list for %s, the character you're on", mailTo), nil, true
     end
-
-    -- A vendor always pays most for arrows and bullets, so the hunter's
-    -- own ammo is kept (Logic/Ammo.lua).
-    local ammo = ns.Ammo and ns.Ammo:Keeps(itemID)
-    if ammo then return "keep", ammo, unit, unit ~= nil end
-
-    local said = Sisters:AskAll(entry)
-    local verdict, reason, worth, extra = self:Kept(said, entry, noAlt)
-    if verdict then return verdict, reason, worth or unit, unit ~= nil, extra end
-
-    verdict, reason, worth, extra = self:Bought(entry, said)
-    if verdict then return verdict, reason, worth or unit, unit ~= nil, extra end
-
-    -- Levelling Enchanting and Tradeskills' disenchanter only take an item
-    -- that pays as much broken as sold (a player asked, the owner said
-    -- yes, 2026-10-16), unless "Always Disenchant" is ticked.
-    local breakIt = not self:SellsForMore(entry, said, unit)
-
-    if not noAlt and breakIt then
-        verdict, reason, worth, extra = self:ForEnchanting(entry, said)
-        if verdict then return verdict, reason, worth or unit, unit ~= nil, extra end
+    if entry.bound then
+        return "keep", L.Format("Soulbound, so it can't be mailed to %s", mailTo), nil, true
     end
-
-    verdict, reason, worth, extra = self:GreensHere(entry, said)
-    if verdict then return verdict, reason, worth or unit, unit ~= nil, extra end
-
-    if breakIt then
-        verdict, reason, worth, extra = self:ForDisenchanter(entry, said)
-        if verdict then return verdict, reason, worth or unit, unit ~= nil, extra end
+    -- Gear Equipment says is an upgrade to wear now is not mailed away,
+    -- as on the Always sell list (the owner, 2026-10-17).
+    local eq = Eq(c)
+    if eq and eq.upgrade == "now" then
+        return "look", L["On your Always mail list, but it's an upgrade for you"], Unit(c), true
     end
+    -- This character's own queued crafts come first (the owner,
+    -- 2026-10-14): Tradeskills' `need` is what they still use from the
+    -- bags, so only what is left over goes in the mail.
+    local queued = Sisters.Number(Sisters:Ask("ts", entry), "need")
+    if queued and queued > 0 then
+        local spare = math.max(ns.Bags:Carried(itemID), entry.count or 1) - queued
+        if spare <= 0 then
+            return "keep", L.Format("On your Always mail list, but your craft queue needs %d", queued),
+                nil, true
+        end
+        return "mail", L.Format("Mail %d to %s, keep %d for your craft queue", spare, mailTo, queued),
+            Unit(c), true, { to = mailTo, count = spare }
+    end
+    return "mail", L.Format("On your Always mail list, to %s", mailTo), Unit(c), true,
+        { to = mailTo }
+end
 
-    -- A habit of mailing it to one of the player's characters: soulbound
-    -- can't go, and never to the character playing.
-    if learned == "mail" and not entry.bound and not self:IsMe(learnedTo) then
+-- Butler sold it and the player bought it back: kept from then on, but an
+-- alt's queued craft still gets its share, as the Always keep list gives it.
+function STEPS.buyback(self, c)
+    if Learned(c) ~= "keep" then return nil end
+    local verdict, reason, extra = self:ForAltCraft(c.entry)
+    if verdict then
+        return verdict, reason, Unit(c), true, extra
+    end
+    return "keep", ns.Learning.Reason("keep"), nil, true
+end
+
+function STEPS.noValue(self, c)
+    local entry, unit = c.entry, Unit(c)
+    if not (entry.noValue or unit == 0) then return nil end
+    -- No vendor pays for it, but an alt's queued craft may need it:
+    -- that share still goes in the mail (a player's alchemist was
+    -- never sent its materials, 2026-10-14).
+    local share = self:AltCraftShare(entry)
+    if share then
+        return "mail", L.Format("Mail %d to %s for their crafts", share.count, share.to),
+            (not entry.noValue) and 0 or nil, true, share
+    end
+    return "keep", L["Vendors won't buy it"], (not entry.noValue) and 0 or nil, true
+end
+
+function STEPS.sellList(self, c)
+    if Choice(c) ~= "sell" then return nil end
+    local entry, unit = c.entry, Unit(c)
+    -- Always sell gives way to one thing: gear Equipment says is an
+    -- upgrade to wear now. It is not sold on a list made when it was junk.
+    local eq = Eq(c)
+    if eq and eq.upgrade == "now" then
+        return "look", L["On your Always sell list, but it's an upgrade for you"], unit, unit ~= nil
+    end
+    -- Nor what another character's queued craft needs: its share goes
+    -- in the mail first, as from the Always keep list (2026-10-14).
+    local share = self:AltCraftShare(entry)
+    if share then
+        return "mail", L.Format("Mail %d to %s for their crafts", share.count, share.to),
+            unit, unit ~= nil, share
+    end
+    -- Nor what a Farmer goal or this character's craft queue still
+    -- needs (the owner, 2026-10-14): the list is kept, and it sells
+    -- again once nothing needs it.
+    local goalNeed = Sisters.Number(Sisters:Ask("farmer", entry), "need")
+    if goalNeed and goalNeed > 0 then
+        return "keep", L.Format("On your Always sell list, but your goal needs %d more", goalNeed),
+            unit, unit ~= nil
+    end
+    local queued = Sisters.Number(Sisters:Ask("ts", entry), "need")
+    if queued and queued > 0 then
+        return "keep", L.Format("On your Always sell list, but your craft queue needs %d", queued),
+            unit, unit ~= nil
+    end
+    return "sell", L["On your Always sell list"], unit, unit ~= nil
+end
+
+-- A vendor always pays most for arrows and bullets, so the hunter's own
+-- ammo is kept (Logic/Ammo.lua).
+function STEPS.ammo(self, c)
+    local ammo = ns.Ammo and ns.Ammo:Keeps(c.itemID)
+    if ammo then
+        local unit = Unit(c)
+        return "keep", ammo, unit, unit ~= nil
+    end
+end
+
+function STEPS.upgrades(self, c)
+    return FromSister(c, self:KeptUpgrade(Said(c)))
+end
+
+function STEPS.altCrafts(self, c)
+    return FromSister(c, self:KeptAltCraft(Said(c), c.entry))
+end
+
+function STEPS.goals(self, c)
+    return FromSister(c, self:KeptGoal(Said(c)))
+end
+
+function STEPS.queue(self, c)
+    return FromSister(c, self:KeptQueue(Said(c), c.entry))
+end
+
+function STEPS.altUpgrades(self, c)
+    return FromSister(c, self:KeptAltUpgrade(Said(c), c.entry, c.noAlt))
+end
+
+function STEPS.petFood(self, c)
+    return FromSister(c, self:KeptPetFood(Said(c)))
+end
+
+function STEPS.bought(self, c)
+    return FromSister(c, self:Bought(c.entry, Said(c)))
+end
+
+function STEPS.levelEnch(self, c)
+    if c.noAlt or not BreakIt(c) then return nil end
+    return FromSister(c, self:ForEnchanting(c.entry, Said(c)))
+end
+
+function STEPS.greensHere(self, c)
+    return FromSister(c, self:GreensHere(c.entry, Said(c)))
+end
+
+function STEPS.disenchanter(self, c)
+    if not BreakIt(c) then return nil end
+    return FromSister(c, self:ForDisenchanter(c.entry, Said(c)))
+end
+
+-- A habit of mailing it to one of the player's characters: soulbound
+-- can't go, and never to the character playing.
+function STEPS.mailHabit(self, c)
+    local learned, learnedTo = Learned(c)
+    if learned == "mail" and not c.entry.bound and not self:IsMe(learnedTo) then
+        local unit = Unit(c)
         return "mail", ns.Learning.Reason("mail", learnedTo), unit, unit ~= nil, { to = learnedTo }
     end
+end
 
+-- A habit of selling it by hand. Soulbound green or better is never sold
+-- for the player, habit or not. The rules from here on wait for the price.
+function STEPS.sellHabit(self, c)
+    local unit = Unit(c)
+    if unit == nil or Learned(c) ~= "sell" then return nil end
+    if c.entry.bound and (c.entry.quality or 0) >= 2 then return nil end
+    return "sell", L.Format("%s: %s each", ns.Learning.Reason("sell"), Items.FormatMoney(unit)), unit, true
+end
+
+function STEPS.greys(self, c)
+    local unit = Unit(c)
+    if unit ~= nil and c.entry.quality == 0 then
+        return "sell", L["Grey, vendor only"], unit, true
+    end
+end
+
+-- The bank alt (Logic/BankAlt.lua) takes what the player's pick says from
+-- the best price on: everything, or only what a vendor would get, or only
+-- what is left to look at.
+function STEPS.bankAlt(self, c)
+    local unit = Unit(c)
+    if unit == nil or not ns.BankAlt then return nil end
+    local verdict, _, worth = self:Best(c.entry, unit, Said(c))
+    local bank, why, to = ns.BankAlt:Verdict(c.entry, verdict)
+    if bank then return bank, why, worth, true, to end
+end
+
+function STEPS.sellBelow(self, c)
+    local unit = Unit(c)
+    if unit == nil then return nil end
+    local verdict, reason, worth = self:BelowAmount(c.entry, unit, Said(c))
+    if verdict then return verdict, reason, worth, true end
+end
+
+function STEPS.best(self, c)
+    local unit = Unit(c)
+    if unit == nil then return nil end
+    local verdict, reason, worth, extra = self:Best(c.entry, unit, Said(c), true)
+    return verdict, reason, worth, true, extra
+end
+
+-- What no rule may do, whatever order they are in: mail soulbound or to
+-- the character playing, sell what no vendor buys, or let go of gear
+-- Equipment says to wear now (the two lists that ask about it themselves
+-- already said Look at it).
+local LETS_GO = { sell = true, auction = true, disenchant = true, mail = true }
+local function Allowed(self, c, id, verdict, extra)
+    if verdict == "mail" then
+        if c.entry.bound then return false end
+        if type(extra) == "table" and self:IsMe(extra.to) then return false end
+    end
+    if verdict == "sell" and (c.entry.noValue or Unit(c) == 0) then return false end
+    if LETS_GO[verdict] and id ~= "mailList" and id ~= "sellList" then
+        local eq = Eq(c)
+        if eq and eq.upgrade == "now" then return false end
+    end
+    return true
+end
+
+local function Ask(self, c, id)
+    local step = STEPS[id]
+    if not step then return nil end
+    local verdict, reason, unit, final, extra = step(self, c)
+    if verdict and Allowed(self, c, id, verdict, extra) then
+        return verdict, reason, unit, final, extra
+    end
+end
+
+--- The rules, in the player's order. The fourth return says whether the
+--- answer will hold (false while the price is still loading); the fifth
+--- is who a Mail row goes to and how many ({ to, count }).
+function Verdicts:Decide(entry, noAlt)
+    local c = { entry = entry, itemID = entry.itemID, noAlt = noAlt }
+    for _, id in ipairs(self.FIRST) do
+        local verdict, reason, unit, final, extra = Ask(self, c, id)
+        if verdict then return verdict, reason, unit, final, extra end
+    end
+    local off = ns.db and ns.db.rulesOff
+    if type(off) ~= "table" then off = nil end
+    for _, id in ipairs(self:Order()) do
+        if not (off and off[id] and not OWN_SWITCH[id]) then
+            local verdict, reason, unit, final, extra = Ask(self, c, id)
+            if verdict then return verdict, reason, unit, final, extra end
+        end
+    end
+    local verdict, reason, unit, final, extra = Ask(self, c, "best")
+    if verdict then return verdict, reason, unit, final, extra end
+    unit = Unit(c)
     if unit == nil then
         return "look", L["Still loading from the game"], nil, false
     end
-
-    -- A habit of selling it by hand. Soulbound green or better is never
-    -- sold for the player, habit or not.
-    if learned == "sell" and not (entry.bound and (entry.quality or 0) >= 2) then
-        return "sell", L.Format("%s: %s each", ns.Learning.Reason("sell"), Items.FormatMoney(unit)), unit, true
-    end
-
-    if entry.quality == 0 then
-        return "sell", L["Grey, vendor only"], unit, true
-    end
-
-    verdict, reason, worth, extra = self:Best(entry, unit, said)
-    -- The bank alt (Logic/BankAlt.lua) takes what the player's pick says
-    -- from here on: everything, or only what a vendor would get, or only
-    -- what is left to look at.
-    if ns.BankAlt then
-        local bank, why, to = ns.BankAlt:Verdict(entry, verdict)
-        if bank then return bank, why, worth, true, to end
-    end
-    return verdict, reason, worth, true, extra
+    return "look", Each(unit), unit, true
 end
 
 --------------------------------------------------------------------------------
@@ -493,51 +791,77 @@ end
 --- { to, count }; or nil. `entry` (the bag slot) says whether it is
 --- soulbound, which can't be mailed.
 function Verdicts:Kept(said, entry, noAlt)
-    local Number, String, True = Sisters.Number, Sisters.String, Sisters.True
+    local verdict, reason, worth, extra = self:KeptUpgrade(said)
+    if verdict then return verdict, reason, worth, extra end
+    verdict, reason, worth, extra = self:KeptAltCraft(said, entry)
+    if verdict then return verdict, reason, worth, extra end
+    verdict, reason, worth, extra = self:KeptGoal(said)
+    if verdict then return verdict, reason, worth, extra end
+    verdict, reason, worth, extra = self:KeptQueue(said, entry)
+    if verdict then return verdict, reason, worth, extra end
+    verdict, reason, worth, extra = self:KeptAltUpgrade(said, entry, noAlt)
+    if verdict then return verdict, reason, worth, extra end
+    return self:KeptPetFood(said)
+end
 
+--- Equipment: an upgrade now or later, or a tool.
+function Verdicts:KeptUpgrade(said)
     local eq = said.equipment
-    if eq then
-        if eq.upgrade == "now" then
-            return "keep", L["An upgrade: wear it"]
-        elseif eq.upgrade == "later" then
-            return "keep", L["An upgrade at a later level"]
-        elseif True(eq, "tool") then
-            return "keep", L["A tool you use"]
-        end
+    if not eq then return nil end
+    if eq.upgrade == "now" then
+        return "keep", L["An upgrade: wear it"]
+    elseif eq.upgrade == "later" then
+        return "keep", L["An upgrade at a later level"]
+    elseif Sisters.True(eq, "tool") then
+        return "keep", L["A tool you use"]
     end
+end
 
+-- Tradeskills: what this character's queue needs, and the alt whose queue
+-- wants it.
+local function QueueMail(said, entry)
     local ts = said.ts
-    local queued = Number(ts, "need")
-    local mailTo = String(ts, "mailTo")
+    local queued = Sisters.Number(ts, "need")
+    local mailTo = Sisters.String(ts, "mailTo")
     -- An older Tradeskills could name the character playing, and a
     -- soulbound stack can't go in the mail, whoever's craft wants it.
     if mailTo and (Verdicts:IsMe(mailTo) or (entry and entry.bound)) then mailTo = nil end
-    -- An alt's queued craft comes before a Farmer goal here: the goal is
-    -- usually Tradeskills' Set goal gathering for that queue, and Fill
-    -- mail left two herbs out while it kept them (2026-10-13). Only what
-    -- this character's own crafts can spare goes.
-    local share = Number(ts, "mailCount")
+    return queued, mailTo, Sisters.Number(ts, "mailCount")
+end
+
+--- An alt's queued craft: only what this character's own crafts can spare
+--- goes. It comes before a Farmer goal by default: the goal is usually
+--- Tradeskills' Set goal gathering for that queue, and Fill mail left two
+--- herbs out while it kept them (2026-10-13).
+function Verdicts:KeptAltCraft(said, entry)
+    local queued, mailTo, share = QueueMail(said, entry)
     if mailTo and share and share > 0 then
         local reason = (queued and queued > 0)
             and L.Format("Mail %d to %s for their crafts, keep %d for yours", share, mailTo, queued)
             or L.Format("Mail %d to %s for their crafts", share, mailTo)
         return "mail", reason, nil, { to = mailTo, count = share }
     end
+end
 
+--- Farmer: a goal of this character needs it.
+function Verdicts:KeptGoal(said)
     local farmer = said.farmer
-    local need = Number(farmer, "need")
+    local need = Sisters.Number(farmer, "need")
     if need and need > 0 then
-        local goal = String(farmer, "goal")
+        local goal = Sisters.String(farmer, "goal")
         return "keep", goal and L.Format("Your %s goal needs %d more", goal, need)
             or L.Format("A goal needs %d more", need)
     end
+end
 
+--- Tradeskills: the craft queue here needs it, or an alt's does.
+function Verdicts:KeptQueue(said, entry)
+    local queued, mailTo, count = QueueMail(said, entry)
     if queued and queued > 0 then
         -- The alt's share goes in the mail too: Tradeskills' mailCount is
         -- what is left once this character's own crafts are kept back, so
         -- Fill mail sends that many and the rest stays (a player's leather
         -- was all kept while an alt's craft waited on it, 2026-10-11).
-        local count = Number(ts, "mailCount")
         if mailTo and count and count > 0 then
             return "mail", L.Format("Mail %d to %s for their crafts, keep %d for yours", count, mailTo, queued),
                 nil, { to = mailTo, count = count }
@@ -545,23 +869,26 @@ function Verdicts:Kept(said, entry, noAlt)
         return "keep", L.Format("Your craft queue needs %d", queued)
     end
     if mailTo then
-        local count = Number(ts, "mailCount")
         return "mail", count and L.Format("Mail %d to %s for their crafts", count, mailTo)
             or L.Format("Mail to %s for their crafts", mailTo), nil, { to = mailTo, count = count }
     end
+end
 
-    -- No use here, but an upgrade for another of the player's characters
-    -- (the owner asked 2026-10-11): mail it to them. Equipment says which
-    -- by GUID, and Tradeskills' record names it.
-    -- An alt needs one (two rings or trinkets): `count` says how many go,
-    -- less any already mailed to them, and Groups judges the rest as if no
-    -- alt wanted them (a pair too many went in the mail, 2026-10-11).
-    -- Bought to disenchant (Tradeskills' mark) is for breaking, never an
-    -- alt's upgrade (a player was told to mail one, 2026-10-13): step 8b.
-    -- Off unless the player ticks "Mail upgrades to your characters" (the
-    -- owner, 2026-10-13): Verdicts:AltUpgradesOn.
+--- No use here, but an upgrade for another of the player's characters
+--- (the owner asked 2026-10-11): mail it to them. Equipment says which
+--- by GUID, and Tradeskills' record names it.
+--- An alt needs one (two rings or trinkets): `count` says how many go,
+--- less any already mailed to them, and Groups judges the rest as if no
+--- alt wanted them (a pair too many went in the mail, 2026-10-11).
+--- Bought to disenchant (Tradeskills' mark) is for breaking, never an
+--- alt's upgrade (a player was told to mail one, 2026-10-13): step 8b.
+--- Off unless the player ticks "Mail upgrades to your characters" (the
+--- owner, 2026-10-13): Verdicts:AltUpgradesOn.
+function Verdicts:KeptAltUpgrade(said, entry, noAlt)
+    local Number = Sisters.Number
+    local eq = said.equipment
     local alt = eq and eq.alt
-    local bought = Number(ts, "bought")
+    local bought = Number(said.ts, "bought")
     if bought and bought > 0 then alt = nil end
     if not Verdicts:AltUpgradesOn() then alt = nil end
     if type(alt) == "table" and not noAlt and not (entry and entry.bound) then
@@ -583,20 +910,22 @@ function Verdicts:Kept(said, entry, noAlt)
             return "mail", reason, nil, { to = to, count = wanted, upgrade = true }
         end
     end
+end
 
+--- Pets: the pet eats it. Pets' hours are for all the food carried, and
+--- only a rough guess (classic's hunger rule), so they are shown, never
+--- used to sell food.
+function Verdicts:KeptPetFood(said)
     local pets = said.pets
-    -- Pets' hours are for all the food carried, and only a rough guess
-    -- (classic's hunger rule), so they are shown, never used to sell food.
-    if True(pets, "eats") then
-        local buff = True(pets, "buff")
-        local what = buff and L["Buff food for your pet"] or L["Your pet eats it"]
-        local hours = Number(pets, "hours")
-        if hours and hours > 0 then
-            what = buff and L.Format("Buff food for your pet (about %s h of food carried)", Verdicts.Hours(hours))
-                or L.Format("Your pet eats it (about %s h of food carried)", Verdicts.Hours(hours))
-        end
-        return "keep", what
+    if not Sisters.True(pets, "eats") then return nil end
+    local buff = Sisters.True(pets, "buff")
+    local what = buff and L["Buff food for your pet"] or L["Your pet eats it"]
+    local hours = Sisters.Number(pets, "hours")
+    if hours and hours > 0 then
+        what = buff and L.Format("Buff food for your pet (about %s h of food carried)", Verdicts.Hours(hours))
+            or L.Format("Your pet eats it (about %s h of food carried)", Verdicts.Hours(hours))
     end
+    return "keep", what
 end
 
 -- Rings and trinkets: a character wears two.
@@ -914,9 +1243,33 @@ function Verdicts.ParseMoney(text)
     return total
 end
 
+--- Step 11: worth less than the player's Sell below amount, judged on the
+--- most it could fetch (vendor, auction after the cut, a disenchant this
+--- character or an enchanter can do). Only once Tradeskills has priced it,
+--- and never soulbound green or better, which always gets a second look.
+function Verdicts:BelowAmount(entry, unit, said)
+    local below = self:SellBelow()
+    local ts = said.ts
+    local bound = entry.bound == true
+    if not below or not ts or (bound and (entry.quality or 0) >= 2) then return nil end
+    local Number, String, True = Sisters.Number, Sisters.String, Sisters.True
+    local auction = not bound and Number(ts, "auction") or nil
+    local disenchant = Number(ts, "disenchant")
+    local enchanter = not bound and String(ts, "enchanter") or nil
+    if enchanter and self:IsMe(enchanter) then enchanter = nil end
+    if disenchant and not True(ts, "canDisenchant") and not enchanter then disenchant = nil end
+    local most = math.max(unit, auction or 0, disenchant or 0)
+    if most < below then
+        return "sell", L.Format("Worth less than %s: %s each", Items.FormatMoney(below),
+            Items.FormatMoney(unit)), unit
+    end
+end
+
 --- Step 12: the best of what a vendor pays, the auction house (after the
 --- cut) and disenchanting. Returns verdict, reason and one's worth.
-function Verdicts:Best(entry, unit, said)
+--- Sell below is asked first unless `noBelow` (the Order page puts it
+--- where the player wants it).
+function Verdicts:Best(entry, unit, said, noBelow)
     local Number, String, True = Sisters.Number, Sisters.String, Sisters.True
     local ts, eq = said.ts, said.equipment
 
@@ -934,16 +1287,9 @@ function Verdicts:Best(entry, unit, said)
     if enchanter and self:IsMe(enchanter) then enchanter = nil end
     if disenchant and not canDisenchant and not enchanter then disenchant = nil end
 
-    -- Step 11: worth less than the player's Sell below amount, judged on
-    -- the most it could fetch. Only once Tradeskills has priced it, and
-    -- never soulbound green or better, which always gets a second look.
-    local below = self:SellBelow()
-    if below and ts and not (bound and (entry.quality or 0) >= 2) then
-        local most = math.max(unit, auction or 0, disenchant or 0)
-        if most < below then
-            return "sell", L.Format("Worth less than %s: %s each", Items.FormatMoney(below),
-                Items.FormatMoney(unit)), unit
-        end
+    if not noBelow then
+        local verdict, reason, worth = self:BelowAmount(entry, unit, said)
+        if verdict then return verdict, reason, worth end
     end
 
     local best, value = "sell", unit

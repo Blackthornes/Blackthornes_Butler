@@ -37,6 +37,8 @@ local TITLE = "Blackthornes Butler"
 local PAGES = {
     { key = "selling", text = L["ERRANDS"],
       tip = L["Selling at a vendor, mail and the bank, and your Always keep, sell and bank lists"] },
+    { key = "order", text = L["ORDER"],
+      tip = L["The order Butler asks its rules in, and which ones are on"] },
     { key = "bankalt", text = L["BANK ALT"],
       tip = L["Mail whole kinds of items to one of your characters"] },
     { key = "gold", text = L["GOLD"],
@@ -121,6 +123,16 @@ function SettingsUI:Build()
         db = function() return ns.db end,
     })
     self:BuildPages()
+    -- The order Butler asks its rules in (UI/RuleOrder.lua): one board
+    -- across both columns.
+    if ns.RuleOrderUI then
+        local pages = self.pages
+        local board = ns.RuleOrderUI:Build(pages.pages.order.content, COLUMN_WIDTH, COLUMN_GAP, function(key)
+            pages:Show(key)
+        end)
+        pages:Place("order", 1, board)
+        pages:Searchable("order", board, board.words)
+    end
     -- About (UI/About.lua): the note on how the addons are made, then the
     -- version, the Discord and the other Blackthornes addons.
     if ns.About then
@@ -791,6 +803,7 @@ function SettingsUI:Refresh()
     self:SyncBankAlt()
     controls.textSize:Sync()
     controls.windowStyle:Sync()
+    if ns.RuleOrderUI then ns.RuleOrderUI:Refresh() end
     self.pages:Refresh()
 end
 
