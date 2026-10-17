@@ -512,6 +512,36 @@ suite.check("crafts freeing more slots come first", table.concat(ids, ",") == "2
 ordered = Jobs.Order({ craftStep(1), craftStep(2) }, {})
 suite.check("with no slot counts the order stays", ordered[1].recipeID == 1 and ordered[2].recipeID == 2)
 
+-- 7b. At login an item's name can still be loading: the line waits for
+-- it rather than saying "Item 2605", and says it anyway in the end.
+do
+    local realName = _G.C_Item.GetItemNameByID
+    local realAfter = _G.C_Timer.After
+    local looks = 0
+    _G.C_Item.GetItemNameByID = function(id)
+        if id == 2605 then
+            looks = looks + 1
+            return looks > 2 and "Green Dye" or nil
+        end
+        return realName(id)
+    end
+    local waits = {}
+    _G.C_Timer.After = function(_, fn) waits[#waits + 1] = fn end
+    local said = {}
+    local buy = { kind = "buy", items = { { itemID = 2605, count = 2 } } }
+    Jobs.SayWhenNamed(buy, function() said[#said + 1] = Jobs.Short(buy) end)
+    suite.check("a line waits while a name is loading", #said == 0 and #waits == 1)
+    while #waits > 0 do table.remove(waits, 1)() end
+    suite.check("the line names the item once it's in", said[1] == "buy 2 Green Dye from a vendor", tostring(said[1]))
+    _G.C_Item.GetItemNameByID = function(id) if id ~= 2605 then return realName(id) end end
+    said = {}
+    Jobs.SayWhenNamed(buy, function() said[#said + 1] = Jobs.Short(buy) end)
+    while #waits > 0 do table.remove(waits, 1)() end
+    suite.check("a name that never comes doesn't hold the line forever", #said == 1)
+    _G.C_Item.GetItemNameByID = realName
+    _G.C_Timer.After = realAfter
+end
+
 -- 8. Wrong shapes and errors.
 local clean = Jobs.Clean({ { name = "X", steps = { { kind = "craft" }, { kind = "mail", to = "Y", items = {} },
     "junk", { kind = "dance" } } }, "junk", { steps = {} } })

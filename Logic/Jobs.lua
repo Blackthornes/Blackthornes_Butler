@@ -427,6 +427,40 @@ function Jobs.ItemName(itemID, fallback)
     return fallback or L.Format("Item %s", tostring(itemID))
 end
 
+--- True once the client knows the name of every item a step names, so a
+--- line said in chat reads "Linen Cloth", not "Item 2589". Asks for the
+--- ones it doesn't know yet.
+function Jobs.NamesKnown(step)
+    local known = true
+    local function Check(itemID)
+        if not itemID then return end
+        local name = Items.Call({ "C_Item.GetItemNameByID", "GetItemInfo" }, itemID)
+        if not Text(name) then
+            Items:RequestLoad(itemID)
+            known = false
+        end
+    end
+    if step then
+        if step.kind ~= "cooldown" then Check(step.itemID) end
+        for _, item in ipairs(step.items or {}) do Check(item.itemID) end
+    end
+    return known
+end
+
+--- Says a chat line once the step's item names are in, looking again
+--- every NAME_WAIT seconds; after NAME_TRIES looks it says it anyway.
+Jobs.NAME_WAIT = 0.5
+Jobs.NAME_TRIES = 10
+
+function Jobs.SayWhenNamed(step, say, tries)
+    tries = tries or 0
+    if Jobs.NamesKnown(step) or tries >= Jobs.NAME_TRIES or not (C_Timer and C_Timer.After) then
+        say()
+        return
+    end
+    C_Timer.After(Jobs.NAME_WAIT, function() Jobs.SayWhenNamed(step, say, tries + 1) end)
+end
+
 local function ItemIcon(itemID)
     if not itemID then return nil end
     local icon = Items.Call({ "C_Item.GetItemIconByID", "GetItemIcon" }, itemID)
@@ -1137,8 +1171,11 @@ function Jobs:Noticed()
     local plan = self:Plan()
     local hasHere = plan.here ~= nil
     if self.hadHere and not hasHere and plan.nextJob then
-        ns.Print(L.Format("that's everything here. Next: %s. %s Log out on their line in the Butler window to switch.",
-            plan.nextJob.name, Jobs.Summary(plan.nextJob)))
+        local job = plan.nextJob
+        Jobs.SayWhenNamed(job.steps[1], function()
+            ns.Print(L.Format("that's everything here. Next: %s. %s Log out on their line in the Butler window to switch.",
+                job.name, Jobs.Summary(job)))
+        end)
     end
     self.hadHere = hasHere
 end
@@ -1151,8 +1188,10 @@ function Jobs:Greet()
     local plan = self:Plan()
     local first = plan.here and plan.here.steps[1]
     if not first then return end
-    ns.Print(L.Format("a job on this character: %s.", Jobs.Short(first)))
     if ns.UI and not ns.UI:IsShown() then ns.UI:Show("bags") end
+    Jobs.SayWhenNamed(first, function()
+        ns.Print(L.Format("a job on this character: %s.", Jobs.Short(first)))
+    end)
 end
 
 --- Every character's jobs in chat.
