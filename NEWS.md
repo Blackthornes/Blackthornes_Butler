@@ -23,6 +23,12 @@ tell a friend: no hype, no questions to the reader, no exclamation marks
 outside the thanks line, no dashes as punctuation, no "now you can". The
 tool prints a note for a shipped line that reads like an advert.
 
+## 0.12.1
+
+Fixes and changes:
+
+- Various fixes to Butler.
+
 ## 0.12.0
 
 - Settings has a new page where you drag Butler's rules into the order you want, or turn them off.
