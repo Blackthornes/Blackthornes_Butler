@@ -72,4 +72,23 @@ suite.check("nothing needs it: Sell again", Find("Old Boots").verdict == "sell",
 suite.check("and the list kept it all along", ns.db.alwaysSell[702] == true)
 _G.BlackthornesFarmer, _G.BlackthornesTS = nil, nil
 
+-- Always mail gives way to an upgrade to wear now, the same way (2026-10-17).
+_G.BlackthornesEquipment = { Butler = { Advise = function(_, link)
+    if tostring(link):find("701", 1, true) and upgrade then return { upgrade = "now" } end
+end } }
+Verdicts:SetChoice(701, "mail", "Someone Else")
+upgrade = true
+Verdicts:Changed(true)
+UI:Hide()
+UI:Show()
+boots = Find("Thendal Boots")
+suite.check("an upgrade on Always mail is Look at it", boots and boots.verdict == "look", boots and boots.verdict)
+suite.check("the mail list still holds it", ns.db.alwaysMail[701] == "Someone Else")
+upgrade = false
+Verdicts:Changed(true)
+UI:Hide()
+UI:Show()
+boots = Find("Thendal Boots")
+suite.check("no longer an upgrade: Mail again", boots and boots.verdict == "mail", boots and boots.verdict)
+
 suite.done()

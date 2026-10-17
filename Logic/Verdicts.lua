@@ -224,6 +224,12 @@ function Verdicts:Decide(entry, noAlt)
         if entry.bound then
             return "keep", L.Format("Soulbound, so it can't be mailed to %s", mailTo), nil, true
         end
+        -- Gear Equipment says is an upgrade to wear now is not mailed away,
+        -- as on the Always sell list (the owner, 2026-10-17).
+        local eq = Sisters:Ask("equipment", entry)
+        if eq and eq.upgrade == "now" then
+            return "look", L["On your Always mail list, but it's an upgrade for you"], Items:SellPrice(itemID), true
+        end
         -- This character's own queued crafts come first (the owner,
         -- 2026-10-14): Tradeskills' `need` is what they still use from the
         -- bags, so only what is left over goes in the mail.
