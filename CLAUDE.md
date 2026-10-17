@@ -850,6 +850,30 @@ next hover builds it again at most once every `WhoHas.REBUILD_GAP` (1 s).
 unticked, never rename it) and `/bbutler whohas`. Tested in
 `tools/test_whohas.lua`. Not yet seen in game.
 
+## The rule order
+
+The owner said build it (2026-10-17, from a mockup): Settings has an ORDER
+page (`UI/RuleOrder.lua`, `RuleOrderUI`) that lists the rules
+`Verdicts:Decide` asks, in the order it asks them. Equipment sets and quest
+items are always first (`Verdicts.FIRST`; quests now come before the
+Always keep, bank and mail lists), the best price and Look at it always
+last (`Verdicts.LAST`); the 22 between (`Verdicts.DEFAULT_ORDER`, each a
+step in `Verdicts.STEPS`) are dragged by their grip, the others sliding
+out of the way, and each has a tick box. A rule with a setting of its own
+(`Verdicts.OWN_SWITCH`: alt upgrades, Disenchant greens here) ticks that
+setting; Sell below and the bank alt have an Open button to their pages
+instead. Saved account wide, never rename either: `ruleOrder` (the ids in
+order, nil while it is the usual one; `Verdicts:Order` drops unknown and
+repeated ids and puts a missing one back after the rule it follows in the
+usual order, so a rule added later finds its place) and `rulesOff` (`[id]
+= true`). Set Default (`Verdicts:SetDefault`, also `/bbutler order
+default`) clears both; Undo Move takes back the last moves and ticks for
+the session. In any order `Allowed` holds: an upgrade to wear now is never
+sold, auctioned, broken or mailed except by the player's own lists,
+nothing bound is mailed, nothing is mailed to the character playing. The
+rows move by an OnUpdate only while one is moving. Tested in
+`tools/test_ruleorder.lua`.
+
 ## Butler on tooltips
 
 A player asked; the owner said yes (2026-10-13): "add Butler as the last
