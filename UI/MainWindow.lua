@@ -1101,7 +1101,16 @@ function UI:BuildMenu()
     menu.keepNote = Theme.CreateLabel(menu, "small", "muted")
     menu.keepNote:SetWordWrap(true)
     menu.keepSave = Widgets.CreateButton(menu, L["Save"], SaveKeep,
-        { width = MENU_WIDTH - 16, height = 20, primary = true })
+        { width = math.floor((MENU_WIDTH - 20) / 2), height = 20, primary = true })
+    -- Keep All (Trent asked the same day): every one stays, nothing to type.
+    menu.keepAll = Widgets.CreateButton(menu, L["Keep All"], function()
+        local data = UI.menu.data
+        UI:HideMenu()
+        if not data then return end
+        local done, why = ns.KeepHere:Set(data.itemID, ns.KeepHere.MOST)
+        if not done and why then ns.Print(why) end
+        if ns.SettingsUI and ns.SettingsUI.SyncKeepHere then ns.SettingsUI:SyncKeepHere() end
+    end, { width = math.floor((MENU_WIDTH - 20) / 2), height = 20 })
     -- An alt's upgrade under Mail: hold this one back from them, or every
     -- upgrade (the owner asked 2026-10-12). Undone in Settings.
     menu.hold = Widgets.CreateButton(menu, L["Don't mail this"], function()
@@ -1154,6 +1163,7 @@ function UI:ShowMenu(data, stay)
     menu.keepBox:Hide()
     menu.keepNote:Hide()
     menu.keepSave:Hide()
+    menu.keepAll:Hide()
 
     local choice, mailTo = ns.Verdicts:Choice(data.itemID)
     menu.keep:SetText(choice == "keep" and L["Always keep (now)"] or L["Always keep"])
@@ -1202,8 +1212,8 @@ function UI:ShowMenu(data, stay)
     -- Keep on this character: the number kept, when there is one.
     local keepCount = ns.KeepHere and ns.KeepHere:Count(data.itemID)
     menu.keepHere:SetShown(ns.KeepHere ~= nil)
-    menu.keepHere:SetText(keepCount and L.Format("Keep on This Character: %d", keepCount)
-        or L["Keep on This Character..."])
+    menu.keepHere:SetText(keepCount and (ns.KeepHere.IsAll(keepCount) and L["Keep on This Character: All"]
+        or L.Format("Keep on This Character: %d", keepCount)) or L["Keep on This Character..."])
     menu.keepHere:ClearAllPoints()
     menu.keepHere:SetPoint("TOPLEFT", last, "BOTTOMLEFT", 0, -4)
     if ns.KeepHere then last = menu.keepHere end
@@ -1323,20 +1333,36 @@ function UI:ShowKeepMenu()
     local count = ns.KeepHere:Count(data.itemID)
     menu.keepBox:ClearAllPoints()
     menu.keepBox:SetPoint("TOPLEFT", 8, -26)
-    menu.keepBox:SetText(count and tostring(count) or "")
+    menu.keepBox:SetText(count and not ns.KeepHere.IsAll(count) and tostring(count) or "")
     menu.keepBox:Show()
     menu.keepNote:ClearAllPoints()
     menu.keepNote:SetPoint("TOPLEFT", menu.keepBox, "BOTTOMLEFT", 0, -4)
     menu.keepNote:SetPoint("RIGHT", menu, "RIGHT", -8, 0)
-    menu.keepNote:SetText(L["Anything past this number goes on down Butler's rules. 0 clears it."])
+    menu.keepNote:SetText(ns.KeepHere.IsAll(count)
+        and L["Keeping all of them now. Type a number to keep fewer, or 0 to clear it."]
+        or L["Anything past this number goes on down Butler's rules. 0 clears it."])
     menu.keepNote:Show()
     menu.keepSave:ClearAllPoints()
     menu.keepSave:SetPoint("TOPLEFT", menu.keepNote, "BOTTOMLEFT", 0, -6)
     menu.keepSave:Show()
+    menu.keepAll:ClearAllPoints()
+    menu.keepAll:SetPoint("LEFT", menu.keepSave, "RIGHT", 4, 0)
+    menu.keepAll:Show()
     menu.back:ClearAllPoints()
     menu.back:SetPoint("TOPLEFT", menu.keepSave, "BOTTOMLEFT", 0, -4)
     menu.back:Show()
-    UI.FitMenu(menu, { menu.keepSave, menu.back })
+    UI.FitMenu(menu, { menu.back })
+    -- Save and Keep All share the row, whatever width the menu took.
+    local inner = (tonumber((menu:GetWidth())) or MENU_WIDTH) - 16
+    local need = math.max(Theme.TextWidth("small", L["Save"]) or 0, Theme.TextWidth("small", L["Keep All"]) or 0) + 24
+    if inner < 2 * need + 4 then
+        inner = 2 * need + 4
+        menu:SetWidth(inner + 16)
+        menu.back:SetWidth(inner)
+    end
+    menu.keepBox:SetWidth(inner)
+    menu.keepSave:SetWidth(math.floor((inner - 4) / 2))
+    menu.keepAll:SetWidth(math.floor((inner - 4) / 2))
     local noteHeight = menu.keepNote.GetStringHeight and tonumber((menu.keepNote:GetStringHeight())) or 0
     menu:SetHeight(30 + 28 + math.max(noteHeight, 28) + 10 + 2 * MENU_ROW)
     if menu.keepBox.editBox.SetFocus then menu.keepBox.editBox:SetFocus() end
