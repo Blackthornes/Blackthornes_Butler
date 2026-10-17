@@ -23,6 +23,14 @@ tell a friend: no hype, no questions to the reader, no exclamation marks
 outside the thanks line, no dashes as punctuation, no "now you can". The
 tool prints a note for a shipped line that reads like an advert.
 
+## 0.12.0
+
+- Settings has a new page where you drag Butler's rules into the order you want, or turn them off.
+
+Fixes and changes:
+
+- An item on your Always mail list stays with you when it's an upgrade you can wear now.
+
 ## 0.11.0
 
 - Type the name of a character on your other account as your bank alt.

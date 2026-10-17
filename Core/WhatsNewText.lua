@@ -5,6 +5,9 @@
 local _, ns = ...
 
 ns.WHATS_NEW = {
+    { version = "0.12.0", lines = {
+        "Settings has a new page where you drag Butler's rules into the order you want, or turn them off.",
+    } },
     { version = "0.11.0", lines = {
         "Type the name of a character on your other account as your bank alt.",
         "Greens go to your disenchanter only when breaking them pays at least what selling would. A new option sends them anyway.",
@@ -12,9 +15,5 @@ ns.WHATS_NEW = {
     } },
     { version = "0.10.0", lines = {
         "The Craft button opens the profession window first when it's closed.",
-    } },
-    { version = "0.9.0", lines = {
-        "Shift-click an item at a vendor and type how many you want. Butler buys them all for you.",
-        "A new option has Butler send every green to Disenchant on your disenchanter.",
     } },
 }
