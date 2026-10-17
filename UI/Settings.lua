@@ -435,11 +435,12 @@ function SettingsUI:BuildPages()
     end)
     controls.disenchantGreens:SetPoint("TOPLEFT", CONTROL_X, -2)
 
-    -- A player asked, the owner said yes (2026-10-16): your disenchanter and
-    -- levelling Enchanting take a green only when breaking it pays as much
-    -- as selling it, unless this is ticked.
+    -- A player asked, the owner said yes (2026-10-16): your disenchanter
+    -- takes a green only when breaking it pays as much as selling it,
+    -- unless this is ticked. Levelling Enchanting takes it either way
+    -- (the owner, 2026-10-17).
     local alwaysRow = pages:Row("selling", 1, L["Always Disenchant:"],
-        L["Greens go to disenchanting even when selling them pays more."])
+        L["Greens go to your disenchanter even when selling them pays more."])
     controls.alwaysDisenchant = Widgets.CreateCheckbox(alwaysRow, L["On"], function(checked)
         ns.Verdicts:SetAlwaysDisenchant(checked)
     end)

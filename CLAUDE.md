@@ -228,8 +228,22 @@ Enchanting: RECIPE needs MATERIAL", whatever a vendor or the auction house
 pays. Only while this character can break it, only greens. Once the
 greens picked so far should give `short` (`yield` each), `Verdicts:Groups`
 judges the rest again without it (`Judge(entry, true)`), so it stops at
-enough. The player still clicks Disenchant. Tested in
-`tools/test_levelenchanting.lua`.
+enough. It wins even when the auction house pays more (the owner,
+2026-10-17: a skill point beats a better sale). The player still clicks
+Disenchant. Tested in `tools/test_levelenchanting.lua`.
+
+## Always disenchant
+
+The owner asked (2026-10-17): a green that sells for more than it breaks
+into goes to Auction (the best price does that already), unless it gives
+a skill point (above), and the player can say to break it anyway. The
+right-click menu's "Always disenchant" (green or better only) puts it on
+the player's Always disenchant list (`alwaysDisenchant`, `[itemID] =
+true`, account wide, never rename it; `Verdicts:Choice` "disenchant").
+Rule `disenchantList`, after the Always sell list: Disenchant when this
+character can break it, else Mail to the enchanter Tradeskills names,
+else Look at it; an upgrade to wear now is Look at it. Tested in
+`tools/test_alwaysdisenchant.lua`.
 
 ## Disenchant greens here
 
@@ -259,12 +273,11 @@ that character, whatever the auction house or a vendor pays; a soulbound
 copy and the character playing never get it. With nobody typed there,
 Tradeskills picks the alt with the most Enchanting (more than the
 character playing; its "Pick one for me", 2026-10-11), so Advise names
-that one; with that unticked too, nothing changes. Since 2026-10-16 (a player asked) this and
-Levelling Enchanting take an item only when breaking it pays at least what
+that one; with that unticked too, nothing changes. Since 2026-10-16 (a player asked) this takes an item only when breaking it pays at least what
 a vendor or the auction house would (`Verdicts:SellsForMore`, the auction
 counted as `Best` counts it), unless "Always Disenchant" on the Selling page
 is ticked (`disenchantAnyPrice`, account wide, off unless ticked, never
-rename it). Disenchant greens here still takes every green. Tested in `tools/test_disenchantermail.lua`.
+rename it). Levelling Enchanting no longer waits on it (2026-10-17). Disenchant greens here still takes every green. Tested in `tools/test_disenchantermail.lua`.
 
 ## The bank alt
 
@@ -857,7 +870,7 @@ page (`UI/RuleOrder.lua`, `RuleOrderUI`) that lists the rules
 `Verdicts:Decide` asks, in the order it asks them. Equipment sets and quest
 items are always first (`Verdicts.FIRST`; quests now come before the
 Always keep, bank and mail lists), the best price and Look at it always
-last (`Verdicts.LAST`); the 22 between (`Verdicts.DEFAULT_ORDER`, each a
+last (`Verdicts.LAST`); the 23 between (`Verdicts.DEFAULT_ORDER`, each a
 step in `Verdicts.STEPS`) are dragged by their grip, the others sliding
 out of the way, and each has a tick box. A rule with a setting of its own
 (`Verdicts.OWN_SWITCH`: alt upgrades, Disenchant greens here) ticks that

@@ -1016,7 +1016,8 @@ end
 -- The right-click menu
 --
 -- A small window of Butler's own, never the game's dropdown menus: Always
--- keep, Always sell, Always bank, Always mail to (which turns the menu into
+-- keep, Always sell, Always bank, Always disenchant (green or better),
+-- Always mail to (which turns the menu into
 -- a list of the player's characters), and Let Butler decide once one is
 -- picked.
 --------------------------------------------------------------------------------
@@ -1057,6 +1058,10 @@ function UI:BuildMenu()
     menu.bank = Widgets.CreateButton(menu, L["Always bank"], function() Pick("bank") end,
         { width = MENU_WIDTH - 16, height = 20 })
     menu.bank:SetPoint("TOPLEFT", menu.sell, "BOTTOMLEFT", 0, -4)
+    -- Greens and better that sell for more go to auction; this breaks
+    -- them anyway (the owner, 2026-10-17).
+    menu.disenchant = Widgets.CreateButton(menu, L["Always disenchant"], function() Pick("disenchant") end,
+        { width = MENU_WIDTH - 16, height = 20 })
     -- Bought to disenchant: Tradeskills keeps the mark, for the whole account.
     menu.bought = Widgets.CreateButton(menu, L["Bought to disenchant"], function()
         local data = UI.menu.data
@@ -1131,6 +1136,14 @@ function UI:ShowMenu(data, stay)
     menu.sell:Show()
     menu.bank:Show()
 
+    -- Only gear worth breaking: green or better.
+    local canBreak = choice == "disenchant" or (data.quality or 0) >= 2
+    menu.disenchant:SetShown(canBreak)
+    menu.disenchant:SetText(choice == "disenchant" and L["Always disenchant (now)"] or L["Always disenchant"])
+    menu.disenchant:ClearAllPoints()
+    menu.disenchant:SetPoint("TOPLEFT", menu.bank, "BOTTOMLEFT", 0, -4)
+    local above = canBreak and menu.disenchant or menu.bank
+
     -- Mail needs Tradeskills to know the player's characters, and gear
     -- bound to this one can't be mailed at all.
     local canMail = choice == "mail" or (not data.bound and #ns.Errands:Characters() > 0)
@@ -1140,10 +1153,12 @@ function UI:ShowMenu(data, stay)
     local canMark = ns.Sisters.CanMarkBought()
     menu.bought:SetShown(canMark)
     menu.bought:SetText(data.bought and L["Bought to disenchant (now)"] or L["Bought to disenchant"])
+    menu.bought:ClearAllPoints()
+    menu.bought:SetPoint("TOPLEFT", above, "BOTTOMLEFT", 0, -4)
     menu.mail:ClearAllPoints()
-    menu.mail:SetPoint("TOPLEFT", canMark and menu.bought or menu.bank, "BOTTOMLEFT", 0, -4)
+    menu.mail:SetPoint("TOPLEFT", canMark and menu.bought or above, "BOTTOMLEFT", 0, -4)
 
-    local last = canMail and menu.mail or (canMark and menu.bought or menu.bank)
+    local last = canMail and menu.mail or (canMark and menu.bought or above)
     local upgradeTo = data.upgrade and type(data.mailTo) == "string" and data.mailTo or nil
     menu.hold:SetShown(upgradeTo ~= nil)
     menu.holdAll:SetShown(upgradeTo ~= nil)
@@ -1165,9 +1180,9 @@ function UI:ShowMenu(data, stay)
     menu.decide:SetShown(decides)
     menu.decide:SetText(learned and L["Forget what Butler learned"] or L["Let Butler decide"])
 
-    local rows = 3 + (canMark and 1 or 0) + (canMail and 1 or 0) + (upgradeTo and 2 or 0) + (decides and 1 or 0)
+    local rows = 3 + (canBreak and 1 or 0) + (canMark and 1 or 0) + (canMail and 1 or 0) + (upgradeTo and 2 or 0) + (decides and 1 or 0)
     menu:SetHeight(30 + rows * MENU_ROW)
-    UI.FitMenu(menu, { menu.keep, menu.sell, menu.bank, menu.bought, menu.mail,
+    UI.FitMenu(menu, { menu.keep, menu.sell, menu.bank, menu.disenchant, menu.bought, menu.mail,
         menu.hold, menu.holdAll, menu.decide })
 
     if stay and menu:IsShown() then return end

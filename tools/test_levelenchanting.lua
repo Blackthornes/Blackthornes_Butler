@@ -10,8 +10,9 @@
 --      usual verdict.
 --   3. Keeping and the Always sell list still win.
 --   4. Not when this character can't break it, and never for a blue.
---   5. With "Always Disenchant" unticked (the default), only greens that
---      pay as much broken as sold (a player asked, 2026-10-16).
+--   5. With "Always Disenchant" unticked (the default) too, even when the
+--      auction house pays more (the owner, 2026-10-17: a skill point beats
+--      a better sale).
 
 local env = dofile(lfs_cwd .. "/tools/testenv.lua")
 local suite = env.NewSuite("levelenchanting")
@@ -94,10 +95,16 @@ short = 0
 Verdicts:Changed(true)
 suite.check("nothing short: its usual verdict", Verdict("Ridge Cleaver") == "auction", Verdict("Ridge Cleaver"))
 
--- 5. Unticked: a green that sells for more is sold.
+-- 5. Unticked: a skill point still beats a better sale.
 short = 2
 Verdicts:SetAlwaysDisenchant(false)
-suite.check("selling pays more: its usual verdict", Verdict("Ridge Cleaver") == "auction", Verdict("Ridge Cleaver"))
+suite.check("selling pays more: still for Enchanting", Verdict("Ridge Cleaver") == "disenchant",
+    Verdict("Ridge Cleaver"))
+short = 0
+Verdicts:Changed(true)
+suite.check("no skill point: selling pays more, so auction", Verdict("Ridge Cleaver") == "auction",
+    Verdict("Ridge Cleaver"))
+short = 2
 auction = 500
 Verdicts:Changed(true)
 local row = Find("Ridge Cleaver")
