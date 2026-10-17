@@ -882,7 +882,10 @@ number is split while the window is up and no fight is on
 (`KeepHere:SplitNext`, `SplitContainerItem` into a free slot, at most
 `SPLITS` tries an item each time the window opens); with no free slot the
 whole stack is kept and the row asks for one. Nothing is sold or deleted
-by it. Tested in `tools/test_keephere.lua`.
+by it. Keep All (the owner asked the same day), beside Save in the menu
+and beside the number in Settings, saves `KeepHere.MOST` (9999), shown as
+"All" (`KeepHere.IsAll`, `Shown`): every stack stays, nothing is split,
+and no new key is saved. Tested in `tools/test_keephere.lua`.
 
 ## The rule order
 

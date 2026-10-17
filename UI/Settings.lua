@@ -361,7 +361,12 @@ function SettingsUI:SyncKeepHere()
     if #items == 0 then what.text:SetText(L["Nothing kept yet"]) end
 
     local picked = items[what.index]
-    controls.keepCount:SetText(picked and tostring(picked.count) or "")
+    local all = picked and ns.KeepHere.IsAll(picked.count)
+    controls.keepCount:SetText(picked and not all and tostring(picked.count) or "")
+    if controls.keepAll then
+        controls.keepAll:SetText(all and L["Keeping All"] or L["Keep All"])
+        controls.keepAll:SetLabelColor(picked and not all and nil or "dim")
+    end
     controls.keepRemove:SetLabelColor(picked and nil or "dim")
 end
 
@@ -566,11 +571,14 @@ function SettingsUI:BuildPages()
         return state.guids[controls.keepWho.index], state.items[controls.keepWhat.index]
     end
 
-    local keepCountRow = pages:Row("selling", 2, L["Keep:"], L["0 takes it off the list."])
+    local keepCountRow = pages:Row("selling", 2, L["Keep:"], L["0 takes it off the list. Keep All keeps every one."])
     local function SaveCount()
         local who, what = KeepPicked()
         if not (who and what) then return end
-        local count = tonumber(controls.keepCount.editBox:GetText()) or 0
+        local text = controls.keepCount.editBox:GetText()
+        -- An empty box beside Keep All means it is still all.
+        if (text == nil or text == "") and ns.KeepHere.IsAll(what.count) then return end
+        local count = tonumber(text) or 0
         if count == what.count then return end
         ns.KeepHere:Set(what.itemID, count, who)
         SettingsUI:SyncKeepHere()
@@ -581,6 +589,13 @@ function SettingsUI:BuildPages()
     controls.keepCount.editBox:SetMaxLetters(4)
     if controls.keepCount.editBox.SetNumeric then controls.keepCount.editBox:SetNumeric(true) end
     controls.keepCount.editBox:HookScript("OnEditFocusLost", SaveCount)
+    controls.keepAll = Widgets.CreateButton(keepCountRow, L["Keep All"], function()
+        local who, what = KeepPicked()
+        if not (who and what) or ns.KeepHere.IsAll(what.count) then return end
+        ns.KeepHere:Set(what.itemID, ns.KeepHere.MOST, who)
+        SettingsUI:SyncKeepHere()
+    end, { width = 100, height = 20 })
+    controls.keepAll:SetPoint("LEFT", controls.keepCount, "RIGHT", 6, 0)
 
     local keepRemoveRow = pages:Row("selling", 2, L["Remove:"], nil)
     controls.keepRemove = Widgets.CreateButton(keepRemoveRow, L["Remove"], function()

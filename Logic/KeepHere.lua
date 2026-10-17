@@ -25,8 +25,19 @@ local KeepHere = ns.NewModule("KeepHere")
 
 local Items = ns.Items
 
--- The most a box takes.
+-- The most a box takes. Keep All saves this too, so every stack stays.
 KeepHere.MOST = 9999
+
+--- True when the number means every one (Keep All).
+function KeepHere.IsAll(count)
+    return type(count) == "number" and count >= KeepHere.MOST
+end
+
+--- The number as a player reads it: "All" for Keep All.
+function KeepHere.Shown(count)
+    if KeepHere.IsAll(count) then return L["All"] end
+    return tostring(count or 0)
+end
 -- How long after the window's lists are laid out a split waits, so the
 -- bags have settled.
 KeepHere.SPLIT_WAIT = 0.5
@@ -358,7 +369,7 @@ function KeepHere:PrintMine()
     local names = {}
     for _, each in ipairs(list) do
         local _, link = Items.Call({ "C_Item.GetItemInfo", "GetItemInfo" }, each.itemID)
-        names[#names + 1] = L.Format("%s: %d", link or each.name, each.count)
+        names[#names + 1] = L.Format("%s: %s", link or each.name, KeepHere.Shown(each.count))
     end
     ns.PrintRaw(("  |c%s%s|r %s"):format(ns.COLORS.muted,
         L.Format("Keep on this character (%d):", #list), table.concat(names, ", ")))

@@ -189,4 +189,40 @@ suite.check("0 takes it off the list", KeepHere:Count(901) == nil)
 suite.check("and the elixirs sell again", Verdict("Elixir of Agility", "sell") == 8)
 suite.check("the saved table stays", type(ns.db.keepHere[GUID]) == "table")
 
+-- Keep All: every copy stays, nothing to type, and it reads "All".
+local splitsBefore = #splits
+UI:ShowMenu(Rows("Elixir of Agility")[1])
+menu.keepHere:GetScript("OnClick")(menu.keepHere)
+suite.check("the page has Keep All beside Save", menu.keepAll:IsShown() and menu.keepAll.label:GetText() == "Keep All")
+menu.keepAll:GetScript("OnClick")(menu.keepAll)
+suite.check("Keep All saves the most", KeepHere:Count(901) == KeepHere.MOST and KeepHere.IsAll(KeepHere:Count(901)))
+suite.check("every elixir is kept", Verdict("Elixir of Agility", "keep") == 8 and Verdict("Elixir of Agility", "sell") == 0)
+local allRow
+for _, row in ipairs(Rows("Elixir of Agility")) do allRow = row end
+suite.check("the row says all", allRow and allRow.reason == "Keeping all on this character", allRow and allRow.reason)
+suite.check("nothing is split for Keep All", #splits == splitsBefore)
+UI:ShowMenu(Rows("Elixir of Agility")[1])
+suite.check("the menu says All", menu.keepHere.label:GetText() == "Keep on This Character: All",
+    menu.keepHere.label:GetText())
+menu.keepHere:GetScript("OnClick")(menu.keepHere)
+suite.check("the box is empty for All", menu.keepBox.editBox:GetText() == "")
+UI:HideMenu()
+
+SettingsUI:Show()
+SettingsUI:SyncKeepHere()
+controls = SettingsUI.controls
+while controls.keepWhat:GetName() ~= "Elixir of Agility" do
+    controls.keepWhat.next:GetScript("OnClick")(controls.keepWhat.next)
+end
+suite.check("Settings says Keeping All", controls.keepAll.label:GetText() == "Keeping All"
+    and controls.keepCount.editBox:GetText() == "", controls.keepAll.label:GetText())
+controls.keepCount.editBox:GetScript("OnEditFocusLost")(controls.keepCount.editBox)
+suite.check("leaving the empty box keeps All", KeepHere.IsAll(KeepHere:Count(901)))
+controls.keepCount.editBox:SetText("4")
+controls.keepCount.editBox:GetScript("OnEditFocusLost")(controls.keepCount.editBox)
+suite.check("a number replaces All", KeepHere:Count(901) == 4)
+controls.keepAll:GetScript("OnClick")(controls.keepAll)
+suite.check("Keep All in Settings", KeepHere.IsAll(KeepHere:Count(901)))
+SettingsUI:Hide()
+
 suite.done()

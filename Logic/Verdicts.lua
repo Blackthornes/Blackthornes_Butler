@@ -430,6 +430,9 @@ function STEPS.keepHere(self, c)
     if c.pastKeep or not ns.KeepHere then return nil end
     local count = ns.KeepHere:Count(c.itemID)
     if not count then return nil end
+    if ns.KeepHere.IsAll(count) then
+        return "keep", L["Keeping all on this character"], nil, true, { keepHere = count }
+    end
     return "keep", L.Format("Keeping %d on this character", count), nil, true, { keepHere = count }
 end
 
