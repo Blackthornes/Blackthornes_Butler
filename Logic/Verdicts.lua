@@ -21,6 +21,8 @@
 --   3. A vendor won't buy it                       Keep
 --   4. On the player's Always sell list            Sell, unless Equipment
 --      says it is an upgrade to wear now          Look at it
+--   4a. On the player's Always disenchant list     Disenchant, or Mail to
+--                                                  the enchanter
 --   4b. Ammo for the hunter's bow or gun           Keep
 --   5. Equipment: an upgrade now or later, a tool  Keep
 --   6. Farmer: a goal of this character needs it   Keep
@@ -32,13 +34,15 @@
 --                                                  the enchanter
 --   8bb. Tradeskills: a green, not crafted, that
 --      gives a material this character's
---      Enchanting still lacks for a sure point     Disenchant
+--      Enchanting still lacks for a sure point,
+--      even when it sells for more                 Disenchant
 --   8be. "Disenchant greens here" ticked, and this
 --      character is the disenchanter (Tradeskills'
 --      Mail page): a green it can break, not
 --      crafted, whatever it would sell for         Disenchant
 --   8c. Tradeskills: gear its Mail page sends to
---      the disenchanter typed in its Settings      Mail to the disenchanter
+--      the disenchanter typed in its Settings,
+--      when breaking it pays as much as selling   Mail to the disenchanter
 --   8d. Learned: the player mails it to one of
 --      their characters by hand                    Mail
 --   9. Its price has not loaded yet                Look at it
@@ -64,8 +68,8 @@
 --
 -- The Always keep, Always sell and Always bank lists are the player's own
 -- choices, account wide, by item ID: BlackthornesButlerDB.alwaysKeep,
--- .alwaysSell and .alwaysBank ([itemID] = true), and .alwaysMail
--- ([itemID] = the character's short name). Never rename them.
+-- .alwaysSell, .alwaysBank and .alwaysDisenchant ([itemID] = true), and
+-- .alwaysMail ([itemID] = the character's short name). Never rename them.
 --
 -- Sell below (a player asked, the owner agreed 2026-10-11) is
 -- BlackthornesButlerDB.sellBelow, copper, account wide, nil when off (never
@@ -126,13 +130,14 @@ local function List(name)
     return ns.db[name]
 end
 
---- "keep", "sell", "bank", "mail" or nil: what the player said about this
---- item. For "mail", the second return is who it goes to.
+--- "keep", "sell", "bank", "disenchant", "mail" or nil: what the player
+--- said about this item. For "mail", the second return is who it goes to.
 function Verdicts:Choice(itemID)
     if not itemID then return nil end
     if List("alwaysKeep")[itemID] then return "keep" end
     if List("alwaysSell")[itemID] then return "sell" end
     if List("alwaysBank")[itemID] then return "bank" end
+    if List("alwaysDisenchant")[itemID] then return "disenchant" end
     local to = List("alwaysMail")[itemID]
     if type(to) == "string" and to ~= "" then
         -- Saved before names were whole ("Ana S."): read as the full name.
@@ -142,15 +147,16 @@ function Verdicts:Choice(itemID)
     return nil
 end
 
---- Put an item on the Always keep, Always sell, Always bank or Always mail
---- list (`to` the character, for "mail"), or take it off all four (`choice`
---- nil) so Butler decides again.
+--- Put an item on the Always keep, Always sell, Always bank, Always
+--- disenchant or Always mail list (`to` the character, for "mail"), or take
+--- it off all five (`choice` nil) so Butler decides again.
 function Verdicts:SetChoice(itemID, choice, to)
     if not itemID then return end
     if choice == "mail" and not (type(to) == "string" and to ~= "") then return end
     List("alwaysKeep")[itemID] = (choice == "keep") or nil
     List("alwaysSell")[itemID] = (choice == "sell") or nil
     List("alwaysBank")[itemID] = (choice == "bank") or nil
+    List("alwaysDisenchant")[itemID] = (choice == "disenchant") or nil
     List("alwaysMail")[itemID] = (choice == "mail") and to or nil
     -- The player's own pick (or Let Butler decide) replaces what was learned.
     if ns.Learning then ns.Learning:Forget(itemID) end
@@ -208,7 +214,7 @@ end
 -- judges exactly as it always has.
 Verdicts.FIRST = { "sets", "quests" }
 Verdicts.DEFAULT_ORDER = {
-    "keepList", "bankList", "mailList", "buyback", "noValue", "sellList", "ammo",
+    "keepList", "bankList", "mailList", "buyback", "noValue", "sellList", "disenchantList", "ammo",
     "upgrades", "altCrafts", "goals", "queue", "altUpgrades", "petFood",
     "bought", "levelEnch", "greensHere", "disenchanter", "mailHabit",
     "sellHabit", "greys", "bankAlt", "sellBelow",
@@ -365,9 +371,10 @@ local function Eq(c)
     return c.eq
 end
 
--- Levelling Enchanting and Tradeskills' disenchanter only take an item
--- that pays as much broken as sold (a player asked, the owner said yes,
--- 2026-10-16), unless "Always Disenchant" is ticked.
+-- Tradeskills' disenchanter only takes an item that pays as much broken
+-- as sold (a player asked, the owner said yes, 2026-10-16), unless
+-- "Always Disenchant" is ticked. Levelling Enchanting takes it either way
+-- (the owner, 2026-10-17): a skill point beats a better sale.
 local function BreakIt(c)
     if c.breakIt == nil then
         c.breakIt = not Verdicts:SellsForMore(c.entry, Said(c), Unit(c))
@@ -520,6 +527,32 @@ function STEPS.sellList(self, c)
     return "sell", L["On your Always sell list"], unit, unit ~= nil
 end
 
+-- The player's Always disenchant list (the owner, 2026-10-17: a green that
+-- sells for more goes to auction, unless the player says to break it).
+-- Broken here when this character can, else mailed to the enchanter
+-- Tradeskills names; an upgrade to wear now is never broken.
+function STEPS.disenchantList(self, c)
+    if Choice(c) ~= "disenchant" then return nil end
+    local entry, unit = c.entry, Unit(c)
+    local eq = Eq(c)
+    if eq and eq.upgrade == "now" then
+        return "look", L["On your Always disenchant list, but it's an upgrade for you"], unit, unit ~= nil
+    end
+    local Number, String, True = Sisters.Number, Sisters.String, Sisters.True
+    local ts = Said(c).ts
+    local value = Number(ts, "disenchant") or unit
+    if True(ts, "canDisenchant") then
+        return "disenchant", L["On your Always disenchant list"], value, unit ~= nil
+    end
+    local enchanter = not entry.bound and String(ts, "enchanter") or nil
+    if enchanter and not self:IsMe(enchanter) then
+        return "mail", L.Format("On your Always disenchant list: mail to %s", enchanter), value, unit ~= nil,
+            { to = enchanter }
+    end
+    return "look", L["On your Always disenchant list, but none of your characters can break it yet"],
+        unit, unit ~= nil
+end
+
 -- A vendor always pays most for arrows and bullets, so the hunter's own
 -- ammo is kept (Logic/Ammo.lua).
 function STEPS.ammo(self, c)
@@ -559,7 +592,7 @@ function STEPS.bought(self, c)
 end
 
 function STEPS.levelEnch(self, c)
-    if c.noAlt or not BreakIt(c) then return nil end
+    if c.noAlt then return nil end
     return FromSister(c, self:ForEnchanting(c.entry, Said(c)))
 end
 
@@ -1093,7 +1126,8 @@ end
 --- 2026-10-13). Tradeskills' `forEnchanting` names a green this character
 --- can break, not crafted, whose likely material its Enchanting still lacks
 --- for the crafts that give a point every time, after what it owns. Then
---- Disenchant, whatever the auction house or a vendor pays. Returns
+--- Disenchant, whatever the auction house or a vendor pays (the owner,
+--- 2026-10-17: a skill point beats a better sale). Returns
 --- verdict, reason, worth and { enchanting, yield }; or nil.
 --- Verdicts:Groups stops once the greens already picked cover the shortfall.
 function Verdicts:ForEnchanting(entry, said)
@@ -1149,8 +1183,7 @@ function Verdicts:SetDisenchantGreens(on)
 end
 
 --- Does a vendor or the auction house pay more for the item than what
---- breaking it gives? Asked before Levelling Enchanting and Tradeskills'
---- disenchanter (a player asked, the owner said yes, 2026-10-16), so a
+--- breaking it gives? Asked before Tradeskills' disenchanter (a player asked, the owner said yes, 2026-10-16), so a
 --- green that sells for more is sold instead. The auction house counts as
 --- Verdicts:Best counts it (after the cut, less when it sells slowly).
 --- False when nothing says what breaking it gives, or while "Always
@@ -1555,6 +1588,7 @@ ns.RegisterCommand("lists", L["show your Always keep, Always sell, Always bank a
     PrintList("alwaysKeep", L["Always keep"])
     PrintList("alwaysSell", L["Always sell"])
     PrintList("alwaysBank", L["Always bank"])
+    PrintList("alwaysDisenchant", L["Always disenchant"])
     PrintList("alwaysMail", L["Always mail"])
     if ns.Learning then ns.Learning:PrintLearned() end
 end)
