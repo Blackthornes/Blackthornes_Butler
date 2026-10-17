@@ -23,9 +23,7 @@ tell a friend: no hype, no questions to the reader, no exclamation marks
 outside the thanks line, no dashes as punctuation, no "now you can". The
 tool prints a note for a shipped line that reads like an advert.
 
-## 0.13.0
-
-- Green gear that sells for more at the auction house goes to Auction instead of getting broken down. If breaking it would give you an Enchanting skill point, Butler still says to break it. Right-click an item and pick Always disenchant to break it anyway.
+## 0.12.1
 
 Fixes and changes:
 

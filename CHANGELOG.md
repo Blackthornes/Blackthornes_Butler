@@ -4,14 +4,10 @@ Versions follow [semantic versioning](https://semver.org): the middle number
 moves for new behaviour, the last for fixes alone. The newest version goes at
 the top; a release is refused if its version has no section here.
 
-## 0.13.0
+## 0.12.1
 
 For WoW: Forever (interface 16001). `/reload` is enough after updating.
 
-- **Greens:** a green that sells for more at the auction house goes to
-  Auction, unless breaking it gives an Enchanting skill point. Right-click an
-  item and pick Always disenchant to break it anyway. It is a new rule on the
-  Order page.
 - **Bug fixes:** various fixes to Butler.
 
 ## 0.12.0
