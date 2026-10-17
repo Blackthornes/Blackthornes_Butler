@@ -94,8 +94,9 @@ end
 suite.check("no repeats or unknown rules", clean)
 local at = {}
 for i, id in ipairs(order) do at[id] = i end
-suite.check("the player's own picks keep their order", at.greys == 1 and at.greys < at.keepList,
+suite.check("the player's own picks keep their order", at.greys < at.keepList,
     tostring(order[1]) .. " " .. tostring(order[2]))
+suite.check("a missing first rule goes on top", at.keepHere == 1)
 suite.check("a missing rule after a moved one follows it", at.bankAlt == at.greys + 1)
 suite.check("a missing rule follows its usual neighbour", at.mailList == at.bankList + 1)
 suite.check("the saved table itself is untouched", ns.db.ruleOrder[2] == "bogus")

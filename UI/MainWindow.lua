@@ -1080,6 +1080,28 @@ function UI:BuildMenu()
     menu.mail:SetPoint("TOPLEFT", menu.bank, "BOTTOMLEFT", 0, -4)
     menu.decide = Widgets.CreateButton(menu, L["Let Butler decide"], function() Pick(nil) end,
         { width = MENU_WIDTH - 16, height = 20 })
+    -- Keep a number on this character (Logic/KeepHere.lua, a player asked,
+    -- the owner said build it 2026-10-17): its own page with a box.
+    menu.keepHere = Widgets.CreateButton(menu, L["Keep on This Character..."], function() UI:ShowKeepMenu() end,
+        { width = MENU_WIDTH - 16, height = 20 })
+    local function SaveKeep()
+        local data = UI.menu.data
+        local count = tonumber(menu.keepBox.editBox:GetText()) or 0
+        UI:HideMenu()
+        if not data then return end
+        local done, why = ns.KeepHere:Set(data.itemID, count)
+        if not done and why then ns.Print(why) end
+        if ns.SettingsUI and ns.SettingsUI.SyncKeepHere then ns.SettingsUI:SyncKeepHere() end
+    end
+    menu.keepBox = Widgets.CreateSearchBox(menu, "0", nil, SaveKeep, { plain = true })
+    menu.keepBox:SetSize(MENU_WIDTH - 16, 24)
+    local keepEdit = menu.keepBox.editBox
+    keepEdit:SetMaxLetters(4)
+    if keepEdit.SetNumeric then keepEdit:SetNumeric(true) end
+    menu.keepNote = Theme.CreateLabel(menu, "small", "muted")
+    menu.keepNote:SetWordWrap(true)
+    menu.keepSave = Widgets.CreateButton(menu, L["Save"], SaveKeep,
+        { width = MENU_WIDTH - 16, height = 20, primary = true })
     -- An alt's upgrade under Mail: hold this one back from them, or every
     -- upgrade (the owner asked 2026-10-12). Undone in Settings.
     menu.hold = Widgets.CreateButton(menu, L["Don't mail this"], function()
@@ -1103,7 +1125,10 @@ function UI:BuildMenu()
     -- go. Only runs while the menu is up.
     menu:SetScript("OnUpdate", function(frame, elapsed)
         local ok, over = pcall(frame.IsMouseOver, frame)
-        frame.away = (ok and over) and 0 or (frame.away or 0) + (elapsed or 0)
+        -- Never while the player types a number in it.
+        local typing = frame.keepBox and frame.keepBox:IsShown() and frame.keepBox.editBox.HasFocus
+            and frame.keepBox.editBox:HasFocus()
+        frame.away = ((ok and over) or typing) and 0 or (frame.away or 0) + (elapsed or 0)
         if frame.away > 1.5 then UI:HideMenu() end
     end)
 
@@ -1126,6 +1151,9 @@ function UI:ShowMenu(data, stay)
 
     for _, button in ipairs(menu.characters) do button:Hide() end
     menu.back:Hide()
+    menu.keepBox:Hide()
+    menu.keepNote:Hide()
+    menu.keepSave:Hide()
 
     local choice, mailTo = ns.Verdicts:Choice(data.itemID)
     menu.keep:SetText(choice == "keep" and L["Always keep (now)"] or L["Always keep"])
@@ -1171,6 +1199,14 @@ function UI:ShowMenu(data, stay)
         menu.holdAll:SetPoint("TOPLEFT", menu.hold, "BOTTOMLEFT", 0, -4)
         last = menu.holdAll
     end
+    -- Keep on this character: the number kept, when there is one.
+    local keepCount = ns.KeepHere and ns.KeepHere:Count(data.itemID)
+    menu.keepHere:SetShown(ns.KeepHere ~= nil)
+    menu.keepHere:SetText(keepCount and L.Format("Keep on This Character: %d", keepCount)
+        or L["Keep on This Character..."])
+    menu.keepHere:ClearAllPoints()
+    menu.keepHere:SetPoint("TOPLEFT", last, "BOTTOMLEFT", 0, -4)
+    if ns.KeepHere then last = menu.keepHere end
     menu.decide:ClearAllPoints()
     menu.decide:SetPoint("TOPLEFT", last, "BOTTOMLEFT", 0, -4)
     -- Also there for what Butler learned from the player (a buyback, a
@@ -1180,10 +1216,11 @@ function UI:ShowMenu(data, stay)
     menu.decide:SetShown(decides)
     menu.decide:SetText(learned and L["Forget what Butler learned"] or L["Let Butler decide"])
 
-    local rows = 3 + (canBreak and 1 or 0) + (canMark and 1 or 0) + (canMail and 1 or 0) + (upgradeTo and 2 or 0) + (decides and 1 or 0)
+    local rows = 3 + (canBreak and 1 or 0) + (canMark and 1 or 0) + (canMail and 1 or 0) + (upgradeTo and 2 or 0)
+        + (ns.KeepHere and 1 or 0) + (decides and 1 or 0)
     menu:SetHeight(30 + rows * MENU_ROW)
     UI.FitMenu(menu, { menu.keep, menu.sell, menu.bank, menu.disenchant, menu.bought, menu.mail,
-        menu.hold, menu.holdAll, menu.decide })
+        menu.hold, menu.holdAll, menu.keepHere, menu.decide })
 
     if stay and menu:IsShown() then return end
     local x, y = 0, 0
@@ -1231,6 +1268,8 @@ function UI:ShowMailMenu()
     menu.hold:Hide()
     menu.holdAll:Hide()
     menu.decide:Hide()
+    menu.keepHere:Hide()
+    menu.disenchant:Hide()
 
     local above
     for index, name in ipairs(names) do
@@ -1265,6 +1304,42 @@ function UI:ShowMailMenu()
     local buttons = { menu.back }
     for index = 1, #names do buttons[#buttons + 1] = menu.characters[index] end
     UI.FitMenu(menu, buttons)
+end
+
+--- The menu's keep page: how many to keep on this character, typed in a
+--- box. 0 takes it off the list.
+function UI:ShowKeepMenu()
+    local menu = self.menu
+    local data = menu and menu.data
+    if not data or not ns.KeepHere then return end
+    menu.away = 0
+    menu.title:SetText(L.Format("Keep %s on this character", data.name))
+    for _, button in ipairs({ menu.keep, menu.sell, menu.bank, menu.disenchant, menu.bought, menu.mail,
+        menu.hold, menu.holdAll, menu.keepHere, menu.decide }) do
+        button:Hide()
+    end
+    for _, button in ipairs(menu.characters) do button:Hide() end
+
+    local count = ns.KeepHere:Count(data.itemID)
+    menu.keepBox:ClearAllPoints()
+    menu.keepBox:SetPoint("TOPLEFT", 8, -26)
+    menu.keepBox:SetText(count and tostring(count) or "")
+    menu.keepBox:Show()
+    menu.keepNote:ClearAllPoints()
+    menu.keepNote:SetPoint("TOPLEFT", menu.keepBox, "BOTTOMLEFT", 0, -4)
+    menu.keepNote:SetPoint("RIGHT", menu, "RIGHT", -8, 0)
+    menu.keepNote:SetText(L["Anything past this number goes on down Butler's rules. 0 clears it."])
+    menu.keepNote:Show()
+    menu.keepSave:ClearAllPoints()
+    menu.keepSave:SetPoint("TOPLEFT", menu.keepNote, "BOTTOMLEFT", 0, -6)
+    menu.keepSave:Show()
+    menu.back:ClearAllPoints()
+    menu.back:SetPoint("TOPLEFT", menu.keepSave, "BOTTOMLEFT", 0, -4)
+    menu.back:Show()
+    UI.FitMenu(menu, { menu.keepSave, menu.back })
+    local noteHeight = menu.keepNote.GetStringHeight and tonumber((menu.keepNote:GetStringHeight())) or 0
+    menu:SetHeight(30 + 28 + math.max(noteHeight, 28) + 10 + 2 * MENU_ROW)
+    if menu.keepBox.editBox.SetFocus then menu.keepBox.editBox:SetFocus() end
 end
 
 function UI:HideMenu()
