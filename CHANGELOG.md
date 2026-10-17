@@ -4,6 +4,17 @@ Versions follow [semantic versioning](https://semver.org): the middle number
 moves for new behaviour, the last for fixes alone. The newest version goes at
 the top; a release is refused if its version has no section here.
 
+## 0.12.0
+
+For WoW: Forever (interface 16001). A file was added and the TOC changed, so
+restart the game fully after updating (`/reload` is not enough).
+
+- **Order:** Settings has an ORDER page that lists every rule Butler asks, in
+  order. Drag a rule to a new place or turn it off. Set Default and Undo Move
+  put things back.
+- **Always mail:** an item on an Always mail list stays with you when it is an
+  upgrade you can wear now.
+
 ## 0.11.0
 
 For WoW: Forever (interface 16001). `/reload` is enough after updating.
