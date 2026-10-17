@@ -863,6 +863,27 @@ next hover builds it again at most once every `WhoHas.REBUILD_GAP` (1 s).
 unticked, never rename it) and `/bbutler whohas`. Tested in
 `tools/test_whohas.lua`. Not yet seen in game.
 
+## Keep on each character
+
+A player asked, the owner said build it (2026-10-17): keep a number of an
+item on one character, and let the rest follow the usual rules. The
+right-click menu's "Keep on This Character..." opens a box for the number
+(0 clears it), and Settings, Errands page, KEEP ON EACH CHARACTER shows
+and changes any character's list from any character. `Logic/KeepHere.lua`
+keeps it account wide by GUID, `keepHere[guid] = { name, items = {
+[itemID] = count } }`, with a copy of the playing character's list in its
+own save (`BlackthornesButlerCharDB.keepHere`, read when the GUID can't
+be, never written then); never rename either. Rule `keepHere` is first
+in `Verdicts.DEFAULT_ORDER` and can be moved or turned off on the Order
+page. `Verdicts:Groups` keeps enough stacks (`KeepHere.Plan`: the biggest
+that fit, then the smallest past that) and judges the rest again past the
+rule (`Judge(entry, nil, true)`). A kept stack holding more than the
+number is split while the window is up and no fight is on
+(`KeepHere:SplitNext`, `SplitContainerItem` into a free slot, at most
+`SPLITS` tries an item each time the window opens); with no free slot the
+whole stack is kept and the row asks for one. Nothing is sold or deleted
+by it. Tested in `tools/test_keephere.lua`.
+
 ## The rule order
 
 The owner said build it (2026-10-17, from a mockup): Settings has an ORDER

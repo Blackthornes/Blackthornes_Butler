@@ -13,6 +13,9 @@
 -- to the character playing (Allowed).
 --
 --   0. In one of the player's equipment sets       Keep
+--   0b. Kept on this character: the player keeps a number of it here
+--      (Logic/KeepHere.lua); stacks past that number go on down the
+--      rules                                        Keep
 --   1. On the player's Always keep list            Keep
 --      ... or Always bank list                     Bank
 --      ... or learned: bought back after Butler sold it   Keep
@@ -178,7 +181,9 @@ end
 --- `noAlt` judges a copy past what an alt's upgrade needs, or past the
 --- greens that already cover what Enchanting lacks (Verdicts:Groups): as
 --- if no alt and no skill-up wanted it.
-function Verdicts:Judge(entry, noAlt)
+--- `pastKeep` judges a copy past what the player keeps on this character
+--- (Logic/KeepHere.lua, Verdicts:Groups).
+function Verdicts:Judge(entry, noAlt, pastKeep)
     if memoVersion ~= self.version then
         memo, memoVersion = {}, self.version
     end
@@ -190,12 +195,12 @@ function Verdicts:Judge(entry, noAlt)
     local carried = entry.itemID and ns.Bags.Carried and ns.Bags:Carried(entry.itemID) or 0
     -- Soulbound too: a link doesn't say it, and a bound copy of gear can't
     -- be mailed or auctioned as an unbound one beside it can.
-    local key = (noAlt and "x|" or "") .. (entry.bound and "b|" or "")
+    local key = (noAlt and "x|" or "") .. (pastKeep and "k|" or "") .. (entry.bound and "b|" or "")
         .. tostring(entry.link or entry.itemID) .. "#" .. carried
     local known = memo[key]
     if known then return known[1], known[2], known[3], known[4] end
 
-    local verdict, reason, unit, final, extra = self:Decide(entry, noAlt)
+    local verdict, reason, unit, final, extra = self:Decide(entry, noAlt, pastKeep)
     -- An answer that waits on the client loading the item is asked again.
     if final then memo[key] = { verdict, reason, unit, extra } end
     return verdict, reason, unit, extra
@@ -214,7 +219,7 @@ end
 -- judges exactly as it always has.
 Verdicts.FIRST = { "sets", "quests" }
 Verdicts.DEFAULT_ORDER = {
-    "keepList", "bankList", "mailList", "buyback", "noValue", "sellList", "disenchantList", "ammo",
+    "keepHere", "keepList", "bankList", "mailList", "buyback", "noValue", "sellList", "disenchantList", "ammo",
     "upgrades", "altCrafts", "goals", "queue", "altUpgrades", "petFood",
     "bought", "levelEnch", "greensHere", "disenchanter", "mailHabit",
     "sellHabit", "greys", "bankAlt", "sellBelow",
@@ -416,6 +421,16 @@ function STEPS.quests(self, c)
     if forQuest then
         return "keep", forQuest, nil, true
     end
+end
+
+-- A number the player keeps on this character (Logic/KeepHere.lua). Every
+-- copy says Keep here; Groups keeps only enough stacks for the number and
+-- judges the rest again past this rule.
+function STEPS.keepHere(self, c)
+    if c.pastKeep or not ns.KeepHere then return nil end
+    local count = ns.KeepHere:Count(c.itemID)
+    if not count then return nil end
+    return "keep", L.Format("Keeping %d on this character", count), nil, true, { keepHere = count }
 end
 
 function STEPS.keepList(self, c)
@@ -686,8 +701,8 @@ end
 --- The rules, in the player's order. The fourth return says whether the
 --- answer will hold (false while the price is still loading); the fifth
 --- is who a Mail row goes to and how many ({ to, count }).
-function Verdicts:Decide(entry, noAlt)
-    local c = { entry = entry, itemID = entry.itemID, noAlt = noAlt }
+function Verdicts:Decide(entry, noAlt, pastKeep)
+    local c = { entry = entry, itemID = entry.itemID, noAlt = noAlt, pastKeep = pastKeep }
     for _, id in ipairs(self.FIRST) do
         local verdict, reason, unit, final, extra = Ask(self, c, id)
         if verdict then return verdict, reason, unit, final, extra end
@@ -1420,17 +1435,51 @@ function Verdicts:Groups()
         return a.slot < b.slot
     end)
 
+    -- Each item's slots, for what the player keeps on this character.
+    local byItem = {}
+    for _, entry in ipairs(entries) do
+        local id = entry.itemID
+        if id then
+            byItem[id] = byItem[id] or {}
+            byItem[id][#byItem[id] + 1] = entry
+        end
+    end
+    local plans, splits = {}, {}
+
     -- How many of each item have gone to an alt's upgrade so far: past
     -- what it wants, a copy gets its own verdict.
     local allotted, slotVerdicts = {}, {}
     for _, entry in ipairs(entries) do
         local verdict, reason, unit, extra = self:Judge(entry)
+        -- Kept on this character: only enough stacks for the number; the
+        -- rest are judged past it. A stack holding more is split.
+        local pastKeep
+        if extra and extra.keepHere and ns.KeepHere then
+            local id = entry.itemID
+            local plan = plans[id]
+            if not plan then
+                local kept, split = ns.KeepHere.Plan(byItem[id] or { entry }, extra.keepHere)
+                plan = { kept = kept, split = split }
+                plans[id] = plan
+                if split then
+                    splits[#splits + 1] = { bag = split.entry.bag, slot = split.entry.slot,
+                        itemID = id, count = split.entry.count, extra = split.extra }
+                end
+            end
+            if not plan.kept[entry] then
+                pastKeep = true
+                verdict, reason, unit, extra = self:Judge(entry, nil, true)
+            elseif plan.split and plan.split.entry == entry and not ns.KeepHere:CanSplitNow() then
+                reason = L.Format("Keeping %d on this character. Free one bag slot so Butler can split off the rest.",
+                    extra.keepHere)
+            end
+        end
         -- Greens broken to level Enchanting: once those before it should give
         -- enough of the material, a copy gets its own verdict.
         if extra and extra.enchanting then
             local id = extra.enchanting
             if (allotted["e" .. id] or 0) >= (extra.short or 0) then
-                verdict, reason, unit, extra = self:Judge(entry, true)
+                verdict, reason, unit, extra = self:Judge(entry, true, pastKeep)
             else
                 allotted["e" .. id] = (allotted["e" .. id] or 0) + (extra.yield or 1) * (entry.count or 1)
             end
@@ -1438,7 +1487,7 @@ function Verdicts:Groups()
         if extra and extra.upgrade then
             local id = entry.itemID
             if (allotted[id] or 0) >= (extra.count or 1) then
-                verdict, reason, unit, extra = self:Judge(entry, true)
+                verdict, reason, unit, extra = self:Judge(entry, true, pastKeep)
             else
                 allotted[id] = (allotted[id] or 0) + entry.count
             end
@@ -1491,6 +1540,7 @@ function Verdicts:Groups()
 
     self.groupCache = { bags = bagsVersion, verdicts = self.version, groups = groups,
         slots = slotVerdicts }
+    if #splits > 0 and ns.KeepHere then ns.KeepHere:SplitSoon(splits) end
     return groups
 end
 
@@ -1590,6 +1640,7 @@ ns.RegisterCommand("lists", L["show your Always keep, Always sell, Always bank a
     PrintList("alwaysBank", L["Always bank"])
     PrintList("alwaysDisenchant", L["Always disenchant"])
     PrintList("alwaysMail", L["Always mail"])
+    if ns.KeepHere then ns.KeepHere:PrintMine() end
     if ns.Learning then ns.Learning:PrintLearned() end
 end)
 

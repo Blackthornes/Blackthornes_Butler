@@ -324,6 +324,47 @@ function SettingsUI:SyncHeld()
     controls.heldItems:SetLabelColor(count == 0 and "dim" or nil)
 end
 
+-- The characters and items the keep pickers step through.
+SettingsUI.keepState = { guids = {}, items = {} }
+
+--- Keep on each character: the characters with a list (the one playing
+--- first), the picked one's items, and the picked item's number.
+function SettingsUI:SyncKeepHere()
+    local controls = self.controls
+    if not (controls and controls.keepWho and ns.KeepHere) then return end
+    local state = self.keepState
+    local who = controls.keepWho
+    local current = state.guids[who.index]
+    local names, guids = {}, {}
+    for _, each in ipairs(ns.KeepHere:Characters()) do
+        names[#names + 1] = each.name
+        guids[#guids + 1] = each.guid
+    end
+    state.guids = guids
+    who:SetNames(names)
+    who.index = 1
+    for index, guid in ipairs(guids) do
+        if guid == current then who.index = index end
+    end
+    who:Select(names[who.index])
+    who.index = math.max(1, math.min(#guids, who.index))
+
+    local what = controls.keepWhat
+    local items = ns.KeepHere:Items(guids[who.index])
+    local itemNames = {}
+    for _, each in ipairs(items) do itemNames[#itemNames + 1] = each.name end
+    local index = what.index or 1
+    state.items = items
+    what:SetNames(itemNames)
+    what.index = math.max(1, math.min(#items, index))
+    what:Select(itemNames[what.index])
+    if #items == 0 then what.text:SetText(L["Nothing kept yet"]) end
+
+    local picked = items[what.index]
+    controls.keepCount:SetText(picked and tostring(picked.count) or "")
+    controls.keepRemove:SetLabelColor(picked and nil or "dim")
+end
+
 --- The bank alt page: who, when, which list and the kinds, as saved.
 function SettingsUI:SyncBankAlt()
     local controls = self.controls
@@ -502,6 +543,53 @@ function SettingsUI:BuildPages()
         SettingsUI:SyncHeld()
     end, { width = 100, height = 20 })
     controls.heldItems:SetPoint("TOPLEFT", CONTROL_X, 0)
+
+    -- How many of an item each character keeps (Logic/KeepHere.lua, a
+    -- player asked, the owner said build it 2026-10-17). Set with a
+    -- right-click in the Butler window; seen and changed here.
+    pages:Section("selling", 2, L["KEEP ON EACH CHARACTER"])
+
+    local keepWhoRow = pages:Row("selling", 2, L["Character:"],
+        L["Right-click an item in the Butler window to keep some on the character you're on."])
+    controls.keepWho = SettingsUI.CharacterPicker(keepWhoRow, CONTROL_X, function()
+        controls.keepWhat.index = 1
+        SettingsUI:SyncKeepHere()
+    end)
+
+    local keepWhatRow = pages:Row("selling", 2, L["Item:"], nil)
+    controls.keepWhat = SettingsUI.CharacterPicker(keepWhatRow, CONTROL_X, function()
+        SettingsUI:SyncKeepHere()
+    end)
+
+    local function KeepPicked()
+        local state = SettingsUI.keepState
+        return state.guids[controls.keepWho.index], state.items[controls.keepWhat.index]
+    end
+
+    local keepCountRow = pages:Row("selling", 2, L["Keep:"], L["0 takes it off the list."])
+    local function SaveCount()
+        local who, what = KeepPicked()
+        if not (who and what) then return end
+        local count = tonumber(controls.keepCount.editBox:GetText()) or 0
+        if count == what.count then return end
+        ns.KeepHere:Set(what.itemID, count, who)
+        SettingsUI:SyncKeepHere()
+    end
+    controls.keepCount = Widgets.CreateSearchBox(keepCountRow, "0", nil, SaveCount, { plain = true })
+    controls.keepCount:SetSize(60, 24)
+    controls.keepCount:SetPoint("TOPLEFT", CONTROL_X, 0)
+    controls.keepCount.editBox:SetMaxLetters(4)
+    if controls.keepCount.editBox.SetNumeric then controls.keepCount.editBox:SetNumeric(true) end
+    controls.keepCount.editBox:HookScript("OnEditFocusLost", SaveCount)
+
+    local keepRemoveRow = pages:Row("selling", 2, L["Remove:"], nil)
+    controls.keepRemove = Widgets.CreateButton(keepRemoveRow, L["Remove"], function()
+        local who, what = KeepPicked()
+        if not (who and what) then return end
+        ns.KeepHere:Set(what.itemID, 0, who)
+        SettingsUI:SyncKeepHere()
+    end, { width = 100, height = 20 })
+    controls.keepRemove:SetPoint("TOPLEFT", CONTROL_X, 0)
 
     -- Bank alt (Logic/BankAlt.lua, a player asked, the owner said build it
     -- 2026-10-14): who, where it sits among the verdicts and which list on
@@ -801,6 +889,7 @@ function SettingsUI:Refresh()
     table.sort(heldNames)
     controls.heldPick:SetNames(heldNames)
     self:SyncHeld()
+    self:SyncKeepHere()
     self:SyncBankAlt()
     controls.textSize:Sync()
     controls.windowStyle:Sync()

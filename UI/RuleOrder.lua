@@ -37,6 +37,7 @@ local SECTION_GAP = 10
 RuleOrderUI.RULES = {
     sets = { L["Equipment Sets:"], "keep", L["Gear in one of your equipment sets is never sold, mailed or broken."] },
     quests = { L["Quest Items:"], "keep", L["Quest items, things that start a quest, and things your quests ask for."] },
+    keepHere = { L["Kept on This Character:"], "keep", L["The number you keep on this character stays. The rest go on down the rules."] },
     keepList = { L["Always Keep List:"], "keep", L["Things you put on the list stay. A queued craft on another character still gets its share."] },
     bankList = { L["Always Bank List:"], "bank", L["Goes in the bank when you click Move to bank."] },
     mailList = { L["Always Mail List:"], "mail", L["Each item goes to the character you picked for it. An upgrade you can wear now stays."] },
