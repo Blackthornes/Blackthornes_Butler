@@ -1043,3 +1043,9 @@ L["Nobody is selling %d %s right now."] = "Personne ne vend %d %s en ce moment."
 L["Bought %d %s."] = "%d %s achetés."
 L["Buy Quest Items is on."] = "Acheter les objets de quête est activé."
 L["Buy Quest Items is off."] = "Acheter les objets de quête est coupé."
+
+-- Off, Shift or Always for a tooltip line (UI/TooltipShift.lua).
+L["Off"] = "Aucun"
+L["Shift"] = "Maj"
+L["Always"] = "Toujours"
+L["Hold Shift for more."] = "Maintiens Maj pour en voir plus."
