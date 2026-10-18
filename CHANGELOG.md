@@ -4,6 +4,22 @@ Versions follow [semantic versioning](https://semver.org): the middle number
 moves for new behaviour, the last for fixes alone. The newest version goes at
 the top; a release is refused if its version has no section here.
 
+## 0.13.0
+
+For WoW: Forever (interface 16001). Files were added and the TOC changed, so
+restart the game fully after updating (`/reload` is not enough).
+
+- **Keep on each character:** right-click an item to keep a number of it on the
+  character you are playing, or Keep All. Settings, Errands page, lists them.
+- **Quest items:** Buy Quest Items on the Selling page adds a Buy row at the
+  auction house for what your open quests need. Off until you tick it.
+- **Vendors:** a Buy row shows at any vendor that has something your craft
+  queue needs.
+- **Upgrades:** only as many copies as a character can wear are kept. The spares
+  go to the auction house.
+- **Rarity colors:** item names use their rarity color in jobs, lists and
+  tooltips.
+
 ## 0.12.1
 
 For WoW: Forever (interface 16001). `/reload` is enough after updating.
