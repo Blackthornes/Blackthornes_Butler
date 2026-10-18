@@ -343,6 +343,72 @@ function Jobs:Changed()
     self.version = self.version + 1
 end
 
+--------------------------------------------------------------------------------
+-- Ignore until next login
+--
+-- A player asked, the owner said yes (2026-10-18): right-click a
+-- character's jobs to put them away, and they come back the next time that
+-- character logs in. Kept account wide by full name in jobsIgnored
+-- ([name] = time put away; made when first needed, never rename it), so
+-- the character logging in, wherever it was put away from, brings its own
+-- back. Nothing in the queue changes; only the lines are left out.
+--------------------------------------------------------------------------------
+
+local function IgnoredList(make)
+    local db = ns.db
+    if type(db) ~= "table" then return nil end
+    if type(db.jobsIgnored) ~= "table" then
+        if not make then return nil end
+        db.jobsIgnored = {}
+    end
+    return db.jobsIgnored
+end
+
+--- Is this character's line put away?
+function Jobs:Ignored(name)
+    local list = IgnoredList(false)
+    if not list or type(name) ~= "string" then return false end
+    if list[name] then return true end
+    for kept in pairs(list) do
+        if Jobs.SameName(kept, name) then return true end
+    end
+    return false
+end
+
+--- Put a character's jobs away until it next logs in.
+function Jobs:Ignore(name)
+    if type(name) ~= "string" or name == "" then return end
+    local list = IgnoredList(true)
+    if not list then return end
+    list[name] = type(time) == "function" and time() or true
+    self:Changed()
+    if ns.UI and ns.UI.IsShown and ns.UI:IsShown() then ns.UI:Refresh(true) end
+end
+
+--- Is `name` the character playing? Its own name first, so this works
+--- before Tradeskills has read the characters.
+function Jobs.IsPlaying(name)
+    if type(name) ~= "string" then return false end
+    local ok, mine = pcall(UnitName, "player")
+    if ok and type(mine) == "string" and Jobs.SameName(mine, name) then return true end
+    local errands = ns.Errands
+    return errands and errands.IsMe and errands:IsMe(name) or false
+end
+
+--- Logging in: this character's jobs come back.
+function Jobs:Welcome()
+    local list = IgnoredList(false)
+    if not list then return end
+    local moved = false
+    for name in pairs(list) do
+        if Jobs.IsPlaying(name) then
+            list[name] = nil
+            moved = true
+        end
+    end
+    if moved then self:Changed() end
+end
+
 --- Can the character do any of its steps now? A mail, a vendor run or
 --- materials to buy or gather always can; a craft once it has what it takes.
 function Jobs.Ready(job)
@@ -364,7 +430,9 @@ function Jobs:Plan()
     local here, others = nil, {}
     local errands = ns.Errands
     for _, job in ipairs(self:Read()) do
-        if job.isCurrent or (errands and errands.IsMe and errands:IsMe(job.name)) then
+        if Jobs:Ignored(job.name) then
+            -- Put away until that character logs in again.
+        elseif job.isCurrent or (errands and errands.IsMe and errands:IsMe(job.name)) then
             -- The character playing, under any record of it, is never one
             -- to log out for (a player was told to, 2026-10-11).
             here = here or { name = job.name, isCurrent = true, steps = {} }
@@ -663,7 +731,7 @@ function Jobs:Lines()
         rows[#rows + 1] = { type = "jobnext", job = plan.nextJob, isNext = true, isFirst = true }
     end
     for _, step in ipairs(plan.here and plan.here.steps or {}) do
-        rows[#rows + 1] = { type = "job", step = step }
+        rows[#rows + 1] = { type = "job", step = step, job = plan.here }
     end
     for index, job in ipairs(plan.others) do
         if not (plan.goFirst and index == 1) then
@@ -1295,8 +1363,13 @@ function Jobs:OnEnable()
         training.OnTrainer = function(open) Jobs:AtTrainer(open) end
     end
     ns.RegisterEvent(self, "PLAYER_ENTERING_WORLD", function(_, _, isInitialLogin)
+        if isInitialLogin then Jobs:Welcome() end
         if isInitialLogin and C_Timer and C_Timer.After then
-            C_Timer.After(Jobs.LOGIN_DELAY, function() Jobs:Greet() end)
+            C_Timer.After(Jobs.LOGIN_DELAY, function()
+                -- Again once Tradeskills has read every name of this character.
+                Jobs:Welcome()
+                Jobs:Greet()
+            end)
         end
     end)
     -- Just before combat locks secure frames: the button can still hide.
