@@ -127,6 +127,8 @@ Verdicts:SetChoice(3005, "keep")
 suite.check("Always keep wins", Row("Wool Cloth").verdict == "keep")
 Verdicts:SetChoice(3005, "mail", "Cara Reed")
 suite.check("Always mail to another character wins", Row("Wool Cloth").mailTo == "Cara Reed")
+Verdicts:SetChoice(3005, "mail", "Me Here")
+suite.check("mailed here by the Always mail list, it is not sent on", not ToBank("Wool Cloth"))
 Verdicts:SetChoice(3005, nil)
 suite.check("off every list, it goes to the bank alt", ToBank("Wool Cloth"))
 

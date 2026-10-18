@@ -353,6 +353,12 @@ local function Choice(c)
     if not c.choiceRead then
         c.choice, c.mailTo = Verdicts:Choice(c.itemID)
         c.choiceRead = true
+        -- On the character it is mailed to, it has arrived: the usual rules
+        -- decide it there, and only that character's own keep holds it
+        -- (the owner, 2026-10-18).
+        if c.choice == "mail" and Verdicts:IsMe(c.mailTo) then
+            c.choice, c.mailTo = nil, nil
+        end
     end
     return c.choice, c.mailTo
 end
@@ -461,11 +467,8 @@ function STEPS.mailList(self, c)
     local choice, mailTo = Choice(c)
     if choice ~= "mail" then return nil end
     local entry, itemID = c.entry, c.itemID
-    -- Soulbound can't go in the mail, whatever the list says, and the
-    -- list is account wide, so it can name the character playing.
-    if self:IsMe(mailTo) then
-        return "keep", L.Format("On your Always mail list for %s, the character you're on", mailTo), nil, true
-    end
+    -- Soulbound can't go in the mail, whatever the list says. On the
+    -- character it names, Choice gives nothing, so the usual rules decide.
     if entry.bound then
         return "keep", L.Format("Soulbound, so it can't be mailed to %s", mailTo), nil, true
     end
@@ -659,6 +662,10 @@ end
 function STEPS.bankAlt(self, c)
     local unit = Unit(c)
     if unit == nil or not ns.BankAlt then return nil end
+    -- Mailed here by the Always mail list, it stays: sent on to the bank
+    -- alt, that character's list would only mail it back.
+    local choice, mailTo = self:Choice(c.itemID)
+    if choice == "mail" and self:IsMe(mailTo) then return nil end
     local verdict, _, worth = self:Best(c.entry, unit, Said(c))
     local bank, why, to = ns.BankAlt:Verdict(c.entry, verdict)
     if bank then return bank, why, worth, true, to end
