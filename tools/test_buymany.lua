@@ -125,7 +125,7 @@ suite.check("Shift-click with a chat box open links the item instead", not Box:I
 _G.ChatEdit_GetActiveWindow = function() return nil end
 Click(1)
 suite.check("Shift-click opens the Buy more box", Box:IsShown() and Box.index == 1)
-suite.check("with the item's name", Box.name:GetText() == "Refreshing Spring Water")
+suite.check("with the item's name", env.Plain(Box.name:GetText()) == "Refreshing Spring Water")
 
 -- 2. The box says what it comes to; Buy waits for an amount.
 suite.check("nothing typed, nothing to buy", Box.plan.state == "none")
@@ -171,7 +171,7 @@ for _, call in ipairs(calls) do total = total + call.quantity end
 suite.check("Buy bought 200 water", total == 200, total)
 suite.check("a stack at most a call", calls[1].quantity == 20 and #calls == 10, #calls)
 suite.check("and paid for it", fake.money == 10000 - 1000, fake.money)
-suite.check("chat says what it bought", env.ChatText():find("bought 200 Refreshing Spring Water", 1, true) ~= nil)
+suite.check("chat says what it bought", env.Plain(env.ChatText()):find("bought 200 Refreshing Spring Water", 1, true) ~= nil)
 suite.check("the box closes when done", not Box:IsShown())
 
 -- 5. The bags fill: the game's error stops it.

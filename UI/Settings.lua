@@ -352,7 +352,7 @@ function SettingsUI:SyncKeepHere()
     local what = controls.keepWhat
     local items = ns.KeepHere:Items(guids[who.index])
     local itemNames = {}
-    for _, each in ipairs(items) do itemNames[#itemNames + 1] = each.name end
+    for _, each in ipairs(items) do itemNames[#itemNames + 1] = ns.Items:ColorName(each.name, each.itemID) end
     local index = what.index or 1
     state.items = items
     what:SetNames(itemNames)

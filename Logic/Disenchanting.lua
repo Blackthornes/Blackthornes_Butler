@@ -105,7 +105,7 @@ function Disenchanting:Queue()
         for _, entry in ipairs(row.slots) do
             if not entry.locked then
                 queue[#queue + 1] = { bag = entry.bag, slot = entry.slot, itemID = entry.itemID,
-                    name = row.name, bought = row.bought }
+                    name = row.name, quality = entry.quality, bought = row.bought }
                 total = total + (entry.count or 1)
             end
         end
@@ -199,8 +199,9 @@ function Disenchanting:Words()
 
     local lines = {}
     if first then
-        lines[#lines + 1] = first.bought and L.Format("Next: %s, bought to disenchant.", first.name)
-            or L.Format("Next: %s.", first.name)
+        local name = ns.Items:ColorName(first.name, first.itemID, first.quality)
+        lines[#lines + 1] = first.bought and L.Format("Next: %s, bought to disenchant.", name)
+            or L.Format("Next: %s.", name)
     end
     lines[#lines + 1] = L["Each click breaks the next item under Disenchant."]
     lines[#lines + 1] = L["Items you bought to disenchant go first."]

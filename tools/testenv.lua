@@ -304,6 +304,13 @@ function env.Load(locale)
     return ns
 end
 
+--- `text` without colour codes, for checks on words that name items in
+--- their rarity colour (Items:ColorName). Anything not a string as it is.
+function env.Plain(text)
+    if type(text) ~= "string" then return text end
+    return (text:gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", ""))
+end
+
 --- Everything printed to chat since the addon loaded, as one string.
 function env.ChatText()
     return table.concat(env.chat, "\n")

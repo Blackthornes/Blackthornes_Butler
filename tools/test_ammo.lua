@@ -133,7 +133,7 @@ suite.check("which no other row shows", not row.action:IsShown())
 suite.check("nothing bought without a click", #bought == 0)
 Ammo:Buy()
 suite.check("the click buys 3 lots", #bought == 3 and bought[1].index == 2 and bought[1].quantity == nil, #bought)
-suite.check("and says so", env.ChatText():find("bought 600 Sharp Arrow", 1, true) ~= nil)
+suite.check("and says so", env.Plain(env.ChatText()):find("bought 600 Sharp Arrow", 1, true) ~= nil)
 
 -- 5. The gold fund is only for mailing gold, never for spending (the
 -- owner, 2026-10-11): a purse below it still buys.

@@ -63,15 +63,13 @@ local SCALE_MIN = 0.6
 local SCALE_MAX = 1.5
 local GRIP_SIZE = 20
 
--- The game's item quality colours.
-local QUALITY = {
-    [0] = { 0.616, 0.616, 0.616 },
-    [1] = { 1, 1, 1 },
-    [2] = { 0.118, 1, 0 },
-    [3] = { 0, 0.439, 0.867 },
-    [4] = { 0.639, 0.208, 0.933 },
-    [5] = { 1, 0.502, 0 },
-}
+-- The game's item quality colours (Items.QualityRGB), Common white for an
+-- item not read yet.
+local function QualityColor(quality)
+    local r, g, b = Items.QualityRGB(quality or 1)
+    if not r then return 1, 1, 1 end
+    return r, g, b
+end
 
 --------------------------------------------------------------------------------
 -- Construction
@@ -471,8 +469,7 @@ function UI.DrawRow(row, data)
     row.fold:Hide()
     row.icon:Show()
     row.icon:SetTexture(data.icon or [[Interface\Icons\INV_Misc_QuestionMark]])
-    local color = QUALITY[data.quality or 1] or QUALITY[1]
-    row.name:SetTextColor(color[1], color[2], color[3])
+    row.name:SetTextColor(QualityColor(data.quality))
     row.name:SetText(data.count > 1 and L.Format("%s x%d", data.name, data.count) or data.name)
     row.reason:SetText(data.reason or "")
     -- Bought to disenchant reads in the tag's violet, as on Tradeskills' tab.
@@ -635,7 +632,7 @@ function UI.UpdateAmmoRow(row, data)
     row.icon:Show()
     row.icon:SetTexture(offer.ammo.icon or [[Interface\Icons\INV_Ammo_Arrow_02]])
     row.name:SetTextColor(Theme.Unpack("text"))
-    row.name:SetText(offer.ammo.name or L["Ammo"])
+    row.name:SetText(offer.ammo.name and Items:ColorName(offer.ammo.name, offer.ammo.itemID) or L["Ammo"])
     row.reason:SetText(ns.Ammo.Reason(offer))
     if offer.state ~= "fill" then row.reason:SetTextColor(Theme.Unpack("accent")) end
     row.worth:SetText("")
@@ -651,8 +648,7 @@ function UI.UpdateItemRow(row, data)
     row.fold:Hide()
     row.icon:Show()
     row.icon:SetTexture(item.icon or [[Interface\Icons\INV_Misc_QuestionMark]])
-    local color = QUALITY[item.quality or 1] or QUALITY[1]
-    row.name:SetTextColor(color[1], color[2], color[3])
+    row.name:SetTextColor(QualityColor(item.quality))
     row.name:SetText(item.name)
     row.reason:SetText(ns.Everyone.Summary(item))
     row.worth:SetText(tostring(item.total))
@@ -1183,13 +1179,19 @@ function UI:BuildMenu()
     return menu
 end
 
+--- A row's item name in its rarity colour, for the menu's title.
+function UI.ItemTitle(data)
+    if type(data.name) ~= "string" then return data.name end
+    return Items:ColorName(data.name, data.itemID, data.quality)
+end
+
 --- Show the menu's main page for `data` (a row). `stay` keeps it where it
 --- is, coming back from the characters page.
 function UI:ShowMenu(data, stay)
     local menu = self:BuildMenu()
     menu.data = data
     menu.away = 0
-    menu.title:SetText(data.name)
+    menu.title:SetText(UI.ItemTitle(data))
 
     for _, button in ipairs(menu.characters) do button:Hide() end
     menu.back:Hide()
@@ -1301,7 +1303,7 @@ function UI:ShowMailMenu()
 
     local choice, mailTo = ns.Verdicts:Choice(data.itemID)
     local names = ns.Errands:Characters()
-    menu.title:SetText(L.Format("Always mail %s to", data.name))
+    menu.title:SetText(L.Format("Always mail %s to", UI.ItemTitle(data)))
 
     menu.keep:Hide()
     menu.sell:Hide()
@@ -1356,7 +1358,7 @@ function UI:ShowKeepMenu()
     local data = menu and menu.data
     if not data or not ns.KeepHere then return end
     menu.away = 0
-    menu.title:SetText(L.Format("Keep %s on this character", data.name))
+    menu.title:SetText(L.Format("Keep %s on this character", UI.ItemTitle(data)))
     for _, button in ipairs({ menu.keep, menu.sell, menu.bank, menu.disenchant, menu.bought, menu.mail,
         menu.hold, menu.holdAll, menu.keepHere, menu.decide }) do
         button:Hide()

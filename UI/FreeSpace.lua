@@ -63,6 +63,17 @@ local function IsReagentBag(bag)
     return type(reagent) == "number" and bag == reagent
 end
 
+--- A bag's name in its rarity colour, read only for the tooltip: the bag
+--- item in that bag slot (the backpack has none and stays as it is).
+function FreeSpace.BagName(entry)
+    if not (entry.bag and entry.bag > 0) then return entry.name end
+    local Items = ns.Items
+    local slot = Items.Call({ "C_Container.ContainerIDToInventoryID", "ContainerIDToInventoryID" }, entry.bag)
+    local itemID = type(slot) == "number" and tonumber((Items.Call({ "GetInventoryItemID" }, "player", slot)))
+    if not itemID then return entry.name end
+    return Items:ColorName(entry.name, itemID)
+end
+
 --- What the bags hold now: free and total slots over the bags that take
 --- anything, and a line for each bag. Nil when the client says nothing.
 function FreeSpace.Read()
@@ -244,11 +255,11 @@ function FreeSpace:AddTooltip(owner)
         GameTooltip:AddLine(L.Format("Free bag space: %d of %d", read.free, read.total),
             color[1], color[2], color[3])
         for _, entry in ipairs(read.bags) do
-            GameTooltip:AddDoubleLine(entry.name, L.Format("%d of %d free", entry.free, entry.total),
+            GameTooltip:AddDoubleLine(FreeSpace.BagName(entry), L.Format("%d of %d free", entry.free, entry.total),
                 0.8, 0.8, 0.8, 1, 1, 1)
         end
         for _, entry in ipairs(read.special) do
-            GameTooltip:AddDoubleLine(L.Format("%s (only some items)", entry.name),
+            GameTooltip:AddDoubleLine(L.Format("%s (only some items)", FreeSpace.BagName(entry)),
                 L.Format("%d of %d free", entry.free, entry.total), 0.6, 0.6, 0.6, 0.8, 0.8, 0.8)
         end
         GameTooltip:Show()

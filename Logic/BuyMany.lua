@@ -309,7 +309,7 @@ function BuyMany:Start(plan, onDone)
         self.running = nil
         if state.bought > 0 then
             ns.Print(L.Format("bought %s %s for %s.", ns.Ammo.Thousands(state.bought),
-                item.name or L["items"], Items.FormatMoney(state.spent)))
+                item.name and Items:ColorName(item.name, item.itemID) or L["items"], Items.FormatMoney(state.spent)))
         end
         if reason and STOPPED[reason] then ns.Print(STOPPED[reason]) end
         if onDone then onDone(state.bought, reason) end
