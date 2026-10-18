@@ -23,6 +23,14 @@ tell a friend: no hype, no questions to the reader, no exclamation marks
 outside the thanks line, no dashes as punctuation, no "now you can". The
 tool prints a note for a shipped line that reads like an advert.
 
+## 0.14.0
+
+- Butler speaks Simplified Chinese, French, Spanish and Russian now if your game is in one of those.
+
+Fixes and changes:
+
+- Items you always mail to another character follow the usual rules once they're on that character.
+
 ## 0.13.0
 
 - You can keep a number of an item on each character. Right-click an item, or use Keep on Each Character on the Errands page of Settings.
