@@ -194,6 +194,29 @@ local function CommandRow(pages, page, column, label, description, buttonText, c
     return row, button
 end
 
+--- Off, Shift or Always for a tooltip line (UI/TooltipShift.lua), on `row`
+--- at CONTROL_X. `isOn()` reads the line's own on/off setting and `setOn`
+--- is its setter, the one the old tick box called; Shift is kept apart.
+function SettingsUI.TooltipShiftControl(row, key, isOn, setOn)
+    local TooltipShift = ns.TooltipShift
+    local stepper = Widgets.CreateStepper(row, {
+        min = 0, max = 2, step = 1,
+        format = function(value) return TooltipShift.NAMES[value] end,
+        onChange = function(value)
+            TooltipShift:Apply(value, key, isOn(), setOn)
+        end,
+    })
+    ns.SettingsPages.FitStepper(stepper, TooltipShift.NAMES)
+    stepper:SetPoint("TOPLEFT", CONTROL_X, -2)
+
+    --- Show what is saved, without writing anything.
+    function stepper:Sync()
+        self:SetValue(TooltipShift:Mode(isOn(), key), true)
+    end
+    stepper:Sync()
+    return stepper
+end
+
 -- The window styles, in the order the stepper steps through them.
 local STYLES = { "titanforged", "blizzard" }
 local STYLE_LABELS = { titanforged = "Titanforged", blizzard = "Blizzard" }
@@ -774,17 +797,15 @@ function SettingsUI:BuildPages()
 
     local whoRow = pages:Row("general", 1, L["Who Has It:"],
         L["Tooltips list which characters have the item. Needs Blackthornes Tradeskills."])
-    controls.whoHas = Widgets.CreateCheckbox(whoRow, L["Show"], function(checked)
-        if ns.WhoHas then ns.WhoHas:SetEnabled(checked) end
-    end, true)
-    controls.whoHas:SetPoint("TOPLEFT", CONTROL_X, -2)
+    controls.whoHas = SettingsUI.TooltipShiftControl(whoRow, "whoHas",
+        function() return ns.db.whoHas ~= false end,
+        function(on) if ns.WhoHas then ns.WhoHas:SetEnabled(on) end end)
 
     local tipRow = pages:Row("general", 1, L["Butler on Tooltips:"],
         L["The last tooltip line says what Butler would do with it."])
-    controls.verdictTip = Widgets.CreateCheckbox(tipRow, L["Show"], function(checked)
-        if ns.VerdictTip then ns.VerdictTip:SetEnabled(checked) end
-    end, true)
-    controls.verdictTip:SetPoint("TOPLEFT", CONTROL_X, -2)
+    controls.verdictTip = SettingsUI.TooltipShiftControl(tipRow, "verdictTip",
+        function() return ns.db.verdictTip ~= false end,
+        function(on) if ns.VerdictTip then ns.VerdictTip:SetEnabled(on) end end)
 
     local voiceRow = pages:Row("general", 1, L["Butler's Voice:"], nil)
     controls.voice = Widgets.CreateCheckbox(voiceRow, L["On"], function(checked)
@@ -885,8 +906,8 @@ function SettingsUI:Refresh()
     controls.freeSpace:SetChecked(ns.db.freeSpace ~= false)
     controls.trashCan:SetChecked(ns.db.trashCan ~= false)
     controls.buyMany:SetChecked(ns.BuyMany:IsOn())
-    controls.whoHas:SetChecked(ns.db.whoHas ~= false)
-    controls.verdictTip:SetChecked(ns.db.verdictTip ~= false)
+    controls.whoHas:Sync()
+    controls.verdictTip:Sync()
     controls.voice:SetChecked(ns.db.voice ~= false)
     controls.learn:SetChecked(ns.db.learn ~= false)
     controls.classTraining:SetChecked(ns.ClassTraining:IsOn())

@@ -988,6 +988,27 @@ the General page (`verdictTip`, account wide, on unless unticked, never
 rename it) and `/bbutler tooltip`. Tested in `tools/test_verdicttip.lua`.
 Not yet seen in game.
 
+## Off, Shift or Always on tooltips
+
+A player asked, the owner said yes (2026-10-18): each tooltip line an
+addon adds is Off, Shift (only while Shift is held) or Always, picked on a
+stepper in Settings (`SettingsUI.TooltipShiftControl`). Nobody's settings
+change: a line that was on reads as Always and one that was off as Off.
+`UI/TooltipShift.lua` is the same file in all five addons (a fix to it
+belongs in all five): `ns.TooltipShift` `:Mode`, `:Apply`, `:Shows`
+(asked every time the tooltip is built, never kept in a cache) and `:Held`
+(adds "Hold Shift for more." once a tooltip, shared through
+`_G.BlackthornesTooltipShift`, whose one frame redraws GameTooltip on Shift
+only while a line is on Shift). Butler has two lines on the General page:
+`whoHas` ("Who Has It:") and `verdictTip` ("Butler on Tooltips:").
+Whether each is on stays in `whoHas` and `verdictTip`; the Shift choice is
+kept account wide in `tooltipShift[key] = true` (never rename any of them;
+nothing is written until Shift is picked). The verdict stays Butler's last
+line, so the hint goes after it: Who has it notes a held line in
+`WhoHas.held` and `VerdictTip:Decorate` adds the hint at the end (Who has
+it adds it itself in the second before the verdict's hook goes in). Tested
+in `tools/test_tooltipshift.lua`.
+
 ## The trash can
 
 The owner asked (2026-10-13) for a small can on the item worth the least

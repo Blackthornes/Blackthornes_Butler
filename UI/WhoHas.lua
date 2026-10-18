@@ -30,6 +30,15 @@ WhoHas.MOST = 6
 -- Seconds between rebuilds while the bags keep changing.
 WhoHas.REBUILD_GAP = 1
 
+-- The line's key for Off, Shift or Always (UI/TooltipShift.lua). Whether it
+-- is on at all stays in ns.db.whoHas.
+WhoHas.SHIFT_KEY = "whoHas"
+
+-- Tooltips whose lines waited for Shift on this build, for the hint. Butler
+-- on tooltips adds it after its own line, which stays last; without that
+-- hook in, the hint goes on here.
+WhoHas.held = setmetatable({}, { __mode = "k" })
+
 WhoHas.PLACES = { "bags", "bank", "mail" }
 WhoHas.PLACE_WORDS = { bags = L["in bags"], bank = L["in the bank"], mail = L["in the mail"] }
 WhoHas.PLACE_SHORT = { bags = L["bags"], bank = L["bank"], mail = L["mail"] }
@@ -194,12 +203,23 @@ end
 
 --- Add the lines under the game's own. Never raises.
 function WhoHas:Decorate(tooltip, data)
+    if tooltip ~= nil then WhoHas.held[tooltip] = nil end
     if self.quiet or not self:Enabled() or not Decorates(tooltip) then return end
     local itemID = WhoHas.ItemID(tooltip, data)
     if not itemID then return end
     local ok = pcall(function()
         local lines = WhoHas.Lines(self:Lookup()[itemID])
         if not lines then return end
+        -- On Shift and Shift is up: only the hint, asked each build.
+        if not ns.TooltipShift:Shows(WhoHas.SHIFT_KEY) then
+            local tip = ns.VerdictTip
+            if tip and tip.installed then
+                WhoHas.held[tooltip] = true
+            else
+                ns.TooltipShift:Held(tooltip)
+            end
+            return
+        end
         local r, g, b = 1, 0.82, 0
         if ns.Theme and ns.Theme.Unpack then r, g, b = ns.Theme.Unpack("accent") end
         tooltip:AddLine(" ")

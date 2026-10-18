@@ -48,6 +48,7 @@ UI\WhatsNew.lua
 UI\SettingsPages.lua
 UI\RuleOrder.lua
 UI\Minimap.lua
+UI\TooltipShift.lua
 UI\Settings.lua
 UI\GoldGoals.lua
 UI\MainWindow.lua

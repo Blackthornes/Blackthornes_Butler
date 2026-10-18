@@ -24,6 +24,11 @@ local VerdictTip = ns.NewModule("VerdictTip")
 -- Seconds after the first loading screen before the hook goes in.
 VerdictTip.DELAY = 1
 
+-- The line's key for Off, Shift or Always (UI/TooltipShift.lua). Whether it
+-- is on at all stays in ns.db.verdictTip.
+VerdictTip.SHIFT_KEY = "verdictTip"
+ns.TooltipShift.KEYS = { "whoHas", VerdictTip.SHIFT_KEY }
+
 function VerdictTip:Enabled()
     return ns.db ~= nil and ns.db.verdictTip ~= false
 end
@@ -144,14 +149,31 @@ local function Decorates(tooltip)
     return tooltip ~= nil and (tooltip == _G.GameTooltip or tooltip == _G.ItemRefTooltip)
 end
 
---- Add the line under everything else. Never raises.
+--- Add the line under everything else, then "Hold Shift for more." when
+--- this line or Who has it waited for Shift. Never raises.
 function VerdictTip:Decorate(tooltip, data)
-    if not self:Enabled() or not Decorates(tooltip) then return end
+    if not Decorates(tooltip) then return end
+    local held = ns.WhoHas and ns.WhoHas.held[tooltip] or false
+    if held then ns.WhoHas.held[tooltip] = nil end
+    if self:Enabled() then
+        held = self:AddLine(tooltip, data) or held
+    end
+    if held then ns.TooltipShift:Held(tooltip) end
+end
+
+--- The line itself. True when it was held back for Shift.
+function VerdictTip:AddLine(tooltip, data)
     local itemID = ns.WhoHas and ns.WhoHas.ItemID(tooltip, data)
-    if not itemID then return end
+    if not itemID then return false end
+    local held = false
     local ok = pcall(function()
         local left, right = self:Line(itemID, tooltip)
         if not left then return end
+        -- On Shift and Shift is up: only the hint, asked each build.
+        if not ns.TooltipShift:Shows(self.SHIFT_KEY) then
+            held = true
+            return
+        end
         local r, g, b = 1, 0.82, 0
         if ns.Theme and ns.Theme.Unpack then r, g, b = ns.Theme.Unpack("accent") end
         if right then
@@ -162,6 +184,7 @@ function VerdictTip:Decorate(tooltip, data)
         if not data and tooltip.Show then tooltip:Show() end
     end)
     if not ok then ns.Debug("verdict tooltip failed") end
+    return held
 end
 
 --- Hook item tooltips once, the same two ways Who has it does. Returns
