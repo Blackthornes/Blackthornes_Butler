@@ -382,6 +382,8 @@ function UI.RowAction(data)
         ns.Ammo:Buy()
     elseif data.type == "job" and data.step and data.step.kind == "buy" then
         ns.Jobs:BuyAtVendor()
+    elseif data.type == "questbuy" then
+        ns.QuestBuy:Click(data.item)
     elseif data.type == "job" and data.step and data.step.kind == "quest" then
         if ns.Quests:Search(data.step.items) then UI:Refresh(true) end
     elseif data.type == "job" then
@@ -449,6 +451,7 @@ function UI.DrawRow(row, data)
     if data.type == "gold" then return UI.UpdateGoldRow(row, data) end
     if data.type == "job" then return UI.UpdateJobRow(row, data) end
     if data.type == "jobnext" then return UI.UpdateNextRow(row, data) end
+    if data.type == "questbuy" then return UI.UpdateQuestBuyRow(row, data) end
     if data.type == "train" or data.type == "trainnext" or data.type == "trainalt" then
         return UI.UpdateTrainRow(row, data)
     end
@@ -524,6 +527,30 @@ function UI.UpdateJobRow(row, data)
         -- In a form that stops a craft, the secure Leave form button
         -- (Jobs:UpdateLeaveForm) covers the first of these.
         row.action:SetText(ns.Jobs.InBlockingForm() and L["Leave form"] or L["Craft"])
+        row.action:Show()
+    end
+end
+
+--- An item an open quest needs, at the auction house: how many, for
+--- which quest and about what it costs, with Buy, then Pay
+--- (Logic/QuestBuy.lua).
+function UI.UpdateQuestBuyRow(row, data)
+    local item = data.item
+    row.fold:Hide()
+    row.icon:Show()
+    row.icon:SetTexture(Items.Call({ "C_Item.GetItemIconByID", "GetItemIcon" }, item.itemID)
+        or [[Interface\Icons\INV_Misc_QuestionMark]])
+    local quality = Items.Call({ "C_Item.GetItemQualityByID" }, item.itemID)
+    local color = QUALITY[tonumber(quality) or 1] or QUALITY[1]
+    row.name:SetTextColor(color[1], color[2], color[3])
+    row.name:SetText(ns.Jobs.ItemName(item.itemID))
+    local text, money = ns.QuestBuy:Text(item)
+    row.reason:SetText(text)
+    row.worth:SetText(money and Items.FormatMoney(money) or "")
+    local label, tip = ns.QuestBuy:Button(item)
+    if label then
+        row.action:SetText(label)
+        row.action.tooltipText = tip
         row.action:Show()
     end
 end
@@ -855,7 +882,7 @@ function UI:Clicked(data, button)
         self:Refresh(true)
         return
     end
-    if data.type == "ammo" or data.type == "job" or data.type == "jobnext"
+    if data.type == "ammo" or data.type == "job" or data.type == "jobnext" or data.type == "questbuy"
         or data.type == "train" or data.type == "trainnext" or data.type == "trainalt" then return end
     if button == "RightButton" and data.type ~= "gold" then
         self:ShowMenu(data)
@@ -909,6 +936,12 @@ function UI:Enter(row, data)
         GameTooltip:AddLine(other.count == 1 and L["1 spell to train the last time they played."]
             or L.Format("%d spells to train the last time they played.", other.count), 1, 1, 1, true)
         GameTooltip:AddLine(ns.ClassTraining.CostText(other.cost, other.unknown, other.count), 1, 1, 1)
+        GameTooltip:Show()
+        return
+    end
+    if data.type == "questbuy" then
+        local shown = pcall(GameTooltip.SetItemByID, GameTooltip, data.item.itemID)
+        if not shown then GameTooltip:AddLine(ns.Jobs.ItemName(data.item.itemID), 1, 1, 1) end
         GameTooltip:Show()
         return
     end
@@ -1388,7 +1421,8 @@ function UI:Refresh(force)
     if ns.Ammo then ns.Ammo:Offer() end
     if ns.Jobs and ns.Jobs.VendorOffer then ns.Jobs:VendorOffer() end
     local search = self:BagSearch()
-    local key = ("%d:%s:%d:%d:%d:%d:%d:%s:%s:%s:%s:%s"):format(ns.Quests and ns.Quests.version or 0,
+    local key = ("%d:%d:%s:%d:%d:%d:%d:%d:%s:%s:%s:%s:%s"):format(ns.QuestBuy and ns.QuestBuy.version or 0,
+        ns.Quests and ns.Quests.version or 0,
         tostring(ns.Quests and ns.Quests.auctionOpen), ns.ClassTraining and ns.ClassTraining.version or 0,
         ns.Bags.version, ns.Verdicts.version,
         ns.Funds and ns.Funds.version or 0, ns.Jobs and ns.Jobs.version or 0, tostring(ns.Errands.mailOpen),

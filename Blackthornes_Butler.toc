@@ -29,6 +29,7 @@ Logic\Items.lua
 Logic\Bags.lua
 Logic\Sisters.lua
 Logic\Quests.lua
+Logic\QuestBuy.lua
 Logic\Verdicts.lua
 Logic\Everyone.lua
 Logic\BankAlt.lua

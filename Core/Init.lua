@@ -365,6 +365,11 @@ local DEFAULTS = {
     -- in learned and learnTally, made when first needed; never rename them.
     learn = true,
 
+    -- At the auction house, each item an open quest needs gets a row with
+    -- its price and a Buy button (Logic/QuestBuy.lua, a player asked, the
+    -- owner said yes 2026-10-18, off unless ticked). Never rename it.
+    questBuy = false,
+
     -- Logging in on a character with a job for the craft queue brings the
     -- window up on its steps (Logic/Jobs.lua, asked 2026-10-11).
     jobsAtLogin = true,

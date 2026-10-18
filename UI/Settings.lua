@@ -464,6 +464,14 @@ function SettingsUI:BuildPages()
     end, true)
     controls.questItems:SetPoint("TOPLEFT", CONTROL_X, -2)
 
+    -- Buy them at the auction house (Logic/QuestBuy.lua, 2026-10-18).
+    local questBuyRow = pages:Row("selling", 1, L["Buy Quest Items:"],
+        L["At the auction house, lists each item your quests need with its price and a Buy button."])
+    controls.questBuy = Widgets.CreateCheckbox(questBuyRow, L["On"], function(checked)
+        ns.QuestBuy:SetOn(checked)
+    end, false)
+    controls.questBuy:SetPoint("TOPLEFT", CONTROL_X, -2)
+
     local bankRow = pages:Row("selling", 1, L["Open at the Bank:"],
         L["Opens Butler at the bank when there's something to move."])
     controls.openAtBank = Widgets.CreateCheckbox(bankRow, L["On"], function(checked)
@@ -872,6 +880,7 @@ function SettingsUI:Refresh()
     controls.alwaysDisenchant:SetChecked(ns.Verdicts:AlwaysDisenchantOn())
     controls.jobsAtLogin:SetChecked(ns.db.jobsAtLogin ~= false)
     controls.questItems:SetChecked(ns.Quests:IsOn())
+    controls.questBuy:SetChecked(ns.db.questBuy == true)
     controls.openAtBank:SetChecked(ns.db.openAtBank ~= false)
     controls.freeSpace:SetChecked(ns.db.freeSpace ~= false)
     controls.trashCan:SetChecked(ns.db.trashCan ~= false)
