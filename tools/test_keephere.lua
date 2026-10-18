@@ -189,6 +189,27 @@ suite.check("0 takes it off the list", KeepHere:Count(901) == nil)
 suite.check("and the elixirs sell again", Verdict("Elixir of Agility", "sell") == 8)
 suite.check("the saved table stays", type(ns.db.keepHere[GUID]) == "table")
 
+-- Tradeskills' own keep on this character: the bigger number wins.
+local tsCount
+_G.BlackthornesTS = { KeepHere = { Count = function(_, id) if id == 901 then return tsCount end end } }
+tsCount = 3
+suite.check("Tradeskills' number alone is kept", Verdict("Elixir of Agility", "keep") == 3,
+    Verdict("Elixir of Agility", "keep"))
+suite.check("and the rest sell", Verdict("Elixir of Agility", "sell") == 5)
+local tsRow = Rows("Elixir of Agility")[1]
+for _, row in ipairs(Rows("Elixir of Agility")) do if row.verdict == "keep" then tsRow = row end end
+suite.check("the row says Tradeskills' number", tsRow.reason == "Keeping 3 on this character", tsRow.reason)
+KeepHere:Set(901, 5)
+suite.check("Butler's bigger number wins", Verdict("Elixir of Agility", "keep") == 5)
+tsCount = 8
+suite.check("Tradeskills' bigger number wins", Verdict("Elixir of Agility", "keep") == 8)
+suite.check("Butler's own number is unchanged", KeepHere:Count(901) == 5)
+_G.BlackthornesTS = { KeepHere = { Count = function() error("boom") end } }
+suite.check("a Tradeskills that raises changes nothing", Verdict("Elixir of Agility", "keep") == 5)
+_G.BlackthornesTS = nil
+KeepHere:Set(901, 0)
+suite.check("without either, the elixirs sell again", Verdict("Elixir of Agility", "sell") == 8)
+
 -- Keep All: every copy stays, nothing to type, and it reads "All".
 local splitsBefore = #splits
 UI:ShowMenu(Rows("Elixir of Agility")[1])

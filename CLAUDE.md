@@ -918,7 +918,12 @@ whole stack is kept and the row asks for one. Nothing is sold or deleted
 by it. Keep All (the owner asked the same day), beside Save in the menu
 and beside the number in Settings, saves `KeepHere.MOST` (9999), shown as
 "All" (`KeepHere.IsAll`, `Shown`): every stack stays, nothing is split,
-and no new key is saved. Tested in `tools/test_keephere.lua`.
+and no new key is saved. Tradeskills has its own keep for its Sell list
+(2026-10-18, the owner: the bigger number wins in both). The rule reads
+`KeepHere:Effective`, the bigger of `Count` (Butler's own, which
+Tradeskills reads) and Tradeskills' `_G.BlackthornesTS.KeepHere:Count(itemID)`,
+inside a pcall, read only; the menu and Settings still show Butler's own.
+If that call changes, change `KeepHere.FromTradeskills` too. Tested in `tools/test_keephere.lua`.
 
 ## The rule order
 
