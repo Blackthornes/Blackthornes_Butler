@@ -1130,7 +1130,7 @@ function UI:BuildMenu()
     menu.keepNote:SetWordWrap(true)
     menu.keepSave = Widgets.CreateButton(menu, L["Save"], SaveKeep,
         { width = math.floor((MENU_WIDTH - 20) / 2), height = 20, primary = true })
-    -- Keep All (Trent asked the same day): every one stays, nothing to type.
+    -- Keep All (asked the same day): every one stays, nothing to type.
     menu.keepAll = Widgets.CreateButton(menu, L["Keep All"], function()
         local data = UI.menu.data
         UI:HideMenu()
