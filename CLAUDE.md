@@ -456,7 +456,11 @@ Tradeskills' `UI/QueueMailPanel.lua` reads it.
   it goes under Mail addressed to them, all of it, less what this
   character's own queued crafts need (Tradeskills' `need`; the owner,
   2026-10-14): with the queue needing it all it is Keep, otherwise only
-  the rest is mailed (`tools/test_alwaysmailqueue.lua`). The characters are
+  the rest is mailed (`tools/test_alwaysmailqueue.lua`). On the character
+  it names, it has arrived: the usual rules decide it there and only that
+  character's own keep holds it (the owner, 2026-10-18; the local `Choice`
+  in `Logic/Verdicts.lua` drops it, `Verdicts:Choice` still says mail), and
+  the bank alt never takes it on, so it can't bounce back. The characters are
   Tradeskills' `Holdings()` on the same realm and side
   (`Errands:Characters`), so the choice shows only with Tradeskills;
   soulbound items are never offered and are kept if already listed.
