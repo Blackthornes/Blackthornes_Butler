@@ -426,12 +426,13 @@ function STEPS.quests(self, c)
     end
 end
 
--- A number the player keeps on this character (Logic/KeepHere.lua). Every
+-- A number the player keeps on this character (Logic/KeepHere.lua; the
+-- bigger of Butler's and Tradeskills', KeepHere:Effective). Every
 -- copy says Keep here; Groups keeps only enough stacks for the number and
 -- judges the rest again past this rule.
 function STEPS.keepHere(self, c)
     if c.pastKeep or not ns.KeepHere then return nil end
-    local count = ns.KeepHere:Count(c.itemID)
+    local count = ns.KeepHere:Effective(c.itemID)
     if not count then return nil end
     if ns.KeepHere.IsAll(count) then
         return "keep", L["Keeping all on this character"], nil, true, { keepHere = count }

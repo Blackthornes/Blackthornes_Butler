@@ -17,6 +17,12 @@
 -- (KeepHere:SplitNext), one stack a look; the extra then gets its own
 -- verdict. Nothing is sold or deleted by a split: items only move in the
 -- bags. With no free slot the whole stack is kept.
+--
+-- Tradeskills has the same choice for its Sell list (its Logic/KeepHere.lua,
+-- 2026-10-18). Where both have a number, the bigger one wins, in both
+-- addons (the owner): KeepHere:Effective reads Tradeskills', inside a pcall,
+-- read only, and Tradeskills reads Count here. Count stays Butler's own, so
+-- neither asks the other back.
 
 local _, ns = ...
 local L = ns.L
@@ -118,6 +124,26 @@ function KeepHere:Count(itemID)
     local count = Clean(self:MyItems()[itemID])
     if count > 0 then return count end
     return nil
+end
+
+--- How many Tradeskills keeps on the character playing, or nil.
+function KeepHere.FromTradeskills(itemID)
+    local ts = _G.BlackthornesTS
+    local keep = type(ts) == "table" and ts.KeepHere
+    if type(keep) ~= "table" or type(keep.Count) ~= "function" then return nil end
+    local ok, count = pcall(keep.Count, keep, itemID)
+    if not ok or type(count) ~= "number" or count ~= count then return nil end
+    count = Clean(count)
+    if count > 0 then return count end
+    return nil
+end
+
+--- The number Butler keeps by: the bigger of its own and Tradeskills'.
+function KeepHere:Effective(itemID)
+    local own = self:Count(itemID)
+    local ts = self.FromTradeskills(itemID)
+    if own and ts then return math.max(own, ts) end
+    return own or ts
 end
 
 --- How many a character (by GUID) keeps, or nil for none.
