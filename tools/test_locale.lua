@@ -1,6 +1,6 @@
--- The translations: on a German client the window and settings speak
--- Deutsch, on any other they speak English, and a word with no German line
--- falls back to its English key. L.Format puts values named by place
+-- The translations: on a German, Chinese, French, Spanish or Russian
+-- client the window and settings speak that language, on any other they
+-- speak English, and a word with no line falls back to its English key. L.Format puts values named by place
 -- ("%2$s ... %1$d") in order, which the tests' Lua 5.1 cannot do itself.
 
 local env = dofile(lfs_cwd .. "/tools/testenv.lua")
@@ -39,8 +39,26 @@ suite.check("a word with no German line falls back to English",
     L["A string nobody translated"] == "A string nobody translated")
 suite.check("and formats in English", L.Format("%d stacks, %s", 3, "grey") == "3 stacks, grey")
 
+-- Simplified Chinese, French, Spanish (both clients) and Russian.
+local OTHERS = {
+    { "zhCN", "Simplified Chinese", "出售", "背包空位：" },
+    { "frFR", "French", "Vendre", "Place libre dans les sacs :" },
+    { "esES", "Spanish", "Vender", "Espacio libre en bolsas:" },
+    { "esMX", "Spanish (Mexico)", "Vender", "Espacio libre en bolsas:" },
+    { "ruRU", "Russian", "Продать", "Место в сумках:" },
+}
+for _, lang in ipairs(OTHERS) do
+    ns = env.Load(lang[1])
+    suite.check("a group's title in " .. lang[2], ns.Verdicts.LABELS.sell == lang[3], ns.Verdicts.LABELS.sell)
+    labels = SettingsLabels(ns)
+    suite.check("the settings rows speak " .. lang[2], labels[lang[4]] == true)
+    suite.check("and none is left in English in " .. lang[2], labels["Free Bag Space:"] == nil)
+    suite.check("a missing line falls back to English in " .. lang[2],
+        ns.L["A string nobody translated"] == "A string nobody translated")
+end
+
 -- Another language that has no file shows English.
-ns = env.Load("frFR")
+ns = env.Load("itIT")
 suite.check("a client in a language with no file shows English", ns.L["Sell"] == "Sell")
 
 _G.GetLocale = nil
