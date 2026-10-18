@@ -643,7 +643,13 @@ function Jobs:Lines()
     end
     -- What the open quests still want that can be bought (Logic/Quests.lua).
     local quest = ns.Quests and ns.Quests:Step()
-    if quest then rows[#rows + 1] = { type = "job", step = quest } end
+    if quest then
+        rows[#rows + 1] = { type = "job", step = quest }
+        -- At the auction house, a row an item with its own Buy (Logic/QuestBuy.lua).
+        if ns.QuestBuy then
+            for _, row in ipairs(ns.QuestBuy:Rows(quest)) do rows[#rows + 1] = row end
+        end
+    end
     -- At a vendor with something for the queue, a Buy row even when no
     -- step here names a vendor material, since Tradeskills' own button
     -- over the vendor window stands down while Butler is loaded.

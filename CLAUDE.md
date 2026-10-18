@@ -727,6 +727,22 @@ when the bags or the item come in.
 Tested in `tools/test_quests.lua`. If `SearchAuctions` changes in
 Tradeskills, change `Quests:Search` too.
 
+Buy quest items (a player asked, the owner said yes, 2026-10-18): with
+"Buy Quest Items" ticked (Selling page, `questBuy`, account wide, off
+unless ticked, never rename it; `/bbutler quests buy on|off`), at the
+auction house each item `Quests:ToBuy` names gets its own row under For
+your quests (`QuestBuy:Rows`, type `questbuy`), with Tradeskills' public
+price (`_G.BlackthornesTS_API.GetPrice`, read in a pcall) as "About X
+each". Two clicks, never one: Buy calls
+`C_AuctionHouse.StartCommoditiesPurchase` and the row waits for
+`COMMODITY_PRICE_UPDATED`'s total, then Pay calls
+`ConfirmCommoditiesPurchase`; a price that moves while it buys needs Pay
+again, and short of gold Pay buys nothing. One buy at a time; closing the
+auction house, an unavailable price, a failure or no answer
+(`QUOTE_WAIT`, `BUY_WAIT`) lets it go. An item sold one at a time
+(`GetItemCommodityStatus` 1) gets Search instead (`Quests:Search` for that
+item). The gold fund never limits it. Tested in `tools/test_questbuy.lua`.
+
 ## Class training
 
 The owner said build it (2026-10-13), in Butler and Equipment: which class

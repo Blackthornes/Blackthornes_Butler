@@ -484,6 +484,12 @@ end
 
 ns.RegisterCommand("quests", L["list what your open quests still need, or turn the quest line on or off"], function(arg)
     arg = (arg or ""):lower()
+    local buy = arg:match("^buy%s*(%a*)$")
+    if buy == "on" or buy == "off" then
+        ns.QuestBuy:SetOn(buy == "on")
+        ns.Print(buy == "on" and L["Buy Quest Items is on."] or L["Buy Quest Items is off."])
+        return
+    end
     if arg == "on" or arg == "off" then
         Quests:SetOn(arg == "on")
         ns.Print(arg == "on" and L["Butler keeps and lists the items your open quests collect."]
