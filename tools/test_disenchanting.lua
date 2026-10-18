@@ -4,7 +4,8 @@
 --   1. An item Tradeskills marks bought to disenchant goes under Disenchant,
 --      even when the auction house pays more, and heads that group.
 --   2. A character that can't disenchant mails it to the enchanter; with no
---      enchanter it waits under Look at it. An upgrade still says Keep.
+--      enchanter it waits under Look at it. An upgrade still says Keep
+--      for the one worn; a spare is still broken.
 --   3. The Disenchant button aims at one slot just before the click, bought
 --      items first, and only at rows judged Disenchant; nothing stays aimed.
 --   4. Never in combat.
@@ -176,7 +177,17 @@ suite.check("with no enchanter it waits under Look at it", Find("Dire Wand").ver
 can = true
 upgrade = true
 Verdicts:Changed(true)
-suite.check("an upgrade still says Keep", Find("Dire Wand").verdict == "keep")
+-- One copy is kept to wear; the spare is still broken (2026-10-18).
+local function WandCount(verdict)
+    local group = Verdicts:Group(verdict)
+    local n = 0
+    for _, row in ipairs(group and group.rows or {}) do
+        if row.name == "Dire Wand" then n = n + row.count end
+    end
+    return n
+end
+suite.check("an upgrade still says Keep", WandCount("keep") == 1, WandCount("keep"))
+suite.check("and the spare is still broken", WandCount("disenchant") == 1, WandCount("disenchant"))
 upgrade = false
 
 -- 5. The menu marks and unmarks through Tradeskills.

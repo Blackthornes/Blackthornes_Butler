@@ -184,6 +184,19 @@ slot (bought first) through `target-bag`/`target-slot`, re-reading the slot
 and its verdict first, never a "/use" macro (that equips when the cast does
 not start). Hidden, its aim emptied, in combat. Not yet seen in game.
 
+## Upgrades kept: one copy
+
+Gear Equipment calls an upgrade for the character playing ("now" or
+"later") is kept only as many copies as it wears: one, two rings or
+trinkets (`Verdicts.Wears`). `KeptUpgrade` hands `{ wear }` to
+`Verdicts:Groups`, which judges the rest again past it
+(`Judge(entry, nil, pastKeep, true)`, `pastWear`), so they go to the
+auction house, a vendor or wherever they belong (a player's five robes
+were all kept, 2026-10-18). Counted by link, so two random suffixes are
+each kept; soulbound copies are kept first. Tradeskills' Sell list holds
+the same number (its `SisterKeeps`). Tested in
+`tools/test_upgradecopies.lua`.
+
 ## Always sell and upgrades
 
 The owner asked (2026-10-13) that an item on the Always sell list that is

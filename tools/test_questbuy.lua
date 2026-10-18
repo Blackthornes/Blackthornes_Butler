@@ -14,6 +14,11 @@
 --   7. Items not sold in stacks get Search, never Buy.
 
 local env = dofile(lfs_cwd .. "/tools/testenv.lua")
+
+-- Item names come in their rarity colour; the checks read the words.
+local function Plain(text)
+    return (tostring(text or ""):gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", ""))
+end
 local suite = env.NewSuite("questbuy")
 
 local ns = env.Load()
@@ -99,7 +104,7 @@ suite.check("most needed first", eye.itemID == 730 and eye.count == 5)
 local row = CreateFrame("Button")
 UI.CreateRow(row)
 UI.UpdateRow(row, rows[1])
-suite.check("the row names the item", row.name:GetText() == "Murloc Eye", row.name:GetText())
+suite.check("the row names the item", (row.name:GetText() or ""):find("Murloc Eye", 1, true) ~= nil, row.name:GetText())
 suite.check("with how many, the quest and the price",
     row.reason:GetText():find("5 for Westfall Stew. About", 1, true) ~= nil, row.reason:GetText())
 suite.check("and the total on the right", row.worth:GetText() ~= "")
@@ -118,7 +123,7 @@ env.Fire("COMMODITY_PRICE_UPDATED", 250, 1250)
 UI.UpdateRow(row, rows[1])
 suite.check("the price shows with Pay", row.action.label:GetText() == "Pay"
     and row.reason:GetText():find("Click Pay", 1, true) ~= nil, row.reason:GetText())
-suite.check("Pay's hover says what it buys", row.action.tooltipText:find("Buys 5 Murloc Eye", 1, true) ~= nil,
+suite.check("Pay's hover says what it buys", Plain(row.action.tooltipText):find("Buys 5 Murloc Eye", 1, true) ~= nil,
     row.action.tooltipText)
 UI.RowAction(rows[1])
 suite.check("Pay buys them", Count("confirm") == 1 and calls[#calls][3] == 5)
@@ -132,7 +137,7 @@ UI.RowAction(rows[1])
 suite.check("Pay again buys at it", Count("confirm") == 2)
 env.chat = {}
 env.Fire("COMMODITY_PURCHASE_SUCCEEDED")
-suite.check("a buy that went through is said", env.ChatText():find("Bought 5 Murloc Eye", 1, true) ~= nil,
+suite.check("a buy that went through is said", Plain(env.ChatText()):find("Bought 5 Murloc Eye", 1, true) ~= nil,
     env.ChatText())
 suite.check("and is done", QuestBuy.pending == nil)
 RunTimers()
