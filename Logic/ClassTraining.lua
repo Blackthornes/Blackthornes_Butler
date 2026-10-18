@@ -366,7 +366,8 @@ local function KnownSides()
             local guid = type(entry) == "table" and Text(entry.key)
             if guid then
                 local side = sides[guid] or {}
-                side.realm = side.realm or Text(entry.realm)
+                -- Tradeskills writes "?" for a realm it could not read.
+                side.realm = side.realm or (entry.realm ~= "?" and Text(entry.realm) or nil)
                 side.faction = side.faction or Text(entry.faction)
                 sides[guid] = side
             end
