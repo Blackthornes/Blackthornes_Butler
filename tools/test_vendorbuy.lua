@@ -131,6 +131,51 @@ _G.BlackthornesTS.Butler.VendorOffer = function() return { items = "junk", cost 
 Jobs:VendorOffer()
 suite.check("an offer of the wrong shape has nothing to buy", not Jobs.Buyable(step))
 
+-- 6. Tradeskills' own button hides while Butler is loaded, so the vendor
+-- always gets a Buy row here, even with no craft step naming a vendor
+-- material (the owner, 2026-10-18).
+_G.InCombatLockdown = nil
+_G.BlackthornesTS.Butler.Jobs = function()
+    return { { name = "Ana Blackthorne", isCurrent = true, steps = {
+        { kind = "craft", recipeID = 21, itemID = 9001, name = "Thing", count = 1, forNames = {},
+          ready = true, missing = {} } } } }
+end
+_G.BlackthornesTS.Butler.VendorOffer = function() return offer end
+Jobs:Changed()
+ns.Selling.merchantOpen = true
+offer = { count = 1, cost = 81, items = { { itemID = 2320, amount = 3, cost = 81 } }, cheaperElsewhere = 0 }
+Jobs:VendorOffer()
+local extra = BuyStep()
+suite.check("a vendor with something gets a Buy row of its own", extra ~= nil and extra.atVendor == true)
+suite.check("which has the Buy button", Jobs.Buyable(extra))
+text = Jobs.VendorText(extra)
+suite.check("and says what", text:find("Buy 3 Coarse Thread here", 1, true) ~= nil, text)
+offer = { count = 0, cost = 0, items = {}, cheaperElsewhere = 0, buying = true }
+Jobs:VendorOffer()
+suite.check("while it buys the row stays", BuyStep() ~= nil)
+offer = { count = 0, cost = 0, items = {}, cheaperElsewhere = 0 }
+Jobs:VendorOffer()
+suite.check("with nothing left it goes", BuyStep() == nil)
+ns.Selling.merchantOpen = false
+Jobs:VendorOffer()
+suite.check("away from a vendor there is none", BuyStep() == nil)
+
+-- A craft step that already buys keeps the one row.
+_G.BlackthornesTS.Butler.Jobs = function()
+    return { { name = "Ana Blackthorne", isCurrent = true, steps = {
+        { kind = "craft", recipeID = 21, itemID = 9001, name = "Thing", count = 1, forNames = {},
+          ready = false, missing = { { itemID = 2321, count = 4, vendor = 10 } } } } } }
+end
+Jobs:Changed()
+ns.Selling.merchantOpen = true
+offer = { count = 1, cost = 40, items = { { itemID = 2321, amount = 4, cost = 40 } }, cheaperElsewhere = 0 }
+Jobs:VendorOffer()
+local count = 0
+for _, r in ipairs(Jobs:Lines()) do
+    if r.type == "job" and r.step.kind == "buy" then count = count + 1 end
+end
+suite.check("only one Buy row", count == 1, count)
+
 ns.Selling.merchantOpen = false
 _G.BlackthornesTS = nil
 suite.done()

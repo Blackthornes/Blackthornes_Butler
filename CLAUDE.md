@@ -670,8 +670,12 @@ cheaperElsewhere, buying }`, nil away from a vendor) and
 step). `Jobs:VendorOffer` reads it on each `UI:Refresh` while a vendor is
 open (`Jobs.vendorKey` is in the redraw key), once more 0.5 s after
 `MERCHANT_SHOW`, and `Jobs:WatchBuying` redraws every `BUY_LOOK` seconds
-while the run goes. Without Tradeskills the row is as before. Tested in
-`tools/test_vendorbuy.lua`.
+while the run goes. Without Tradeskills the row is as before.
+Tradeskills' own Buy materials button over the vendor window hides while
+Butler is loaded and opens at vendors (the owner, 2026-10-18), so at a
+vendor with something for the queue and no buy step here,
+`Jobs:VendorStep` adds a Buy from a vendor row made from the offer. Tested
+in `tools/test_vendorbuy.lua`.
 
 Profession cooldowns (the owner said yes, 2026-10-12): Tradeskills'
 `Jobs()` also gives each character's ready cooldown as a step, `{ kind =
