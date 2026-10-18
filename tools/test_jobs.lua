@@ -30,6 +30,17 @@ end
 
 local Jobs, UI = ns.Jobs, ns.UI
 
+-- Item names come in their rarity colour (Items:ColorName); these checks
+-- read the words.
+local Words = {}
+for _, fn in ipairs({ "StepText", "Summary", "Short", "VendorText", "BuyTooltip", "SearchTooltip" }) do
+    local raw = Jobs[fn]
+    Words[fn] = function(...)
+        local a, b, c = raw(...)
+        return env.Plain(a), env.Plain(b), env.Plain(c)
+    end
+end
+
 -- 1. No Tradeskills.
 _G.BlackthornesTS = nil
 env.Enable(ns)
@@ -81,22 +92,22 @@ suite.check("then the next character", rows[3].type == "jobnext" and rows[3].isN
 suite.check("then the one waiting", rows[4].job.name == "Cy Waiting" and not rows[4].isNext)
 
 -- 3. Words, with whole names.
-local title, detail = Jobs.StepText(rows[1].step)
+local title, detail = Words.StepText(rows[1].step)
 suite.check("a mail names the character in full", title == "Mail to Blackthornes Wither", title)
 suite.check("and says what goes", detail:find("30 Light Leather", 1, true) ~= nil, detail)
-title, detail = Jobs.StepText(rows[2].step)
+title, detail = Words.StepText(rows[2].step)
 suite.check("a craft of one has no number", title == "Craft Linen Bag", title)
 suite.check("short of materials says so", detail:find("Still needs", 1, true) == 1, detail)
 local banked = Jobs.Clean({ { name = "Ana Blackthorne", isCurrent = true, steps = { { kind = "mail",
     to = "Blackthornes Wither", forCraft = true, items = { { itemID = 2318, count = 40, bank = 20 } } } } } })
-title, detail = Jobs.StepText(banked[1].steps[1])
+title, detail = Words.StepText(banked[1].steps[1])
 suite.check("a mail with some in the bank says to take it out first",
     detail:find("Take 20 Light Leather out of the bank first", 1, true) ~= nil, detail)
 suite.check("and still says how many go", detail:find("40 Light Leather", 1, true) == 1, detail)
-local summary = Jobs.Summary(WITHER)
+local summary = Words.Summary(WITHER)
 suite.check("the next character's job in one line",
     summary == "Craft 20 Medium Leather, then mail it to Ana Blackthorne.", summary)
-suite.check("one waiting on materials says so", Jobs.Summary(CY):find("Waiting on materials", 1, true) ~= nil)
+suite.check("one waiting on materials says so", Words.Summary(CY):find("Waiting on materials", 1, true) ~= nil)
 
 -- The window shows them first.
 UI:Show("bags")
@@ -269,7 +280,7 @@ suite.check("its line heads the Jobs group", rows[1].type == "jobnext" and rows[
     and rows[1].job.name == "Blackthornes Wither")
 suite.check("then the craft here", rows[2].type == "job" and rows[2].step.recipeID == 13)
 suite.check("then the rest, once each", #rows == 3 and rows[3].job.name == "Cy Waiting", #rows)
-title, detail = Jobs.StepText(rows[2].step)
+title, detail = Words.StepText(rows[2].step)
 suite.check("the craft says who has what it needs",
     detail:find("Blackthornes Wither has it", 1, true) ~= nil, detail)
 ShowRows(rows)
@@ -342,16 +353,16 @@ local HERE = { name = "Ana Blackthorne", isCurrent = true, steps = {
 local plan = Fresh({ HERE, MOON })
 suite.check("a ready cooldown is a step here", plan.here and #plan.here.steps == 2)
 suite.check("one on another character is a job to go to", plan.nextJob and plan.nextJob.name == "Blackthornes Wither")
-local title, detail = Jobs.StepText(plan.here.steps[1])
+local title, detail = Words.StepText(plan.here.steps[1])
 suite.check("says it is ready", title == "Transmute is ready", title)
 suite.check("and what to make", detail:find("Transmute: Arcanite", 1, true) ~= nil, detail)
-suite.check("the other's line says so", Jobs.Summary(plan.nextJob):find("Mooncloth", 1, true) ~= nil,
-    Jobs.Summary(plan.nextJob))
+suite.check("the other's line says so", Words.Summary(plan.nextJob):find("Mooncloth", 1, true) ~= nil,
+    Words.Summary(plan.nextJob))
 crafted = {}
 craftAnswer = { true, "crafting" }
 suite.check("Craft makes a ready transmute", Jobs:Craft(plan.here.steps[1]) == true and crafted[1] == 17187)
 suite.check("an item's cooldown has no Craft", Jobs:Craft(plan.here.steps[2]) == false and #crafted == 1)
-local _, itemDetail = Jobs.StepText(plan.here.steps[2])
+local _, itemDetail = Words.StepText(plan.here.steps[2])
 suite.check("an item's says to use it", itemDetail:find("bags", 1, true) ~= nil, itemDetail)
 suite.check("a cooldown without a name is left out",
     #Jobs.Clean({ { name = "X", steps = { { kind = "cooldown", recipeID = 1 } } } }) == 0)
@@ -399,7 +410,7 @@ plan = Fresh({ ANA, CY, WITHER, MIA })
 suite.check("a character with mail waiting for its crafts is next", plan.nextJob.name == "Mia Thorn",
     plan.nextJob.name)
 suite.check("its mailbox is its first step", plan.nextJob.steps[1].kind == "pickup")
-suite.check("its line says so", Jobs.Summary(plan.nextJob):find("^Get 20 ") ~= nil, Jobs.Summary(plan.nextJob))
+suite.check("its line says so", Words.Summary(plan.nextJob):find("^Get 20 ") ~= nil, Words.Summary(plan.nextJob))
 local FEEDER = { name = "Dee Tanner", steps = {
     { kind = "mail", to = "Ana Blackthorne", items = { { itemID = 2996, count = 2 } }, forCraft = true },
 } }
@@ -413,10 +424,10 @@ local WAITING_HERE = { name = "Ana Blackthorne", isCurrent = true, steps = {
 plan = Fresh({ WAITING_HERE, WITHER })
 suite.check("here, the mailbox comes before the craft", plan.here.steps[1].kind == "pickup")
 suite.check("and keeps this character here", plan.goFirst == false)
-local title, detail = Jobs.StepText(plan.here.steps[1])
+local title, detail = Words.StepText(plan.here.steps[1])
 suite.check("it says to get the mail", title == "Get your mail" and detail:find("sent to you", 1, true) ~= nil,
     tostring(title) .. " / " .. tostring(detail))
-title, detail = Jobs.StepText(MIA.steps[2])
+title, detail = Words.StepText(MIA.steps[2])
 suite.check("for crafts, it says to take it out first", detail:find("before you craft", 1, true) ~= nil, detail)
 suite.check("an empty pickup is left out", #Jobs.Clean({ { name = "Z", steps = { { kind = "pickup", items = {} } } } }) == 0)
 
@@ -444,7 +455,7 @@ suite.check("mailbox, vendor, deepest part, part, then the rest",
 local buy = plan.here.steps[2]
 suite.check("the vendor step adds up what every craft is short",
     #buy.items == 1 and buy.items[1].itemID == 2321 and buy.items[1].count == 4)
-title, detail = Jobs.StepText(buy)
+title, detail = Words.StepText(buy)
 suite.check("it says to buy them", title == "Buy from a vendor" and detail:find("Tradeskills Vendor", 1, true) ~= nil,
     tostring(title) .. " / " .. tostring(detail))
 suite.check("a vendor run counts as a step to do now", Jobs.Ready({ steps = { buy } }))
@@ -453,7 +464,7 @@ plan = Fresh({ { name = "Ana Blackthorne", isCurrent = true, steps = {
       ready = false, missing = { { itemID = 9011, count = 1 } } } } } })
 suite.check("a material nobody makes is bought or gathered first",
     plan.here.steps[1].kind == "gather" and plan.here.steps[1].items[1].itemID == 9011 and #plan.here.steps == 2)
-title, detail = Jobs.StepText(plan.here.steps[1])
+title, detail = Words.StepText(plan.here.steps[1])
 suite.check("it says to buy or gather it", title == "Buy or gather" and detail:find("auction house", 1, true) ~= nil,
     tostring(title) .. " / " .. tostring(detail))
 suite.check("no vendor step without vendor materials", plan.here.steps[1].kind ~= "buy")
@@ -486,16 +497,16 @@ plan = Fresh({ { name = "Ana Blackthorne", isCurrent = true, steps = {
           forNames = { "Ana Blackthorne" }, ready = false,
           missing = { { itemID = 2592, count = 6, from = "Ana Blackthorne" } } } } } })
 local wool = plan.here.steps[1]
-title, detail = Jobs.StepText(wool)
-local _, _, hint = Jobs.StepText(wool)
+title, detail = Words.StepText(wool)
+local _, _, hint = Words.StepText(wool)
 suite.check("a mail of materials says what they make",
     detail == "6 Wool Cloth, so Bo Smith can make 2 Bolt of Woolen Cloth.", detail)
 suite.check("how Fill mail works goes in the tooltip", hint == "At a mailbox, Fill mail adds it.", hint)
-_, detail = Jobs.StepText(plan.here.steps[2])
+_, detail = Words.StepText(plan.here.steps[2])
 suite.check("finished crafts sent back keep their line",
     detail == "2 Light Leather. At a mailbox, Fill mail adds it.", detail)
 wool.items[1].bank = 2
-_, detail = Jobs.StepText(wool)
+_, detail = Words.StepText(wool)
 suite.check("banked materials still say to take them out",
     detail == "6 Wool Cloth, so Bo Smith can make 2 Bolt of Woolen Cloth. Take 2 Wool Cloth out of the bank first.",
     detail)
@@ -529,13 +540,13 @@ do
     _G.C_Timer.After = function(_, fn) waits[#waits + 1] = fn end
     local said = {}
     local buy = { kind = "buy", items = { { itemID = 2605, count = 2 } } }
-    Jobs.SayWhenNamed(buy, function() said[#said + 1] = Jobs.Short(buy) end)
+    Jobs.SayWhenNamed(buy, function() said[#said + 1] = Words.Short(buy) end)
     suite.check("a line waits while a name is loading", #said == 0 and #waits == 1)
     while #waits > 0 do table.remove(waits, 1)() end
     suite.check("the line names the item once it's in", said[1] == "buy 2 Green Dye from a vendor", tostring(said[1]))
     _G.C_Item.GetItemNameByID = function(id) if id ~= 2605 then return realName(id) end end
     said = {}
-    Jobs.SayWhenNamed(buy, function() said[#said + 1] = Jobs.Short(buy) end)
+    Jobs.SayWhenNamed(buy, function() said[#said + 1] = Words.Short(buy) end)
     while #waits > 0 do table.remove(waits, 1)() end
     suite.check("a name that never comes doesn't hold the line forever", #said == 1)
     _G.C_Item.GetItemNameByID = realName

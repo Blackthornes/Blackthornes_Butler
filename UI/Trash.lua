@@ -374,6 +374,7 @@ function Trash:ShowTooltip(owner)
             local entry, to = pick.entry, pick.to
             local name = ns.Items.NameFromLink(entry.link) or L.Format("item %s", tostring(entry.itemID))
             GameTooltip:AddLine(L["Stack these to make room"], 1, 0.82, 0)
+            name = ns.Items:ColorName(name, entry.itemID, entry.quality)
             GameTooltip:AddLine(L.Format("%s x%d", name, entry.count or 1), 1, 1, 1)
             GameTooltip:AddLine(L.Format("It fits on your other stack of %d.", to.count or 1), 1, 1, 1, true)
             GameTooltip:AddLine(" ")
@@ -384,6 +385,7 @@ function Trash:ShowTooltip(owner)
         GameTooltip:AddLine(L["Throw away to make room"], 1, 0.82, 0)
         local row, count = pick.row, pick.entry.count or 1
         local name = row.name or L.Format("item %s", tostring(pick.entry.itemID))
+        name = ns.Items:ColorName(name, pick.entry.itemID, pick.entry.quality)
         if count > 1 then name = L.Format("%s x%d", name, count) end
         GameTooltip:AddLine(name, 1, 1, 1)
         GameTooltip:AddLine(L.Format("Worth %s in all, the least in your bags",

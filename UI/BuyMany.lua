@@ -159,7 +159,7 @@ function BuyManyUI:Open(index, amount, force)
     self.index = index
     self.itemID = item.itemID
     self.icon:SetTexture(item.icon or 134400)
-    self.name:SetText(item.name or "")
+    self.name:SetText(item.name and ns.Items:ColorName(item.name, item.itemID) or "")
     self.box:SetText(amount and tostring(amount) or "")
     self:Place()
     self.frame:Show()

@@ -21,6 +21,17 @@ local suite = env.NewSuite("quests")
 local ns = env.Load()
 local Quests, Verdicts, Jobs, UI = ns.Quests, ns.Verdicts, ns.Jobs, ns.UI
 
+-- Item names come in their rarity colour (Items:ColorName); these checks
+-- read the words.
+local Words = {}
+for _, fn in ipairs({ "StepText", "Summary", "Short", "VendorText", "BuyTooltip", "SearchTooltip" }) do
+    local raw = Jobs[fn]
+    Words[fn] = function(...)
+        local a, b, c = raw(...)
+        return env.Plain(a), env.Plain(b), env.Plain(c)
+    end
+end
+
 -- 1. Reading an objective.
 local name, have, want = Quests.ParseObjective("Murloc Eye: 3/8")
 suite.check("Classic's way", name == "Murloc Eye" and have == 3 and want == 8)
@@ -121,7 +132,7 @@ suite.check("and the Fox Pelt, by its name in the bags", ids[50002] == 1)
 suite.check("never the finished Okra", ids[732] == nil)
 suite.check("never the bind on pickup shard", ids[50001] == nil)
 suite.check("most needed first", step.items[1].itemID == 730)
-local title, detail, hint = Jobs.StepText(step)
+local title, detail, hint = Words.StepText(step)
 suite.check("it is called For your quests", title == "For your quests")
 suite.check("and says what", detail:find("5 Murloc Eye", 1, true) ~= nil, detail)
 suite.check("away from the auction house it says where Search is", hint ~= nil)

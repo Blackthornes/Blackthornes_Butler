@@ -55,6 +55,7 @@ local priceMemo = {}
 --- Forget what was kept (for tests, whose pretend items change).
 function Items:Forget()
     priceMemo = {}
+    Items.qualityMemo = {}
 end
 
 -- The tooltip line type retail gives "Sell Price:". 11 on every retail build
@@ -172,6 +173,93 @@ function Items.NameFromLink(link)
     if type(link) ~= "string" then return nil end
     local ok, name = pcall(string.match, link, "|h%[(.-)%]|h")
     return ok and name or nil
+end
+
+--------------------------------------------------------------------------------
+-- Rarity colour
+--------------------------------------------------------------------------------
+
+-- The game's item quality colours, for a client without ITEM_QUALITY_COLORS:
+-- Poor grey, Common white, Uncommon green, Rare blue, Epic purple,
+-- Legendary orange.
+Items.QUALITY_RGB = {
+    [0] = { 0.616, 0.616, 0.616 },
+    [1] = { 1, 1, 1 },
+    [2] = { 0.118, 1, 0 },
+    [3] = { 0, 0.439, 0.867 },
+    [4] = { 0.639, 0.208, 0.933 },
+    [5] = { 1, 0.502, 0 },
+}
+
+-- [itemID] = quality, kept for the session once the client says. A miss
+-- is not kept, so the item is asked again once it has loaded.
+Items.qualityMemo = {}
+
+local function Unit(value)
+    value = tonumber(value)
+    if value and value == value and value >= 0 and value <= 1 then return value end
+    return nil
+end
+
+--- The red, green and blue of `quality`, or nil for none: the game's own
+--- table first, then its call, then the colours above.
+function Items.QualityRGB(quality)
+    quality = tonumber(quality)
+    if not quality then return nil end
+    local colors = rawget(_G, "ITEM_QUALITY_COLORS")
+    local ok, r, g, b = pcall(function()
+        local color = type(colors) == "table" and colors[quality]
+        if type(color) == "table" then return color.r, color.g, color.b end
+    end)
+    if ok and Unit(r) and Unit(g) and Unit(b) then return r, g, b end
+    r, g, b = Items.Call({ "C_Item.GetItemQualityColor", "GetItemQualityColor" }, quality)
+    if Unit(r) and Unit(g) and Unit(b) then return r, g, b end
+    local fixed = Items.QUALITY_RGB[quality]
+    if fixed then return fixed[1], fixed[2], fixed[3] end
+    return nil
+end
+
+--- "ffRRGGBB" for `quality`, for a |c colour code, or nil for none.
+function Items.QualityHex(quality)
+    local r, g, b = Items.QualityRGB(quality)
+    if not r then return nil end
+    local function Byte(value) return math.floor(value * 255 + 0.5) end
+    return ("ff%02x%02x%02x"):format(Byte(r), Byte(g), Byte(b))
+end
+
+--- The item's quality (0 Poor to 5 Legendary and up), or nil while the
+--- client has not loaded it (it is asked for, and GET_ITEM_INFO_RECEIVED
+--- redraws). `known` is a quality already in hand (a bag slot's), which wins.
+function Items:Quality(itemID, known)
+    known = tonumber(known)
+    if known then return known end
+    itemID = tonumber(itemID)
+    if not itemID then return nil end
+    local memo = Items.qualityMemo
+    if memo[itemID] then return memo[itemID] end
+    local quality = tonumber((Items.Call({ "C_Item.GetItemQualityByID" }, itemID)))
+    if not quality then
+        local name, _, infoQuality = Items.Call({ "C_Item.GetItemInfo", "GetItemInfo" }, itemID)
+        if name then quality = tonumber(infoQuality) end
+    end
+    if quality then
+        memo[itemID] = quality
+        return quality
+    end
+    Items:RequestLoad(itemID)
+    return nil
+end
+
+--- `name` in the item's rarity colour, "|cff1eff00Truefaith Gloves|r",
+--- only the name, so a sentence around it keeps its own colour. The name as
+--- it is while the quality isn't known yet, and a link (already coloured
+--- by the game) as it is.
+function Items:ColorName(name, itemID, known)
+    if type(name) ~= "string" or name == "" then return name end
+    if name:find("|c", 1, true) or name:find("|H", 1, true) then return name end
+    local hex = Items.QualityHex(self:Quality(itemID, known))
+    if not hex then return name end
+    return ("|c%s%s|r"):format(hex, name)
 end
 
 --------------------------------------------------------------------------------

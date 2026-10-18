@@ -461,7 +461,8 @@ function Ammo:Buy()
         Ammo.buying = false
         if bought > 0 then
             local full = bought >= offer.lots and not offer.short
-            local amount, name, money = Thousands(bought * ammo.perBuy), ammo.name or L["ammo"], Items.FormatMoney(spent)
+            local amount, name, money = Thousands(bought * ammo.perBuy),
+                ammo.name and Items:ColorName(ammo.name, ammo.itemID) or L["ammo"], Items.FormatMoney(spent)
             if not full then
                 ns.Print(L.Format("bought %s %s for %s.", amount, name, money))
             elseif offer.bag.holds == "arrow" then

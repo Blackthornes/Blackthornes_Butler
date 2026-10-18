@@ -407,7 +407,8 @@ function Quests:Report()
     local any = false
     for itemID, item in pairs(self.byItem) do
         any = true
-        local name = NameOf(itemID) or L.Format("Item %s", tostring(itemID))
+        local name = NameOf(itemID)
+        name = name and Items:ColorName(name, itemID) or L.Format("Item %s", tostring(itemID))
         local line = item.need > 0 and L.Format("%s: %d more for %s", name, item.need, table.concat(item.quests, ", "))
             or L.Format("%s: you have enough for %s", name, table.concat(item.quests, ", "))
         if item.need > 0 and item.trade == false then

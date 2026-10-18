@@ -417,12 +417,15 @@ end
 --------------------------------------------------------------------------------
 
 --- An item's name, asked of the client (and loaded when it doesn't know
---- it yet), else the name Tradeskills gave, else "Item N".
+--- it yet), else the name Tradeskills gave, else "Item N". In the item's
+--- rarity colour once the client knows it (Items:ColorName), only the name,
+--- so the line around it keeps its own colour.
 function Jobs.ItemName(itemID, fallback)
     if itemID then
         local name = Items.Call({ "C_Item.GetItemNameByID", "GetItemInfo" }, itemID)
-        if Text(name) then return name end
+        if Text(name) then return Items:ColorName(name, itemID) end
         Items:RequestLoad(itemID)
+        if Text(fallback) then return Items:ColorName(fallback, itemID) end
     end
     return fallback or L.Format("Item %s", tostring(itemID))
 end

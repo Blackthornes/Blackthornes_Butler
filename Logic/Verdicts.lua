@@ -1161,6 +1161,7 @@ function Verdicts:ForEnchanting(entry, said)
 
     local value = Number(ts, "disenchant")
     local name = String(wanted, "materialName")
+    if name then name = Items:ColorName(name, material) end
     local reason = name and L.Format("To level Enchanting: %s needs %s", recipe, name)
         or L.Format("To level Enchanting: %s needs what it gives", recipe)
     return "disenchant", reason, value,
