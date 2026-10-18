@@ -644,6 +644,11 @@ function Jobs:Lines()
     -- What the open quests still want that can be bought (Logic/Quests.lua).
     local quest = ns.Quests and ns.Quests:Step()
     if quest then rows[#rows + 1] = { type = "job", step = quest } end
+    -- At a vendor with something for the queue, a Buy row even when no
+    -- step here names a vendor material, since Tradeskills' own button
+    -- over the vendor window stands down while Butler is loaded.
+    local buy = self:VendorStep(plan.here)
+    if buy then rows[#rows + 1] = { type = "job", step = buy } end
     -- Nothing here can be done yet: the one who can goes first.
     if plan.goFirst then
         rows[#rows + 1] = { type = "jobnext", job = plan.nextJob, isNext = true, isFirst = true }
@@ -779,6 +784,32 @@ function Jobs:VendorOffer()
     self.vendorKey = offer and ("%d:%d:%d:%s"):format(offer.count, offer.cost, offer.cheaperElsewhere,
         tostring(offer.buying)) or ""
     return offer
+end
+
+--- A Buy from a vendor step made from the open vendor's offer, for when
+--- no step here has one (the owner, 2026-10-18: Tradeskills' Buy materials
+--- button over the vendor window hides while Butler is loaded, so Butler
+--- has to offer everything it would have bought). nil away from a vendor,
+--- with nothing to buy, or when a step here already buys.
+function Jobs:VendorStep(here)
+    local offer = self.offer
+    if not (offer and (offer.buying or offer.count > 0)) then
+        self.vendorItems = nil
+        return nil
+    end
+    for _, step in ipairs(here and here.steps or {}) do
+        if step.kind == "buy" then return nil end
+    end
+    if offer.count > 0 then
+        local items = {}
+        for _, item in ipairs(offer.items) do
+            items[#items + 1] = { itemID = item.itemID, count = item.count }
+        end
+        self.vendorItems = items
+    end
+    -- While it buys the offer is empty, so the row keeps what it was buying.
+    if not (self.vendorItems and self.vendorItems[1]) then return nil end
+    return { kind = "buy", items = self.vendorItems, atVendor = true }
 end
 
 --- Does this step get the Buy button? A Buy from a vendor step, at a
