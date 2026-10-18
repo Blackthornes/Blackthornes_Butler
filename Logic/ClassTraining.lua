@@ -17,7 +17,7 @@
 --       prices = { [spell ID] = copper },
 --       notTaught = { [spell ID] = true },        -- no trainer lists it
 --       trainers = { [CLASS] = { [NPC ID] = { name, zone, sub, mapID, x, y, faction, at } } },
---       characters = { [GUID] = { name, class, level, ready = { spell IDs }, at } },
+--       characters = { [GUID] = { name, class, level, realm, faction, ready = { spell IDs }, at } },
 --   }
 --
 -- Never rename it, nor the `classTraining` setting (on unless unticked).
@@ -128,7 +128,7 @@ end
 -- The character playing
 --------------------------------------------------------------------------------
 
---- { class, className, level, race, faction, guid, name } for the
+--- { class, className, level, race, faction, realm, guid, name } for the
 --- character playing.
 function CT.Player()
     local className, class = Call("UnitClass", "player")
@@ -140,6 +140,7 @@ function CT.Player()
         level = Number(Call("UnitLevel", "player")) or 1,
         race = Number(race),
         faction = Text(faction),
+        realm = Text(Call("GetRealmName")),
         guid = Text(Call("UnitGUID", "player")),
         name = Text(Call("UnitName", "player")),
     }
@@ -314,7 +315,8 @@ function CT:Note()
     for _, spell in ipairs(plan.ready) do ready[#ready + 1] = spell.id end
     self:Data().characters[player.guid] = {
         name = player.name, class = player.class, className = player.className,
-        level = player.level, ready = ready, at = Now(),
+        level = player.level, realm = player.realm, faction = player.faction,
+        ready = ready, at = Now(),
     }
 end
 
@@ -337,14 +339,73 @@ function CT:Other(guid)
         count = count, cost = cost, unknown = unknown, at = note.at, guid = guid }
 end
 
---- Every other character with spells waiting, most first.
+--- The realm part of a character's GUID ("Player-<realm>-<id>").
+local function ServerOf(guid)
+    return type(guid) == "string" and guid:match("^Player%-(%d+)%-") or nil
+end
+
+--- Where other characters play, { [GUID] = { realm, faction } }, for notes
+--- written before they kept it: Equipment's note of their gear, else
+--- Tradeskills' record of them (read only, in a pcall).
+local function KnownSides()
+    local sides = {}
+    local gear = ns.db and rawget(ns.db, "characterGear")
+    if type(gear) == "table" then
+        for guid, note in pairs(gear) do
+            if type(note) == "table" then
+                sides[guid] = { realm = Text(note.realm), faction = Text(note.faction) }
+            end
+        end
+    end
+    local ts = rawget(_G, "BlackthornesTS")
+    local butler = type(ts) == "table" and rawget(ts, "Butler")
+    local holdings = type(butler) == "table" and rawget(butler, "Holdings")
+    if type(holdings) == "function" then
+        local ok, list = pcall(holdings, butler)
+        for _, entry in ipairs(ok and type(list) == "table" and list or {}) do
+            local guid = type(entry) == "table" and Text(entry.key)
+            if guid then
+                local side = sides[guid] or {}
+                side.realm = side.realm or Text(entry.realm)
+                side.faction = side.faction or Text(entry.faction)
+                sides[guid] = side
+            end
+        end
+    end
+    return sides
+end
+
+--- Is another character on the realm and side of the one playing? Only
+--- those can be sent gold for their spells, so only those are listed (a
+--- player saw the other side's and other realms' characters, 2026-10-18).
+--- A character whose side is not known yet is left out until it logs in.
+function CT.SameSide(guid, note, player, sides)
+    note = type(note) == "table" and note or {}
+    local side = sides and sides[guid] or {}
+    local realm = Text(note.realm) or side.realm
+    local faction = Text(note.faction) or side.faction
+    if not (player.faction and faction and faction == player.faction) then return false end
+    if realm and player.realm then return realm == player.realm end
+    local here, there = ServerOf(player.guid), ServerOf(guid)
+    return here ~= nil and here == there
+end
+
+--- Every other character on this realm and side with spells waiting, most
+--- first.
 function CT:Others()
-    local me = self.Player().guid
+    local player = self.Player()
+    local me = player.guid
     local list = {}
-    for guid in pairs(self:Data().characters) do
+    local sides
+    for guid, note in pairs(self:Data().characters) do
         if guid ~= me then
             local other = self:Other(guid)
-            if other then list[#list + 1] = other end
+            if other then
+                if type(note) == "table" and not (Text(note.realm) and Text(note.faction)) then
+                    sides = sides or KnownSides()
+                end
+                if CT.SameSide(guid, note, player, sides) then list[#list + 1] = other end
+            end
         end
     end
     table.sort(list, function(a, b)

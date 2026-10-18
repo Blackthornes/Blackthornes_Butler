@@ -9,7 +9,8 @@
 --      where it stands; the filter is put back as it was.
 --   4. Train all buys one at a time, only what the purse pays for.
 --   5. The Jobs group leads with the spells to train, and other
---      characters' waiting spells.
+--      characters' waiting spells, only for characters on this realm and
+--      side.
 --   6. The gold fund keeps back what this character's spells cost and
 --      tops up another character for theirs.
 --   7. Turned off, nothing shows and no gold is kept back.
@@ -214,6 +215,36 @@ suite.check("and it waits under Later", laterAlt ~= nil)
 for _, row in ipairs(Jobs:Lines()) do
     suite.check("not in Jobs", row.type ~= "trainalt" and row.type ~= "trainnext")
 end
+
+-- 5b. Only characters on this realm and side (a player saw the other
+-- side's and other realms' characters, 2026-10-18).
+local savedRealm = rawget(_G, "GetRealmName")
+_G.GetRealmName = function() return "R" end
+data.characters["Player-1-HHH"] = { name = "Hord Guy", class = "MAGE", level = 14, realm = "R",
+    faction = "Horde", ready = { 8 }, at = 1 }
+data.characters["Player-2-OOO"] = { name = "Far Away", class = "MAGE", level = 14, realm = "Other",
+    faction = "Alliance", ready = { 8 }, at = 1 }
+data.characters["Player-2-OLD"] = { name = "Old Note", class = "MAGE", level = 14, ready = { 8 }, at = 1 }
+data.characters["Player-1-NEW"] = { name = "Fresh Note", class = "MAGE", level = 14,
+    faction = "Alliance", ready = { 8 }, at = 1 }
+local names = {}
+for _, other in ipairs(CT:Others()) do names[other.name] = true end
+suite.check("an alt on this realm and side is listed", names["Bob Stone"] and names["Fresh Note"])
+suite.check("the other side is not", not names["Hord Guy"])
+suite.check("another realm is not", not names["Far Away"])
+suite.check("a note with no side known is not", not names["Old Note"])
+holdings[#holdings + 1] = { key = "Player-2-OLD", short = "Old Note", realm = "R", faction = "Alliance" }
+names = {}
+for _, other in ipairs(CT:Others()) do names[other.name] = true end
+suite.check("Tradeskills' record fills in an old note", names["Old Note"])
+table.remove(holdings)
+CT:Note()
+suite.check("this character's note keeps its side", data.characters["Player-1-AAA"].faction == "Alliance"
+    and data.characters["Player-1-AAA"].realm == "R")
+for _, key in ipairs({ "Player-1-HHH", "Player-2-OOO", "Player-2-OLD", "Player-1-NEW" }) do
+    data.characters[key] = nil
+end
+_G.GetRealmName = savedRealm
 
 -- 7. Turned off.
 ns.HandleSlash("training off")
