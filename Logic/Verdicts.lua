@@ -183,7 +183,9 @@ end
 --- if no alt and no skill-up wanted it.
 --- `pastKeep` judges a copy past what the player keeps on this character
 --- (Logic/KeepHere.lua, Verdicts:Groups).
-function Verdicts:Judge(entry, noAlt, pastKeep)
+--- `pastWear` judges a copy of an upgrade for this character past the
+--- one it wears (two rings or trinkets): the spare gets its own verdict.
+function Verdicts:Judge(entry, noAlt, pastKeep, pastWear)
     if memoVersion ~= self.version then
         memo, memoVersion = {}, self.version
     end
@@ -195,12 +197,13 @@ function Verdicts:Judge(entry, noAlt, pastKeep)
     local carried = entry.itemID and ns.Bags.Carried and ns.Bags:Carried(entry.itemID) or 0
     -- Soulbound too: a link doesn't say it, and a bound copy of gear can't
     -- be mailed or auctioned as an unbound one beside it can.
-    local key = (noAlt and "x|" or "") .. (pastKeep and "k|" or "") .. (entry.bound and "b|" or "")
+    local key = (noAlt and "x|" or "") .. (pastKeep and "k|" or "") .. (pastWear and "w|" or "")
+        .. (entry.bound and "b|" or "")
         .. tostring(entry.link or entry.itemID) .. "#" .. carried
     local known = memo[key]
     if known then return known[1], known[2], known[3], known[4] end
 
-    local verdict, reason, unit, final, extra = self:Decide(entry, noAlt, pastKeep)
+    local verdict, reason, unit, final, extra = self:Decide(entry, noAlt, pastKeep, pastWear)
     -- An answer that waits on the client loading the item is asked again.
     if final then memo[key] = { verdict, reason, unit, extra } end
     return verdict, reason, unit, extra
@@ -582,7 +585,7 @@ function STEPS.ammo(self, c)
 end
 
 function STEPS.upgrades(self, c)
-    return FromSister(c, self:KeptUpgrade(Said(c)))
+    return FromSister(c, self:KeptUpgrade(Said(c), c.itemID, c.pastWear))
 end
 
 function STEPS.altCrafts(self, c)
@@ -685,7 +688,7 @@ local function Allowed(self, c, id, verdict, extra)
         if type(extra) == "table" and self:IsMe(extra.to) then return false end
     end
     if verdict == "sell" and (c.entry.noValue or Unit(c) == 0) then return false end
-    if LETS_GO[verdict] and id ~= "mailList" and id ~= "sellList" then
+    if LETS_GO[verdict] and id ~= "mailList" and id ~= "sellList" and not c.pastWear then
         local eq = Eq(c)
         if eq and eq.upgrade == "now" then return false end
     end
@@ -704,8 +707,8 @@ end
 --- The rules, in the player's order. The fourth return says whether the
 --- answer will hold (false while the price is still loading); the fifth
 --- is who a Mail row goes to and how many ({ to, count }).
-function Verdicts:Decide(entry, noAlt, pastKeep)
-    local c = { entry = entry, itemID = entry.itemID, noAlt = noAlt, pastKeep = pastKeep }
+function Verdicts:Decide(entry, noAlt, pastKeep, pastWear)
+    local c = { entry = entry, itemID = entry.itemID, noAlt = noAlt, pastKeep = pastKeep, pastWear = pastWear }
     for _, id in ipairs(self.FIRST) do
         local verdict, reason, unit, final, extra = Ask(self, c, id)
         if verdict then return verdict, reason, unit, final, extra end
@@ -842,7 +845,7 @@ end
 --- { to, count }; or nil. `entry` (the bag slot) says whether it is
 --- soulbound, which can't be mailed.
 function Verdicts:Kept(said, entry, noAlt)
-    local verdict, reason, worth, extra = self:KeptUpgrade(said)
+    local verdict, reason, worth, extra = self:KeptUpgrade(said, entry and entry.itemID)
     if verdict then return verdict, reason, worth, extra end
     verdict, reason, worth, extra = self:KeptAltCraft(said, entry)
     if verdict then return verdict, reason, worth, extra end
@@ -855,14 +858,19 @@ function Verdicts:Kept(said, entry, noAlt)
     return self:KeptPetFood(said)
 end
 
---- Equipment: an upgrade now or later, or a tool.
-function Verdicts:KeptUpgrade(said)
+--- Equipment: an upgrade now or later, or a tool. Only as many copies as
+--- the character wears are kept (one, two rings or trinkets): `wear` tells
+--- Groups how many, and a spare copy (`pastWear`) gets its own verdict (a
+--- player's five robes were all kept, 2026-10-18).
+function Verdicts:KeptUpgrade(said, itemID, pastWear)
     local eq = said.equipment
     if not eq then return nil end
+    if (eq.upgrade == "now" or eq.upgrade == "later") and pastWear then return nil end
+    local wear = { wear = itemID and self.Wears(itemID) or 1 }
     if eq.upgrade == "now" then
-        return "keep", L["An upgrade: wear it"]
+        return "keep", L["An upgrade: wear it"], nil, wear
     elseif eq.upgrade == "later" then
-        return "keep", L["An upgrade at a later level"]
+        return "keep", L["An upgrade at a later level"], nil, wear
     elseif Sisters.True(eq, "tool") then
         return "keep", L["A tool you use"]
     end
@@ -1434,7 +1442,10 @@ function Verdicts:Groups()
 
     local entries = {}
     for _, entry in pairs(ns.Bags.slots) do entries[#entries + 1] = entry end
+    -- Soulbound copies first, so the copy of an upgrade kept to wear is
+    -- one that can't be sold anyway.
     table.sort(entries, function(a, b)
+        if (a.bound and true or false) ~= (b.bound and true or false) then return a.bound and true or false end
         if a.bag ~= b.bag then return a.bag < b.bag end
         return a.slot < b.slot
     end)
@@ -1478,12 +1489,25 @@ function Verdicts:Groups()
                     extra.keepHere)
             end
         end
+        -- An upgrade for this character: only the copies it wears are kept,
+        -- counted by link, so two different random suffixes are both kept
+        -- (each is judged on its own).
+        local pastWear
+        if extra and extra.wear then
+            local id = tostring(entry.link or entry.itemID)
+            if (allotted["w" .. id] or 0) >= extra.wear then
+                pastWear = true
+                verdict, reason, unit, extra = self:Judge(entry, nil, pastKeep, true)
+            else
+                allotted["w" .. id] = (allotted["w" .. id] or 0) + (entry.count or 1)
+            end
+        end
         -- Greens broken to level Enchanting: once those before it should give
         -- enough of the material, a copy gets its own verdict.
         if extra and extra.enchanting then
             local id = extra.enchanting
             if (allotted["e" .. id] or 0) >= (extra.short or 0) then
-                verdict, reason, unit, extra = self:Judge(entry, true, pastKeep)
+                verdict, reason, unit, extra = self:Judge(entry, true, pastKeep, pastWear)
             else
                 allotted["e" .. id] = (allotted["e" .. id] or 0) + (extra.yield or 1) * (entry.count or 1)
             end
@@ -1491,7 +1515,7 @@ function Verdicts:Groups()
         if extra and extra.upgrade then
             local id = entry.itemID
             if (allotted[id] or 0) >= (extra.count or 1) then
-                verdict, reason, unit, extra = self:Judge(entry, true, pastKeep)
+                verdict, reason, unit, extra = self:Judge(entry, true, pastKeep, pastWear)
             else
                 allotted[id] = (allotted[id] or 0) + entry.count
             end
