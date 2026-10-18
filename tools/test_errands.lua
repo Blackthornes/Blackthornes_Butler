@@ -365,10 +365,13 @@ suite.check("Let Butler decide takes it off the mail list", ns.db.alwaysMail[404
 -- Never a mail to the character playing (a player found one, 2026-10-11):
 -- the Always mail list is account wide, so it can name this character, and
 -- an older Tradeskills could too.
+-- On the character it names, it has arrived: the usual rules decide it, as
+-- if it were on no list (the owner, 2026-10-18).
+local usualVerdict, usualReason = ns.Verdicts:Decide({ itemID = 404, count = 1 })
 ns.Verdicts:SetChoice(404, "mail", "Me")
 verdict, reason = ns.Verdicts:Decide({ itemID = 404, count = 1 })
-suite.check("Always mail to the character you're on keeps it", verdict == "keep"
-    and reason:find("character you're on", 1, true) ~= nil, reason)
+suite.check("Always mail to the character you're on is decided as usual",
+    verdict == usualVerdict and reason == usualReason and not reason:find("Always mail", 1, true), reason)
 ns.Verdicts:SetChoice(404, nil)
 local advise = _G.BlackthornesTS.Butler.Advise
 _G.BlackthornesTS.Butler.Advise = function(_, id)
@@ -406,14 +409,18 @@ local _, savedTo = ns.Verdicts:Choice(404)
 suite.check("an old short name is read as the full one", savedTo == "Bob Stonebreakerson", savedTo)
 suite.check("and is left as saved", ns.db.alwaysMail[404] == "Bob S.")
 ns.db.alwaysMail[404] = "Me M."
-suite.check("an old short name for the character playing is kept, not mailed",
-    (ns.Verdicts:Decide({ itemID = 404, count = 1 })) == "keep")
+do
+    local v, _, _, _, x = ns.Verdicts:Decide({ itemID = 404, count = 1 })
+    suite.check("an old short name for the character playing is never mailed", not (v == "mail" and x and ns.Verdicts:IsMe(x.to)), x and x.to)
+end
 -- A first name alone, saved before last names were read.
 ns.db.alwaysMail[404] = "Me"
 local _, bareTo = ns.Verdicts:Choice(404)
 suite.check("a first name alone is read as the full one", bareTo == "Me Myself", tostring(bareTo))
-suite.check("and the character playing keeps it, never mails it",
-    (ns.Verdicts:Decide({ itemID = 404, count = 1 })) == "keep")
+do
+    local v, _, _, _, x = ns.Verdicts:Decide({ itemID = 404, count = 1 })
+    suite.check("and the character playing never mails it", not (v == "mail" and x and ns.Verdicts:IsMe(x.to)), x and x.to)
+end
 ns.db.alwaysMail[404] = "Bob"
 local _, twoBobs = ns.Verdicts:Choice(404)
 suite.check("a first name two characters share is left as saved", twoBobs == "Bob", tostring(twoBobs))
