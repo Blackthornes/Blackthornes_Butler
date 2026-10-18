@@ -5,6 +5,10 @@
 local _, ns = ...
 
 ns.WHATS_NEW = {
+    { version = "0.15.0", lines = {
+        "Who Has It and Butler on Tooltips can each be Off, Shift or Always. You pick on the General page of Settings.",
+        "Right-click a character's jobs to ignore them until that character next logs in.",
+    } },
     { version = "0.14.0", lines = {
         "Butler speaks Simplified Chinese, French, Spanish and Russian now if your game is in one of those.",
     } },
@@ -12,8 +16,5 @@ ns.WHATS_NEW = {
         "You can keep a number of an item on each character. Right-click an item, or use Keep on Each Character on the Errands page of Settings.",
         "Buy Quest Items on the Selling page adds a Buy row at the auction house for what your open quests need. It's off until you tick it.",
         "A Buy row shows at any vendor that has something your craft queue needs.",
-    } },
-    { version = "0.12.0", lines = {
-        "Settings has a new page where you drag Butler's rules into the order you want, or turn them off.",
     } },
 }

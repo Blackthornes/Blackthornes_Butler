@@ -23,6 +23,15 @@ tell a friend: no hype, no questions to the reader, no exclamation marks
 outside the thanks line, no dashes as punctuation, no "now you can". The
 tool prints a note for a shipped line that reads like an advert.
 
+## 0.15.0
+
+- Who Has It and Butler on Tooltips can each be Off, Shift or Always. You pick on the General page of Settings.
+- Right-click a character's jobs to ignore them until that character next logs in.
+
+Fixes and changes:
+
+- Class training lists only characters on your realm and side.
+
 ## 0.14.0
 
 - Butler speaks Simplified Chinese, French, Spanish and Russian now if your game is in one of those.

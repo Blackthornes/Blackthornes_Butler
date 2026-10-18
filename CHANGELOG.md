@@ -4,6 +4,15 @@ Versions follow [semantic versioning](https://semver.org): the middle number
 moves for new behaviour, the last for fixes alone. The newest version goes at
 the top; a release is refused if its version has no section here.
 
+## 0.15.0
+
+For WoW: Forever (interface 16001). Files were added and the TOC changed, so
+restart the game fully after updating (`/reload` is not enough).
+
+- **Tooltips:** Who Has It and Butler on Tooltips can each be Off, Shift or Always. The choices are on the General page.
+- **Jobs:** right-click a character's jobs to ignore them until that character next logs in.
+- **Bug fixes:** class training lists only characters on your realm and side.
+
 ## 0.14.0
 
 For WoW: Forever (interface 16001). Files were added and the TOC changed, so
