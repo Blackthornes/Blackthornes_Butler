@@ -367,6 +367,53 @@ suite.check("an item's says to use it", itemDetail:find("bags", 1, true) ~= nil,
 suite.check("a cooldown without a name is left out",
     #Jobs.Clean({ { name = "X", steps = { { kind = "cooldown", recipeID = 1 } } } }) == 0)
 
+-- 7c. Ignore Until Next Login (a player asked, the owner said yes,
+-- 2026-10-18): a right-click puts a character's jobs away, and they come
+-- back the next time that character logs in.
+ns.db.jobsIgnored = nil
+UI:Show("bags")
+plan = Fresh({ ANA, CY, WITHER })
+rows = Jobs:Lines()
+local witherRow
+for _, row in ipairs(rows) do
+    if row.type == "jobnext" and row.job.name == "Blackthornes Wither" then witherRow = row end
+end
+suite.check("this character's steps carry its line", rows[1].type == "job" and rows[1].job
+    and rows[1].job.name == "Ana Blackthorne")
+UI:Clicked(witherRow, "RightButton")
+suite.check("a right-click on another's line opens its menu", UI.menu and UI.menu:IsShown()
+    and UI.menu.ignoreJobs:IsShown() and not UI.menu.keep:IsShown())
+suite.check("the menu says it plainly", UI.menu.ignoreJobs.label:GetText() == "Ignore Until Next Login")
+UI.menu.ignoreJobs:GetScript("OnClick")(UI.menu.ignoreJobs)
+suite.check("the menu goes once picked", not UI.menu:IsShown())
+suite.check("put away by its whole name", ns.db.jobsIgnored and ns.db.jobsIgnored["Blackthornes Wither"] ~= nil)
+plan = Jobs:Plan()
+suite.check("its line is gone", #plan.others == 1 and plan.others[1].name == "Cy Waiting")
+suite.check("and it is no longer next", plan.nextJob.name == "Cy Waiting")
+suite.check("the queue itself is untouched", #Jobs:Read() == 3)
+UI:Clicked(rows[1], "RightButton")
+UI.menu.ignoreJobs:GetScript("OnClick")(UI.menu.ignoreJobs)
+plan = Jobs:Plan()
+suite.check("this character's own steps can go too", plan.here == nil)
+env.Fire("PLAYER_ENTERING_WORLD", false, true)
+suite.check("a reload keeps them away", Jobs:Ignored("Ana Blackthorne"))
+_G.UnitName = function() return "Blackthornes Wither" end
+local realAfter = _G.C_Timer.After
+_G.C_Timer.After = function() end
+env.Fire("PLAYER_ENTERING_WORLD", true, false)
+suite.check("logging in brings that character's jobs back", not Jobs:Ignored("Blackthornes Wither"))
+suite.check("and only that character's", Jobs:Ignored("Ana Blackthorne"))
+_G.UnitName = function() return "ana blackthorne" end
+env.Fire("PLAYER_ENTERING_WORLD", true, false)
+suite.check("names match in any case", not Jobs:Ignored("Ana Blackthorne"))
+_G.C_Timer.After = realAfter
+_G.UnitName = nil
+plan = Fresh({ ANA, CY, WITHER })
+suite.check("all lines are back", plan.here and #plan.others == 2)
+UI:Clicked({ type = "jobnext" }, "RightButton")
+suite.check("a line with no name opens nothing", not UI.menu:IsShown())
+UI:Hide()
+
 -- 9. At a mailbox, Fill mail sits on the Jobs line that mails the
 -- character (the owner asked 2026-10-12), not on the Mail row below it.
 local filledTo

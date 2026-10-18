@@ -877,6 +877,11 @@ function UI:Clicked(data, button)
         self:Refresh(true)
         return
     end
+    -- A character's jobs: right-click puts them away until it logs in again.
+    if button == "RightButton" and (data.type == "job" or data.type == "jobnext")
+        and type(data.job) == "table" and type(data.job.name) == "string" then
+        return self:ShowJobMenu(data)
+    end
     if data.type == "ammo" or data.type == "job" or data.type == "jobnext" or data.type == "questbuy"
         or data.type == "train" or data.type == "trainnext" or data.type == "trainalt" then return end
     if button == "RightButton" and data.type ~= "gold" then
@@ -1153,6 +1158,14 @@ function UI:BuildMenu()
     end, { width = MENU_WIDTH - 16, height = 20 })
 
     -- The characters page: one button a character, made as needed, and Back.
+    -- A character's jobs line: put away until that character logs in.
+    menu.ignoreJobs = Widgets.CreateButton(menu, L["Ignore Until Next Login"], function()
+        local data = UI.menu.data
+        UI:HideMenu()
+        if data and data.job and ns.Jobs then ns.Jobs:Ignore(data.job.name) end
+    end, { width = MENU_WIDTH - 16, height = 20 })
+    menu.ignoreJobs:Hide()
+
     menu.characters = {}
     menu.back = Widgets.CreateButton(menu, L["Back"], function()
         if UI.menu.data then UI:ShowMenu(UI.menu.data, true) end
@@ -1194,6 +1207,7 @@ function UI:ShowMenu(data, stay)
 
     for _, button in ipairs(menu.characters) do button:Hide() end
     menu.back:Hide()
+    menu.ignoreJobs:Hide()
     menu.keepBox:Hide()
     menu.keepNote:Hide()
     menu.keepSave:Hide()
@@ -1278,6 +1292,37 @@ function UI:ShowMenu(data, stay)
     menu:Show()
 end
 
+--- The menu for a character's jobs line: its name, and one choice.
+function UI:ShowJobMenu(data)
+    local menu = self:BuildMenu()
+    menu.data = data
+    menu.away = 0
+    menu.title:SetText(data.job.name)
+    for _, button in ipairs({ menu.keep, menu.sell, menu.bank, menu.disenchant, menu.bought, menu.mail,
+        menu.hold, menu.holdAll, menu.keepHere, menu.decide, menu.back, menu.keepSave, menu.keepAll }) do
+        button:Hide()
+    end
+    for _, button in ipairs(menu.characters) do button:Hide() end
+    menu.keepBox:Hide()
+    menu.keepNote:Hide()
+
+    menu.ignoreJobs:ClearAllPoints()
+    menu.ignoreJobs:SetPoint("TOPLEFT", 8, -26)
+    menu.ignoreJobs:Show()
+    menu:SetHeight(30 + MENU_ROW)
+    UI.FitMenu(menu, { menu.ignoreJobs })
+
+    local x, y = 0, 0
+    if type(GetCursorPosition) == "function" then
+        x, y = GetCursorPosition()
+        local scale = UIParent:GetEffectiveScale() or 1
+        x, y = x / scale, y / scale
+    end
+    menu:ClearAllPoints()
+    menu:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT", x - 10, y + 10)
+    menu:Show()
+end
+
 --- The menu as wide as its widest button or title, so a long name (never
 --- shortened) stays inside it; every shown button takes that width.
 function UI.FitMenu(menu, buttons)
@@ -1314,6 +1359,7 @@ function UI:ShowMailMenu()
     menu.decide:Hide()
     menu.keepHere:Hide()
     menu.disenchant:Hide()
+    menu.ignoreJobs:Hide()
 
     local above
     for index, name in ipairs(names) do
@@ -1359,7 +1405,7 @@ function UI:ShowKeepMenu()
     menu.away = 0
     menu.title:SetText(L.Format("Keep %s on this character", UI.ItemTitle(data)))
     for _, button in ipairs({ menu.keep, menu.sell, menu.bank, menu.disenchant, menu.bought, menu.mail,
-        menu.hold, menu.holdAll, menu.keepHere, menu.decide }) do
+        menu.hold, menu.holdAll, menu.keepHere, menu.decide, menu.ignoreJobs }) do
         button:Hide()
     end
     for _, button in ipairs(menu.characters) do button:Hide() end

@@ -393,7 +393,9 @@ local DEFAULTS = {
     -- right-click choices), alwaysMail ([itemID] = a character's short name)
     -- sellTest (what /bbutler selltest found) and sellBelow (copper, the
     -- player's Sell below amount; nil is off) and windowScale (the
-    -- window's size from its corner grip; 1 is the normal size).
+    -- window's size from its corner grip; 1 is the normal size), and
+    -- jobsIgnored ([full name] = when, a character's jobs put away until it
+    -- next logs in; Logic/Jobs.lua).
 }
 
 -- Per character, because bags are: what one character carries is its own.

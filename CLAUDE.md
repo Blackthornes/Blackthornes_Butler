@@ -634,6 +634,16 @@ any name `Errands:IsMe` knows counts as here, whatever `isCurrent` says,
 and a mail step to the character doing it is dropped (`Jobs.Clean`). A player
 was told to log out for the character they were on, 2026-10-11.
 
+Ignore Until Next Login (a player asked, the owner said yes, 2026-10-18):
+a right-click on a character's jobs (its "Next:"/"Then:" line, or one of
+this character's own steps) opens a small menu with that one line.
+`Jobs:Ignore(name)` keeps the full name in `jobsIgnored[name] = time`
+(account wide, made when first needed, never rename it), `Jobs:Plan`
+leaves that character out, and at that character's next initial login
+(`PLAYER_ENTERING_WORLD`, again `LOGIN_DELAY` later once Tradeskills
+knows its names) `Jobs:Welcome` brings it back; a /reload does not.
+Nothing in the queue changes. No setting. Tested in `tools/test_jobs.lua`.
+
 Mail waiting (the owner, 2026-10-13: "if a character needs to visit the
 mail for something sent to it, butler should move that up the priority
 list"): Tradeskills' `Jobs()` gives a `{ kind = "pickup", items, forCraft
