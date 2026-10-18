@@ -23,6 +23,17 @@ tell a friend: no hype, no questions to the reader, no exclamation marks
 outside the thanks line, no dashes as punctuation, no "now you can". The
 tool prints a note for a shipped line that reads like an advert.
 
+## 0.13.0
+
+- You can keep a number of an item on each character. Right-click an item, or use Keep on Each Character on the Errands page of Settings.
+- Buy Quest Items on the Selling page adds a Buy row at the auction house for what your open quests need. It's off until you tick it.
+- A Buy row shows at any vendor that has something your craft queue needs.
+
+Fixes and changes:
+
+- Only as many copies of an upgrade as a character can wear are kept. The spares go to the auction house.
+- Item names use their rarity color in jobs, lists and tooltips.
+
 ## 0.12.1
 
 Fixes and changes:
