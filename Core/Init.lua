@@ -370,6 +370,11 @@ local DEFAULTS = {
     -- owner said yes 2026-10-18, off unless ticked). Never rename it.
     questBuy = false,
 
+    -- The cheapest craft for the next skill point in each profession, at
+    -- the end of Jobs (Logic/SkillUp.lua, a player asked, the owner said
+    -- build it 2026-10-19, off unless ticked). Never rename it.
+    skillUpLine = false,
+
     -- Logging in on a character with a job for the craft queue brings the
     -- window up on its steps (Logic/Jobs.lua, asked 2026-10-11).
     jobsAtLogin = true,
