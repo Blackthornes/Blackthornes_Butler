@@ -41,6 +41,7 @@ RuleOrderUI.RULES = {
     keepList = { L["Always Keep List:"], "keep", L["Things you put on the list stay. A queued craft on another character still gets its share."] },
     bankList = { L["Always Bank List:"], "bank", L["Goes in the bank when you click Move to bank."] },
     mailList = { L["Always Mail List:"], "mail", L["Each item goes to the character you picked for it. An upgrade you can wear now stays."] },
+    lists = { L["Your Lists:"], "mail" },
     buyback = { L["Things You Bought Back:"], "keep", L["Butler sold it and you bought it back, so it stays from now on."] },
     noValue = { L["Vendors Won't Buy It:"], "keep", L["No vendor pays for it, so it stays. A queued craft on another character still gets its share."] },
     sellList = { L["Always Sell List:"], "sell", L["Sold at a vendor, unless a goal, a craft or an upgrade still needs it."] },
@@ -114,7 +115,7 @@ local function Tooltip(row)
     if not (rule and GameTooltip) then return end
     GameTooltip:SetOwner(row, "ANCHOR_RIGHT")
     GameTooltip:AddLine((rule[1]:gsub(":$", "")), Theme.Unpack("accentHi"))
-    GameTooltip:AddLine(rule[3], Theme.Muted(true))
+    if rule[3] then GameTooltip:AddLine(rule[3], Theme.Muted(true)) end
     local Verdicts = ns.Verdicts
     if row.id == "sellBelow" then
         local below = Verdicts:SellBelow()

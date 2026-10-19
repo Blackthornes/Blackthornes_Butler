@@ -127,8 +127,9 @@ _G.BlackthornesTS.Butler:SearchAuctions(items)
   -- { { itemID, count } }: true and "all" or "one", or false and why
   --   (see "Items for your quests")
 _G.BlackthornesTS.Butler:Lists()
-  -- { { name, items = { [itemID] = want } } } and its version: the
-  --   player's shopping lists, for the bank alt (see "The bank alt")
+  -- { { name, id, items = { [itemID] = want } } } and its version: the
+  --   player's shopping lists, for the bank alt and "Your Tradeskills
+  --   lists"; id stays the same through a rename
 _G.BlackthornesEquipment.Butler:Advise(link, bag, slot)
   -- { upgrade = "now" | "later" | nil, gain, sell (its bag coin), tool,
   --   alt = { key (a GUID), gain, level } when it is an upgrade for
@@ -257,6 +258,34 @@ Rule `disenchantList`, after the Always sell list: Disenchant when this
 character can break it, else Mail to the enchanter Tradeskills names,
 else Look at it; an upgrade to wear now is Look at it. Tested in
 `tools/test_alwaysdisenchant.lua`.
+
+## Craft When It Pays More
+
+A player asked, the owner said build it (2026-10-19, from a mockup, words
+approved): Butler says when a craft the character knows earns more than
+selling. Off unless ticked: "Craft When It Pays More:" under CRAFTING on
+the Selling page (`craftPays`, account wide, never rename it) and `/bbutler
+craft on|off` (typed only, set straight in `ns.commands`, so it is not in
+the help line). In `Verdicts:Best`, after the best price is worked out,
+`Verdicts:CraftPays` asks Tradeskills, inside a pcall, read only:
+
+```lua
+_G.BlackthornesTS.Butler:CraftFor(itemID, carried)
+  -- { recipeID, name, itemID, per, crafts, perItem, needs = { { itemID, count } } }, or nil
+_G.BlackthornesTS.Butler:QueueCraft(recipeID, crafts)   -- true, or false and why
+```
+
+An item goes under Craft, the first group, only when one made into it is
+worth `Verdicts.CRAFT_MARGIN` (1.1) times the best price and the stack
+gains at least `CRAFT_LEAST` (200) copper: "Make NAME, about X more than
+selling it", or "(needs 2 Maple Seed)" for materials the bags lack. The
+row's worth is that gain (`row.craft.gain`). Everything kept before the
+best price still wins. The Craft heading's **Queue** button
+(`UI:QueueCrafts`) calls `QueueCraft` once a recipe, for the most any row
+makes, and says "Added N crafts to your Tradeskills queue." Nothing is
+made, sold or moved by it. Tested in `tools/test_craftpays.lua`. If
+Tradeskills changes either call, change `Sisters:CraftFor` and
+`Sisters:QueueCraft` too. Not yet seen in game.
 
 ## Disenchant greens here
 
@@ -676,8 +705,10 @@ still need to get (`Jobs.GetSteps`, added up over the crafts): "Buy from
 a vendor" (`kind = "buy"`, missing materials marked `vendor`; Tradeskills'
 Buy materials button at the vendor gets them) and "Buy or gather"
 (`kind = "gather"`, the rest, from the auction house or the world), then
-crafts whose item another craft on the line still misses, deepest part
-first, then the rest as Tradeskills gave them. Left out of the get steps:
+crafts whose item another craft on the line still misses, in
+Tradeskills' order (it groups a profession's sub-crafts, every bar before
+the anvil; a player's report, 2026-10-19) but never before a part they
+are made from, then the rest as Tradeskills gave them. Left out of the get steps:
 what another character holds (`from`), what any queued craft on any line
 makes, and what waits in the mailbox. Both count as steps to do now.
 `Jobs:Plan` puts a character who can make a part a craft here waits on
@@ -810,6 +841,12 @@ class trainer with something to train (`Jobs:AtTrainer`). The gold fund
 keeps back the playing character's `ReadyCost()` and tops another
 character up by its `Other(guid).cost` (`Funds:Plan`). Tested in
 `tools/test_classtraining.lua`. Not yet seen in game.
+A spell is known when the client says so, when a class trainer showed it
+as learned (kept by GUID in `classTrainingData.learned`, never rename it),
+or when a higher rank of the same name is known (the data skips a rank now
+and then; a player was told to train spells known a long time,
+2026-10-19). A trainer line in another language matches by name and the
+rank's number.
 
 ## Gold goals
 
@@ -965,6 +1002,27 @@ Tradeskills reads) and Tradeskills' `_G.BlackthornesTS.KeepHere:Count(itemID)`,
 inside a pcall, read only; the menu and Settings still show Butler's own.
 If that call changes, change `KeepHere.FromTradeskills` too. Tested in `tools/test_keephere.lua`.
 
+## Your Tradeskills lists
+
+The owner said build it (2026-10-19, from a mockup), with Tradeskills'
+own list rules (its "List rules"): each of the player's Tradeskills lists
+can have Mail To (one of the player's characters) and Keep Here (that many
+of each, on every character). Tradeskills only holds the lists
+(`Butler:Lists()`, with each list's `id`); Butler does the work.
+`Logic/ListRules.lua` keeps them account wide by list id, so a rename keeps
+them: `listRules[id] = { mailTo = full name, keep = count }` (never rename
+it; a list with neither has no entry, so nothing changes until a rule is
+set). An item on two lists follows the first on Tradeskills' Lists view
+that has a rule (`ListRules:For`). Keep Here joins `KeepHere:Effective`:
+the biggest of Butler's own keep, Tradeskills' and the list's wins (the
+list's name comes back second when it is the biggest). Mail To is the rule
+`lists` ("Your Lists" on the Order page), after the Always mail list:
+"On your NAME list, keeping N" mails the rest past the keep, "Your NAME
+list keeps N here" keeps the rest; never bound items, never the character
+playing, so once the items reach that character they stay, as with Always
+mail. Settings, LISTS page, YOUR TRADESKILLS LISTS: a list picker, "Mail
+To:" and "Keep Here:". Tested in `tools/test_listrules.lua`.
+
 ## The rule order
 
 The owner said build it (2026-10-17, from a mockup): Settings has an ORDER
@@ -1061,6 +1119,51 @@ Farmer has the same can by its own prices (its `UI/Trash.lua`, same art
 and tool) and stands down while `_G.BlackthornesButler.Trash` exists, so
 only one shows; keep `ns.Trash` on the global, or change Farmer's
 `Trash.ButlerHasIt` too.
+
+## The Bags window
+
+Players kept asking for a bag window in our style, and the owner said
+build it inside Butler (2026-10-19, from a mockup whose words he approved,
+with a one huge bag choice). Never name another bag addon in the repo,
+PRs or posts. `Logic/BagView.lua` works out what it shows;
+`UI/BagWindow.lua` draws it in the house frame (plate "Bags", portrait,
+close gem, size grip, dark glass well). Off unless ticked: "Use Butler
+Bags:" under BAGS on the General page, and `/bbutler bags [on|off]`
+(alone it opens or closes the window).
+
+- **The game's bags are never hidden.** While it is on, the game's bag
+  windows (`ContainerFrameCombinedBags`, `ContainerFrame1` to 13) go under
+  `ns.Veil` (`UI/Veil.lua`, Equipment's file: see-through, no mouse; a fix
+  to it belongs in both), also as each one shows (HookScript OnShow). The
+  bag calls (`ToggleAllBags`, `OpenAllBags`, `CloseAllBags` and the like)
+  are only post-hooked and settled once a frame: a toggle flips the window,
+  else an open shows it and a close hides it. Turned off, the veil comes off.
+- **Squares** are the game's `ContainerFrameItemButtonTemplate` on a holder
+  per bag (`SetID(bag)`, `SetID(slot)`), so clicks, drags, tooltips and
+  using items are the game's own; our own button if the client refuses
+  it. Made `MAKE_BUDGET` a frame, never in a fight: in a fight only what
+  each square shows is painted, and the layout waits for
+  `PLAYER_REGEN_ENABLED`. `/bbutler probe` has a "bag window" line.
+- **Group By:** What To Do (Butler's verdict groups in Butler's order, with
+  Fill mail and Move to bank on their headings), Item Type (QUEST, ARMOR,
+  WEAPONS, TRADE GOODS, FOOD AND DRINK, OTHER, greys under Sell) or One
+  Grid (every slot in bag order, empty ones too). Search by name or ID and
+  the Upgrades, To Sell, For My Crafts and For My Goals chips dim what does
+  not match. Marks come from `Verdicts` and the sisters' answers
+  (`BagView:Marks`, kept per `Verdicts.version`); new items glow until
+  hovered (session only, nothing saved). Sell and Disenchant stay in the
+  main Butler window. Sort shows only when the game has a bag sort.
+- **Bank** and **Everyone** tabs are view only: the bank read live at a
+  banker, else as Tradeskills last saw it; Everyone is All characters'
+  list (needs Tradeskills).
+- While it is on, the trash can stands down (`Trash:Refresh`) and the
+  window marks the item itself; `Bags:Wanted` reads the bags while it
+  shows; `Verdicts:Redraw` redraws it.
+
+Saved, account wide, never rename them: `bagWindow` (off unless ticked),
+`bagGroupBy`, `bagItemSize`, `bagItemLevel`, `bagNewGlow`, `bagScale`,
+`bagPoint`, `bagRelPoint`, `bagX`, `bagY`. Tested in
+`tools/test_bagwindow.lua`. Not yet seen in game.
 
 ## Butler's voice
 

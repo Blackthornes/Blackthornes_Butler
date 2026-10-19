@@ -391,6 +391,9 @@ function Trash:Changed()
     self.stale = true
     if self.settling or self.waiting then return end
     if not self:Enabled() or InCombat() or self.atVendor then return self:Hide() end
+    -- Butler's Bags window marks the item itself while it stands in for the
+    -- game's bags.
+    if ns.BagWindow and ns.BagWindow:Covering() then return self:Hide() end
     self.settling = true
     C_Timer.After(self.SETTLE, function()
         Trash.settling = false

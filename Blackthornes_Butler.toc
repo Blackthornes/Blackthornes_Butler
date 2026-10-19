@@ -38,6 +38,7 @@ Logic\Verdicts.lua
 Logic\Everyone.lua
 Logic\BankAlt.lua
 Logic\KeepHere.lua
+Logic\ListRules.lua
 
 UI\Theme.lua
 UI\BlizzardLook.lua
@@ -69,5 +70,8 @@ Logic\Jobs.lua
 Logic\SkillUp.lua
 Logic\ClassTraining.lua
 Logic\GoldGoals.lua
+Logic\BagView.lua
+UI\Veil.lua
+UI\BagWindow.lua
 
 Probe\Probe.lua

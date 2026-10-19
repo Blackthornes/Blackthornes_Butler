@@ -990,6 +990,9 @@ local function CreateScrollbar(list, thumbKey)
     return scrollbar
 end
 
+-- The Bags window (UI/BagWindow.lua) wears the same bar.
+Widgets.CreateScrollbar = CreateScrollbar
+
 --------------------------------------------------------------------------------
 -- Fade
 --------------------------------------------------------------------------------

@@ -192,8 +192,9 @@ end
 --- a mailbox visit first, then buying vendor materials, then buying or
 --- gathering the other materials (`made`: item IDs any queued craft
 --- makes, on any character's line, which are not got), then the crafts
---- that make parts another craft on the line still needs, deepest part
---- first, then the rest as Tradeskills gave them.
+--- that make parts another craft on the line still needs, in Tradeskills'
+--- order but never before a part they are made from, then the rest as
+--- Tradeskills gave them.
 function Jobs.Order(steps, made)
     -- How many crafts down the line a craft's item goes: 0 for one that
     -- nothing here waits on.
@@ -230,10 +231,42 @@ function Jobs.Order(steps, made)
             rest[#rest + 1] = step
         end
     end
-    table.sort(parts, function(a, b)
-        if a.depth ~= b.depth then return a.depth > b.depth end
-        return a.index < b.index
-    end)
+    -- In Tradeskills' order, which keeps a profession's parts together
+    -- (every bar before the anvil, a player's report 2026-10-19), except
+    -- that a part never comes before a part it is made from. Sorting by
+    -- depth alone split them: forge, anvil, forge.
+    local byItem = {}
+    for _, part in ipairs(parts) do
+        byItem[part.step.itemID] = byItem[part.step.itemID] or {}
+        table.insert(byItem[part.step.itemID], part)
+    end
+    local inOrder, placed = {}, {}
+    local function Free(part)
+        for _, need in ipairs(part.step.missing) do
+            for _, from in ipairs(byItem[need.itemID] or {}) do
+                if from ~= part and not placed[from] then return false end
+            end
+        end
+        return true
+    end
+    for _ = 1, #parts do
+        local pick
+        for _, part in ipairs(parts) do
+            if not placed[part] and Free(part) and (not pick or part.index < pick.index) then pick = part end
+        end
+        if not pick then
+            -- Parts made from each other: the deepest first, as before.
+            for _, part in ipairs(parts) do
+                if not placed[part] and (not pick or part.depth > pick.depth
+                    or (part.depth == pick.depth and part.index < pick.index)) then
+                    pick = part
+                end
+            end
+        end
+        placed[pick] = true
+        inOrder[#inOrder + 1] = pick
+    end
+    parts = inOrder
 
     -- The plain crafts: the ones freeing the most bag slots first (Tradeskills
     -- gives `slots` for the character playing). They swap places among

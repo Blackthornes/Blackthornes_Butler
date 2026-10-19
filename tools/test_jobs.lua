@@ -506,6 +506,23 @@ title, detail = Words.StepText(buy)
 suite.check("it says to buy them", title == "Buy from a vendor" and detail:find("Tradeskills Vendor", 1, true) ~= nil,
     tostring(title) .. " / " .. tostring(detail))
 suite.check("a vendor run counts as a step to do now", Jobs.Ready({ steps = { buy } }))
+-- Bars all at once (a player's report, 2026-10-19): Tradeskills lists
+-- the bar before the deeper anvil parts, and that order stays.
+plan = Fresh({ { name = "Ana Blackthorne", isCurrent = true, steps = {
+    { kind = "craft", recipeID = 41, itemID = 9021, name = "Iron Bar", count = 1, forNames = {},
+      ready = true, missing = {} },
+    { kind = "craft", recipeID = 42, itemID = 9022, name = "Grit", count = 1, forNames = {},
+      ready = true, missing = {} },
+    { kind = "craft", recipeID = 43, itemID = 9023, name = "Plate", count = 1, forNames = {},
+      ready = false, missing = { { itemID = 9022, count = 1 } } },
+    { kind = "craft", recipeID = 44, itemID = 9024, name = "Helm", count = 1, forNames = {},
+      ready = false, missing = { { itemID = 9023, count = 1 }, { itemID = 9021, count = 1 } } },
+} } })
+kinds = {}
+for _, step in ipairs(plan.here.steps) do kinds[#kinds + 1] = step.kind .. ":" .. tostring(step.recipeID or "") end
+order = table.concat(kinds, " ")
+suite.check("the bar stays before the anvil parts", order == "craft:41 craft:42 craft:43 craft:44", order)
+
 plan = Fresh({ { name = "Ana Blackthorne", isCurrent = true, steps = {
     { kind = "craft", recipeID = 31, itemID = 9010, name = "Plain", count = 1, forNames = {},
       ready = false, missing = { { itemID = 9011, count = 1 } } } } } })

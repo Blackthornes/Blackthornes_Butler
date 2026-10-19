@@ -69,7 +69,7 @@ BankAlt.WHEN_LABELS = {
 
 -- Which of Butler's own verdicts each pick takes over.
 local TAKES = {
-    first = { sell = true, auction = true, disenchant = true, wait = true, look = true },
+    first = { craft = true, sell = true, auction = true, disenchant = true, wait = true, look = true },
     vendor = { sell = true, look = true },
     leftovers = { look = true },
 }
@@ -180,8 +180,8 @@ end
 --------------------------------------------------------------------------------
 
 --- The player's shopping lists from Tradeskills, read once per
---- Verdicts.version (so once each time the window opens): { { name, items
---- = { [itemID] = want } } }. Empty without Tradeskills.
+--- Verdicts.version (so once each time the window opens): { { name, id,
+--- items = { [itemID] = want } } }. Empty without Tradeskills.
 function BankAlt:Lists()
     local version = ns.Verdicts and ns.Verdicts.version
     if self.lists and self.listsVersion == version then return self.lists end
@@ -192,7 +192,7 @@ function BankAlt:Lists()
         if ok and type(answer) == "table" then
             for _, list in ipairs(answer) do
                 if type(list) == "table" and Text(list.name) and type(list.items) == "table" then
-                    lists[#lists + 1] = { name = Text(list.name), items = list.items }
+                    lists[#lists + 1] = { name = Text(list.name), id = tonumber(list.id), items = list.items }
                 end
             end
         end

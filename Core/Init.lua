@@ -340,6 +340,12 @@ local DEFAULTS = {
     -- Never rename it.
     disenchantAnyPrice = false,
 
+    -- A bag item a known craft makes worth more goes under Craft, with a
+    -- Queue button that puts it in Tradeskills' queue (Verdicts:CraftPays;
+    -- a player asked, the owner said build it, 2026-10-19, off by
+    -- default). Never rename it.
+    craftPays = false,
+
     -- The free bag space number on the backpack button (UI/FreeSpace.lua,
     -- asked 2026-10-11).
     freeSpace = true,

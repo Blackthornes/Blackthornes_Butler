@@ -19,6 +19,8 @@
 --   1. On the player's Always keep list            Keep
 --      ... or Always bank list                     Bank
 --      ... or learned: bought back after Butler sold it   Keep
+--   1b. On one of the player's Tradeskills lists with Mail To set here
+--      (Logic/ListRules.lua), less what is kept    Mail
 --   2. A quest item, or one that starts one        Keep
 --      ... or one an open quest collects           Keep
 --   3. A vendor won't buy it                       Keep
@@ -92,9 +94,10 @@ local Items = ns.Items
 local Sisters = ns.Sisters
 
 -- The order the groups show in: what to do first at the top.
-Verdicts.ORDER = { "sell", "auction", "disenchant", "mail", "bank", "look", "wait", "keep" }
+Verdicts.ORDER = { "craft", "sell", "auction", "disenchant", "mail", "bank", "look", "wait", "keep" }
 
 Verdicts.LABELS = {
+    craft = L["Craft"],
     sell = L["Sell"],
     auction = L["Auction"],
     disenchant = L["Disenchant"],
@@ -114,6 +117,13 @@ Verdicts.SLOW = 0.75
 -- of its usual price (auction). A little under is normal: the usual price is
 -- an average of the cheapest listings, so only a real dip counts.
 Verdicts.LOW_NOW = 0.85
+
+-- Craft When It Pays More: a craft is offered only when one of the item made
+-- into it is worth this much more than Butler's best price for it, and the
+-- whole stack gains at least CRAFT_LEAST copper, so a copper or two never
+-- sends the player to the profession window.
+Verdicts.CRAFT_MARGIN = 1.1
+Verdicts.CRAFT_LEAST = 200
 
 
 -- Moves whenever a judgement could change (a choice made, an item loaded),
@@ -222,7 +232,7 @@ end
 -- judges exactly as it always has.
 Verdicts.FIRST = { "sets", "quests" }
 Verdicts.DEFAULT_ORDER = {
-    "keepHere", "keepList", "bankList", "mailList", "buyback", "noValue", "sellList", "disenchantList", "ammo",
+    "keepHere", "keepList", "bankList", "mailList", "lists", "buyback", "noValue", "sellList", "disenchantList", "ammo",
     "upgrades", "altCrafts", "goals", "queue", "altUpgrades", "petFood",
     "bought", "levelEnch", "greensHere", "disenchanter", "mailHabit",
     "sellHabit", "greys", "bankAlt", "sellBelow",
@@ -438,8 +448,11 @@ end
 -- judges the rest again past this rule.
 function STEPS.keepHere(self, c)
     if c.pastKeep or not ns.KeepHere then return nil end
-    local count = ns.KeepHere:Effective(c.itemID)
+    local count, listName = ns.KeepHere:Effective(c.itemID)
     if not count then return nil end
+    if listName then
+        return "keep", L.Format("Your %s list keeps %d here", listName, count), nil, true, { keepHere = count }
+    end
     if ns.KeepHere.IsAll(count) then
         return "keep", L["Keeping all on this character"], nil, true, { keepHere = count }
     end
@@ -493,6 +506,39 @@ function STEPS.mailList(self, c)
     end
     return "mail", L.Format("On your Always mail list, to %s", mailTo), Unit(c), true,
         { to = mailTo }
+end
+
+-- Your Lists (Logic/ListRules.lua): a list's Mail To sends what is on it
+-- to that character, less what this character keeps (Keep Here, its own
+-- keep or Tradeskills', the bigger) and what its own queued crafts need.
+-- Soulbound stays; on the character it names, it has arrived, as with the
+-- Always mail list, and the usual rules decide.
+function STEPS.lists(self, c)
+    local rule = ns.ListRules and ns.ListRules:For(c.itemID)
+    local mailTo = rule and rule.mailTo
+    if not mailTo or c.entry.bound or self:IsMe(mailTo) then return nil end
+    local entry, itemID = c.entry, c.itemID
+    local keep = 0
+    -- Stacks the keep holds were set aside before this rule was asked
+    -- (pastKeep); otherwise keep them back here.
+    if not c.pastKeep and ns.KeepHere then keep = ns.KeepHere:Effective(itemID) or 0 end
+    local queued = Sisters.Number(Sisters:Ask("ts", entry), "need") or 0
+    local held = math.max(keep, queued)
+    local shown = c.pastKeep and ns.KeepHere and ns.KeepHere:Effective(itemID) or held
+    local unit = Unit(c)
+    if held > 0 then
+        local spare = math.max(ns.Bags:Carried(itemID), entry.count or 1) - held
+        if spare <= 0 then
+            return "keep", L.Format("Your %s list keeps %d here", rule.name, held), nil, true
+        end
+        return "mail", L.Format("On your %s list, keeping %d", rule.name, held), unit, unit ~= nil,
+            { to = mailTo, count = spare }
+    end
+    if shown and shown > 0 then
+        return "mail", L.Format("On your %s list, keeping %d", rule.name, shown), unit, unit ~= nil,
+            { to = mailTo }
+    end
+    return "mail", L.Format("On your %s list", rule.name), unit, unit ~= nil, { to = mailTo }
 end
 
 -- Butler sold it and the player bought it back: kept from then on, but an
@@ -1364,6 +1410,9 @@ function Verdicts:Best(entry, unit, said, noBelow)
     if auctionWorth and auctionWorth > value then best, value = "auction", auctionWorth end
     if disenchant and disenchant > value then best, value = "disenchant", disenchant end
 
+    local craft = self:CraftPays(entry, value)
+    if craft then return "craft", craft.reason, craft.perItem, { craft = craft } end
+
     if best == "disenchant" then
         if canDisenchant then
             return "disenchant", L.Format("Disenchant, about %s", Items.FormatMoney(disenchant)), disenchant
@@ -1420,6 +1469,53 @@ function Verdicts:Best(entry, unit, said, noBelow)
 
     -- Short enough for the row; the tooltip says right-click decides it.
     return "look", Each(unit), unit
+end
+
+--- Whether "Craft When It Pays More" is ticked: off unless the player
+--- ticks it (a player asked, the owner said build it, 2026-10-19).
+function Verdicts:CraftPaysOn()
+    return ns.db ~= nil and ns.db.craftPays == true
+end
+
+function Verdicts:SetCraftPays(on)
+    if not ns.db then return end
+    ns.db.craftPays = on and true or false
+    self:Changed(true)
+end
+
+local function NeedName(itemID)
+    local name = Items.Call({ "C_Item.GetItemNameByID", "C_Item.GetItemInfo", "GetItemInfo" }, itemID)
+    if type(name) == "string" and name ~= "" then return name end
+    Items:RequestLoad(itemID)
+    return L.Format("item %s", tostring(itemID))
+end
+
+--- A craft the character knows that makes the item worth more than `value`
+--- (Butler's best price for one), from Tradeskills, while the setting is on.
+--- { recipeID, crafts, perItem, gain, reason }, or nil.
+function Verdicts:CraftPays(entry, value)
+    if not self:CraftPaysOn() or not entry.itemID then return nil end
+    local carried = ns.Bags.Carried and ns.Bags:Carried(entry.itemID) or entry.count
+    local craft = Sisters:CraftFor(entry.itemID, carried)
+    if not craft then return nil end
+    value = value or 0
+    if craft.perItem <= value * Verdicts.CRAFT_MARGIN or craft.perItem <= value then return nil end
+    local used = math.min(carried or 0, craft.crafts * craft.per)
+    local gain = math.floor((craft.perItem - value) * used)
+    if gain < Verdicts.CRAFT_LEAST then return nil end
+    local reason
+    if #craft.needs > 0 then
+        local parts = {}
+        for i, need in ipairs(craft.needs) do
+            parts[i] = ("%d %s"):format(need.count, NeedName(need.itemID))
+        end
+        reason = L.Format("Make %s (needs %s), about %s more than selling it",
+            craft.name, table.concat(parts, ", "), Items.FormatMoney(gain))
+    else
+        reason = L.Format("Make %s, about %s more than selling it", craft.name, Items.FormatMoney(gain))
+    end
+    return { recipeID = craft.recipeID, crafts = craft.crafts, perItem = craft.perItem, gain = gain,
+        reason = reason }
 end
 
 --- "2.5" or "8": hours as the row shows them.
@@ -1540,6 +1636,7 @@ function Verdicts:Groups()
                 mailTo = extra and extra.to, mailCount = extra and extra.count,
                 upgrade = extra and extra.upgrade or nil,
                 bought = extra and extra.bought,
+                craft = extra and extra.craft,
                 name = Items.NameFromLink(entry.link) or L.Format("item %s", tostring(entry.itemID)),
                 count = 0, slots = {},
             }
@@ -1555,7 +1652,9 @@ function Verdicts:Groups()
     for _, verdict in ipairs(self.ORDER) do
         local group = byVerdict[verdict]
         for _, row in ipairs(group.rows) do
-            row.worth = (row.unit or 0) * row.count
+            -- A craft row shows what crafting gains over selling, for
+            -- the whole stack.
+            row.worth = row.craft and row.craft.gain or (row.unit or 0) * row.count
             group.worth = group.worth + row.worth
             -- Slots in bag order, so a sale goes through the bags as the
             -- player reads them.
@@ -1644,6 +1743,7 @@ function Verdicts:Redraw()
     if ns.UI then ns.UI:Refresh() end
     if ns.Selling then ns.Selling:Update() end
     if ns.Trash then ns.Trash:Changed() end
+    if ns.BagWindow then ns.BagWindow:Changed() end
 end
 
 --------------------------------------------------------------------------------
@@ -1695,6 +1795,16 @@ ns.RegisterCommand("greens", L["turn disenchanting every green on your disenchan
     ns.Print(on and L["On your disenchanter, Butler says to disenchant every green it can break."]
         or L["On your disenchanter, Butler goes back to judging greens by what they're worth."])
 end)
+
+-- Craft When It Pays More: typed only, so it stays out of the help line.
+ns.commands.craft = { fn = function(arg)
+    arg = (arg or ""):lower():match("^%s*(.-)%s*$")
+    local on
+    if arg == "on" then on = true elseif arg == "off" then on = false
+    else on = not Verdicts:CraftPaysOn() end
+    Verdicts:SetCraftPays(on)
+    ns.Print(L["Craft When It Pays More:"] .. " " .. (on and L["On"] or L["Off"]))
+end }
 
 -- Upgrades held back from a character (right-click a Mail upgrade row).
 -- Undo lets them go again; nothing else is deleted.
