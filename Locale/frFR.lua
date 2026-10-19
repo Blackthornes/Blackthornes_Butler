@@ -1049,3 +1049,13 @@ L["Off"] = "Aucun"
 L["Shift"] = "Maj"
 L["Always"] = "Toujours"
 L["Hold Shift for more."] = "Maintiens Maj pour en voir plus."
+
+-- Rules for your Tradeskills lists (Logic/ListRules.lua).
+L["LISTS"] = "LISTES"
+L["YOUR TRADESKILLS LISTS"] = "TES LISTES TRADESKILLS"
+L["Mail To:"] = "Envoyer à :"
+L["Keep Here:"] = "Garder ici :"
+L["of each, on every character"] = "de chaque, sur chaque personnage"
+L["On your %s list, keeping %d"] = "Sur ta liste %s, %d gardés ici"
+L["Your %s list keeps %d here"] = "Ta liste %s en garde %d ici"
+L["Your Lists:"] = "Tes listes :"

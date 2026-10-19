@@ -19,6 +19,8 @@
 --   1. On the player's Always keep list            Keep
 --      ... or Always bank list                     Bank
 --      ... or learned: bought back after Butler sold it   Keep
+--   1b. On one of the player's Tradeskills lists with Mail To set here
+--      (Logic/ListRules.lua), less what is kept    Mail
 --   2. A quest item, or one that starts one        Keep
 --      ... or one an open quest collects           Keep
 --   3. A vendor won't buy it                       Keep
@@ -222,7 +224,7 @@ end
 -- judges exactly as it always has.
 Verdicts.FIRST = { "sets", "quests" }
 Verdicts.DEFAULT_ORDER = {
-    "keepHere", "keepList", "bankList", "mailList", "buyback", "noValue", "sellList", "disenchantList", "ammo",
+    "keepHere", "keepList", "bankList", "mailList", "lists", "buyback", "noValue", "sellList", "disenchantList", "ammo",
     "upgrades", "altCrafts", "goals", "queue", "altUpgrades", "petFood",
     "bought", "levelEnch", "greensHere", "disenchanter", "mailHabit",
     "sellHabit", "greys", "bankAlt", "sellBelow",
@@ -438,8 +440,11 @@ end
 -- judges the rest again past this rule.
 function STEPS.keepHere(self, c)
     if c.pastKeep or not ns.KeepHere then return nil end
-    local count = ns.KeepHere:Effective(c.itemID)
+    local count, listName = ns.KeepHere:Effective(c.itemID)
     if not count then return nil end
+    if listName then
+        return "keep", L.Format("Your %s list keeps %d here", listName, count), nil, true, { keepHere = count }
+    end
     if ns.KeepHere.IsAll(count) then
         return "keep", L["Keeping all on this character"], nil, true, { keepHere = count }
     end
@@ -493,6 +498,39 @@ function STEPS.mailList(self, c)
     end
     return "mail", L.Format("On your Always mail list, to %s", mailTo), Unit(c), true,
         { to = mailTo }
+end
+
+-- Your Lists (Logic/ListRules.lua): a list's Mail To sends what is on it
+-- to that character, less what this character keeps (Keep Here, its own
+-- keep or Tradeskills', the bigger) and what its own queued crafts need.
+-- Soulbound stays; on the character it names, it has arrived, as with the
+-- Always mail list, and the usual rules decide.
+function STEPS.lists(self, c)
+    local rule = ns.ListRules and ns.ListRules:For(c.itemID)
+    local mailTo = rule and rule.mailTo
+    if not mailTo or c.entry.bound or self:IsMe(mailTo) then return nil end
+    local entry, itemID = c.entry, c.itemID
+    local keep = 0
+    -- Stacks the keep holds were set aside before this rule was asked
+    -- (pastKeep); otherwise keep them back here.
+    if not c.pastKeep and ns.KeepHere then keep = ns.KeepHere:Effective(itemID) or 0 end
+    local queued = Sisters.Number(Sisters:Ask("ts", entry), "need") or 0
+    local held = math.max(keep, queued)
+    local shown = c.pastKeep and ns.KeepHere and ns.KeepHere:Effective(itemID) or held
+    local unit = Unit(c)
+    if held > 0 then
+        local spare = math.max(ns.Bags:Carried(itemID), entry.count or 1) - held
+        if spare <= 0 then
+            return "keep", L.Format("Your %s list keeps %d here", rule.name, held), nil, true
+        end
+        return "mail", L.Format("On your %s list, keeping %d", rule.name, held), unit, unit ~= nil,
+            { to = mailTo, count = spare }
+    end
+    if shown and shown > 0 then
+        return "mail", L.Format("On your %s list, keeping %d", rule.name, shown), unit, unit ~= nil,
+            { to = mailTo }
+    end
+    return "mail", L.Format("On your %s list", rule.name), unit, unit ~= nil, { to = mailTo }
 end
 
 -- Butler sold it and the player bought it back: kept from then on, but an

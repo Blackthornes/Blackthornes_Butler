@@ -127,8 +127,9 @@ _G.BlackthornesTS.Butler:SearchAuctions(items)
   -- { { itemID, count } }: true and "all" or "one", or false and why
   --   (see "Items for your quests")
 _G.BlackthornesTS.Butler:Lists()
-  -- { { name, items = { [itemID] = want } } } and its version: the
-  --   player's shopping lists, for the bank alt (see "The bank alt")
+  -- { { name, id, items = { [itemID] = want } } } and its version: the
+  --   player's shopping lists, for the bank alt and "Your Tradeskills
+  --   lists"; id stays the same through a rename
 _G.BlackthornesEquipment.Butler:Advise(link, bag, slot)
   -- { upgrade = "now" | "later" | nil, gain, sell (its bag coin), tool,
   --   alt = { key (a GUID), gain, level } when it is an upgrade for
@@ -943,6 +944,27 @@ and no new key is saved. Tradeskills has its own keep for its Sell list
 Tradeskills reads) and Tradeskills' `_G.BlackthornesTS.KeepHere:Count(itemID)`,
 inside a pcall, read only; the menu and Settings still show Butler's own.
 If that call changes, change `KeepHere.FromTradeskills` too. Tested in `tools/test_keephere.lua`.
+
+## Your Tradeskills lists
+
+The owner said build it (2026-10-19, from a mockup), with Tradeskills'
+own list rules (its "List rules"): each of the player's Tradeskills lists
+can have Mail To (one of the player's characters) and Keep Here (that many
+of each, on every character). Tradeskills only holds the lists
+(`Butler:Lists()`, with each list's `id`); Butler does the work.
+`Logic/ListRules.lua` keeps them account wide by list id, so a rename keeps
+them: `listRules[id] = { mailTo = full name, keep = count }` (never rename
+it; a list with neither has no entry, so nothing changes until a rule is
+set). An item on two lists follows the first on Tradeskills' Lists view
+that has a rule (`ListRules:For`). Keep Here joins `KeepHere:Effective`:
+the biggest of Butler's own keep, Tradeskills' and the list's wins (the
+list's name comes back second when it is the biggest). Mail To is the rule
+`lists` ("Your Lists" on the Order page), after the Always mail list:
+"On your NAME list, keeping N" mails the rest past the keep, "Your NAME
+list keeps N here" keeps the rest; never bound items, never the character
+playing, so once the items reach that character they stay, as with Always
+mail. Settings, LISTS page, YOUR TRADESKILLS LISTS: a list picker, "Mail
+To:" and "Keep Here:". Tested in `tools/test_listrules.lua`.
 
 ## The rule order
 

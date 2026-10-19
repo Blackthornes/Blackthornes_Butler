@@ -999,3 +999,13 @@ L["Off"] = "Выкл"
 L["Shift"] = "Shift"
 L["Always"] = "Всегда"
 L["Hold Shift for more."] = "Зажми Shift, чтобы увидеть больше."
+
+-- Rules for your Tradeskills lists (Logic/ListRules.lua).
+L["LISTS"] = "СПИСКИ"
+L["YOUR TRADESKILLS LISTS"] = "ТВОИ СПИСКИ TRADESKILLS"
+L["Mail To:"] = "Отправлять:"
+L["Keep Here:"] = "Оставлять здесь:"
+L["of each, on every character"] = "каждого, на каждом персонаже"
+L["On your %s list, keeping %d"] = "В твоём списке «%s», остаётся %d"
+L["Your %s list keeps %d here"] = "Список «%s» оставляет здесь %d"
+L["Your Lists:"] = "Твои списки:"
