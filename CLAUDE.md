@@ -1024,7 +1024,10 @@ locked, not a quest item. A trade good counts as
 and two short stacks of one item that fit in one slot come first: the can
 says "Stack these to make room" and a click joins them (`Trash:Merge`,
 the owner 2026-10-16). Keep, Mail, Bank, Wait and Look at it never get
-it. Butler never deletes: a click picks the item up
+it. A red glow lies round that slot too, pulsing slowly (the owner,
+2026-10-19; `Trash:Glow`, `Media/Trash/PickGlow.tga` from the same tool,
+`Trash.GLOW_REACH`), our own frame with no mouse, shown and hidden with
+the can. Butler never deletes: a click picks the item up
 (`C_Container.PickupContainerItem`, after reading the slot again) and says
 to drop it outside the bags, where the game's own box asks first. The can
 is Butler's own button on UIParent, anchored to the game's item button

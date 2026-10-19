@@ -86,6 +86,9 @@ local point = Trash.can._point
 suite.check("on the cheapest stack, not the quest item or a locked one",
     point and point[2] == buttons[2], point and tostring(point[2]))
 suite.check("Butler picked the Ruined Pelt", Trash.pick and Trash.pick.entry.itemID == 702)
+suite.check("a red glow lies round the same slot",
+    Trash.glow ~= nil and Trash.glow:IsShown() and Trash.glow:GetParent() == buttons[2]
+        and Trash.glow._point and Trash.glow._point[2] == buttons[2])
 
 -- 3.
 GameTooltip._lines = {}
@@ -128,6 +131,7 @@ suite.check("and the can comes back once the bags are read", Showing())
 -- 6.
 env.Fire("PLAYER_REGEN_DISABLED")
 suite.check("hidden in a fight", not Showing())
+suite.check("the glow goes with it", not Trash.glow:IsShown() and Trash.glow:GetParent() == UIParent)
 env.Fire("PLAYER_REGEN_ENABLED")
 suite.check("back after it", Showing())
 env.Fire("MERCHANT_SHOW")
