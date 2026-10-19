@@ -1048,6 +1048,16 @@ L["Shift"] = "Shift"
 L["Always"] = "总是"
 L["Hold Shift for more."] = "按住 Shift 查看更多。"
 
+-- Rules for your Tradeskills lists (Logic/ListRules.lua).
+L["LISTS"] = "清单"
+L["YOUR TRADESKILLS LISTS"] = "你的 TRADESKILLS 清单"
+L["Mail To:"] = "邮寄给："
+L["Keep Here:"] = "留在这里："
+L["of each, on every character"] = "每种，每个角色"
+L["On your %s list, keeping %d"] = "在你的“%s”清单上，保留 %d 个"
+L["Your %s list keeps %d here"] = "你的“%s”清单在这里保留 %d 个"
+L["Your Lists:"] = "你的清单："
+
 -- The Bags window (UI/BagWindow.lua, Logic/BagView.lua).
 L["Bags"] = "背包"
 L["Everyone"] = "所有角色"

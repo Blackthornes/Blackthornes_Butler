@@ -1049,6 +1049,16 @@ L["Shift"] = "Umschalt"
 L["Always"] = "Immer"
 L["Hold Shift for more."] = "Halte Umschalt für mehr."
 
+-- Rules for your Tradeskills lists (Logic/ListRules.lua).
+L["LISTS"] = "LISTEN"
+L["YOUR TRADESKILLS LISTS"] = "DEINE TRADESKILLS-LISTEN"
+L["Mail To:"] = "Verschicken an:"
+L["Keep Here:"] = "Hier behalten:"
+L["of each, on every character"] = "von jedem, auf jedem Charakter"
+L["On your %s list, keeping %d"] = "Auf deiner Liste %s, %d bleiben hier"
+L["Your %s list keeps %d here"] = "Deine Liste %s behält %d hier"
+L["Your Lists:"] = "Deine Listen:"
+
 -- The Bags window (UI/BagWindow.lua, Logic/BagView.lua).
 L["Bags"] = "Taschen"
 L["Everyone"] = "Alle"

@@ -41,6 +41,7 @@ local PAGES = {
       tip = L["The order Butler asks its rules in, and which ones are on"] },
     { key = "bankalt", text = L["BANK ALT"],
       tip = L["Mail whole kinds of items to one of your characters"] },
+    { key = "lists", text = L["LISTS"] },
     { key = "gold", text = L["GOLD"],
       tip = L["How much gold each of your characters keeps, topped up by mail"] },
     { key = "general", text = L["GENERAL"],
@@ -427,6 +428,52 @@ function SettingsUI:SyncBankAlt()
     for key, box in pairs(controls.bankAltKinds) do box:SetChecked(BankAlt:KindOn(key)) end
 end
 
+--- The Tradeskills list picked on the Lists page: { name, id, items }, or
+--- nil when there are none.
+function SettingsUI:PickedList()
+    local controls = self.controls
+    local lists = self.listsState or {}
+    return controls and controls.listsPick and lists[controls.listsPick.index] or nil
+end
+
+--- The Lists page: the player's Tradeskills lists, and the picked one's
+--- Mail To and Keep Here as saved.
+function SettingsUI:SyncLists()
+    local controls = self.controls
+    if not (controls and controls.listsPick and ns.ListRules) then return end
+    local lists = {}
+    for _, list in ipairs(ns.ListRules:Lists()) do
+        if list.id ~= nil then lists[#lists + 1] = list end
+    end
+    self.listsState = lists
+    local names = {}
+    for _, list in ipairs(lists) do names[#names + 1] = list.name end
+    controls.listsPick:SetNames(names)
+    if #names == 0 then controls.listsPick.text:SetText(L["None"]) end
+
+    local list = self:PickedList()
+    local rule = list and ns.ListRules:Get(list.id) or {}
+    local picked = rule.mailTo
+    -- Never the character playing: it can't mail itself.
+    local choices, seen, sorted = { L["Nobody"] }, {}, {}
+    for _, name in ipairs(ns.Errands:Characters()) do
+        if not seen[name] and not ns.Verdicts:IsMe(name) then
+            seen[name] = true
+            sorted[#sorted + 1] = name
+        end
+    end
+    if picked and not seen[picked] then sorted[#sorted + 1] = picked end
+    table.sort(sorted)
+    for _, name in ipairs(sorted) do choices[#choices + 1] = name end
+    controls.listsMailTo:SetNames(choices)
+    controls.listsMailTo:Select(picked)
+    controls.listsMailTo.prev:SetLabelColor((not list or controls.listsMailTo.index <= 1) and "dim" or nil)
+
+    if not controls.listsKeep.editBox:HasFocus() then
+        controls.listsKeep:SetText(rule.keep and tostring(rule.keep) or "")
+    end
+end
+
 function SettingsUI:BuildPages()
     local controls = self.controls
     local pages = self.pages
@@ -690,6 +737,44 @@ function SettingsUI:BuildPages()
         ns.BankAlt:SetList(picker.index > 1 and picker:GetName() or nil)
     end)
 
+    -- Rules for each of the player's Tradeskills lists (Logic/ListRules.lua,
+    -- the owner said build it, 2026-10-19): pick a list, then who it mails
+    -- to and how many of each stay on every character.
+    pages:Section("lists", 1, L["YOUR TRADESKILLS LISTS"])
+    local listRow = pages:Row("lists", 1, "", nil)
+    controls.listsPick = SettingsUI.CharacterPicker(listRow, 0, function()
+        SettingsUI:SyncLists()
+    end)
+    controls.listsPick:SetWidth(COLUMN_WIDTH)
+
+    local mailToRow = pages:Row("lists", 1, L["Mail To:"], nil)
+    controls.listsMailTo = SettingsUI.CharacterPicker(mailToRow, CONTROL_X, function()
+        local list = SettingsUI:PickedList()
+        if not list then return end
+        local picker = controls.listsMailTo
+        ns.ListRules:SetMailTo(list.id, picker.index > 1 and picker:GetName() or nil)
+    end)
+
+    local keepRow = pages:Row("lists", 1, L["Keep Here:"], nil)
+    local function SaveListKeep()
+        local list = SettingsUI:PickedList()
+        if not list then return end
+        local count = tonumber(controls.listsKeep.editBox:GetText()) or 0
+        if count == (ns.ListRules:Get(list.id).keep or 0) then return end
+        ns.ListRules:SetKeep(list.id, count)
+    end
+    controls.listsKeep = Widgets.CreateSearchBox(keepRow, "0", nil, SaveListKeep, { plain = true })
+    controls.listsKeep:SetSize(60, 24)
+    controls.listsKeep:SetPoint("TOPLEFT", CONTROL_X, 0)
+    controls.listsKeep.editBox:SetMaxLetters(4)
+    if controls.listsKeep.editBox.SetNumeric then controls.listsKeep.editBox:SetNumeric(true) end
+    controls.listsKeep.editBox:HookScript("OnEditFocusLost", SaveListKeep)
+    local keepNote = Theme.CreateLabel(keepRow, "tiny", "muted")
+    keepNote:SetPoint("LEFT", controls.listsKeep, "RIGHT", 6, 0)
+    keepNote:SetWidth(COLUMN_WIDTH - CONTROL_X - 66)
+    keepNote:SetWordWrap(true)
+    keepNote:SetText(L["of each, on every character"])
+
     pages:Section("bankalt", 2, L["WHAT GOES THERE"])
     controls.bankAltKinds = {}
     -- The kinds' names as the Settings rows show them; chat keeps kind.label.
@@ -952,6 +1037,7 @@ function SettingsUI:Refresh()
     self:SyncHeld()
     self:SyncKeepHere()
     self:SyncBankAlt()
+    self:SyncLists()
     controls.textSize:Sync()
     controls.windowStyle:Sync()
     if ns.RuleOrderUI then ns.RuleOrderUI:Refresh() end

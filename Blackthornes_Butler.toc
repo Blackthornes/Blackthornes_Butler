@@ -38,6 +38,7 @@ Logic\Verdicts.lua
 Logic\Everyone.lua
 Logic\BankAlt.lua
 Logic\KeepHere.lua
+Logic\ListRules.lua
 
 UI\Theme.lua
 UI\BlizzardLook.lua
