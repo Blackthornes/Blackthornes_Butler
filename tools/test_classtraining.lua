@@ -246,6 +246,49 @@ for _, key in ipairs({ "Player-1-HHH", "Player-2-OOO", "Player-2-OLD", "Player-1
 end
 _G.GetRealmName = savedRealm
 
+-- 8. A spell the character knows is never offered (a player was told to
+-- train spells known a long time, 2026-10-19).
+-- The data skips a rank now and then: a known higher rank still covers
+-- every lower one of that name.
+local gap = {
+    { 20, 22, 4, "Holy Light", nil, 19 },
+    { 21, 38, 6, "Holy Light" },
+    { 22, 46, 7, "Holy Light", nil, 21 },
+}
+local savedKnown = known
+known = { [22] = true }
+local gapKnown = CT.KnownIn(gap)
+suite.check("a lower rank past a gap in the data is known", gapKnown[20] and gapKnown[21] and gapKnown[22])
+known = { [21] = true }
+suite.check("a higher rank is not known from a lower one", not CT.KnownIn(gap)[22])
+
+-- A trainer's "learned" line counts as known, whatever the client says.
+level = 14
+known = { [4] = true }
+services = {
+    { "Frost Nova", "", "used", 200, 10, 3 },
+    { "Arcane Explosion", "", "available", 1000, 14, 8 },
+    { "Flamestrike", "", "available", 1200, 14, 9 },
+}
+env.Fire("TRAINER_SHOW")
+local learned = data.learned["Player-1-AAA"]
+suite.check("the trainer's learned line is kept for this character", learned and learned[3] == true)
+CT:Changed()
+ids = {}
+for _, spell in ipairs(CT:Plan().ready) do ids[#ids + 1] = spell.id end
+suite.check("and never offered again", not ("," .. table.concat(ids, ",") .. ","):find(",3,", 1, true),
+    table.concat(ids, ","))
+suite.check("nor marked as not taught", not data.notTaught[3])
+env.Fire("TRAINER_CLOSED")
+
+-- A trainer line in another language matches by name and the rank's number.
+local german = CT:ServiceSpell(1, "Frostbolt", "Rang 3", "MAGE")
+suite.check("\"Rang 3\" finds Rank 3", german and german[1] == 4)
+data.learned["Player-1-AAA"] = nil
+known = savedKnown
+level = 14
+CT:Changed()
+
 -- 7. Turned off.
 ns.HandleSlash("training off")
 suite.check("off is saved", ns.db.classTraining == false)

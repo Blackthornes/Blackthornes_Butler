@@ -18,6 +18,7 @@
 --       notTaught = { [spell ID] = true },        -- no trainer lists it
 --       trainers = { [CLASS] = { [NPC ID] = { name, zone, sub, mapID, x, y, faction, at } } },
 --       characters = { [GUID] = { name, class, level, realm, faction, ready = { spell IDs }, at } },
+--       learned = { [GUID] = { [spell ID] = true } },  -- the trainer says known
 --   }
 --
 -- Never rename it, nor the `classTraining` setting (on unless unticked).
@@ -95,13 +96,13 @@ end
 --- The account save's table, made when first needed.
 function CT:Data()
     local db = ns.db
-    if not db then return { prices = {}, notTaught = {}, trainers = {}, characters = {} } end
+    if not db then return { prices = {}, notTaught = {}, trainers = {}, characters = {}, learned = {} } end
     local data = db.classTrainingData
     if type(data) ~= "table" then
         data = {}
         db.classTrainingData = data
     end
-    for _, key in ipairs({ "prices", "notTaught", "trainers", "characters" }) do
+    for _, key in ipairs({ "prices", "notTaught", "trainers", "characters", "learned" }) do
         if type(data[key]) ~= "table" then data[key] = {} end
     end
     return data
@@ -161,24 +162,42 @@ function CT.Known(spellID)
 end
 
 --- The spell IDs of the class list the character playing knows: each the
---- client says it knows, and every rank before one it knows, since the
---- game can take an older rank out of the spell book once a newer rank is
---- learned (Backstab Rank 1 asked for again once Rank 2 was known).
+--- client says it knows, each a class trainer showed as learned, and every
+--- lower rank of a spell it knows, since the game can take an older rank
+--- out of the spell book once a newer rank is learned (Backstab Rank 1
+--- asked for again once Rank 2 was known). Lower ranks go by the rank
+--- before and by name, as the data skips a rank now and then (Holy Light
+--- Rank 5), so a gap never brings an old rank back.
 function CT.KnownIn(list)
-    local before, known = {}, {}
+    local before, known, top = {}, {}, {}
+    local learned = CT:Learned()
     for _, entry in ipairs(list) do
         if entry[6] then before[entry[1]] = entry[6] end
     end
     for _, entry in ipairs(list) do
         local id = entry[1]
-        if not known[id] and CT.Known(id) then
+        if not known[id] and (learned[id] or CT.Known(id)) then
+            local name, rank = entry[4], entry[3] or 0
+            if name and rank > (top[name] or 0) then top[name] = rank end
             while id and not known[id] do
                 known[id] = true
                 id = before[id]
             end
         end
     end
+    for _, entry in ipairs(list) do
+        local best = entry[4] and top[entry[4]]
+        if best and (entry[3] or 0) > 0 and entry[3] < best then known[entry[1]] = true end
+    end
     return known
+end
+
+--- The spells a class trainer showed the character playing as learned
+--- ([spell ID] = true), for a spell the client's own check misses.
+function CT:Learned()
+    local guid = Text(Call("UnitGUID", "player"))
+    local learned = guid and self:Data().learned[guid]
+    return type(learned) == "table" and learned or {}
 end
 
 --- The spell's name in the client's language, else the data's English.
@@ -517,10 +536,16 @@ function CT:ServiceSpell(index, name, rank, class)
             -- The English pair too, for a client that gives no subtext.
             local english = entry[3] > 0 and ("Rank " .. entry[3]) or ""
             names[entry[4] .. "|" .. english] = names[entry[4] .. "|" .. english] or entry
+            -- The name and the rank's number, for any language ("Rang 4").
+            local number = CT.SpellName(entry) .. "#" .. (entry[3] or 0)
+            names[number] = names[number] or entry
         end
         self.byName[class] = names
     end
-    return names[name .. "|" .. (Text(rank) or "")]
+    local found = names[name .. "|" .. (Text(rank) or "")]
+    if found then return found end
+    local digits = Text(rank) and select(2, pcall(string.match, rank, "%d+"))
+    return names[name .. "#" .. (Number(digits) or 0)]
 end
 
 --- The trainer's lines: { index, kind ("available", "unavailable",
@@ -576,6 +601,15 @@ function CT:ReadTrainer()
     if not self.atClassTrainer then return end
 
     local data = self:Data()
+    -- What the trainer shows as learned is known, whatever the client's
+    -- own check says.
+    if player.guid then
+        local learned = type(data.learned[player.guid]) == "table" and data.learned[player.guid] or {}
+        for _, service in ipairs(services) do
+            if service.kind == "used" then learned[service.entry[1]] = true end
+        end
+        if next(learned) then data.learned[player.guid] = learned end
+    end
     local listed, upTo = {}, player.level
     for _, service in ipairs(services) do
         listed[service.entry[1]] = true
