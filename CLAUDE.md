@@ -876,6 +876,27 @@ Tradeskills' `Holdings` when it has it), with how many goals are met.
 `/bbutler goals [on|off]`. Never rename `goldGoals` or `goldGoalsData`.
 Tested in `tools/test_goldgoals.lua`. Not yet seen in game.
 
+## The cheapest skill-up
+
+A player asked, the owner said build it (2026-10-19, from a mockup with
+the words he approved): with "Cheapest Skill-Up:" ticked (Gold page,
+PROFESSIONS; `skillUpLine`, account wide, off unless ticked, never rename
+it; `/bbutler skillup on|off`), the end of this character's Jobs has a
+line for each profession still being leveled: "Next skill point: ITEM"
+and "PROFESSION 52/75. A sure point for about 18c." (a likely point for a
+yellow craft, "you make about X back" when it pays), with Queue, then
+Queued. `Logic/SkillUp.lua` reads Tradeskills, inside a pcall, read only:
+
+```lua
+_G.BlackthornesTS.Butler:NextSkillUp()
+  -- { { profession, skill, max, recipeID, itemID, name, tier, cost, queued } }
+_G.BlackthornesTS.Butler:QueueSkillUp(recipeID)   -- true, or false and why
+```
+
+The pick is the top of Tradeskills' Level Up tab for each profession, so
+the two always agree. Without Tradeskills, no line. If either call
+changes, change `Logic/SkillUp.lua` too. Tested in `tools/test_skillup.lua`.
+
 ## What Farmer calls here
 
 Farmer's XP bar (2026-10-13) reads class training for its level-up cheer,

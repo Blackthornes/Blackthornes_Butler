@@ -67,6 +67,7 @@ Logic\BuyMany.lua
 UI\BuyMany.lua
 Logic\Learning.lua
 Logic\Jobs.lua
+Logic\SkillUp.lua
 Logic\ClassTraining.lua
 Logic\GoldGoals.lua
 Logic\BagView.lua

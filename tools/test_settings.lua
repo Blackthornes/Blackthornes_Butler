@@ -188,7 +188,7 @@ suite.check("the command buttons run their commands",
 local covered = { tooltip = true, sisters = true, whatsnew = true, window = true, all = true, probe = true, selltest = true,
     vendor = true, mailbox = true, bank = true, settings = true, reset = true,
     sellbelow = true, freespace = true, whohas = true, goldmin = true, fillnext = true, altupgrades = true,
-    joblogin = true, trash = true, quests = true, bankalt = true, greens = true, buy = true, order = true, bags = true }
+    joblogin = true, trash = true, quests = true, bankalt = true, greens = true, buy = true, order = true, skillup = true, bags = true }
 -- Chat-only commands are typed only (the owner, 2026-10-15): they print a
 -- list in chat, so they have no button here. Their settings parts (training
 -- on|off, goals on|off, upgrademail undo) still have controls.

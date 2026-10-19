@@ -388,6 +388,8 @@ function UI.RowAction(data)
         ns.Jobs:BuyAtVendor()
     elseif data.type == "questbuy" then
         ns.QuestBuy:Click(data.item)
+    elseif data.type == "skillup" then
+        ns.SkillUp:Queue(data.entry)
     elseif data.type == "job" and data.step and data.step.kind == "quest" then
         if ns.Quests:Search(data.step.items) then UI:Refresh(true) end
     elseif data.type == "job" then
@@ -456,6 +458,7 @@ function UI.DrawRow(row, data)
     if data.type == "job" then return UI.UpdateJobRow(row, data) end
     if data.type == "jobnext" then return UI.UpdateNextRow(row, data) end
     if data.type == "questbuy" then return UI.UpdateQuestBuyRow(row, data) end
+    if data.type == "skillup" then return UI.UpdateSkillUpRow(row, data) end
     if data.type == "train" or data.type == "trainnext" or data.type == "trainalt" then
         return UI.UpdateTrainRow(row, data)
     end
@@ -555,6 +558,22 @@ function UI.UpdateQuestBuyRow(row, data)
         row.action.tooltipText = tip
         row.action:Show()
     end
+end
+
+--- The cheapest craft for the next skill point in a profession
+--- (Logic/SkillUp.lua), with Queue, or Queued once it's in the queue.
+function UI.UpdateSkillUpRow(row, data)
+    local entry = data.entry
+    local title, detail = ns.SkillUp.Text(entry)
+    row.fold:Hide()
+    row.icon:Show()
+    row.icon:SetTexture(ns.SkillUp.Icon(entry))
+    row.name:SetTextColor(Theme.Unpack("text"))
+    row.name:SetText(title)
+    row.reason:SetText(detail)
+    row.worth:SetText("")
+    row.action:SetText(entry.queued and L["Queued"] or L["Queue"])
+    row.action:Show()
 end
 
 --- Another character with work waiting: who, and what they have to do.
@@ -889,6 +908,7 @@ function UI:Clicked(data, button)
         return self:ShowJobMenu(data)
     end
     if data.type == "ammo" or data.type == "job" or data.type == "jobnext" or data.type == "questbuy"
+        or data.type == "skillup"
         or data.type == "train" or data.type == "trainnext" or data.type == "trainalt" then return end
     if button == "RightButton" and data.type ~= "gold" then
         self:ShowMenu(data)
@@ -942,6 +962,16 @@ function UI:Enter(row, data)
         GameTooltip:AddLine(other.count == 1 and L["1 spell to train the last time they played."]
             or L.Format("%d spells to train the last time they played.", other.count), 1, 1, 1, true)
         GameTooltip:AddLine(ns.ClassTraining.CostText(other.cost, other.unknown, other.count), 1, 1, 1)
+        GameTooltip:Show()
+        return
+    end
+    if data.type == "skillup" then
+        local title = ns.SkillUp.Text(data.entry)
+        GameTooltip:AddLine(title, Theme.Unpack("accent"))
+        GameTooltip:AddLine(L["This is the cheapest thing you can make for your next skill point. Tradeskills works it out from auction prices."],
+            1, 1, 1, true)
+        GameTooltip:AddLine(L["Queue adds one to your craft queue. Butler then lists what you still need to buy."],
+            Theme.Unpack("muted"))
         GameTooltip:Show()
         return
     end

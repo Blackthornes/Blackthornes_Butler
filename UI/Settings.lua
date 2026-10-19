@@ -836,6 +836,17 @@ function SettingsUI:BuildPages()
     end, true)
     controls.goldGoals:SetPoint("TOPLEFT", CONTROL_X, -2)
 
+    -- The cheapest skill-up in Jobs (Logic/SkillUp.lua, a player asked,
+    -- the owner said build it 2026-10-19).
+    pages:Section("gold", 1, L["PROFESSIONS"])
+
+    local skillUpRow = pages:Row("gold", 1, L["Cheapest Skill-Up:"],
+        L["Shows the cheapest craft for your next skill point in each profession. Needs Blackthornes Tradeskills."])
+    controls.skillUp = Widgets.CreateCheckbox(skillUpRow, L["On"], function(checked)
+        ns.SkillUp:SetOn(checked)
+    end, false)
+    controls.skillUp:SetPoint("TOPLEFT", CONTROL_X, -2)
+
     pages:Section("gold", 2, L["ONE CHARACTER"])
 
     local pickRow = pages:Row("gold", 2, L["Character:"],
@@ -1013,6 +1024,7 @@ function SettingsUI:Refresh()
     controls.learn:SetChecked(ns.db.learn ~= false)
     controls.classTraining:SetChecked(ns.ClassTraining:IsOn())
     controls.goldGoals:SetChecked(ns.GoldGoals:IsOn())
+    controls.skillUp:SetChecked(ns.SkillUp:IsOn())
     controls.debug:SetChecked(ns.db.debug == true)
     controls.sisters:SetChecked(ns.SisterNote:IsOn())
     controls.whatsNewPopup:SetChecked(ns.WhatsNew:IsOn())
