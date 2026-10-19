@@ -810,6 +810,12 @@ class trainer with something to train (`Jobs:AtTrainer`). The gold fund
 keeps back the playing character's `ReadyCost()` and tops another
 character up by its `Other(guid).cost` (`Funds:Plan`). Tested in
 `tools/test_classtraining.lua`. Not yet seen in game.
+A spell is known when the client says so, when a class trainer showed it
+as learned (kept by GUID in `classTrainingData.learned`, never rename it),
+or when a higher rank of the same name is known (the data skips a rank now
+and then; a player was told to train spells known a long time,
+2026-10-19). A trainer line in another language matches by name and the
+rank's number.
 
 ## Gold goals
 
