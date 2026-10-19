@@ -1047,6 +1047,51 @@ and tool) and stands down while `_G.BlackthornesButler.Trash` exists, so
 only one shows; keep `ns.Trash` on the global, or change Farmer's
 `Trash.ButlerHasIt` too.
 
+## The Bags window
+
+Players kept asking for a bag window in our style, and the owner said
+build it inside Butler (2026-10-19, from a mockup whose words he approved,
+with a one huge bag choice). Never name another bag addon in the repo,
+PRs or posts. `Logic/BagView.lua` works out what it shows;
+`UI/BagWindow.lua` draws it in the house frame (plate "Bags", portrait,
+close gem, size grip, dark glass well). Off unless ticked: "Use Butler
+Bags:" under BAGS on the General page, and `/bbutler bags [on|off]`
+(alone it opens or closes the window).
+
+- **The game's bags are never hidden.** While it is on, the game's bag
+  windows (`ContainerFrameCombinedBags`, `ContainerFrame1` to 13) go under
+  `ns.Veil` (`UI/Veil.lua`, Equipment's file: see-through, no mouse; a fix
+  to it belongs in both), also as each one shows (HookScript OnShow). The
+  bag calls (`ToggleAllBags`, `OpenAllBags`, `CloseAllBags` and the like)
+  are only post-hooked and settled once a frame: a toggle flips the window,
+  else an open shows it and a close hides it. Turned off, the veil comes off.
+- **Squares** are the game's `ContainerFrameItemButtonTemplate` on a holder
+  per bag (`SetID(bag)`, `SetID(slot)`), so clicks, drags, tooltips and
+  using items are the game's own; our own button if the client refuses
+  it. Made `MAKE_BUDGET` a frame, never in a fight: in a fight only what
+  each square shows is painted, and the layout waits for
+  `PLAYER_REGEN_ENABLED`. `/bbutler probe` has a "bag window" line.
+- **Group By:** What To Do (Butler's verdict groups in Butler's order, with
+  Fill mail and Move to bank on their headings), Item Type (QUEST, ARMOR,
+  WEAPONS, TRADE GOODS, FOOD AND DRINK, OTHER, greys under Sell) or One
+  Grid (every slot in bag order, empty ones too). Search by name or ID and
+  the Upgrades, To Sell, For My Crafts and For My Goals chips dim what does
+  not match. Marks come from `Verdicts` and the sisters' answers
+  (`BagView:Marks`, kept per `Verdicts.version`); new items glow until
+  hovered (session only, nothing saved). Sell and Disenchant stay in the
+  main Butler window. Sort shows only when the game has a bag sort.
+- **Bank** and **Everyone** tabs are view only: the bank read live at a
+  banker, else as Tradeskills last saw it; Everyone is All characters'
+  list (needs Tradeskills).
+- While it is on, the trash can stands down (`Trash:Refresh`) and the
+  window marks the item itself; `Bags:Wanted` reads the bags while it
+  shows; `Verdicts:Redraw` redraws it.
+
+Saved, account wide, never rename them: `bagWindow` (off unless ticked),
+`bagGroupBy`, `bagItemSize`, `bagItemLevel`, `bagNewGlow`, `bagScale`,
+`bagPoint`, `bagRelPoint`, `bagX`, `bagY`. Tested in
+`tools/test_bagwindow.lua`. Not yet seen in game.
+
 ## Butler's voice
 
 The owner asked (2026-10-11) for Moroes, Karazhan's butler, to answer when
