@@ -225,6 +225,12 @@ function UI:Build()
     self.takeButton.tooltipText = L["Takes out upgrades to wear and what your crafts still need."]
     self.takeButton:Hide()
 
+    -- Craft When It Pays More (2026-10-19): on the Craft heading, puts each
+    -- row's craft in Tradeskills' queue.
+    self.queueButton = Widgets.CreateButton(frame, L["Queue"], function() UI:QueueCrafts() end,
+        { width = 80, height = 24, primary = true })
+    self.queueButton:Hide()
+
     self:BuildSizeGrip()
 
     -- A new frame starts shown, so this Hide runs OnHide: it is no close by
@@ -1833,6 +1839,14 @@ function UI:PlaceErrands()
     Place(self.mailButton)
     Place(self.bankButton, "bank")
     Place(self.takeButton, "jobs")
+    -- Queue sits on the Craft heading only; out of sight, it waits for it.
+    local craftRow = self:HeaderRow("craft")
+    self.queueButton:SetShown(craftRow ~= nil)
+    if craftRow then
+        self.queueButton:ClearAllPoints()
+        self.queueButton:SetPoint("RIGHT", craftRow, "RIGHT", -UI.LINE_BUTTON_RIGHT, 0)
+        self.queueButton:SetFrameLevel(craftRow:GetFrameLevel() + 5)
+    end
     local room = 0
     for index, button in ipairs(foot) do
         if index == 1 then
@@ -1845,6 +1859,36 @@ function UI:PlaceErrands()
         room = room + (button:GetWidth() or ERRAND_WIDTH)
     end
     self.errandRoom = room > 0 and room or nil
+end
+
+--- The Queue button: each Craft row's craft goes in Tradeskills' queue, at
+--- least as many as the bags make. A recipe two rows share is asked once,
+--- for the most either makes.
+function UI:QueueCrafts()
+    local craft = ns.Verdicts:Group("craft")
+    if not (craft and craft.count > 0) then return end
+    local most, order = {}, {}
+    for _, row in ipairs(craft.rows) do
+        local info = row.craft
+        if info then
+            if not most[info.recipeID] then order[#order + 1] = info.recipeID end
+            most[info.recipeID] = math.max(most[info.recipeID] or 0, info.crafts)
+        end
+    end
+    local queued = {}
+    for _, recipeID in ipairs(order) do
+        queued[recipeID] = ns.Sisters:QueueCraft(recipeID, most[recipeID])
+    end
+    local count = 0
+    for _, row in ipairs(craft.rows) do
+        if row.craft and queued[row.craft.recipeID] then count = count + 1 end
+    end
+    if count == 1 then
+        ns.Print(L["Added 1 craft to your Tradeskills queue."])
+    elseif count > 1 then
+        ns.Print(L.Format("Added %d crafts to your Tradeskills queue.", count))
+    end
+    ns.Verdicts:Changed(true)
 end
 
 --------------------------------------------------------------------------------

@@ -1033,3 +1033,13 @@ L["Butler Bags is on."] = "Сумки Butler включены."
 L["Butler Bags is off."] = "Сумки Butler выключены."
 L["Nothing here yet. Open your bank once and it shows here."] = "Пока пусто. Открой банк один раз, и он появится здесь."
 L["Needs Blackthornes Tradeskills to see your other characters."] = "Нужен Blackthornes Tradeskills, чтобы видеть других персонажей."
+
+-- Craft When It Pays More (2026-10-19)
+L["Queue"] = "В очередь"
+L["Added 1 craft to your Tradeskills queue."] = "1 изделие добавлено в очередь Tradeskills."
+L["Added %d crafts to your Tradeskills queue."] = "Изделий добавлено в очередь Tradeskills: %d."
+L["CRAFTING"] = "РЕМЕСЛО"
+L["Craft When It Pays More:"] = "Создавать, когда выгоднее:"
+L["Butler checks the recipes you know and says when crafting earns more than selling. Needs Blackthornes Tradeskills."] = "Butler проверяет известные тебе рецепты и подсказывает, когда создать выгоднее, чем продать. Нужен Blackthornes Tradeskills."
+L["Make %s, about %s more than selling it"] = "Создай %s, примерно на %s больше, чем при продаже"
+L["Make %s (needs %s), about %s more than selling it"] = "Создай %s (нужно: %s), примерно на %s больше, чем при продаже"
