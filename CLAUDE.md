@@ -704,8 +704,10 @@ still need to get (`Jobs.GetSteps`, added up over the crafts): "Buy from
 a vendor" (`kind = "buy"`, missing materials marked `vendor`; Tradeskills'
 Buy materials button at the vendor gets them) and "Buy or gather"
 (`kind = "gather"`, the rest, from the auction house or the world), then
-crafts whose item another craft on the line still misses, deepest part
-first, then the rest as Tradeskills gave them. Left out of the get steps:
+crafts whose item another craft on the line still misses, in
+Tradeskills' order (it groups a profession's sub-crafts, every bar before
+the anvil; a player's report, 2026-10-19) but never before a part they
+are made from, then the rest as Tradeskills gave them. Left out of the get steps:
 what another character holds (`from`), what any queued craft on any line
 makes, and what waits in the mailbox. Both count as steps to do now.
 `Jobs:Plan` puts a character who can make a part a craft here waits on
