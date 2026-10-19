@@ -68,5 +68,8 @@ Logic\Learning.lua
 Logic\Jobs.lua
 Logic\ClassTraining.lua
 Logic\GoldGoals.lua
+Logic\BagView.lua
+UI\Veil.lua
+UI\BagWindow.lua
 
 Probe\Probe.lua

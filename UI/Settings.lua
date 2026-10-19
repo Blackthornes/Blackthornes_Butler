@@ -834,6 +834,9 @@ function SettingsUI:BuildPages()
     local styleRow = pages:Row("general", 1, L["Window Style:"], nil)
     controls.windowStyle = SettingsUI.WindowStyleControl(styleRow, CONTROL_X)
 
+    -- Butler's own bag window (UI/BagWindow.lua), off unless ticked.
+    if ns.BagWindow then ns.BagWindow:AddSettings(pages, controls, CONTROL_X) end
+
     pages:Section("general", 2, L["ADVANCED"])
 
     local debugRow = pages:Row("general", 2, L["Debug:"],
@@ -893,6 +896,7 @@ function SettingsUI:Refresh()
     if not (self.frame and self.frame:IsShown() and ns.db) then return end
 
     local controls = self.controls
+    if ns.BagWindow then ns.BagWindow:SyncSettings(controls) end
     controls.openAtVendor:SetChecked(ns.db.openAtVendor ~= false)
     controls.openAtMailbox:SetChecked(ns.db.openAtMailbox ~= false)
     controls.fillNext:SetChecked(ns.db.fillNext ~= false)
