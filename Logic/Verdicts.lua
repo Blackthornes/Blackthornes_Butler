@@ -92,9 +92,10 @@ local Items = ns.Items
 local Sisters = ns.Sisters
 
 -- The order the groups show in: what to do first at the top.
-Verdicts.ORDER = { "sell", "auction", "disenchant", "mail", "bank", "look", "wait", "keep" }
+Verdicts.ORDER = { "craft", "sell", "auction", "disenchant", "mail", "bank", "look", "wait", "keep" }
 
 Verdicts.LABELS = {
+    craft = L["Craft"],
     sell = L["Sell"],
     auction = L["Auction"],
     disenchant = L["Disenchant"],
@@ -114,6 +115,13 @@ Verdicts.SLOW = 0.75
 -- of its usual price (auction). A little under is normal: the usual price is
 -- an average of the cheapest listings, so only a real dip counts.
 Verdicts.LOW_NOW = 0.85
+
+-- Craft When It Pays More: a craft is offered only when one of the item made
+-- into it is worth this much more than Butler's best price for it, and the
+-- whole stack gains at least CRAFT_LEAST copper, so a copper or two never
+-- sends the player to the profession window.
+Verdicts.CRAFT_MARGIN = 1.1
+Verdicts.CRAFT_LEAST = 200
 
 
 -- Moves whenever a judgement could change (a choice made, an item loaded),
@@ -1364,6 +1372,9 @@ function Verdicts:Best(entry, unit, said, noBelow)
     if auctionWorth and auctionWorth > value then best, value = "auction", auctionWorth end
     if disenchant and disenchant > value then best, value = "disenchant", disenchant end
 
+    local craft = self:CraftPays(entry, value)
+    if craft then return "craft", craft.reason, craft.perItem, { craft = craft } end
+
     if best == "disenchant" then
         if canDisenchant then
             return "disenchant", L.Format("Disenchant, about %s", Items.FormatMoney(disenchant)), disenchant
@@ -1420,6 +1431,53 @@ function Verdicts:Best(entry, unit, said, noBelow)
 
     -- Short enough for the row; the tooltip says right-click decides it.
     return "look", Each(unit), unit
+end
+
+--- Whether "Craft When It Pays More" is ticked: off unless the player
+--- ticks it (a player asked, the owner said build it, 2026-10-19).
+function Verdicts:CraftPaysOn()
+    return ns.db ~= nil and ns.db.craftPays == true
+end
+
+function Verdicts:SetCraftPays(on)
+    if not ns.db then return end
+    ns.db.craftPays = on and true or false
+    self:Changed(true)
+end
+
+local function NeedName(itemID)
+    local name = Items.Call({ "C_Item.GetItemNameByID", "C_Item.GetItemInfo", "GetItemInfo" }, itemID)
+    if type(name) == "string" and name ~= "" then return name end
+    Items:RequestLoad(itemID)
+    return L.Format("item %s", tostring(itemID))
+end
+
+--- A craft the character knows that makes the item worth more than `value`
+--- (Butler's best price for one), from Tradeskills, while the setting is on.
+--- { recipeID, crafts, perItem, gain, reason }, or nil.
+function Verdicts:CraftPays(entry, value)
+    if not self:CraftPaysOn() or not entry.itemID then return nil end
+    local carried = ns.Bags.Carried and ns.Bags:Carried(entry.itemID) or entry.count
+    local craft = Sisters:CraftFor(entry.itemID, carried)
+    if not craft then return nil end
+    value = value or 0
+    if craft.perItem <= value * Verdicts.CRAFT_MARGIN or craft.perItem <= value then return nil end
+    local used = math.min(carried or 0, craft.crafts * craft.per)
+    local gain = math.floor((craft.perItem - value) * used)
+    if gain < Verdicts.CRAFT_LEAST then return nil end
+    local reason
+    if #craft.needs > 0 then
+        local parts = {}
+        for i, need in ipairs(craft.needs) do
+            parts[i] = ("%d %s"):format(need.count, NeedName(need.itemID))
+        end
+        reason = L.Format("Make %s (needs %s), about %s more than selling it",
+            craft.name, table.concat(parts, ", "), Items.FormatMoney(gain))
+    else
+        reason = L.Format("Make %s, about %s more than selling it", craft.name, Items.FormatMoney(gain))
+    end
+    return { recipeID = craft.recipeID, crafts = craft.crafts, perItem = craft.perItem, gain = gain,
+        reason = reason }
 end
 
 --- "2.5" or "8": hours as the row shows them.
@@ -1540,6 +1598,7 @@ function Verdicts:Groups()
                 mailTo = extra and extra.to, mailCount = extra and extra.count,
                 upgrade = extra and extra.upgrade or nil,
                 bought = extra and extra.bought,
+                craft = extra and extra.craft,
                 name = Items.NameFromLink(entry.link) or L.Format("item %s", tostring(entry.itemID)),
                 count = 0, slots = {},
             }
@@ -1555,7 +1614,9 @@ function Verdicts:Groups()
     for _, verdict in ipairs(self.ORDER) do
         local group = byVerdict[verdict]
         for _, row in ipairs(group.rows) do
-            row.worth = (row.unit or 0) * row.count
+            -- A craft row shows what crafting gains over selling, for
+            -- the whole stack.
+            row.worth = row.craft and row.craft.gain or (row.unit or 0) * row.count
             group.worth = group.worth + row.worth
             -- Slots in bag order, so a sale goes through the bags as the
             -- player reads them.
@@ -1696,6 +1757,16 @@ ns.RegisterCommand("greens", L["turn disenchanting every green on your disenchan
     ns.Print(on and L["On your disenchanter, Butler says to disenchant every green it can break."]
         or L["On your disenchanter, Butler goes back to judging greens by what they're worth."])
 end)
+
+-- Craft When It Pays More: typed only, so it stays out of the help line.
+ns.commands.craft = { fn = function(arg)
+    arg = (arg or ""):lower():match("^%s*(.-)%s*$")
+    local on
+    if arg == "on" then on = true elseif arg == "off" then on = false
+    else on = not Verdicts:CraftPaysOn() end
+    Verdicts:SetCraftPays(on)
+    ns.Print(L["Craft When It Pays More:"] .. " " .. (on and L["On"] or L["Off"]))
+end }
 
 -- Upgrades held back from a character (right-click a Mail upgrade row).
 -- Undo lets them go again; nothing else is deleted.

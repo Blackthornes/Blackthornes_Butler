@@ -534,6 +534,17 @@ function SettingsUI:BuildPages()
     end)
     controls.sellBelow:SetPoint("TOPLEFT", CONTROL_X, 0)
 
+    -- A player asked, the owner said build it (2026-10-19): say when a
+    -- known craft earns more than selling. Off unless ticked.
+    pages:Section("selling", 2, L["CRAFTING"])
+
+    local craftRow = pages:Row("selling", 2, L["Craft When It Pays More:"],
+        L["Butler checks the recipes you know and says when crafting earns more than selling. Needs Blackthornes Tradeskills."])
+    controls.craftPays = Widgets.CreateCheckbox(craftRow, L["On"], function(checked)
+        ns.Verdicts:SetCraftPays(checked)
+    end)
+    controls.craftPays:SetPoint("TOPLEFT", CONTROL_X, -2)
+
     pages:Section("selling", 2, L["YOUR LISTS"])
 
     local learnRow = pages:Row("selling", 2, L["Learn From You:"],
@@ -902,6 +913,7 @@ function SettingsUI:Refresh()
     controls.fillNext:SetChecked(ns.db.fillNext ~= false)
     controls.altUpgrades:SetChecked(ns.Verdicts:AltUpgradesOn())
     controls.disenchantGreens:SetChecked(ns.Verdicts:DisenchantGreensOn())
+    controls.craftPays:SetChecked(ns.Verdicts:CraftPaysOn())
     controls.alwaysDisenchant:SetChecked(ns.Verdicts:AlwaysDisenchantOn())
     controls.jobsAtLogin:SetChecked(ns.db.jobsAtLogin ~= false)
     controls.questItems:SetChecked(ns.Quests:IsOn())

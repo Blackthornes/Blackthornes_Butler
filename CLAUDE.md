@@ -258,6 +258,34 @@ character can break it, else Mail to the enchanter Tradeskills names,
 else Look at it; an upgrade to wear now is Look at it. Tested in
 `tools/test_alwaysdisenchant.lua`.
 
+## Craft When It Pays More
+
+A player asked, the owner said build it (2026-10-19, from a mockup, words
+approved): Butler says when a craft the character knows earns more than
+selling. Off unless ticked: "Craft When It Pays More:" under CRAFTING on
+the Selling page (`craftPays`, account wide, never rename it) and `/bbutler
+craft on|off` (typed only, set straight in `ns.commands`, so it is not in
+the help line). In `Verdicts:Best`, after the best price is worked out,
+`Verdicts:CraftPays` asks Tradeskills, inside a pcall, read only:
+
+```lua
+_G.BlackthornesTS.Butler:CraftFor(itemID, carried)
+  -- { recipeID, name, itemID, per, crafts, perItem, needs = { { itemID, count } } }, or nil
+_G.BlackthornesTS.Butler:QueueCraft(recipeID, crafts)   -- true, or false and why
+```
+
+An item goes under Craft, the first group, only when one made into it is
+worth `Verdicts.CRAFT_MARGIN` (1.1) times the best price and the stack
+gains at least `CRAFT_LEAST` (200) copper: "Make NAME, about X more than
+selling it", or "(needs 2 Maple Seed)" for materials the bags lack. The
+row's worth is that gain (`row.craft.gain`). Everything kept before the
+best price still wins. The Craft heading's **Queue** button
+(`UI:QueueCrafts`) calls `QueueCraft` once a recipe, for the most any row
+makes, and says "Added N crafts to your Tradeskills queue." Nothing is
+made, sold or moved by it. Tested in `tools/test_craftpays.lua`. If
+Tradeskills changes either call, change `Sisters:CraftFor` and
+`Sisters:QueueCraft` too. Not yet seen in game.
+
 ## Disenchant greens here
 
 The owner asked (2026-10-14) for an option, off unless ticked, that on the

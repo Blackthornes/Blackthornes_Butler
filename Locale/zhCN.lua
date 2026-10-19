@@ -1081,3 +1081,13 @@ L["Butler Bags is on."] = "管家背包已开启。"
 L["Butler Bags is off."] = "管家背包已关闭。"
 L["Nothing here yet. Open your bank once and it shows here."] = "这里还没有东西。打开一次你的银行，它就会显示在这里。"
 L["Needs Blackthornes Tradeskills to see your other characters."] = "需要 Blackthornes Tradeskills 才能看到你的其他角色。"
+
+-- Craft When It Pays More (2026-10-19)
+L["Queue"] = "加入队列"
+L["Added 1 craft to your Tradeskills queue."] = "已将 1 次制作加入你的 Tradeskills 队列。"
+L["Added %d crafts to your Tradeskills queue."] = "已将 %d 次制作加入你的 Tradeskills 队列。"
+L["CRAFTING"] = "制作"
+L["Craft When It Pays More:"] = "收益更高时制作："
+L["Butler checks the recipes you know and says when crafting earns more than selling. Needs Blackthornes Tradeskills."] = "管家会查看你会的配方，在制作比出售赚得更多时告诉你。需要 Blackthornes Tradeskills。"
+L["Make %s, about %s more than selling it"] = "制作%s，比出售多赚约%s"
+L["Make %s (needs %s), about %s more than selling it"] = "制作%s（需要%s），比出售多赚约%s"

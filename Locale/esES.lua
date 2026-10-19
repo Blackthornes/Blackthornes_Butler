@@ -1082,3 +1082,13 @@ L["Butler Bags is on."] = "Las bolsas de Butler están activadas."
 L["Butler Bags is off."] = "Las bolsas de Butler están desactivadas."
 L["Nothing here yet. Open your bank once and it shows here."] = "Aún no hay nada. Abre tu banco una vez y se verá aquí."
 L["Needs Blackthornes Tradeskills to see your other characters."] = "Necesita Blackthornes Tradeskills para ver tus otros personajes."
+
+-- Craft When It Pays More (2026-10-19)
+L["Queue"] = "A la cola"
+L["Added 1 craft to your Tradeskills queue."] = "1 fabricación añadida a tu cola de Tradeskills."
+L["Added %d crafts to your Tradeskills queue."] = "%d fabricaciones añadidas a tu cola de Tradeskills."
+L["CRAFTING"] = "FABRICACIÓN"
+L["Craft When It Pays More:"] = "Fabricar cuando rinde más:"
+L["Butler checks the recipes you know and says when crafting earns more than selling. Needs Blackthornes Tradeskills."] = "Butler revisa las recetas que conoces y te dice cuándo fabricar rinde más que vender. Necesita Blackthornes Tradeskills."
+L["Make %s, about %s more than selling it"] = "Fabrica %s, unos %s más que venderlo"
+L["Make %s (needs %s), about %s more than selling it"] = "Fabrica %s (necesita %s), unos %s más que venderlo"
