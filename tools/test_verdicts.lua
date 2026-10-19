@@ -76,8 +76,8 @@ suite.check("Let Butler decide takes it off both lists",
 -- The groups come in order: what to do first at the top.
 local order = {}
 for _, group in ipairs(Verdicts:Groups()) do order[#order + 1] = group.verdict end
-suite.check("Sell, Auction, Disenchant, Mail, Bank, Look at it, Wait, then Keep",
-    table.concat(order, ",") == "sell,auction,disenchant,mail,bank,look,wait,keep")
+suite.check("Craft, Sell, Auction, Disenchant, Mail, Bank, Look at it, Wait, then Keep",
+    table.concat(order, ",") == "craft,sell,auction,disenchant,mail,bank,look,wait,keep")
 
 -- Only a slot whose key changed is read further.
 local questReads = 0

@@ -93,6 +93,42 @@ function Sisters:MarkBought(itemID, on, count)
 end
 
 --------------------------------------------------------------------------------
+-- Craft When It Pays More (a player asked, the owner said build it, 2026-10-19)
+--------------------------------------------------------------------------------
+
+--- The known craft that makes one of an item worth the most, from
+--- Tradeskills, or nil. `carried` is how many the bags hold. The answer is
+--- checked field by field: { recipeID, name, crafts, per, perItem, needs }.
+function Sisters:CraftFor(itemID, carried)
+    local butler = Sisters.Butler("ts")
+    if not (butler and type(butler.CraftFor) == "function") then return nil end
+    local ok, answer = pcall(butler.CraftFor, butler, itemID, carried)
+    if not ok or type(answer) ~= "table" then return nil end
+    local recipeID, crafts, perItem = Sisters.Number(answer, "recipeID"), Sisters.Number(answer, "crafts"),
+        Sisters.Number(answer, "perItem")
+    local name, per = Sisters.String(answer, "name"), Sisters.Number(answer, "per") or 1
+    if not (recipeID and crafts and crafts >= 1 and perItem and name and per >= 1) then return nil end
+    local needs = {}
+    if type(answer.needs) == "table" then
+        for _, need in ipairs(answer.needs) do
+            local id, count = Sisters.Number(need, "itemID"), Sisters.Number(need, "count")
+            if id and count and count > 0 then needs[#needs + 1] = { itemID = id, count = count } end
+        end
+    end
+    return { recipeID = recipeID, name = name, crafts = math.floor(crafts), per = math.floor(per),
+        perItem = perItem, needs = needs }
+end
+
+--- Queue at least `crafts` of a recipe in Tradeskills.
+-- @return true, or false
+function Sisters:QueueCraft(recipeID, crafts)
+    local butler = Sisters.Butler("ts")
+    if not (butler and type(butler.QueueCraft) == "function") then return false end
+    local ok, done = pcall(butler.QueueCraft, butler, recipeID, crafts)
+    return ok and done == true
+end
+
+--------------------------------------------------------------------------------
 -- Reading answers safely: a field of the wrong type counts as not given.
 --------------------------------------------------------------------------------
 

@@ -69,7 +69,7 @@ BankAlt.WHEN_LABELS = {
 
 -- Which of Butler's own verdicts each pick takes over.
 local TAKES = {
-    first = { sell = true, auction = true, disenchant = true, wait = true, look = true },
+    first = { craft = true, sell = true, auction = true, disenchant = true, wait = true, look = true },
     vendor = { sell = true, look = true },
     leftovers = { look = true },
 }
