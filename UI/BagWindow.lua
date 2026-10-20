@@ -617,12 +617,6 @@ local function Dress(button, size)
     if Theme.Halo then Theme.Halo(glow, 4, 0.5, "accentHi") end
     glow:Hide()
     button.bfrGlow = glow
-
-    local trash = CreateFrame("Frame", nil, over)
-    trash:SetAllPoints(button)
-    Theme.Border(trash, "loss")
-    trash:Hide()
-    button.bfrTrash = trash
 end
 
 -- Our own picture, for a client without the game's template.
@@ -761,7 +755,6 @@ function BagWindow:Paint(button, entry, search)
     button.bfrGlow:SetShown(new and true or false)
     self.newShown[button] = new and true or nil
 
-    button.bfrTrash:SetShown(entry ~= nil and self.trashPlace == entry.bag .. ":" .. entry.slot)
 
     local lit = true
     if entry then
@@ -817,7 +810,6 @@ local function PaintPlain(button, item)
     button.bfrMark:Hide()
     button.bfrLevel:SetText("")
     button.bfrGlow:Hide()
-    button.bfrTrash:Hide()
     button:SetAlpha(1)
 end
 
@@ -924,10 +916,6 @@ function BagWindow:DrawBags(width, search)
     local columns = Columns(width, size)
     local fighting = InCombat()
     self.newShown = {}
-    self.trashPlace = nil
-    local pick = ns.Trash and ns.Trash.Pick and select(2, pcall(ns.Trash.Pick, ns.Trash))
-    local picked = type(pick) == "table" and pick.entry
-    if picked and picked.bag and picked.slot then self.trashPlace = picked.bag .. ":" .. picked.slot end
 
     -- In a fight nothing moves: only what each square shows is refreshed.
     if fighting then
@@ -1006,6 +994,9 @@ function BagWindow:DrawBags(width, search)
     self.layoutWaiting = false
     self.contentHeight = y
     self.content:SetHeight(math.max(10, y))
+    -- The trash can and its glow sit on these squares (UI/Trash.lua): a
+    -- look once the layout settles, so a new square or size is followed.
+    if ns.Trash then ns.Trash:Changed() end
 end
 
 function BagWindow:DrawList(width, search)
@@ -1059,6 +1050,22 @@ function BagWindow:SetTab(tab)
     self:PaintTabs()
     if self.scroll then self.scroll:SetVerticalScroll(0) end
     self:Changed(true)
+    if ns.Trash then ns.Trash:Changed() end
+end
+
+--- True while the window is up on Your bags, where the squares are.
+function BagWindow:ShowsBags()
+    return self:IsShown() and (self.tab or "bags") == "bags"
+end
+
+--- The square shown for a bag slot, for the trash can, or nil.
+function BagWindow:ButtonFor(bag, slot)
+    if not self:ShowsBags() then return nil end
+    local button = buttons[bag .. ":" .. slot]
+    if not button then return nil end
+    local ok, shown = pcall(button.IsShown, button)
+    if ok and shown then return button end
+    return nil
 end
 
 function BagWindow:Show()
