@@ -236,10 +236,7 @@ function BagView:NoteSeen()
     local function Take()
         BagView.noting = nil
         if BagView.seen then return end
-        BagView.seen = {}
-        for _, entry in pairs(ns.Bags.slots) do
-            if entry.itemID then BagView.seen[entry.itemID] = (BagView.seen[entry.itemID] or 0) + (entry.count or 1) end
-        end
+        BagView:ClearNew()
         if ns.BagWindow and ns.BagWindow.Changed then ns.BagWindow:Changed() end
     end
     -- Only a finished read counts as what was already there.
@@ -259,16 +256,33 @@ function BagView:IsNew(entry)
     return ns.Bags:Carried(entry.itemID) > (self.seen[entry.itemID] or 0)
 end
 
+local function RemoveFlag(bag, slot)
+    local api = _G.C_NewItems
+    if type(api) == "table" and type(api.RemoveNewItem) == "function" then
+        pcall(api.RemoveNewItem, bag, slot)
+    end
+end
+
+--- Everything carried now has been seen: the game's flags go and the count
+--- starts again from here. Run at the first full read and when the window
+--- closes.
+function BagView:ClearNew()
+    self.seen, self.looked = {}, {}
+    for _, entry in pairs(ns.Bags.slots) do
+        if entry.itemID then
+            self.seen[entry.itemID] = (self.seen[entry.itemID] or 0) + (entry.count or 1)
+            RemoveFlag(entry.bag, entry.slot)
+        end
+    end
+end
+
 --- The player looked at it: not new any more. True when it was.
 function BagView:Saw(entry)
     if type(entry) ~= "table" or not entry.itemID then return end
     local was = self:IsNew(entry)
     self.looked[LookKey(entry)] = true
     -- The game's own bags clear its flag on a hover too.
-    local api = _G.C_NewItems
-    if type(api) == "table" and type(api.RemoveNewItem) == "function" then
-        pcall(api.RemoveNewItem, entry.bag, entry.slot)
-    end
+    RemoveFlag(entry.bag, entry.slot)
     if self.seen then
         local now = ns.Bags:Carried(entry.itemID)
         if now > (self.seen[entry.itemID] or 0) then self.seen[entry.itemID] = now end

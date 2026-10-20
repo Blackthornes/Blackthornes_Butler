@@ -358,6 +358,8 @@ function BagWindow:Build()
     end)
     frame:SetScript("OnHide", function()
         GameTooltip:Hide()
+        -- Closing the bags is looking at them, as with the game's own.
+        if ns.BagView.seen then ns.BagView:ClearNew() end
         if ns.Trash then ns.Trash:Changed() end
     end)
     if type(UISpecialFrames) == "table" then table.insert(UISpecialFrames, "BlackthornesButlerBags") end
@@ -635,6 +637,28 @@ local function Dress(button, size)
     button.bfrGlow = glow
 end
 
+-- The game's template brings its own new item glow (a blue wash and a flash)
+-- that its bag frames turn on and off. On our squares it stayed lit, empty
+-- slots too (2026-10-20), so it is kept out of sight; Butler's gold glow is
+-- the only one.
+local TEMPLATE_GLOWS = { "NewItemTexture", "BattlepayItemTexture" }
+local TEMPLATE_ANIMS = { "flashAnim", "newitemglowAnim" }
+
+local function QuietTemplateGlow(button)
+    for _, key in ipairs(TEMPLATE_GLOWS) do
+        local texture = rawget(button, key)
+        if type(texture) == "table" then
+            if texture.SetAlpha then pcall(texture.SetAlpha, texture, 0) end
+            if texture.Hide then pcall(texture.Hide, texture) end
+        end
+    end
+    for _, key in ipairs(TEMPLATE_ANIMS) do
+        local anim = rawget(button, key)
+        if type(anim) == "table" and anim.Stop then pcall(anim.Stop, anim) end
+    end
+end
+BagWindow.QuietTemplateGlow = QuietTemplateGlow
+
 -- Our own picture, for a client without the game's template.
 local function OwnIcon(button)
     if rawget(button, "bfrIcon") then return button.bfrIcon end
@@ -665,6 +689,14 @@ local function MakeButton(bag, slot)
     button.bfrBag, button.bfrSlot = bag, slot
     Dress(button)
     if not BagWindow.templateOK then OwnIcon(button) end
+    QuietTemplateGlow(button)
+    -- The template turns its glow back on by itself; ours turns it off after.
+    for _, method in ipairs({ "UpdateNewItem" }) do
+        if type(rawget(button, method) or button[method]) == "function" and hooksecurefunc then
+            pcall(hooksecurefunc, button, method, QuietTemplateGlow)
+        end
+    end
+    button:HookScript("OnShow", QuietTemplateGlow)
 
     button:HookScript("OnEnter", function(self)
         local entry = ns.Bags.slots[self.bfrBag .. ":" .. self.bfrSlot]
@@ -767,6 +799,7 @@ function BagWindow:Paint(button, entry, search)
     local level = entry and ns.BagView:ItemLevelOn() and ns.BagView.ItemLevel(entry)
     button.bfrLevel:SetText(level and tostring(level) or "")
 
+    QuietTemplateGlow(button)
     local new = entry and ns.BagView:NewGlowOn() and ns.BagView:IsNew(entry)
     button.bfrGlow:SetShown(new and true or false)
     self.newShown[button] = new and true or nil

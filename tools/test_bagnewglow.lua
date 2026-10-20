@@ -5,7 +5,11 @@
 --      new once the first read is done.
 --   2. An item that comes in after that is new; a hover ends it.
 --   3. With the game's own flag, Butler follows it: a slot the game calls
---      new glows, one it doesn't never does, reload or not.
+--      new glows, one it doesn't never does.
+--   4. The game's flags left on old items (its veiled bags never cleared
+--      them) are cleared at the first full read and when the window closes,
+--      and an empty slot never glows.
+--   5. The template's own blue glow is kept out of sight on our squares.
 
 local env = dofile(lfs_cwd .. "/tools/testenv.lua")
 local suite = env.NewSuite("bagnewglow")
@@ -54,6 +58,28 @@ suite.check("an unflagged slot stays dark, even before any count", not BagView:I
     and not BagView:IsNew(Bags.slots["0:3"]))
 BagView:Saw(Bags.slots["0:2"])
 suite.check("a hover clears it, as the game's bags do", removed[1] == "0:2" and not BagView:IsNew(Bags.slots["0:2"]))
+
+-- 4. Stale flags on everything after a reload.
+flags = { ["0:1"] = true, ["0:2"] = true, ["0:3"] = true, ["0:4"] = true }
+removed = {}
+BagView.seen, BagView.looked = nil, {}
+BagView:NoteSeen()
+suite.check("the first read clears old flags", not BagView:IsNew(Bags.slots["0:1"])
+    and not BagView:IsNew(Bags.slots["0:2"]) and not BagView:IsNew(Bags.slots["0:3"]))
+suite.check("an empty slot is never new", not BagView:IsNew(nil) and not BagView:IsNew({ bag = 0, slot = 4 }))
+flags["0:3"] = true
+suite.check("loot after that glows", BagView:IsNew(Bags.slots["0:3"]))
+BagView:ClearNew()
+suite.check("closing the window clears it", not BagView:IsNew(Bags.slots["0:3"]) and not flags["0:3"])
+
+-- 5. The template's own glow.
+local shown, stopped = true, false
+local fake = {
+    NewItemTexture = { SetAlpha = function() end, Hide = function() shown = false end },
+    flashAnim = { Stop = function() stopped = true end },
+}
+ns.BagWindow.QuietTemplateGlow(fake)
+suite.check("the template's blue glow is hidden", not shown and stopped)
 
 _G.C_NewItems = savedNewItems
 suite.done()
