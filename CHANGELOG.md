@@ -4,6 +4,12 @@ Versions follow [semantic versioning](https://semver.org): the middle number
 moves for new behaviour, the last for fixes alone. The newest version goes at
 the top; a release is refused if its version has no section here.
 
+## 0.17.0
+
+For WoW: Forever (interface 16001). No files were added, so `/reload` is enough after updating.
+
+- **Butler Bags:** a new Empty Slots box sits next to Sort. Each way of grouping remembers its own choice. The free space count is bigger too, on the window and on the backpack button.
+
 ## 0.16.0
 
 For WoW: Forever (interface 16001). Files were added and the TOC changed, so

@@ -23,6 +23,10 @@ tell a friend: no hype, no questions to the reader, no exclamation marks
 outside the thanks line, no dashes as punctuation, no "now you can". The
 tool prints a note for a shipped line that reads like an advert.
 
+## 0.17.0
+
+- Butler Bags has an Empty Slots box next to Sort, and the free space count is bigger.
+
 ## 0.16.0
 
 - Butler Bags is a new replacement bag feature, off by default. Turn it on under Bags on the General page of Settings. Group by what to do, by item type or as one grid, search, and sort. Special bags sit on their own rows with One Grid.
