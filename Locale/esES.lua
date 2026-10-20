@@ -827,8 +827,8 @@ L["Open at the Bank:"] = "Abrir en el banco:"
 L["Opens Butler at the bank when there's something to move."] =
     "Abre Butler en el banco cuando hay algo que mover."
 L["Disenchant Greens Here:"] = "Desencantar verdes aquí:"
-L["On your disenchanter, every green goes under Disenchant. Crafted greens, upgrades and things you need are still kept."] =
-    "En tu desencantador, todos los verdes van a Desencantar. Los verdes fabricados, las mejoras y lo que necesitas se siguen guardando."
+L["On your disenchanter, greens go under Disenchant unless selling pays more. Crafted greens, upgrades and things you need are still kept."] =
+    "En tu desencantador, los verdes van a Desencantar, salvo que venderlos dé más. Los verdes fabricados, las mejoras y lo que necesitas se siguen guardando."
 L["Sell Below:"] = "Vender por debajo de:"
 L["Anything worth less than this goes under Sell. 0 turns it off."] =
     "Todo lo que valga menos que esto va a Vender. 0 lo desactiva."
@@ -978,7 +978,7 @@ L["Bought to Disenchant:"] = "Comprado para desencantar:"
 L["Things you bought on the auction house to break."] = "Cosas que compraste en la casa de subastas para desencantar."
 L["Level Your Enchanting:"] = "Subir tu Encantamiento:"
 L["Greens that break into what your next skill points need, even when selling pays more."] = "Verdes que dan lo que necesitan tus próximos puntos de habilidad, aunque venderlos pague más."
-L["On your disenchanter, every green gets broken."] = "En tu desencantador, se desencantan todos los verdes."
+L["On your disenchanter, greens get broken unless selling pays more."] = "En tu desencantador, se desencantan los verdes, salvo que venderlos dé más."
 L["Your Disenchanter:"] = "Tu desencantador:"
 L["Greens you can't break go to your disenchanter, when breaking them pays as much as selling."] = "Los verdes que no puedes desencantar van a tu desencantador, cuando desencantarlos paga tanto como venderlos."
 L["Things You Always Mail:"] = "Lo que siempre envías:"

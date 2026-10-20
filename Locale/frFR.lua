@@ -828,8 +828,8 @@ L["Open at the Bank:"] = "Ouvrir à la banque :"
 L["Opens Butler at the bank when there's something to move."] =
     "Ouvre Butler à la banque quand il y a quelque chose à déplacer."
 L["Disenchant Greens Here:"] = "Désenchanter les verts ici :"
-L["On your disenchanter, every green goes under Disenchant. Crafted greens, upgrades and things you need are still kept."] =
-    "Sur ton désenchanteur, chaque objet vert va dans Désenchanter. Les verts fabriqués, les améliorations et ce dont tu as besoin sont quand même gardés."
+L["On your disenchanter, greens go under Disenchant unless selling pays more. Crafted greens, upgrades and things you need are still kept."] =
+    "Sur ton désenchanteur, les objets verts vont dans Désenchanter, sauf si les vendre rapporte plus. Les verts fabriqués, les améliorations et ce dont tu as besoin sont quand même gardés."
 L["Sell Below:"] = "Vendre en dessous de :"
 L["Anything worth less than this goes under Sell. 0 turns it off."] =
     "Tout ce qui vaut moins que ça va dans Vendre. 0 le coupe."
@@ -979,7 +979,7 @@ L["Bought to Disenchant:"] = "Acheté pour désenchanter :"
 L["Things you bought on the auction house to break."] = "Ce que tu as acheté à l'hôtel des ventes pour le désenchanter."
 L["Level Your Enchanting:"] = "Monter ton Enchantement :"
 L["Greens that break into what your next skill points need, even when selling pays more."] = "Les objets verts qui donnent ce dont tes prochains points de compétence ont besoin, même quand les vendre rapporte plus."
-L["On your disenchanter, every green gets broken."] = "Sur ton désenchanteur, chaque objet vert est désenchanté."
+L["On your disenchanter, greens get broken unless selling pays more."] = "Sur ton désenchanteur, les objets verts sont désenchantés, sauf si les vendre rapporte plus."
 L["Your Disenchanter:"] = "Ton désenchanteur :"
 L["Greens you can't break go to your disenchanter, when breaking them pays as much as selling."] = "Les objets verts que tu ne peux pas désenchanter vont à ton désenchanteur, quand les désenchanter rapporte autant que les vendre."
 L["Things You Always Mail:"] = "Ce que tu envoies toujours :"
