@@ -896,7 +896,14 @@ _G.BlackthornesTS.Butler:QueueSkillUp(recipeID)   -- true, or false and why
 ```
 
 The pick is the top of Tradeskills' Level Up tab for each profession, so
-the two always agree. Without Tradeskills, no line. If either call
+the two always agree. A profession at its cap for now comes as `{
+profession, english, skill, max, capped = true }` (2026-10-20, the owner:
+point to the next trainer each step until max), and its line names the
+trainer's next rank from `GoldGoals.RANKS` (`SkillUp.Train`, `GG.LineOf`):
+"Train Expert Enchanting" and "Visit an Enchanting trainer to raise your
+cap to 225, about X", or "You can train it at level N" while the level is
+short; no Queue button, and no line past the last rank (Cooking and First
+Aid stop after Journeyman). Without Tradeskills, no line. If either call
 changes, change `Logic/SkillUp.lua` too. Tested in `tools/test_skillup.lua`.
 
 ## What Farmer calls here

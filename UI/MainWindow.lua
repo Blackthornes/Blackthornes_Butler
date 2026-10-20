@@ -572,6 +572,7 @@ function UI.UpdateSkillUpRow(row, data)
     row.name:SetText(title)
     row.reason:SetText(detail)
     row.worth:SetText("")
+    if entry.capped then return end
     row.action:SetText(entry.queued and L["Queued"] or L["Queue"])
     row.action:Show()
 end
@@ -962,6 +963,13 @@ function UI:Enter(row, data)
         GameTooltip:AddLine(other.count == 1 and L["1 spell to train the last time they played."]
             or L.Format("%d spells to train the last time they played.", other.count), 1, 1, 1, true)
         GameTooltip:AddLine(ns.ClassTraining.CostText(other.cost, other.unknown, other.count), 1, 1, 1)
+        GameTooltip:Show()
+        return
+    end
+    if data.type == "skillup" and data.entry.capped then
+        local title, detail = ns.SkillUp.Text(data.entry)
+        GameTooltip:AddLine(title, Theme.Unpack("accent"))
+        GameTooltip:AddLine(detail, 1, 1, 1, true)
         GameTooltip:Show()
         return
     end
