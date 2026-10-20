@@ -108,6 +108,32 @@ suite.check("One Grid is one section", #grid == 1)
 suite.check("holding every slot, empty ones too", grid[1] and #grid[1].places == 16)
 suite.check("in bag order", grid[1] and grid[1].places[4].entry == nil and grid[1].places[5].entry.itemID == 804)
 
+-- Empty Slots: each way of grouping keeps its own choice, and nothing is
+-- saved until one is changed.
+do
+    local function Last(list) return list[#list] end
+    suite.check("What To Do starts without empty slots", not BagView:ShowsEmpty("todo")
+        and Last(BagView:Sections("todo")).key ~= "empty")
+    suite.check("One Grid starts with them, as before", BagView:ShowsEmpty("grid"))
+    suite.check("nothing is saved for it yet", ns.db.bagEmptySlots == nil)
+    BagView:SetShowsEmpty(true, "todo")
+    local last = Last(BagView:Sections("todo"))
+    suite.check("ticked, What To Do ends with EMPTY SLOTS", last.key == "empty" and last.label == "EMPTY SLOTS")
+    suite.check("holding only the empty slots", last.places[1] and last.places[1].entry == nil)
+    suite.check("Item Type keeps its own choice", Last(BagView:Sections("type")).key ~= "empty")
+    BagView:SetShowsEmpty(true, "type")
+    suite.check("and can show them too", Last(BagView:Sections("type")).key == "empty")
+    BagView:SetShowsEmpty(false, "grid")
+    local packed = BagView:Sections("grid")
+    local gaps = false
+    for _, place in ipairs(packed[1] and packed[1].places or {}) do
+        if not place.entry then gaps = true end
+    end
+    suite.check("unticked, One Grid packs the items with no gaps", packed[1] and not gaps and #packed[1].places < 16)
+    suite.check("What To Do is left as it was", BagView:ShowsEmpty("todo"))
+    ns.db.bagEmptySlots = nil
+end
+
 -- A bag that takes only some things (a mining bag) gets rows of its own,
 -- so what Sort puts in it is not lost in the middle of the grid.
 do

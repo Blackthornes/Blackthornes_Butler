@@ -941,7 +941,7 @@ The owner asked (2026-10-11) for the free bag slots on the game's own bag,
 and picked the backpack button of the bag bar from a mockup
 (`mockups/butler-free-space-bag-button.png` in the project files).
 `UI/FreeSpace.lua` puts a number in the button's corner in the game's stack
-count font: white, amber at 8 free or fewer (`FreeSpace.AMBER`), red at 3
+count font, made bigger and bold (`FreeSpace.TEXT_SIZE`, 2026-10-20): white, amber at 8 free or fewer (`FreeSpace.AMBER`), red at 3
 or fewer (`FreeSpace.RED`). Only bags that take anything count; profession
 bags (a bag family other than 0) and the reagent bag are listed apart on
 the tooltip. Hovering the button adds each bag's free slots under the
@@ -1181,9 +1181,18 @@ Bags:" under BAGS on the General page, and `/bbutler bags [on|off]`
   `BagWindow:ButtonFor`, only on Your bags, 2026-10-20: the window had
   drawn only a thin red edge, full bags or not); `Bags:Wanted` reads the
   bags while it shows; `Verdicts:Redraw` redraws it.
+- **Empty Slots** (the owner said build it, 2026-10-20, from a mockup):
+  a tick box left of Sort, on Your bags only, kept for each Group By in
+  `bagEmptySlots` (`{ [group] = true/false }`, nil reads as
+  `BagView.EMPTY_DEFAULT`: One Grid ticked, the others not, so nothing
+  looked different). Ticked under What To Do or Item Type, an EMPTY SLOTS
+  group comes last (`BagView:WithEmpty`); unticked under One Grid, the
+  items pack with no gaps. The foot's "N free" is bigger and turns amber
+  and red as Free bag space does (`BagWindow.FREE_SIZE_UP`,
+  `FreeSpace.Level`).
 
 Saved, account wide, never rename them: `bagWindow` (off unless ticked),
-`bagGroupBy`, `bagItemSize`, `bagItemLevel`, `bagNewGlow`, `bagScale`,
+`bagGroupBy`, `bagItemSize`, `bagItemLevel`, `bagNewGlow`, `bagEmptySlots`, `bagScale`,
 `bagPoint`, `bagRelPoint`, `bagX`, `bagY`. Tested in
 `tools/test_bagwindow.lua`. Not yet seen in game.
 

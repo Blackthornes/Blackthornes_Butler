@@ -31,6 +31,9 @@ FreeSpace.GAME_COUNT = "MainMenuBarBackpackButtonCount"
 FreeSpace.AMBER = 8
 FreeSpace.RED = 3
 FreeSpace.SETTLE = 0.2
+-- The number's size on the bag button, bold with an outline (the owner,
+-- 2026-10-20: the game's stack count size was hard to read).
+FreeSpace.TEXT_SIZE = 18
 
 FreeSpace.COLORS = {
     plenty = { 1, 1, 1 },
@@ -180,7 +183,11 @@ function FreeSpace:Attach()
     -- The game's stack count font, so it reads like the counts beside it.
     local made, text = pcall(frame.CreateFontString, frame, nil, "OVERLAY", "NumberFontNormal")
     if not made or not text then text = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal") end
-    text:SetPoint("BOTTOMRIGHT", -3, 3)
+    pcall(function()
+        local font = text:GetFont()
+        if font then text:SetFont(font, FreeSpace.TEXT_SIZE, "THICKOUTLINE") end
+    end)
+    text:SetPoint("BOTTOMRIGHT", -2, 1)
     text:SetJustifyH("RIGHT")
     frame.text = text
 
