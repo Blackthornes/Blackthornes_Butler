@@ -1149,7 +1149,9 @@ Bags:" under BAGS on the General page, and `/bbutler bags [on|off]`
 - **Group By:** What To Do (Butler's verdict groups in Butler's order, with
   Fill mail and Move to bank on their headings), Item Type (QUEST, ARMOR,
   WEAPONS, TRADE GOODS, FOOD AND DRINK, OTHER, greys under Sell) or One
-  Grid (every slot in bag order, empty ones too). Search by name or ID and
+  Grid (every slot in bag order, empty ones too; a bag that takes only
+  some things, such as a mining bag, on rows of its own,
+  `BagView.GridSections`, so what Sort puts there is not mid-grid). Search by name or ID and
   the Upgrades, To Sell, For My Crafts and For My Goals chips dim what does
   not match. Marks come from `Verdicts` and the sisters' answers
   (`BagView:Marks`, kept per `Verdicts.version`); new items glow until

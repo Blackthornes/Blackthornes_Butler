@@ -266,6 +266,44 @@ function BagView.AllSlots()
     return list
 end
 
+--- The bags that take only some things (a profession bag, the reagent
+--- bag), as FreeSpace reads them: [bag] = true.
+function BagView.SpecialBags()
+    local special = {}
+    local read = ns.FreeSpace and ns.FreeSpace.Read and ns.FreeSpace.Read()
+    if type(read) == "table" and type(read.special) == "table" then
+        for _, entry in ipairs(read.special) do
+            if entry.bag then special[entry.bag] = true end
+        end
+    end
+    return special
+end
+
+--- One Grid: the bags that take anything as one grid, then each bag that
+--- takes only some things on rows of its own, so what the game's Sort puts
+--- there (a pick in a mining bag) never looks dropped in the middle.
+function BagView.GridSections()
+    local special = BagView.SpecialBags()
+    local sections = { { key = "grid", places = {} } }
+    local byBag = {}
+    for _, place in ipairs(BagView.AllSlots()) do
+        if special[place.bag] then
+            local section = byBag[place.bag]
+            if not section then
+                section = { key = "grid:" .. place.bag, places = {} }
+                byBag[place.bag] = section
+                sections[#sections + 1] = section
+            end
+            section.places[#section.places + 1] = place
+        else
+            local places = sections[1].places
+            places[#places + 1] = place
+        end
+    end
+    if #sections[1].places == 0 then table.remove(sections, 1) end
+    return sections
+end
+
 --- The carried bags as the window lays them out: a list of sections, each
 --- { key, label, verdict, places = { { bag, slot, entry } } }. A section
 --- with no label is One Grid.
@@ -274,8 +312,7 @@ function BagView:Sections(groupBy)
     local sections = {}
 
     if groupBy == "grid" then
-        sections[1] = { key = "grid", places = self.AllSlots() }
-        return sections
+        return self.GridSections()
     end
 
     if groupBy == "type" then
