@@ -826,7 +826,9 @@ never rename it) and `/bbutler training [on|off]`.
 
 In Butler: the Jobs group leads with "Train N new spells" (Train all at a
 class trainer, one spell every `ClassTraining.GAP`, only what the purse
-pays for; Show the way elsewhere, through TomTom or the game's map pin).
+pays for; Show the way elsewhere: Equipment's quest arrow when it is loaded
+(`CT:GuideFn` reads `_G.BlackthornesEquipment.ClassTraining.Guide`), else
+TomTom or the game's map pin).
 The next level's spells and a "Then:" line for each other character on
 this realm and side wait
 in a Later group at the foot of the list, right above Gold goals (the
