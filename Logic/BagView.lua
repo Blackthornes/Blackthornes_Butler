@@ -135,7 +135,7 @@ end
 -- [link or ID] = marks, for one Verdicts.version.
 local marks, marksVersion = {}, -1
 
---- What an item's square says at a glance: { upgrade, sell, mail, goal,
+--- What an item's square says at a glance: { upgrade, sell, vendor, mail, goal,
 --- craft, quest, verdict }. The sisters are asked once per item each time
 --- the verdicts move, as the Butler window asks them.
 function BagView:Marks(entry)
@@ -156,6 +156,7 @@ function BagView:Marks(entry)
         verdict = verdict,
         upgrade = Sisters.String(said.equipment, "upgrade") == "now",
         sell = verdict == "sell" or verdict == "auction",
+        vendor = verdict == "sell",
         mail = verdict == "mail",
         goal = (Sisters.Number(said.farmer, "need") or 0) > 0,
         craft = (Sisters.Number(said.ts, "need") or 0) > 0 or (Sisters.Number(said.ts, "mailCount") or 0) > 0,
