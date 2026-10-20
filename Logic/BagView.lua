@@ -202,33 +202,78 @@ end
 --------------------------------------------------------------------------------
 -- New items
 --
--- How many of each item the bags held at the first look this session. More
--- than that is new until the player hovers it. Nothing is saved.
+-- The game keeps its own new item flag on each bag slot (C_NewItems), set when
+-- an item comes in and cleared when the player looks, and it lasts through a
+-- /reload, so a reload never makes old items new. Butler asks it first. A
+-- client without it falls back to a count: how many of each item the bags
+-- held at the first full read this session, more than that being new. That
+-- count is taken only once a whole read is done, never from the empty list a
+-- /reload starts with (which made every item glow). Hovering a square ends
+-- its glow either way. Nothing is saved.
 --------------------------------------------------------------------------------
 
 BagView.seen = nil
+BagView.looked = {}
+
+--- The game's own flag for a slot: true or false, or nil without the call.
+function BagView.GameSaysNew(bag, slot)
+    local api = _G.C_NewItems
+    if type(api) ~= "table" or type(api.IsNewItem) ~= "function" then return nil end
+    local ok, new = pcall(api.IsNewItem, bag, slot)
+    if not ok then return nil end
+    local okBool, value = pcall(function() return new and true or false end)
+    if not okBool then return nil end
+    return value
+end
+
+local function LookKey(entry)
+    return ("%s:%s:%s:%s"):format(tostring(entry.bag), tostring(entry.slot), tostring(entry.link or entry.itemID), tostring(entry.count))
+end
 
 function BagView:NoteSeen()
-    if self.seen then return end
-    self.seen = {}
-    for _, entry in pairs(ns.Bags.slots) do
-        if entry.itemID then self.seen[entry.itemID] = (self.seen[entry.itemID] or 0) + (entry.count or 1) end
+    if self.seen or self.noting then return end
+    self.noting = true
+    local function Take()
+        BagView.noting = nil
+        if BagView.seen then return end
+        BagView.seen = {}
+        for _, entry in pairs(ns.Bags.slots) do
+            if entry.itemID then BagView.seen[entry.itemID] = (BagView.seen[entry.itemID] or 0) + (entry.count or 1) end
+        end
+        if ns.BagWindow and ns.BagWindow.Changed then ns.BagWindow:Changed() end
+    end
+    -- Only a finished read counts as what was already there.
+    if ns.Bags.scanning or ns.Bags.stale or not next(ns.Bags.slots) then
+        ns.Bags:Scan(Take)
+    else
+        Take()
     end
 end
 
 function BagView:IsNew(entry)
-    if not (self.seen and entry and entry.itemID) then return false end
+    if not (entry and entry.itemID) then return false end
+    if self.looked[LookKey(entry)] then return false end
+    local game = BagView.GameSaysNew(entry.bag, entry.slot)
+    if game ~= nil then return game end
+    if not self.seen then return false end
     return ns.Bags:Carried(entry.itemID) > (self.seen[entry.itemID] or 0)
 end
 
---- The player looked at it: not new any more.
-function BagView:Saw(itemID)
-    if not (self.seen and itemID) then return end
-    local now = ns.Bags:Carried(itemID)
-    if now > (self.seen[itemID] or 0) then
-        self.seen[itemID] = now
-        return true
+--- The player looked at it: not new any more. True when it was.
+function BagView:Saw(entry)
+    if type(entry) ~= "table" or not entry.itemID then return end
+    local was = self:IsNew(entry)
+    self.looked[LookKey(entry)] = true
+    -- The game's own bags clear its flag on a hover too.
+    local api = _G.C_NewItems
+    if type(api) == "table" and type(api.RemoveNewItem) == "function" then
+        pcall(api.RemoveNewItem, entry.bag, entry.slot)
     end
+    if self.seen then
+        local now = ns.Bags:Carried(entry.itemID)
+        if now > (self.seen[entry.itemID] or 0) then self.seen[entry.itemID] = now end
+    end
+    return was
 end
 
 --------------------------------------------------------------------------------

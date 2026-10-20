@@ -653,7 +653,7 @@ local function MakeButton(bag, slot)
     button:HookScript("OnEnter", function(self)
         local entry = ns.Bags.slots[self.bfrBag .. ":" .. self.bfrSlot]
         if entry and BagWindow.newShown and BagWindow.newShown[self] then
-            if ns.BagView:Saw(entry.itemID) then
+            if ns.BagView:Saw(entry) then
                 if GameTooltip:IsOwned(self) then
                     GameTooltip:AddLine(L["New since you last looked."], Theme.Unpack("accentHi"))
                     GameTooltip:Show()
