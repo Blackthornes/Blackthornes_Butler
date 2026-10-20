@@ -289,6 +289,26 @@ known = savedKnown
 level = 14
 CT:Changed()
 
+-- 6b. Show the way moves Equipment's arrow when Equipment is loaded, not a
+-- map pin behind it (a player saw the quest arrow stay put).
+local aimed
+_G.BlackthornesEquipment = { ClassTraining = { Guide = function(spot, title)
+    aimed = { spot = spot, title = title }
+    return true
+end } }
+local pinned = false
+_G.UiMapPoint = { CreateFromCoordinates = function() return {} end }
+C_Map.SetUserWaypoint = function() pinned = true end
+suite.check("Show the way finds somewhere to go", CT:ShowTheWay() == true)
+suite.check("Equipment's arrow is aimed at the trainer", aimed and aimed.spot
+    and aimed.spot.name == "Jennea Cannon" and aimed.title:find("Jennea Cannon", 1, true) ~= nil)
+suite.check("no map pin when the arrow took it", not pinned)
+_G.BlackthornesEquipment = { ClassTraining = { Guide = function() error("broken") end } }
+suite.check("a broken arrow falls back to the map pin", CT:ShowTheWay() == true and pinned)
+_G.BlackthornesEquipment = nil
+_G.UiMapPoint = nil
+C_Map.SetUserWaypoint = nil
+
 -- 7. Turned off.
 ns.HandleSlash("training off")
 suite.check("off is saved", ns.db.classTraining == false)

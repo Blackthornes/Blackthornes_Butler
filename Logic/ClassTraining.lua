@@ -466,9 +466,21 @@ function CT.Where(spot)
     return zone or sub
 end
 
---- Show the way to the trainer: the addon's own arrow when it has one
---- (CT.Guide, set by Equipment), else TomTom, else the game's map pin.
---- Says where in chat. True when there was somewhere to go.
+--- The arrow that shows the way: this addon's own (CT.Guide, set by
+--- Equipment), else Equipment's when it is loaded beside this one, so
+--- Butler's Show the way moves the quest arrow on screen rather than a pin
+--- behind it.
+function CT:GuideFn()
+    if type(self.Guide) == "function" then return self.Guide end
+    local equipment = rawget(_G, "BlackthornesEquipment")
+    local ok, guide = pcall(function() return equipment.ClassTraining.Guide end)
+    if ok and type(guide) == "function" then return guide end
+    return nil
+end
+
+--- Show the way to the trainer: an arrow when one is loaded (GuideFn),
+--- else TomTom, else the game's map pin. Says where in chat. True when
+--- there was somewhere to go.
 function CT:ShowTheWay()
     local spot = self:Nearest()
     local player = self.Player()
@@ -478,8 +490,9 @@ function CT:ShowTheWay()
     end
     local title = L.Format("%s trainer: %s", player.className or "", spot.name or "")
     local shown = false
-    if type(self.Guide) == "function" then
-        local ok, done = pcall(self.Guide, spot, title)
+    local guide = self:GuideFn()
+    if guide then
+        local ok, done = pcall(guide, spot, title)
         shown = ok and done
     end
     if not shown and spot.mapID and spot.x and spot.y then
