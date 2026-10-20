@@ -28,6 +28,7 @@ local WIDTH = 520
 local HEIGHT = 600
 local PADDING = 18
 local EDGE_PAD = 11
+local SORT_RIGHT = 32   -- clear of the close gem in the top right corner
 local FOOT = 40
 local WELL_TOP = 116
 local GAP = 4
@@ -524,7 +525,8 @@ function BagWindow:SizeScroll()
     end
 end
 
---- Free slots, the gold on every character, and Sort.
+--- Free slots and the gold on every character along the foot; Sort at the
+--- top right, on the tabs' row, clear of the close gem.
 function BagWindow:BuildFoot()
     local frame = self.frame
     local free = Theme.CreateLabel(frame, "small", "text")
@@ -536,8 +538,9 @@ function BagWindow:BuildFoot()
     self.goldLabel = gold
 
     local sort = Widgets.CreateButton(frame, L["Sort"], function() BagWindow:Sort() end,
-        { width = 70, height = 22 })
-    sort:SetPoint("BOTTOMRIGHT", -PADDING, 10)
+        { height = 22 })
+    sort:SetWidth(math.max(70, Theme.TextWidth("small", L["Sort"]) + 28))
+    sort:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -SORT_RIGHT, -EDGE_PAD - 6)
     self.sortButton = sort
     sort:SetShown(BagWindow.CanSort())
 end
