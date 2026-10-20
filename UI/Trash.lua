@@ -28,7 +28,9 @@
 --
 -- The can is Butler's own button, a child of the game's item
 -- button (Equipment's way of finding them: retail's EnumerateValidItems
--- and GetBagID, else classic's ContainerFrame<n>Item<m>). Nothing is
+-- and GetBagID, else classic's ContainerFrame<n>Item<m>), or, while
+-- Butler's Bags window stands in for the game's bags, of that window's
+-- square for the slot (the game's are veiled then, so never used). Nothing is
 -- written on a game frame: the bag windows' UpdateItems, OnShow and OnHide
 -- are only hooked. It hides in combat and at a vendor, where Butler's Sell
 -- button is the better way to make room.
@@ -142,8 +144,15 @@ function Trash:Buttons(frame)
     return buttons
 end
 
+-- Stands in for the list of bag windows while Butler's Bags covers the
+-- game's: the can goes on its squares.
+Trash.BUTLER_BAGS = "butler bags"
+
 --- The shown item button for a bag slot, or nil.
 function Trash:FindButton(frames, bag, slot)
+    if frames == self.BUTLER_BAGS then
+        return ns.BagWindow and ns.BagWindow:ButtonFor(bag, slot) or nil
+    end
     for _, frame in ipairs(frames) do
         for _, button in ipairs(self:Buttons(frame)) do
             local buttonBag = Ask(button, "GetBagID")
@@ -369,7 +378,7 @@ function Trash:Place(frames, bags)
     -- button, at its scale and strata, over it, and goes when it does. Our
     -- own frame; nothing is written on the game's.
     if Ask(can, "GetParent") ~= button then pcall(can.SetParent, can, button) end
-    local size = (Ask(button, "GetWidth") or 37) * self.SHARE
+    local size = (tonumber(Ask(button, "GetWidth")) or 37) * self.SHARE
     can:SetSize(size, size)
     can:SetFrameLevel((Ask(button, "GetFrameLevel") or 1) + 10)
     can:ClearAllPoints()
@@ -378,7 +387,7 @@ function Trash:Place(frames, bags)
 
     local glow = self:Glow()
     if Ask(glow, "GetParent") ~= button then pcall(glow.SetParent, glow, button) end
-    local reach = (Ask(button, "GetWidth") or 37) * self.GLOW_REACH
+    local reach = (tonumber(Ask(button, "GetWidth")) or 37) * self.GLOW_REACH
     glow:SetFrameLevel((Ask(button, "GetFrameLevel") or 1) + 9)
     glow:ClearAllPoints()
     glow:SetPoint("TOPLEFT", button, "TOPLEFT", -reach, reach)
@@ -391,9 +400,6 @@ function Trash:Changed()
     self.stale = true
     if self.settling or self.waiting then return end
     if not self:Enabled() or InCombat() or self.atVendor then return self:Hide() end
-    -- Butler's Bags window marks the item itself while it stands in for the
-    -- game's bags.
-    if ns.BagWindow and ns.BagWindow:Covering() then return self:Hide() end
     self.settling = true
     C_Timer.After(self.SETTLE, function()
         Trash.settling = false
@@ -408,8 +414,14 @@ function Trash:Refresh()
     -- the can waits rather than jump to the next item.
     local cursor = rawget(_G, "GetCursorInfo")
     if type(cursor) == "function" and cursor() then return self:Hide() end
-    local frames = self:ShownFrames()
-    if #frames == 0 then return self:Hide() end
+    local frames
+    if ns.BagWindow and ns.BagWindow:Covering() then
+        if not ns.BagWindow:ShowsBags() then return self:Hide() end
+        frames = self.BUTLER_BAGS
+    else
+        frames = self:ShownFrames()
+        if #frames == 0 then return self:Hide() end
+    end
     local read = ns.FreeSpace and ns.FreeSpace.Read()
     if not read or read.free > self.FREE then return self:Hide() end
 
@@ -541,7 +553,9 @@ function Trash:ProbeText()
         if pick then
             parts[#parts + 1] = ("would pick bag %d slot %d, %s"):format(pick.entry.bag, pick.entry.slot,
                 tostring(pick.row.name or pick.row.itemID or "?"))
-            local found = self:FindButton(self:ShownFrames(), pick.entry.bag, pick.entry.slot)
+            local covering = ns.BagWindow and ns.BagWindow:Covering()
+            local found = self:FindButton(covering and self.BUTLER_BAGS or self:ShownFrames(),
+                pick.entry.bag, pick.entry.slot)
             parts[#parts + 1] = found and "its button was found" or "its button was NOT found"
             if found then parts[#parts + 1] = self:ButtonText(found) end
         else

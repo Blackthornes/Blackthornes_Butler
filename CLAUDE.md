@@ -1160,9 +1160,11 @@ Bags:" under BAGS on the General page, and `/bbutler bags [on|off]`
 - **Bank** and **Everyone** tabs are view only: the bank read live at a
   banker, else as Tradeskills last saw it; Everyone is All characters'
   list (needs Tradeskills).
-- While it is on, the trash can stands down (`Trash:Refresh`) and the
-  window marks the item itself; `Bags:Wanted` reads the bags while it
-  shows; `Verdicts:Redraw` redraws it.
+- While it is on, the trash can and its red glow go on this window's
+  squares instead of the game's veiled ones (`Trash.BUTLER_BAGS`,
+  `BagWindow:ButtonFor`, only on Your bags, 2026-10-20: the window had
+  drawn only a thin red edge, full bags or not); `Bags:Wanted` reads the
+  bags while it shows; `Verdicts:Redraw` redraws it.
 
 Saved, account wide, never rename them: `bagWindow` (off unless ticked),
 `bagGroupBy`, `bagItemSize`, `bagItemLevel`, `bagNewGlow`, `bagScale`,

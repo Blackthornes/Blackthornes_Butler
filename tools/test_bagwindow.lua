@@ -12,6 +12,8 @@
 --   5. Search and the chips dim what does not match.
 --   6. Settings and /bbutler bags set the same saved values.
 --   7. Turned off, the veil comes off and the window goes.
+--   8. Full bags: the trash can and its red glow sit on the cheapest
+--      stack's square in this window, never on the game's veiled bags.
 
 local env = dofile(lfs_cwd .. "/tools/testenv.lua")
 local suite = env.NewSuite("bagwindow")
@@ -71,7 +73,7 @@ suite.check("/bbutler bags on turns it on", BagWindow:On() and ns.db.bagWindow =
 suite.check("and says so", env.ChatText():find("Butler Bags is on.", 1, true) ~= nil)
 suite.check("the game's bags go under the veil", ns.Veil:Covers(_G.ContainerFrameCombinedBags))
 suite.check("but are never hidden", _G.ContainerFrameCombinedBags:IsShown())
-suite.check("the trash can stands down while it covers the bags", BagWindow:Covering())
+suite.check("it covers the game's bags", BagWindow:Covering())
 
 -- 3. Opening and toggling.
 _G.OpenAllBags(); EndFrame()
@@ -158,6 +160,28 @@ suite.check("the Bank tab draws", BagWindow.tab == "bank")
 BagWindow:SetTab("everyone"); EndFrame()
 suite.check("the Everyone tab draws", BagWindow.tab == "everyone")
 BagWindow:SetTab("bags"); EndFrame()
+
+-- 8. The trash can on this window's squares.
+do
+    local freeSlots = _G.C_Container.GetContainerNumFreeSlots
+    _G.C_Container.GetContainerNumFreeSlots = function() return 0, 0 end
+    BagWindow:Changed(true); EndFrame()
+    local Trash = ns.Trash
+    local square = BagWindow:ButtonFor(0, 1)
+    suite.check("the cheapest stack has a square", square ~= nil)
+    suite.check("full bags show the can", Trash.can ~= nil and Trash.can:IsShown())
+    suite.check("on that square", Trash.can and Trash.can:GetParent() == square and square ~= nil)
+    suite.check("the red glow lies round it too", Trash.glow ~= nil and Trash.glow:IsShown()
+        and Trash.glow:GetParent() == square)
+    BagWindow:SetTab("bank"); EndFrame()
+    suite.check("the Bank tab has no squares for it", BagWindow:ButtonFor(0, 1) == nil)
+    suite.check("so the can goes", not Trash.can:IsShown())
+    BagWindow:SetTab("bags"); EndFrame()
+    suite.check("and comes back on Your bags", Trash.can:IsShown() and Trash.can:GetParent() == square)
+    _G.C_Container.GetContainerNumFreeSlots = freeSlots
+    BagWindow:Changed(true); EndFrame()
+    suite.check("a free slot puts it away", not Trash.can:IsShown())
+end
 
 -- 7. Off again.
 ns.HandleSlash("bags off"); EndFrame()
