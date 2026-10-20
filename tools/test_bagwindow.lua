@@ -208,6 +208,23 @@ do
     _G.C_Container.SortBags, _G.PlaySound = saveSort, savePlay
 end
 
+-- The coin is for vendor items only, never for auction items.
+do
+    local saveJudge, saveAsk = ns.Verdicts.VerdictOf, ns.Sisters.AskAll
+    local verdictFor = {}
+    ns.Verdicts.VerdictOf = function(_, entry) return verdictFor[entry.itemID] end
+    ns.Sisters.AskAll = function() return {} end
+    ns.Verdicts.version = (ns.Verdicts.version or 0) + 1
+    verdictFor[9001], verdictFor[9002] = "sell", "auction"
+    local vendorItem = ns.BagView:Marks({ itemID = 9001, bag = 0, slot = 30, count = 1 })
+    local auctionItem = ns.BagView:Marks({ itemID = 9002, bag = 0, slot = 31, count = 1 })
+    suite.check("a vendor item gets the coin", vendorItem.vendor == true)
+    suite.check("an auction item gets no coin", auctionItem.vendor == false)
+    suite.check("the To Sell chip still finds both", vendorItem.sell and auctionItem.sell)
+    ns.Verdicts.VerdictOf, ns.Sisters.AskAll = saveJudge, saveAsk
+    ns.Verdicts.version = ns.Verdicts.version + 1
+end
+
 -- The probe line is read without raising.
 suite.check("the probe says what it found", type(BagWindow:ProbeText()) == "string")
 

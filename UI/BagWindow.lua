@@ -741,7 +741,9 @@ function BagWindow:MakeButtons(done)
     Step()
 end
 
-local MARK_ORDER = { "quest", "upgrade", "goal", "craft", "mail", "sell" }
+-- The coin is for vendor items only; an item for the auction house gets no
+-- mark (the To Sell chip still finds both).
+local MARK_ORDER = { "quest", "upgrade", "goal", "craft", "mail", "vendor" }
 
 local function ShowMark(texture, kind)
     if kind == "upgrade" then
@@ -753,7 +755,7 @@ local function ShowMark(texture, kind)
     else
         texture:SetTexCoord(0, 1, 0, 1)
         local files = {
-            sell = "Interface\\MoneyFrame\\UI-GoldIcon",
+            vendor = "Interface\\MoneyFrame\\UI-GoldIcon",
             mail = "Interface\\Minimap\\Tracking\\Mailbox",
             goal = "Interface\\RaidFrame\\ReadyCheck-Ready",
             craft = "Interface\\RaidFrame\\ReadyCheck-Ready",

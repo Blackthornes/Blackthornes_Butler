@@ -1154,7 +1154,8 @@ Bags:" under BAGS on the General page, and `/bbutler bags [on|off]`
   `BagView.GridSections`, so what Sort puts there is not mid-grid). Search by name or ID and
   the Upgrades, To Sell, For My Crafts and For My Goals chips dim what does
   not match. Marks come from `Verdicts` and the sisters' answers
-  (`BagView:Marks`, kept per `Verdicts.version`); new items glow until
+  (`BagView:Marks`, kept per `Verdicts.version`); the gold coin is for
+  vendor items only (`vendor`, the owner 2026-10-20), never auction ones; new items glow until
   hovered, by the game's own new item flag (`C_NewItems`, which lasts
   through a /reload), else by counts from the first full read this session
   (never the empty list a /reload starts with, which lit every item,
