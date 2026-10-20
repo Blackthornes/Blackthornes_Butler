@@ -23,6 +23,17 @@ tell a friend: no hype, no questions to the reader, no exclamation marks
 outside the thanks line, no dashes as punctuation, no "now you can". The
 tool prints a note for a shipped line that reads like an advert.
 
+## 0.16.0
+
+- Butler Bags is a new replacement bag feature, off by default. Turn it on under Bags on the General page of Settings. Group by what to do, by item type or as one grid, search, and sort. Special bags sit on their own rows with One Grid.
+- Craft When It Pays More puts a craft that earns more than selling under Craft, with a Queue button. It's on the Selling page.
+- Cheapest Skill-Up shows your next skill point in Jobs, with a Queue button. It's on the Gold page.
+- Your Tradeskills lists can mail to a character and keep a number on each one. It's on the Lists page.
+
+Fixes and changes:
+
+- Several bug fixes for class training and Jobs order.
+
 ## 0.15.0
 
 - Who Has It and Butler on Tooltips can each be Off, Shift or Always. You pick on the General page of Settings.

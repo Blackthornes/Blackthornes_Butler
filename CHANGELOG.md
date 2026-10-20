@@ -4,6 +4,17 @@ Versions follow [semantic versioning](https://semver.org): the middle number
 moves for new behaviour, the last for fixes alone. The newest version goes at
 the top; a release is refused if its version has no section here.
 
+## 0.16.0
+
+For WoW: Forever (interface 16001). Files were added and the TOC changed, so
+restart the game fully after updating (`/reload` is not enough).
+
+- **Butler Bags:** a new replacement bag feature, off by default. Turn it on under Bags on the General page of Settings. Group by what to do, by item type or as one grid, search, and sort. Special bags sit on their own rows with One Grid.
+- **Craft When It Pays More:** puts a craft that earns more than selling under Craft, with a Queue button. It's on the Selling page.
+- **Cheapest Skill-Up:** shows your next skill point in Jobs, with a Queue button. It's on the Gold page.
+- **Your Tradeskills lists:** each list can mail to a character and keep a number on each one. It's on the Lists page.
+- **Bug fixes:** several bug fixes for class training and Jobs order.
+
 ## 0.15.0
 
 For WoW: Forever (interface 16001). Files were added and the TOC changed, so
