@@ -1,8 +1,8 @@
 -- Blackthornes Butler -- Logic/SkillUp.lua
 -- The cheapest skill-up (a player asked, the owner said build it
 -- 2026-10-19, from a mockup with the words he approved): with "Cheapest
--- Skill-Up:" ticked, the end of this character's Jobs has a line for each
--- profession still being leveled, naming the craft Tradeskills' Level Up
+-- Skill-Up:" ticked, the Profession Leveling group under Jobs has a line
+-- for each profession still being leveled, naming the craft Tradeskills' Level Up
 -- tab puts first, with a Queue button. Tradeskills works it out, inside a
 -- pcall, read only:
 --
@@ -97,7 +97,7 @@ function SkillUp.Train(profession, english, skill, max)
     }
 end
 
---- The Jobs rows, one a profession.
+--- The Profession Leveling rows, one a profession.
 function SkillUp:Rows()
     local rows = {}
     for _, entry in ipairs(self:Read()) do

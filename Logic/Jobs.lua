@@ -766,11 +766,6 @@ function Jobs:Lines()
     for _, step in ipairs(plan.here and plan.here.steps or {}) do
         rows[#rows + 1] = { type = "job", step = step, job = plan.here }
     end
-    -- The cheapest craft for the next skill point in each profession
-    -- (Logic/SkillUp.lua), only while "Cheapest Skill-Up:" is ticked.
-    if ns.SkillUp then
-        for _, row in ipairs(ns.SkillUp:Rows()) do rows[#rows + 1] = row end
-    end
     for index, job in ipairs(plan.others) do
         if not (plan.goFirst and index == 1) then
             rows[#rows + 1] = { type = "jobnext", job = job, isNext = index == 1 }

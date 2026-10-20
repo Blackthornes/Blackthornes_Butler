@@ -56,7 +56,7 @@ UI:Show("bags")
 
 local function SkillRows()
     local rows = {}
-    for _, row in ipairs(Jobs:Lines()) do
+    for _, row in ipairs(UI:Lines()) do
         if row.type == "skillup" then rows[#rows + 1] = row end
     end
     return rows
@@ -74,8 +74,20 @@ suite.check("and says so", env.ChatText():find("Butler will show your cheapest s
     env.ChatText())
 local rows = SkillRows()
 suite.check("one line a profession", #rows == 2, #rows)
-local lines = Jobs:Lines()
-suite.check("at the end of Jobs", lines[#lines].type == "skillup")
+local inJobs = false
+for _, line in ipairs(Jobs:Lines()) do inJobs = inJobs or line.type == "skillup" end
+suite.check("not in Jobs anymore", not inJobs)
+local lines, heading, firstSkill = UI:Lines(), nil, nil
+for index, line in ipairs(lines) do
+    if line.type == "header" and line.group.verdict == "leveling" then heading = heading or index end
+    if line.type == "skillup" then firstSkill = firstSkill or index end
+end
+suite.check("its own Profession Leveling group", heading ~= nil and lines[heading].group.label == "Profession Leveling")
+suite.check("the lines sit under it", heading and firstSkill == heading + 1)
+suite.check("it counts professions", lines[heading].group.count == 2 and lines[heading].group.many == "professions")
+UI.Folded(UI).leveling = true
+suite.check("it folds on its own", #SkillRows() == 0)
+UI.Folded(UI).leveling = nil
 
 local row = CreateFrame("Button")
 UI.CreateRow(row)
