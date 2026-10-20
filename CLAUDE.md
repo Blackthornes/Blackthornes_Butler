@@ -883,8 +883,9 @@ Tested in `tools/test_goldgoals.lua`. Not yet seen in game.
 A player asked, the owner said build it (2026-10-19, from a mockup with
 the words he approved): with "Cheapest Skill-Up:" ticked (Gold page,
 PROFESSIONS; `skillUpLine`, account wide, off unless ticked, never rename
-it; `/bbutler skillup on|off`), the end of this character's Jobs has a
-line for each profession still being leveled: "Next skill point: ITEM"
+it; `/bbutler skillup on|off`), a PROFESSION LEVELING group right under
+Jobs (its own fold, `folded.leveling`; the owner, 2026-10-20: the queued
+crafts stay above it) has a line for each profession still being leveled: "Next skill point: ITEM"
 and "PROFESSION 52/75. A sure point for about 18c." (a likely point for a
 yellow craft, "you make about X back" when it pays), with Queue, then
 Queued. `Logic/SkillUp.lua` reads Tradeskills, inside a pcall, read only:

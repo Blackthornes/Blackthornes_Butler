@@ -776,6 +776,20 @@ function UI:Lines()
             for _, row in ipairs(jobRows) do lines[#lines + 1] = row end
         end
     end
+    -- The cheapest craft for the next skill point in each profession
+    -- (Logic/SkillUp.lua), its own group right under Jobs, so the queued
+    -- crafts stay on top (the owner, 2026-10-20). Only while "Cheapest
+    -- Skill-Up:" is ticked.
+    local levelRows = ns.SkillUp and ns.SkillUp:Rows() or {}
+    if #levelRows > 0 then
+        local group = { verdict = "leveling", label = L["Profession Leveling"], count = #levelRows, worth = 0,
+            one = L["profession"], many = L["professions"] }
+        local isFolded = folded.leveling == true
+        lines[#lines + 1] = { type = "header", group = group, folded = isFolded }
+        if not isFolded then
+            for _, row in ipairs(levelRows) do lines[#lines + 1] = row end
+        end
+    end
     -- At a mailbox, the gold fund's top-ups come first (Logic/Funds.lua).
     if ns.Errands.mailOpen and ns.Funds then
         local plan = ns.Funds:Plan()
