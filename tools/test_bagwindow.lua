@@ -191,6 +191,23 @@ suite.check("and the window goes", not BagWindow:IsShown())
 _G.OpenAllBags(); EndFrame()
 suite.check("opening the bags leaves it closed", not BagWindow:IsShown())
 
+-- Sort plays the game's own bag sort sound, by ID, then sorts.
+do
+    local played, sorted, saveSort, savePlay = {}, false, nil, _G.PlaySound
+    _G.C_Container = _G.C_Container or {}
+    saveSort = _G.C_Container.SortBags
+    _G.C_Container.SortBags = function() sorted = true end
+    _G.PlaySound = function(id, channel) played[#played + 1] = { id, channel } end
+    BagWindow:Sort()
+    suite.check("Sort plays the game's bag sort sound", #played == 1 and played[1][1] == 73933)
+    suite.check("on the sound effects channel, as the game's button", played[1] and played[1][2] == nil)
+    suite.check("and sorts the bags", sorted)
+    _G.SOUNDKIT = { UI_BAG_SORTING_01 = 5555 }
+    suite.check("the client's own sound name wins", BagWindow.SortSound() == 5555)
+    _G.SOUNDKIT = nil
+    _G.C_Container.SortBags, _G.PlaySound = saveSort, savePlay
+end
+
 -- The probe line is read without raising.
 suite.check("the probe says what it found", type(BagWindow:ProbeText()) == "string")
 

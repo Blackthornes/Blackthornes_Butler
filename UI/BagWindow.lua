@@ -550,8 +550,21 @@ function BagWindow.CanSort()
     return type(container) == "table" and type(container.SortBags) == "function"
 end
 
+-- The sound the game's own bag sort button plays: SOUNDKIT's name when the
+-- client has it, else its ID. Played by ID, so no game audio ships here.
+BagWindow.SORT_SOUND = 73933
+
+function BagWindow.SortSound()
+    local kit = rawget(_G, "SOUNDKIT")
+    local id = type(kit) == "table" and kit.UI_BAG_SORTING_01
+    return type(id) == "number" and id or BagWindow.SORT_SOUND
+end
+
 function BagWindow:Sort()
     if InCombat() or not BagWindow.CanSort() then return end
+    -- No channel, as the game's button: it follows the player's sound effects.
+    local play = rawget(_G, "PlaySound")
+    if type(play) == "function" then pcall(play, BagWindow.SortSound()) end
     pcall(C_Container.SortBags)
 end
 
