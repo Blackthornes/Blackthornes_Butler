@@ -8,6 +8,8 @@
 --      it makes back.
 --   3. Queue puts one in Tradeskills' queue and the line reads Queued;
 --      Queued does nothing more.
+--   5. A capped profession names the trainer's next rank, or the level it
+--      opens at; none past the last rank, nor for Cooking past Journeyman.
 --   4. Without Tradeskills, or when it raises or answers junk, no lines.
 
 local env = dofile(lfs_cwd .. "/tools/testenv.lua")
@@ -107,6 +109,43 @@ UI.RowAction(SkillRows()[1])
 local after = 0
 for _ in pairs(queued) do after = after + 1 end
 suite.check("Queued does nothing more", before == after)
+
+-- 5. Capped professions: the trainer's next rank.
+_G.UnitLevel = function() return 30 end
+answer[#answer + 1] = { profession = "Enchanting", english = "Enchanting", skill = 150, max = 150, capped = true }
+answer[#answer + 1] = { profession = "Blacksmithing", english = "Blacksmithing", skill = 225, max = 225, capped = true }
+answer[#answer + 1] = { profession = "Mining", english = "Mining", skill = 75, max = 75, capped = true }
+answer[#answer + 1] = { profession = "Cooking", english = "Cooking", skill = 150, max = 150, capped = true }
+answer[#answer + 1] = { profession = "Alchemy", english = "Alchemy", skill = 300, max = 300, capped = true }
+local trains = {}
+for _, r in ipairs(SkillRows()) do
+    if r.entry.capped then trains[r.entry.profession] = r end
+end
+suite.check("Cooking past Journeyman has no line", trains.Cooking == nil)
+suite.check("the top rank has no line", trains.Alchemy == nil)
+UI.UpdateRow(row, trains.Enchanting)
+suite.check("names the next rank", Plain(row.name:GetText()) == "Train Expert Enchanting", row.name:GetText())
+suite.check("visit an Enchanting trainer",
+    Plain(row.reason:GetText()) == "Enchanting 150/150. Visit an Enchanting trainer to raise your cap to 225, about 50s 00c.",
+    row.reason:GetText())
+suite.check("no Queue button", not row.action:IsShown())
+UI.UpdateRow(row, trains.Mining)
+suite.check("visit a Mining trainer",
+    Plain(row.reason:GetText()) == "Mining 75/75. Visit a Mining trainer to raise your cap to 150, about 5s 00c.",
+    row.reason:GetText())
+UI.UpdateRow(row, trains.Blacksmithing)
+suite.check("Artisan waits for its level", Plain(row.name:GetText()) == "Train Artisan Blacksmithing", row.name:GetText())
+suite.check("and says which",
+    Plain(row.reason:GetText()) == "Blacksmithing 225/225. You can train it at level 35 to raise your cap to 300.",
+    row.reason:GetText())
+local count = 0
+for _ in pairs(queued) do count = count + 1 end
+UI.RowAction(trains.Enchanting)
+local now = 0
+for _ in pairs(queued) do now = now + 1 end
+suite.check("a capped line queues nothing", count == now)
+for _ = 1, 5 do table.remove(answer) end
+_G.UnitLevel = nil
 
 -- 4. No Tradeskills, or a bad answer.
 answer[#answer + 1] = { profession = "Cooking", skill = 75, max = 75, recipeID = 1, cost = 5, tier = "optimal" }

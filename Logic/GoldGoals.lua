@@ -49,7 +49,7 @@ GG.RANKS = {
     [165] = { { 2154, 50, 10, 500 }, { 3812, 125, 20, 5000 }, { 10663, 200, 35, 50000 } },     -- Leatherworking
     [186] = { { 2582, 50, 0, 500 }, { 3568, 125, 0, 4500 }, { 10249, 200, 0, 50000 } },        -- Mining
     [393] = { { 8619, 50, 0, 500 }, { 8620, 125, 0, 5000 }, { 10769, 200, 35, 50000 } },       -- Skinning
-    [197] = { { 3912, 50, 10, 450 }, { 3913, 125, 20, 4500 }, { 12181, 200, 0, 50000 } },      -- Tailoring
+    [197] = { { 3912, 50, 10, 450 }, { 3913, 125, 20, 4500 }, { 12181, 200, 35, 50000 } },     -- Tailoring
     [185] = { { 3412, 50, 10, 500 } },                                                       -- Cooking
     [129] = { { 3280, 50, 0, 500 } },                                                        -- First Aid
     [356] = { { 7734, 50, 0, 500 }, nil, { 18249, 200, 35, 10000 } },                        -- Fishing
@@ -188,6 +188,15 @@ local ENGLISH = {
     [197] = "Tailoring", [185] = "Cooking", [129] = "First Aid", [356] = "Fishing",
 }
 local RANK_WORDS = { L["Journeyman"], L["Expert"], L["Artisan"] }
+GG.RANK_WORDS = RANK_WORDS
+
+--- A profession's Classic skill line from its English name, or nil.
+function GG.LineOf(english)
+    for line, name in pairs(ENGLISH) do
+        if name == english then return line end
+    end
+    return nil
+end
 
 --- The character's professions: { [Classic skill line] = { skill, max,
 --- name } }, only those with ranks to train.
