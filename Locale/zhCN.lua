@@ -829,8 +829,8 @@ L["Open at the Bank:"] = "在银行处打开："
 L["Opens Butler at the bank when there's something to move."] =
     "有东西要搬时，在银行打开 Butler。"
 L["Disenchant Greens Here:"] = "在这里分解绿色物品："
-L["On your disenchanter, every green goes under Disenchant. Crafted greens, upgrades and things you need are still kept."] =
-    "在你的分解者身上，每件绿色物品都会放到分解下面。制造出来的绿色物品、升级和你需要的东西还是会留着。"
+L["On your disenchanter, greens go under Disenchant unless selling pays more. Crafted greens, upgrades and things you need are still kept."] =
+    "在你的分解者身上，绿色物品会放到分解下面，除非卖掉更值钱。制造出来的绿色物品、升级和你需要的东西还是会留着。"
 L["Sell Below:"] = "低价出售："
 L["Anything worth less than this goes under Sell. 0 turns it off."] =
     "价值低于这个数的东西会放到出售下面。0 表示关闭。"
@@ -980,7 +980,7 @@ L["Bought to Disenchant:"] = "买来分解的："
 L["Things you bought on the auction house to break."] = "你在拍卖行买来分解的东西。"
 L["Level Your Enchanting:"] = "升你的附魔："
 L["Greens that break into what your next skill points need, even when selling pays more."] = "能分解出你接下来几个技能点所需材料的绿色物品，就算卖掉更赚钱也一样。"
-L["On your disenchanter, every green gets broken."] = "在你的分解者身上，每件绿色物品都会被分解。"
+L["On your disenchanter, greens get broken unless selling pays more."] = "在你的分解者身上，绿色物品会被分解，除非卖掉更值钱。"
 L["Your Disenchanter:"] = "你的分解者："
 L["Greens you can't break go to your disenchanter, when breaking them pays as much as selling."] = "你不能分解的绿色物品，在分解和卖掉一样赚时，会寄给你的分解者。"
 L["Things You Always Mail:"] = "你总是邮寄的东西："

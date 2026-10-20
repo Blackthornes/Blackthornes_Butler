@@ -299,8 +299,11 @@ goes under Disenchant when Tradeskills' Advise says `youDisenchant` (the
 character playing is the one its Mail page names, typed or picked) and
 not `crafted`. Everything kept before it (sets, lists, quest items,
 upgrades and tools, goals, the craft queue, an alt's craft, pet food)
-still wins; other characters keep the usual verdicts. Tested in
-`tools/test_disenchantgreens.lua`.
+still wins; other characters keep the usual verdicts. A green that a
+vendor or the auction house pays more for goes on to its best price, as
+for Tradeskills' disenchanter (`BreakIt`, `SellsForMore`), unless "Always
+Disenchant" is ticked (2026-10-20: a green worth 4s at auction was broken
+for 1s 35c). Tested in `tools/test_disenchantgreens.lua`.
 
 ## Tradeskills' disenchanter
 

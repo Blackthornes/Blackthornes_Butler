@@ -668,6 +668,10 @@ function STEPS.levelEnch(self, c)
 end
 
 function STEPS.greensHere(self, c)
+    -- A green that sells for more goes on to the best price, as for the
+    -- disenchanter, unless "Always Disenchant" is ticked (2026-10-20: a
+    -- green worth 4s at auction was broken for 1s 35c).
+    if not BreakIt(c) then return nil end
     return FromSister(c, self:GreensHere(c.entry, Said(c)))
 end
 
@@ -1233,7 +1237,8 @@ end
 --- Step 8be: "Disenchant greens here" (the owner asked 2026-10-14). On the
 --- character Tradeskills' Mail page names as the disenchanter (its
 --- `youDisenchant`), every green it can break goes under Disenchant,
---- whatever a vendor or the auction house pays. Off unless ticked
+--- unless a vendor or the auction house pays more (STEPS.greensHere asks
+--- SellsForMore, so "Always Disenchant" breaks them all). Off unless ticked
 --- (`disenchantGreens`, account wide, never rename it). Never crafted
 --- greens, which are made to sell; everything kept before this step (sets,
 --- the player's lists, quest items, upgrades and tools, goals, the craft

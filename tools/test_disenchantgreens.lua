@@ -5,7 +5,8 @@
 -- What must hold:
 --   1. Off until ticked: greens keep their usual verdict.
 --   2. Ticked, on the disenchanter: a green it can break goes under
---      Disenchant even when the auction house pays more.
+--      Disenchant when breaking it pays as much as selling, and even when
+--      selling pays more once "Always Disenchant" is ticked.
 --   3. Not on another character, not for a blue, not when it can't break
 --      it, never a crafted green.
 --   4. Keeping still wins: an upgrade, a goal, the Always sell list.
@@ -59,6 +60,9 @@ suite.check("off: a green goes to auction as before", Verdict("Ridge Cleaver") =
 -- 2. Ticked, on the disenchanter.
 ns.HandleSlash("greens on")
 suite.check("/bbutler greens on ticks it", ns.db.disenchantGreens == true)
+suite.check("a green that sells for more still goes to auction", Verdict("Ridge Cleaver") == "auction",
+    Verdict("Ridge Cleaver"))
+Verdicts:SetAlwaysDisenchant(true)
 local cleaver = Find("Ridge Cleaver")
 suite.check("a green goes under Disenchant, auction or not", cleaver.verdict == "disenchant", cleaver.verdict)
 suite.check("saying why", cleaver.reason:find("You disenchant greens on this character", 1, true) ~= nil, cleaver.reason)
@@ -84,6 +88,8 @@ upgrade, goal = false, false
 Verdicts:SetChoice(802, "sell")
 suite.check("the Always sell list wins", Verdict("Forest Leather Belt") == "sell", Verdict("Forest Leather Belt"))
 Verdicts:SetChoice(802, nil)
+
+Verdicts:SetAlwaysDisenchant(false)
 
 -- 5. Settings and the command agree.
 ns.SettingsUI:Show()

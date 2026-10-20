@@ -830,8 +830,8 @@ L["Open at the Bank:"] = "Bei der Bank öffnen:"
 L["Opens Butler at the bank when there's something to move."] =
     "Öffnet Butler bei der Bank, wenn es etwas umzuräumen gibt."
 L["Disenchant Greens Here:"] = "Grüne hier entzaubern:"
-L["On your disenchanter, every green goes under Disenchant. Crafted greens, upgrades and things you need are still kept."] =
-    "Auf deinem Entzauberer kommt jeder grüne Gegenstand unter Entzaubern. Hergestellte Grüne, Verbesserungen und was du brauchst, bleiben trotzdem."
+L["On your disenchanter, greens go under Disenchant unless selling pays more. Crafted greens, upgrades and things you need are still kept."] =
+    "Auf deinem Entzauberer kommen Grüne unter Entzaubern, außer Verkaufen bringt mehr. Hergestellte Grüne, Verbesserungen und was du brauchst, bleiben trotzdem."
 L["Sell Below:"] = "Verkaufen unter:"
 L["Anything worth less than this goes under Sell. 0 turns it off."] =
     "Alles, was weniger wert ist, kommt unter Verkaufen. 0 schaltet es aus."
@@ -981,7 +981,7 @@ L["Bought to Disenchant:"] = "Zum Entzaubern gekauft:"
 L["Things you bought on the auction house to break."] = "Dinge, die du im Auktionshaus zum Entzaubern gekauft hast."
 L["Level Your Enchanting:"] = "Verzauberkunst leveln:"
 L["Greens that break into what your next skill points need, even when selling pays more."] = "Grüne, die das ergeben, was deine nächsten Skillpunkte brauchen, auch wenn Verkaufen mehr bringt."
-L["On your disenchanter, every green gets broken."] = "Auf deinem Entzauberer wird jedes Grüne entzaubert."
+L["On your disenchanter, greens get broken unless selling pays more."] = "Auf deinem Entzauberer werden Grüne entzaubert, außer Verkaufen bringt mehr."
 L["Your Disenchanter:"] = "Dein Entzauberer:"
 L["Greens you can't break go to your disenchanter, when breaking them pays as much as selling."] = "Grüne, die du nicht entzaubern kannst, gehen an deinen Entzauberer, wenn Entzaubern so viel bringt wie Verkaufen."
 L["Things You Always Mail:"] = "Was du immer verschickst:"

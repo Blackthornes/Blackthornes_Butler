@@ -553,7 +553,7 @@ function SettingsUI:BuildPages()
     pages:Section("selling", 1, L["DISENCHANTING"])
 
     local greensRow = pages:Row("selling", 1, L["Disenchant Greens Here:"],
-        L["On your disenchanter, every green goes under Disenchant. Crafted greens, upgrades and things you need are still kept."])
+        L["On your disenchanter, greens go under Disenchant unless selling pays more. Crafted greens, upgrades and things you need are still kept."])
     controls.disenchantGreens = Widgets.CreateCheckbox(greensRow, L["On"], function(checked)
         ns.Verdicts:SetDisenchantGreens(checked)
     end)
