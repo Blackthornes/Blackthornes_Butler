@@ -30,6 +30,9 @@ local PADDING = 18
 local EDGE_PAD = 11
 local SORT_RIGHT = 32   -- clear of the close gem in the top right corner
 local FOOT = 40
+-- The free count's size over large: well above the foot's other words, so
+-- it reads at a glance.
+BagWindow.FREE_SIZE_UP = 6
 local WELL_TOP = 116
 local GAP = 4
 local HEADING = 24
@@ -531,8 +534,8 @@ end
 --- top right, on the tabs' row, clear of the close gem.
 function BagWindow:BuildFoot()
     local frame = self.frame
-    local free = Theme.CreateLabel(frame, "small", "text")
-    free:SetPoint("BOTTOMLEFT", PADDING, 14)
+    local free = Theme.CreateLabel(frame, Theme.sizes.large + BagWindow.FREE_SIZE_UP, "text")
+    free:SetPoint("BOTTOMLEFT", PADDING, 11)
     self.freeLabel = free
 
     local gold = Theme.CreateLabel(frame, "small", "muted")
@@ -545,7 +548,15 @@ function BagWindow:BuildFoot()
     sort:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -SORT_RIGHT, -EDGE_PAD - 6)
     self.sortButton = sort
     sort:SetShown(BagWindow.CanSort())
+
+    -- Empty Slots: each way of grouping keeps its own choice (BagView).
+    local empty = Widgets.CreateCheckbox(frame, L["Empty Slots"], function(on)
+        ns.BagView:SetShowsEmpty(on)
+    end, ns.BagView:ShowsEmpty())
+    empty:SetPoint("RIGHT", sort, "LEFT", -12, 0)
+    self.emptyBox = empty
 end
+
 
 function BagWindow.CanSort()
     local container = rawget(_G, "C_Container")
@@ -573,9 +584,17 @@ end
 function BagWindow:UpdateFoot()
     local free = ns.BagView.Free()
     self.freeLabel:SetText(free and L.Format("%d free", free) or "")
+    if free and ns.FreeSpace then
+        local color = ns.FreeSpace.COLORS[ns.FreeSpace.Level(free)]
+        self.freeLabel:SetTextColor(color[1], color[2], color[3])
+    end
     local gold = ns.BagView.Gold()
     self.goldLabel:SetText(gold and L.Format("Gold on all characters: %s", Items.FormatMoney(gold)) or "")
     self.sortButton:SetShown(BagWindow.CanSort() and self.tab == "bags")
+    if self.emptyBox then
+        self.emptyBox:SetShown(self.tab == "bags")
+        self.emptyBox:SetChecked(ns.BagView:ShowsEmpty())
+    end
     if self.sortButton.SetEnabled then self.sortButton:SetEnabled(not InCombat()) end
 end
 
