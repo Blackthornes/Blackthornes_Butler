@@ -1158,7 +1158,12 @@ Bags:" under BAGS on the General page, and `/bbutler bags [on|off]`
   hovered, by the game's own new item flag (`C_NewItems`, which lasts
   through a /reload), else by counts from the first full read this session
   (never the empty list a /reload starts with, which lit every item,
-  2026-10-20); nothing saved. Tested in `tools/test_bagnewglow.lua`. Sell and Disenchant stay in the
+  2026-10-20); nothing saved. The game's flags are cleared for what is
+  carried at that first read and whenever the window closes
+  (`BagView:ClearNew`, as the game's bags do on close; veiled, they never
+  did, so every slot stayed flagged), and the template's own blue glow
+  (`NewItemTexture`, `BattlepayItemTexture`, its flash) is kept out of
+  sight (`QuietTemplateGlow`). Tested in `tools/test_bagnewglow.lua`. Sell and Disenchant stay in the
   main Butler window. Sort shows only when the game has a bag sort.
 - **Bank** and **Everyone** tabs are view only: the bank read live at a
   banker, else as Tradeskills last saw it; Everyone is All characters'
