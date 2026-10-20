@@ -7,7 +7,8 @@
 --   2. Turned on, the game's bags are veiled (see-through), never hidden.
 --   3. Opening the bags opens it; a toggle flips it once a frame.
 --   4. What To Do groups by Butler's verdicts; Item Type by kind; One Grid
---      is every slot in bag order, empty ones too.
+--      is every slot in bag order, empty ones too, with each bag that
+--      takes only some things on rows of its own.
 --   5. Search and the chips dim what does not match.
 --   6. Settings and /bbutler bags set the same saved values.
 --   7. Turned off, the veil comes off and the window goes.
@@ -104,6 +105,24 @@ local grid = BagView:Sections("grid")
 suite.check("One Grid is one section", #grid == 1)
 suite.check("holding every slot, empty ones too", grid[1] and #grid[1].places == 16)
 suite.check("in bag order", grid[1] and grid[1].places[4].entry == nil and grid[1].places[5].entry.itemID == 804)
+
+-- A bag that takes only some things (a mining bag) gets rows of its own,
+-- so what Sort puts in it is not lost in the middle of the grid.
+do
+    local read = ns.FreeSpace.Read
+    local slots = ns.BagView.AllSlots
+    ns.FreeSpace.Read = function() return { free = 0, total = 0, bags = {}, special = { { bag = 1 } } } end
+    ns.BagView.AllSlots = function()
+        return { { bag = 0, slot = 1 }, { bag = 0, slot = 2 }, { bag = 1, slot = 1, entry = { itemID = 2901 } },
+            { bag = 1, slot = 2 }, { bag = 2, slot = 1 } }
+    end
+    local split = BagView:Sections("grid")
+    suite.check("a mining bag starts its own rows", #split == 2 and split[2].key == "grid:1")
+    suite.check("the bags that take anything stay together", split[1] and #split[1].places == 3
+        and split[1].places[3].bag == 2)
+    suite.check("with what is in the mining bag", split[2] and split[2].places[1].entry.itemID == 2901)
+    ns.FreeSpace.Read, ns.BagView.AllSlots = read, slots
+end
 
 -- 5. Search.
 suite.check("search finds by name", BagView.Matches("Linen Cloth", 802, "linen"))
