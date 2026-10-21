@@ -3,7 +3,7 @@
 ## Notes: Tells you what to do with every item in your bags: keep it, sell it, post it, disenchant it or mail it to the alt who needs it.
 ## Author: Blackthornes
 ## Version: @project-version@
-## X-License: MIT
+## X-License: All Rights Reserved
 ## SavedVariables: BlackthornesButlerDB
 ## SavedVariablesPerCharacter: BlackthornesButlerCharDB
 ## IconTexture: Interface\Icons\INV_Misc_Bag_08
