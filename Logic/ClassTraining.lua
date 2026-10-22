@@ -19,9 +19,19 @@
 --       trainers = { [CLASS] = { [NPC ID] = { name, zone, sub, mapID, x, y, faction, at } } },
 --       characters = { [GUID] = { name, class, level, realm, faction, ready = { spell IDs }, at } },
 --       learned = { [GUID] = { [spell ID] = true } },  -- the trainer says known
+--       skipped = { [GUID] = { [spell ID] = time } },  -- the player skipped it
 --   }
 --
 -- Never rename it, nor the `classTraining` setting (on unless unticked).
+--
+-- Skipped spells (a player asked, the owner said yes, 2026-10-22): a
+-- right-click on a spell in Equipment's Training drawer skips it for that
+-- character, so it leaves the lists, the costs, Train all and Butler's gold
+-- goal, until the player brings it back. Each addon keeps its own copy
+-- (`skipped[guid][id]`, the time it was skipped, or minus the time it was
+-- brought back) and tells the other's copy, read through its global inside
+-- a pcall; the newest wins, so a change made while the other was not
+-- loaded still counts.
 --
 -- What is never done: buy a spell without the player's click (Train all
 -- is their click, one spell at a time, each checked again first), or touch
@@ -96,13 +106,13 @@ end
 --- The account save's table, made when first needed.
 function CT:Data()
     local db = ns.db
-    if not db then return { prices = {}, notTaught = {}, trainers = {}, characters = {}, learned = {} } end
+    if not db then return { prices = {}, notTaught = {}, trainers = {}, characters = {}, learned = {}, skipped = {} } end
     local data = db.classTrainingData
     if type(data) ~= "table" then
         data = {}
         db.classTrainingData = data
     end
-    for _, key in ipairs({ "prices", "notTaught", "trainers", "characters", "learned" }) do
+    for _, key in ipairs({ "prices", "notTaught", "trainers", "characters", "learned", "skipped" }) do
         if type(data[key]) ~= "table" then data[key] = {} end
     end
     return data
@@ -200,6 +210,86 @@ function CT:Learned()
     return type(learned) == "table" and learned or {}
 end
 
+--------------------------------------------------------------------------------
+-- Skipped spells
+--------------------------------------------------------------------------------
+
+-- The addons that carry this file, by global.
+CT.SISTERS = { "BlackthornesEquipment", "BlackthornesButler" }
+
+--- The other addon's copy of this module, when it is loaded.
+function CT:Sisters()
+    local list = {}
+    for _, name in ipairs(self.SISTERS) do
+        local addon = rawget(_G, name)
+        local other = type(addon) == "table" and rawget(addon, "ClassTraining")
+        if type(other) == "table" and other ~= self then list[#list + 1] = other end
+    end
+    return list
+end
+
+--- This addon's own record of skips for a character: { [spell ID] = time }.
+function CT:OwnSkips(guid)
+    local skips = guid and self:Data().skipped[guid]
+    return type(skips) == "table" and skips or nil
+end
+
+--- The spells the character playing skipped ([spell ID] = true), from
+--- this addon's record and the other's, the newest change winning.
+function CT:Skipped()
+    local guid = Text(Call("UnitGUID", "player"))
+    local newest = {}
+    local function Take(skips)
+        if type(skips) ~= "table" then return end
+        for id, at in pairs(skips) do
+            if type(at) == "number" and (newest[id] == nil or math.abs(at) > math.abs(newest[id])) then
+                newest[id] = at
+            end
+        end
+    end
+    Take(self:OwnSkips(guid))
+    for _, other in ipairs(self:Sisters()) do
+        local ok, skips = pcall(other.OwnSkips, other, guid)
+        if ok then Take(skips) end
+    end
+    local skipped = {}
+    for id, at in pairs(newest) do
+        if at > 0 then skipped[id] = true end
+    end
+    return skipped
+end
+
+--- Keep one change in this addon's record (the other addon calls it too).
+function CT:KeepSkip(guid, id, at)
+    if not (guid and id and type(at) == "number") then return end
+    local data = self:Data()
+    local skips = data.skipped[guid]
+    if type(skips) ~= "table" then
+        skips = {}
+        data.skipped[guid] = skips
+    end
+    skips[id] = at
+    self:Changed()
+end
+
+--- Skip a spell for the character playing, or bring it back (on false).
+function CT:SetSkipped(id, on)
+    local guid = Text(Call("UnitGUID", "player"))
+    if not (guid and id) then return false end
+    local now = math.max(1, Now())
+    local at = on and now or -now
+    self:KeepSkip(guid, id, at)
+    for _, other in ipairs(self:Sisters()) do
+        pcall(other.KeepSkip, other, guid, id, at)
+    end
+    self:Note()
+    return true
+end
+
+function CT:IsSkipped(id)
+    return self:Skipped()[id] == true
+end
+
 --- The spell's name in the client's language, else the data's English.
 function CT.SpellName(entry)
     local name = Text(Call("C_Spell.GetSpellName", entry[1]))
@@ -274,7 +364,7 @@ function CT:Plan()
 end
 
 function CT:Work(player)
-    local plan = { ready = {}, next = {}, cost = 0, unknown = 0, nextCost = 0, nextUnknown = 0 }
+    local plan = { ready = {}, next = {}, skipped = {}, cost = 0, unknown = 0, nextCost = 0, nextUnknown = 0 }
     local list = ns.CLASS_SPELLS and player.class and ns.CLASS_SPELLS[player.class]
     if type(list) ~= "table" then return plan end
     local data = self:Data()
@@ -283,12 +373,17 @@ function CT:Work(player)
     -- all learns them in order).
     local will = {}
     local knownIn = self.KnownIn(list)
+    local skipped = self:Skipped()
     for _, entry in ipairs(list) do
         local id = entry[1]
         if not notTaught[id] and RaceOK(entry, player.race) then
             local known = knownIn[id]
             if known then
                 will[id] = true
+            elseif skipped[id] then
+                -- Out of every list and cost; a later rank still shows.
+                will[id] = true
+                plan.skipped[#plan.skipped + 1] = Spell(entry, prices)
             elseif entry[2] <= player.level then
                 local before = entry[6]
                 if not before or will[before] or knownIn[before] then
@@ -701,7 +796,9 @@ function CT:Buyable()
     local list = {}
     if not (self.trainerOpen and self.atClassTrainer and player.class) then return list end
     for _, service in ipairs(self:Services(player.class)) do
-        if service.kind == "available" then list[#list + 1] = service end
+        if service.kind == "available" and not (service.entry and self:IsSkipped(service.entry[1])) then
+            list[#list + 1] = service
+        end
     end
     table.sort(list, function(a, b)
         if a.entry[2] ~= b.entry[2] then return a.entry[2] < b.entry[2] end
