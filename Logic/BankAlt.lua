@@ -24,8 +24,15 @@
 --
 -- Saved account wide, never renamed: bankAlt (the character's full name,
 -- nil off), bankAltWhen ("first", "vendor" or "leftovers"), bankAltKinds
--- ([kind] = false for each kind unticked; ticked unless unticked) and
--- bankAltList (a shopping list's name, nil for none).
+-- ([kind] = false for each kind unticked; ticked unless unticked),
+-- bankAltList (a shopping list's name, nil for none) and bankAltAuctions
+-- (true while Auction Items is ticked, off unless ticked).
+--
+-- Auction Items (a player asked, the owner said build it, 2026-10-22): one
+-- character sells everything at the auction house. Ticked, whatever
+-- Butler's final word is Auction goes to the bank alt, whatever its kind,
+-- in any When. Wait for a better price, Sell and the rest stay. A stack
+-- worth less than a mail's postage stays too.
 
 local _, ns = ...
 local L = ns.L
@@ -158,6 +165,17 @@ function BankAlt:SetKind(key, on)
     self:Changed()
 end
 
+--- Does everything Butler would auction go to the bank alt?
+function BankAlt:AuctionsOn()
+    return ns.db and ns.db.bankAltAuctions == true or false
+end
+
+function BankAlt:SetAuctions(on)
+    if not ns.db then return end
+    ns.db.bankAltAuctions = on and true or nil
+    self:Changed()
+end
+
 --- The shopping list it takes, by name, or nil.
 function BankAlt:ListName()
     return ns.db and Text(ns.db.bankAltList) or nil
@@ -240,13 +258,21 @@ function BankAlt.KindOf(entry)
     return nil
 end
 
---- Does the bank alt take this carried item? Its name and why ("Cloth" or
---- the list's name), or nil.
-function BankAlt:Takes(entry)
+--- The bank alt's name when it may take this carried item at all: not
+--- soulbound, not grey, and not the character playing.
+function BankAlt:MayTake(entry)
     local name = self:Name()
     if not (name and entry and entry.itemID) then return nil end
     if entry.bound or entry.quality == 0 then return nil end
     if ns.Verdicts and ns.Verdicts:IsMe(name) then return nil end
+    return name
+end
+
+--- Does the bank alt take this carried item? Its name and why ("Cloth" or
+--- the list's name), or nil.
+function BankAlt:Takes(entry)
+    local name = self:MayTake(entry)
+    if not name then return nil end
     if self:OnList(entry.itemID) then
         return name, L.Format("On your %s list", self:ListName())
     end
@@ -257,12 +283,24 @@ end
 
 --- What Butler would do with the item (`verdict` from Verdicts:Best),
 --- turned into Mail to the bank alt when the player's pick takes it over.
+--- `worth` is one's worth, for Auction Items' postage check.
 --- Returns "mail", why and { to, bankAlt = true }, or nil to leave it.
-function BankAlt:Verdict(entry, verdict)
-    if not TAKES[self:When()][verdict] then return nil end
-    local name, what = self:Takes(entry)
-    if not name then return nil end
-    return "mail", L.Format("%s, for your bank alt %s", what, name), { to = name, bankAlt = true }
+function BankAlt:Verdict(entry, verdict, worth)
+    if TAKES[self:When()][verdict] then
+        local name, what = self:Takes(entry)
+        if name then
+            return "mail", L.Format("%s, for your bank alt %s", what, name), { to = name, bankAlt = true }
+        end
+    end
+    if verdict == "auction" and self:AuctionsOn() then
+        local name = self:MayTake(entry)
+        local postage = ns.Funds and ns.Funds.POSTAGE or 30
+        local stack = (tonumber(worth) or 0) * (tonumber(entry.count) or 1)
+        if name and stack >= postage then
+            return "mail", L.Format("To auction, for your bank alt %s", name), { to = name, bankAlt = true }
+        end
+    end
+    return nil
 end
 
 --------------------------------------------------------------------------------

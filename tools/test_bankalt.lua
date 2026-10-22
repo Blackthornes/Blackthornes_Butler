@@ -162,6 +162,29 @@ Verdicts:Changed(true)
 suite.check("no lists without Tradeskills", #BankAlt:ListNames() == 0)
 _G.BlackthornesTS = ts
 
+-- 10. Auction Items: whatever Butler would auction goes, whatever its kind.
+BankAlt:SetName("Banky Vault")
+BankAlt:SetWhen("vendor")
+BankAlt:SetKind("leather", false)
+suite.check("auction items are off unless ticked", not BankAlt:AuctionsOn() and Row("Light Leather").verdict == "auction")
+BankAlt:SetAuctions(true)
+suite.check("ticked, it is saved", ns.db.bankAltAuctions == true)
+local leather = Row("Light Leather")
+suite.check("an auction item of an unticked kind goes", ToBank("Light Leather"), leather and leather.verdict)
+suite.check("saying it's to auction", leather.reason:find("To auction, for your bank alt Banky Vault", 1, true) ~= nil, leather.reason)
+suite.check("a vendor sale stays a sale", Row("Linen Cloth").verdict == "mail" or Row("Linen Cloth").verdict == "sell")
+BankAlt:SetKind("cloth", false)
+suite.check("with its kind unticked, a vendor sale is not sent", Row("Linen Cloth").verdict == "sell", Row("Linen Cloth").verdict)
+BankAlt:SetName("Me Here")
+suite.check("on the bank alt itself it stays Auction", Row("Light Leather").verdict == "auction", Row("Light Leather").verdict)
+BankAlt:SetName("Banky Vault")
+BankAlt:SetAuctions(false)
+suite.check("unticked it stays Auction", Row("Light Leather").verdict == "auction" and ns.db.bankAltAuctions == nil)
+BankAlt:SetKind("cloth", true)
+BankAlt:SetKind("leather", true)
+BankAlt:SetName(nil)
+BankAlt:SetWhen("first")
+
 -- 8.
 ns.HandleSlash("bankalt Banky Vault")
 suite.check("/bbutler bankalt Full Name picks it", BankAlt:Name() == "Banky Vault")
@@ -183,6 +206,9 @@ box:GetScript("OnClick")(box)
 suite.check("a tick box sets a kind", ns.db.bankAltKinds.leather == false)
 controls.bankAltList.next:GetScript("OnClick")(controls.bankAltList.next)
 suite.check("the list picker picks a list", ns.db.bankAltList == "Gems", tostring(ns.db.bankAltList))
+local auctions = controls.bankAltAuctions
+auctions:GetScript("OnClick")(auctions)
+suite.check("the Auction Items box ticks it", ns.db.bankAltAuctions == true)
 
 _G.BlackthornesTS = nil
 suite.done()
