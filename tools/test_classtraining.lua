@@ -289,16 +289,33 @@ known = savedKnown
 level = 14
 CT:Changed()
 
--- 6b. Show the way moves Equipment's arrow when Equipment is loaded, not a
--- map pin behind it (a player saw the quest arrow stay put).
+-- 6a. Show the way aims Butler's own arrow (Logic/WayArrow.lua) at the
+-- trainer, not a map pin.
+suite.check("Butler's arrow takes Show the way", type(CT.Guide) == "function")
+local pinned = false
+_G.UiMapPoint = { CreateFromCoordinates = function() return {} end }
+C_Map.SetUserWaypoint = function() pinned = true end
+ns.WayArrow:Clear()
+suite.check("Show the way aims Butler's arrow", CT:ShowTheWay() == true)
+local place = ns.WayArrow:Place()
+suite.check("at the trainer", place and place.name and place.name:find("Jennea Cannon", 1, true) ~= nil
+    and place.x and place.x > 0 and place.x < 1, place and place.name)
+suite.check("the arrow shows", ns.WayArrow:IsOn())
+suite.check("no map pin behind it", not pinned)
+ns.WayArrow:Clear()
+suite.check("its close puts it away", not ns.WayArrow:IsOn() and ns.charDB.wayArrowPlace == nil)
+
+-- 6b. Without Butler's own arrow, Show the way moves Equipment's arrow when
+-- Equipment is loaded, not a map pin behind it (a player saw the quest
+-- arrow stay put).
+local ownGuide = CT.Guide
+CT.Guide = nil
 local aimed
 _G.BlackthornesEquipment = { ClassTraining = { Guide = function(spot, title)
     aimed = { spot = spot, title = title }
     return true
 end } }
-local pinned = false
-_G.UiMapPoint = { CreateFromCoordinates = function() return {} end }
-C_Map.SetUserWaypoint = function() pinned = true end
+pinned = false
 suite.check("Show the way finds somewhere to go", CT:ShowTheWay() == true)
 suite.check("Equipment's arrow is aimed at the trainer", aimed and aimed.spot
     and aimed.spot.name == "Jennea Cannon" and aimed.title:find("Jennea Cannon", 1, true) ~= nil)
@@ -319,6 +336,7 @@ suite.check("the pin is on the first stop", pinMap == 1413, tostring(pinMap))
 ns.Travel = realTravel
 _G.UiMapPoint = nil
 C_Map.SetUserWaypoint = nil
+CT.Guide = ownGuide
 
 -- 7. Turned off.
 ns.HandleSlash("training off")

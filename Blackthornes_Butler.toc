@@ -72,9 +72,14 @@ Logic\Jobs.lua
 Logic\SkillUp.lua
 Logic\Travel.lua
 Logic\ClassTraining.lua
+Logic\TomTom.lua
+Logic\WayArrow.lua
 Logic\GoldGoals.lua
 Logic\BagView.lua
 UI\Veil.lua
 UI\BagWindow.lua
+UI\WayArrow.lua
+UI\TravelCard.lua
+UI\TravelMap.lua
 
 Probe\Probe.lua

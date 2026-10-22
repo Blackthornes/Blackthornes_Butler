@@ -825,10 +825,19 @@ function SettingsUI:BuildPages()
     end, true)
     controls.classTraining:SetPoint("TOPLEFT", CONTROL_X, -2)
 
+    -- TomTom's arrow instead of Show the way's dial, when TomTom is
+    -- installed (Logic/TomTom.lua). On unless unticked.
+    local tomtomRow = pages:Row("gold", 1, L["Use TomTom:"],
+        L["With TomTom installed, its arrow shows the way instead."])
+    controls.useTomTom = Widgets.CreateCheckbox(tomtomRow, L["On"], function(checked)
+        if ns.TomTom then ns.TomTom:SetOn(checked) end
+    end, true)
+    controls.useTomTom:SetPoint("TOPLEFT", CONTROL_X, -2)
+
     -- Show the way to a trainer far away step by step (Logic/Travel.lua,
     -- the same in every addon). Off unless ticked.
     local guideRow = pages:Row("gold", 1, L["Guide Me:"],
-        L["When your trainer is in another zone or across the sea, Show the way lists the steps and pins the first stop."])
+        L["When the place is in another zone or across the sea, the arrow leads you there step by step."])
     controls.arrowRoute = Widgets.CreateCheckbox(guideRow, L["On"], function(checked)
         if ns.Travel then ns.Travel:SetOn(checked) end
     end, false)
@@ -1033,6 +1042,7 @@ function SettingsUI:Refresh()
     controls.learn:SetChecked(ns.db.learn ~= false)
     controls.classTraining:SetChecked(ns.ClassTraining:IsOn())
     controls.arrowRoute:SetChecked(ns.db.arrowRoute == true)
+    controls.useTomTom:SetChecked(ns.db.useTomTom ~= false)
     controls.goldGoals:SetChecked(ns.GoldGoals:IsOn())
     controls.skillUp:SetChecked(ns.SkillUp:IsOn())
     controls.debug:SetChecked(ns.db.debug == true)
