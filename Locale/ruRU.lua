@@ -864,6 +864,8 @@ L["When your bags are full, a gold can marks the cheapest item Butler would sell
 L["Who Has It:"] = "У кого есть:"
 L["Tooltips list which characters have the item. Needs Blackthornes Tradeskills."] = "Подсказки показывают, у каких персонажей есть предмет. Нужен Blackthornes Tradeskills."
 L["Butler on Tooltips:"] = "Butler в подсказках:"
+L["Vendor Price:"] = "Цена у торговца:"
+L["Vendors sell it for %s"] = "Торговцы продают за %s"
 L["The last tooltip line says what Butler would do with it."] = "Последняя строка подсказки говорит, что Butler сделал бы с вещью."
 L["Butler's Voice:"] = "Голос Butler:"
 L["Window Position:"] = "Положение окон:"

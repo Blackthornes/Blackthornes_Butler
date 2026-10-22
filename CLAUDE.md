@@ -1132,6 +1132,28 @@ the General page (`verdictTip`, account wide, on unless unticked, never
 rename it) and `/bbutler tooltip`. Tested in `tools/test_verdicttip.lua`.
 Not yet seen in game.
 
+## Vendor price on tooltips
+
+A player asked for what an NPC vendor charges for each item, and the owner
+said build it (2026-10-22, words approved): "Vendors sell it for 25c" goes
+on any item's tooltip (carried or not), under the Butler line, only when a
+vendor is known to sell it; never the price the item data carries for
+everything. `Logic/VendorPrices.lua` reads every vendor the player opens
+(`MERCHANT_SHOW`/`UPDATE`, settled `SETTLE`, `BUDGET` items a frame,
+`Ammo.MerchantItem`) and keeps the price for one account wide in
+`vendorBuyPrices[itemID]` (never rename it); token items and anything under
+a copper for one are skipped. Butler's own price wins; without one it asks
+Tradeskills, inside a pcall, read only:
+
+```lua
+_G.BlackthornesTS.Butler:VendorPrice(itemID)   -- copper for one, or nil
+```
+
+"Vendor Price:" on the General page, Off, Shift or Always (`vendorPrice`,
+on unless picked Off, never rename it; Shift key `vendorPrice`). `/bbutler
+probe` has a "vendor prices" line. Tested in `tools/test_vendorprices.lua`.
+If Tradeskills changes the call, change `VendorPrices.FromTradeskills`.
+
 ## Off, Shift or Always on tooltips
 
 A player asked, the owner said yes (2026-10-18): each tooltip line an

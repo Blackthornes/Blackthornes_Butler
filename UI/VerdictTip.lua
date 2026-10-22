@@ -27,7 +27,7 @@ VerdictTip.DELAY = 1
 -- The line's key for Off, Shift or Always (UI/TooltipShift.lua). Whether it
 -- is on at all stays in ns.db.verdictTip.
 VerdictTip.SHIFT_KEY = "verdictTip"
-ns.TooltipShift.KEYS = { "whoHas", VerdictTip.SHIFT_KEY }
+ns.TooltipShift.KEYS = { "whoHas", VerdictTip.SHIFT_KEY, "vendorPrice" }
 
 function VerdictTip:Enabled()
     return ns.db ~= nil and ns.db.verdictTip ~= false
@@ -149,14 +149,19 @@ local function Decorates(tooltip)
     return tooltip ~= nil and (tooltip == _G.GameTooltip or tooltip == _G.ItemRefTooltip)
 end
 
---- Add the line under everything else, then "Hold Shift for more." when
---- this line or Who has it waited for Shift. Never raises.
+--- Add the line under everything else, then the vendor's price, then
+--- "Hold Shift for more." when any of them waited for Shift. Never raises.
 function VerdictTip:Decorate(tooltip, data)
     if not Decorates(tooltip) then return end
     local held = ns.WhoHas and ns.WhoHas.held[tooltip] or false
     if held then ns.WhoHas.held[tooltip] = nil end
     if self:Enabled() then
         held = self:AddLine(tooltip, data) or held
+    end
+    -- Under it, what a vendor charges (Logic/VendorPrices.lua), on any item.
+    if ns.VendorPrices then
+        local itemID = ns.WhoHas and ns.WhoHas.ItemID(tooltip, data)
+        held = ns.VendorPrices:AddLine(tooltip, itemID, data) or held
     end
     if held then ns.TooltipShift:Held(tooltip) end
 end

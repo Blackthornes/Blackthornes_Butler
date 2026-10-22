@@ -908,6 +908,8 @@ L["Who Has It:"] = "Quién lo tiene:"
 L["Tooltips list which characters have the item. Needs Blackthornes Tradeskills."] =
     "Las descripciones muestran qué personajes tienen el objeto. Necesita Blackthornes Tradeskills."
 L["Butler on Tooltips:"] = "Butler en descripciones:"
+L["Vendor Price:"] = "Precio de vendedor:"
+L["Vendors sell it for %s"] = "Los vendedores lo venden por %s"
 L["The last tooltip line says what Butler would do with it."] =
     "La última línea de la descripción dice qué haría Butler con él."
 L["Butler's Voice:"] = "Voz de Butler:"

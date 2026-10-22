@@ -41,6 +41,7 @@ Logic\Everyone.lua
 Logic\BankAlt.lua
 Logic\KeepHere.lua
 Logic\ListRules.lua
+Logic\VendorPrices.lua
 
 UI\Theme.lua
 UI\BlizzardLook.lua
