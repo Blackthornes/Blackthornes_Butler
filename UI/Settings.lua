@@ -942,6 +942,11 @@ function SettingsUI:BuildPages()
         function() return ns.db.verdictTip ~= false end,
         function(on) if ns.VerdictTip then ns.VerdictTip:SetEnabled(on) end end)
 
+    local vendorRow = pages:Row("general", 1, L["Vendor Price:"], nil)
+    controls.vendorPrice = SettingsUI.TooltipShiftControl(vendorRow, "vendorPrice",
+        function() return ns.db.vendorPrice ~= false end,
+        function(on) if ns.VendorPrices then ns.VendorPrices:SetEnabled(on) end end)
+
     local voiceRow = pages:Row("general", 1, L["Butler's Voice:"], nil)
     controls.voice = Widgets.CreateCheckbox(voiceRow, L["On"], function(checked)
         ns.db.voice = checked
@@ -1048,6 +1053,7 @@ function SettingsUI:Refresh()
     controls.buyMany:SetChecked(ns.BuyMany:IsOn())
     controls.whoHas:Sync()
     controls.verdictTip:Sync()
+    controls.vendorPrice:Sync()
     controls.voice:SetChecked(ns.db.voice ~= false)
     controls.learn:SetChecked(ns.db.learn ~= false)
     controls.classTraining:SetChecked(ns.ClassTraining:IsOn())

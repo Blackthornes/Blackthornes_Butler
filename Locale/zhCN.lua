@@ -907,6 +907,8 @@ L["Who Has It:"] = "谁有它："
 L["Tooltips list which characters have the item. Needs Blackthornes Tradeskills."] =
     "物品提示会列出哪些角色有这件物品。需要 Blackthornes Tradeskills。"
 L["Butler on Tooltips:"] = "提示里的 Butler："
+L["Vendor Price:"] = "商人价格："
+L["Vendors sell it for %s"] = "商人售价：%s"
 L["The last tooltip line says what Butler would do with it."] =
     "提示的最后一行写着 Butler 会怎么处理它。"
 L["Butler's Voice:"] = "Butler 的声音："
