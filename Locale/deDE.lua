@@ -1166,3 +1166,5 @@ L["Your Way There"] = "Dein Weg dorthin"
 
 -- Cheapest skill-up when the gold on hand won't buy what's missing (2026-10-22)
 L["You need about %s to buy what's missing. You have %s."] = "Für die fehlenden Materialien brauchst du etwa %s. Du hast %s."
+-- Gold goals: a click shows the way to the trainer (2026-10-22)
+L["Click to show the way to your trainer."] = "Klick, um den Weg zu deinem Lehrer zu sehen."
