@@ -570,7 +570,14 @@ function UI.UpdateSkillUpRow(row, data)
     row.icon:SetTexture(ns.SkillUp.Icon(entry))
     row.name:SetTextColor(Theme.Unpack("text"))
     row.name:SetText(title)
-    row.reason:SetText(detail)
+    -- Short of gold for what's missing: the red note takes the line's
+    -- place (the row has room for two lines), the rest is on the hover.
+    local short = ns.SkillUp.ShortNote(entry)
+    if short then
+        row.reason:SetText("|c" .. ns.COLORS.bad .. short .. "|r")
+    else
+        row.reason:SetText(detail)
+    end
     row.worth:SetText("")
     if entry.capped then return end
     row.action:SetText(entry.queued and L["Queued"] or L["Queue"])
@@ -988,8 +995,13 @@ function UI:Enter(row, data)
         return
     end
     if data.type == "skillup" then
-        local title = ns.SkillUp.Text(data.entry)
+        local title, detail = ns.SkillUp.Text(data.entry)
         GameTooltip:AddLine(title, Theme.Unpack("accent"))
+        local short = ns.SkillUp.ShortNote(data.entry)
+        if short then
+            GameTooltip:AddLine(detail, 1, 1, 1, true)
+            GameTooltip:AddLine(short, Theme.Unpack("loss"))
+        end
         GameTooltip:AddLine(L["This is the cheapest thing you can make for your next skill point. Tradeskills works it out from auction prices."],
             1, 1, 1, true)
         GameTooltip:AddLine(L["Queue adds one to your craft queue. Butler then lists what you still need to buy."],

@@ -1162,3 +1162,6 @@ L["When the place is in another zone or across the sea, the arrow leads you ther
 L["With TomTom installed, its arrow shows the way instead."] = "装了 TomTom 的话，就由它的箭头来指路。"
 L["You're there"] = "你到了"
 L["Your Way There"] = "前往路线"
+
+-- Cheapest skill-up when the gold on hand won't buy what's missing (2026-10-22)
+L["You need about %s to buy what's missing. You have %s."] = "买齐缺少的材料大约需要%s。你有%s。"

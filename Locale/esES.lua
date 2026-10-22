@@ -1163,3 +1163,6 @@ L["When the place is in another zone or across the sea, the arrow leads you ther
 L["With TomTom installed, its arrow shows the way instead."] = "Si tienes TomTom, su flecha te muestra el camino."
 L["You're there"] = "Ya llegaste"
 L["Your Way There"] = "Tu camino"
+
+-- Cheapest skill-up when the gold on hand won't buy what's missing (2026-10-22)
+L["You need about %s to buy what's missing. You have %s."] = "Necesitas unos %s para comprar lo que falta. Tienes %s."
