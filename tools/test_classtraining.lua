@@ -97,6 +97,28 @@ known = { [1] = true }
 CT:Changed()
 plan = CT:Plan()
 
+-- 2c. A spell skipped in Equipment's Training drawer (2026-10-22) leaves
+-- the plan, so the gold goal and the gold kept back follow; Equipment's
+-- copy is read through its global, the newest change winning.
+local cost = CT:Plan().cost
+_G.BlackthornesEquipment = { ClassTraining = {
+    OwnSkips = function() return { [3] = 100 } end,
+    KeepSkip = function() end,
+} }
+CT:Changed()
+plan = CT:Plan()
+ids = {}
+for _, spell in ipairs(plan.ready) do ids[#ids + 1] = spell.id end
+suite.check("a spell skipped in Equipment leaves the list", not table.concat(ids, ","):find("3")
+    and #plan.skipped == 1, table.concat(ids, ","))
+suite.check("and the cost the gold goal counts", plan.cost < cost or plan.unknown < 3, plan.cost .. " " .. cost)
+CT:SetSkipped(3, false)
+_G.BlackthornesEquipment = nil
+suite.check("brought back here, it is ready again", CT:IsSkipped(3) == false and #CT:Plan().skipped == 0)
+CT:Data().skipped = {}
+CT:Changed()
+plan = CT:Plan()
+
 -- 3. At a class trainer. The list hides spells not learnable yet; the
 -- addon shows them to read prices, then hides them again.
 local filterShown = false
