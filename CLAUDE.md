@@ -829,9 +829,11 @@ never rename it) and `/bbutler training [on|off]`.
 
 In Butler: the Jobs group leads with "Train N new spells" (Train all at a
 class trainer, one spell every `ClassTraining.GAP`, only what the purse
-pays for; Show the way elsewhere: Equipment's quest arrow when it is loaded
-(`CT:GuideFn` reads `_G.BlackthornesEquipment.ClassTraining.Guide`), else
-TomTom or the game's map pin).
+pays for; Show the way elsewhere: Butler's own arrow (see "The arrow"),
+which `Logic/WayArrow.lua` sets as `ClassTraining.Guide`; without it
+Equipment's quest arrow when it is loaded (`CT:GuideFn` reads
+`_G.BlackthornesEquipment.ClassTraining.Guide`), else TomTom or the game's
+map pin).
 The next level's spells and a "Then:" line for each other character on
 this realm and side wait
 in a Later group at the foot of the list, right above Gold goals (the
@@ -852,6 +854,41 @@ or when a higher rank of the same name is known (the data skips a rank now
 and then; a player was told to train spells known a long time,
 2026-10-19). A trainer line in another language matches by name and the
 rank's number.
+
+## Show the way across zones and the sea
+
+The owner said build it (2026-10-21, from a mockup) in every addon: with
+"Guide Me:" ticked under CLASS TRAINING on the Gold page (`arrowRoute`,
+account wide, off unless ticked, never rename it), Show the way to a class
+trainer in another zone or across the sea lists the steps in chat
+(flights this character knows, the boats and zeppelins of its side, its
+Hearthstone, walks through the zones between) and pins the first stop
+(`ClassTraining.TripTo`, `Travel:Guide`), when no arrow took it; Butler's
+own arrow takes it, so it leads the way step by step instead.
+`Logic/Travel.lua`, `Data/Travel.lua`, `Data/TravelZones.lua`,
+`UI/TravelCard.lua`, `UI/TravelMap.lua`, `Media/Frame/TravelDot.tga` and
+the two `tools/make_travel*.py` are Farmer's, the same in every addon (a
+fix to one belongs in all; Farmer's `CLAUDE.md` has the details); Butler's
+side is `ns.TravelHost` at the end of `Logic/WayArrow.lua`. Tested in
+`tools/test_classtraining.lua`. Not yet seen in game.
+
+## The arrow
+
+The owner asked (2026-10-22): Butler and Tradeskills give the same
+guidance as the addons with an arrow, TomTom too. `Logic/WayArrow.lua` and
+`UI/WayArrow.lua` are Pets' beast arrow (itself Farmer's goal arrow)
+brought over as a copy, not a call, and `tools/make_arrow_art.py` draws
+the same `Media/Arrow/*.tga`; a fix to the dial belongs in every addon
+with one. Show the way to a class trainer aims it (`WayArrow:Aim`, the
+place kept per character in `wayArrowPlace`, the dial's spot in
+`wayArrowX`/`wayArrowY`; never rename them). It shows only while a place
+is set: its close gem, or opening the trainer or a vendor once you are
+there (`WayArrow:Reached`), puts it away. Only one Blackthornes arrow is
+on screen at a time (`_G.BlackthornesArrows`, as `"Butler"`). With TomTom
+installed and "Use TomTom:" ticked (`useTomTom`, on unless unticked, Gold
+page; `Logic/TomTom.lua`, the same file as Farmer's, Equipment's and
+Pets'), TomTom's arrow shows the way instead of the dial. Tested in
+`tools/test_wayarrow.lua`. Not yet seen in game.
 
 ## Gold goals
 

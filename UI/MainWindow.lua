@@ -1078,7 +1078,7 @@ function UI:EnterTraining(data)
         if training.trainerOpen and training.atClassTrainer then
             GameTooltip:AddLine(L["Train all trains as many as you can pay for."], Theme.Unpack("muted"))
         elseif training:Nearest() then
-            GameTooltip:AddLine(L["Show the way puts a pin on the map to your trainer."], Theme.Unpack("muted"))
+            GameTooltip:AddLine(L["Show the way points an arrow to your trainer."], Theme.Unpack("muted"))
         end
     end
     GameTooltip:Show()
