@@ -495,14 +495,24 @@ function CT:ShowTheWay()
         local ok, done = pcall(guide, spot, title)
         shown = ok and done
     end
-    if not shown and spot.mapID and spot.x and spot.y then
+    -- A trainer in another zone or across the sea, with "Guide Me:" ticked
+    -- (Logic/Travel.lua): the steps in chat and the pin on the first stop.
+    local pin, steps = spot, nil
+    if not shown then
+        local trip = self.TripTo(spot)
+        if trip then
+            pin = { mapID = trip.point.map, x = trip.point.x, y = trip.point.y }
+            title, steps = trip.point.name or title, trip.lines
+        end
+    end
+    if not shown and pin.mapID and pin.x and pin.y then
         local tomtom = rawget(_G, "TomTom")
         if type(tomtom) == "table" and type(tomtom.AddWaypoint) == "function" and not (ns.db and ns.db.useTomTom == false) then
-            shown = pcall(tomtom.AddWaypoint, tomtom, spot.mapID, spot.x, spot.y,
+            shown = pcall(tomtom.AddWaypoint, tomtom, pin.mapID, pin.x, pin.y,
                 { title = title, persistent = false, minimap = true, world = true })
         end
         if not shown and Has("C_Map.SetUserWaypoint") and Has("UiMapPoint.CreateFromCoordinates") then
-            local point = Call("UiMapPoint.CreateFromCoordinates", spot.mapID, spot.x, spot.y)
+            local point = Call("UiMapPoint.CreateFromCoordinates", pin.mapID, pin.x, pin.y)
             if point then
                 shown = pcall(C_Map.SetUserWaypoint, point)
                 if shown and Has("C_SuperTrack.SetSuperTrackedUserWaypoint") then
@@ -511,6 +521,12 @@ function CT:ShowTheWay()
             end
         end
     end
+    if steps then
+        ns.Print(L.Format("The way to your %s trainer, with a pin on the first stop:", player.className or ""))
+        local say = ns.PrintRaw or ns.Print
+        for _, line in ipairs(steps) do say("  " .. line) end
+        return true
+    end
     local where = self.Where(spot)
     if where then
         ns.Print(L.Format("%s, %s.", title, where))
@@ -518,6 +534,18 @@ function CT:ShowTheWay()
         ns.Print(title .. ".")
     end
     return true
+end
+
+--- The way there to a trainer far away, by Logic/Travel.lua (the same
+--- file in every Blackthornes addon): { lines, point }, or nil when it is
+--- near, "Guide Me:" is off, the addon has no Travel or no way is known.
+function CT.TripTo(spot)
+    local Travel = ns.Travel
+    if not (Travel and Travel.IsOn and Travel.IsOn() and spot and spot.zone) then return nil end
+    local target = { name = spot.name, zone = spot.zone, map = spot.mapID, mx = spot.x, my = spot.y }
+    local ok, trip = pcall(Travel.Guide, Travel, target)
+    if not ok or type(trip) ~= "table" or type(trip.point) ~= "table" or #trip.lines == 0 then return nil end
+    return trip
 end
 
 --------------------------------------------------------------------------------

@@ -825,6 +825,15 @@ function SettingsUI:BuildPages()
     end, true)
     controls.classTraining:SetPoint("TOPLEFT", CONTROL_X, -2)
 
+    -- Show the way to a trainer far away step by step (Logic/Travel.lua,
+    -- the same in every addon). Off unless ticked.
+    local guideRow = pages:Row("gold", 1, L["Guide Me:"],
+        L["When your trainer is in another zone or across the sea, Show the way lists the steps and pins the first stop."])
+    controls.arrowRoute = Widgets.CreateCheckbox(guideRow, L["On"], function(checked)
+        if ns.Travel then ns.Travel:SetOn(checked) end
+    end, false)
+    controls.arrowRoute:SetPoint("TOPLEFT", CONTROL_X, -2)
+
     -- Gold goals at the bottom of the window (Logic/GoldGoals.lua, the
     -- owner said build it 2026-10-13).
     pages:Section("gold", 1, L["GOLD GOALS"])
@@ -1023,6 +1032,7 @@ function SettingsUI:Refresh()
     controls.voice:SetChecked(ns.db.voice ~= false)
     controls.learn:SetChecked(ns.db.learn ~= false)
     controls.classTraining:SetChecked(ns.ClassTraining:IsOn())
+    controls.arrowRoute:SetChecked(ns.db.arrowRoute == true)
     controls.goldGoals:SetChecked(ns.GoldGoals:IsOn())
     controls.skillUp:SetChecked(ns.SkillUp:IsOn())
     controls.debug:SetChecked(ns.db.debug == true)

@@ -853,6 +853,21 @@ and then; a player was told to train spells known a long time,
 2026-10-19). A trainer line in another language matches by name and the
 rank's number.
 
+## Show the way across zones and the sea
+
+The owner said build it (2026-10-21, from a mockup) in every addon: with
+"Guide Me:" ticked under CLASS TRAINING on the Gold page (`arrowRoute`,
+account wide, off unless ticked, never rename it), Show the way to a class
+trainer in another zone or across the sea lists the steps in chat
+(flights this character knows, the boats and zeppelins of its side, its
+Hearthstone, walks through the zones between) and pins the first stop
+(`ClassTraining.TripTo`, `Travel:Guide`), when no arrow took it.
+`Logic/Travel.lua`, `Data/Travel.lua`, `Data/TravelZones.lua` and the two
+`tools/make_travel*.py` are Farmer's, the same in every addon (a fix to
+one belongs in all; Farmer's `CLAUDE.md` has the details); Butler has no
+arrow, so no card or map line, and its defaults need no `ns.TravelHost`.
+Tested in `tools/test_classtraining.lua`. Not yet seen in game.
+
 ## Gold goals
 
 The owner said build it (2026-10-13, from a mockup; "the purse section

@@ -306,6 +306,17 @@ suite.check("no map pin when the arrow took it", not pinned)
 _G.BlackthornesEquipment = { ClassTraining = { Guide = function() error("broken") end } }
 suite.check("a broken arrow falls back to the map pin", CT:ShowTheWay() == true and pinned)
 _G.BlackthornesEquipment = nil
+
+-- A trainer far away with "Guide Me:" ticked (Logic/Travel.lua): the pin
+-- goes on the first stop and chat lists the steps.
+local realTravel, pinMap = ns.Travel, nil
+ns.Travel = { IsOn = function() return true end, Guide = function()
+    return { lines = { "1. Take the boat to Theramore" }, point = { map = 1413, x = 0.5, y = 0.4, name = "Take the boat to Theramore" } }
+end }
+_G.UiMapPoint = { CreateFromCoordinates = function(map) pinMap = map return {} end }
+suite.check("guided: somewhere to go", CT:ShowTheWay() == true)
+suite.check("the pin is on the first stop", pinMap == 1413, tostring(pinMap))
+ns.Travel = realTravel
 _G.UiMapPoint = nil
 C_Map.SetUserWaypoint = nil
 

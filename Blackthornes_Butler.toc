@@ -28,6 +28,8 @@ Core\WhatsNewText.lua
 Data\ForeverItems.lua
 Data\ClassSpells.lua
 Data\QuestItems.lua
+Data\Travel.lua
+Data\TravelZones.lua
 
 Logic\Items.lua
 Logic\Bags.lua
@@ -68,6 +70,7 @@ UI\BuyMany.lua
 Logic\Learning.lua
 Logic\Jobs.lua
 Logic\SkillUp.lua
+Logic\Travel.lua
 Logic\ClassTraining.lua
 Logic\GoldGoals.lua
 Logic\BagView.lua
