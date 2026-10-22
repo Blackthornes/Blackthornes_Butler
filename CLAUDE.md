@@ -860,6 +860,14 @@ or when a higher rank of the same name is known (the data skips a rank now
 and then; a player was told to train spells known a long time,
 2026-10-19). A trainer line in another language matches by name and the
 rank's number.
+Skipping a spell (a player asked, the owner said build it,
+2026-10-22): right-click a spell in Equipment's Training drawer to skip
+it, and again to bring it back. Kept account wide in
+`classTrainingData.skipped[guid][spellID] = time` (minus the time when
+brought back; never rename it); the newest change wins between
+Equipment's and Butler's saves (`CT.SISTERS`). A skipped spell leaves the
+plan, Train all and the gold goal. Tested in
+`tools/test_classtraining.lua`.
 
 ## Show the way across zones and the sea
 
