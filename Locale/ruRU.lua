@@ -1115,3 +1115,6 @@ L["When the place is in another zone or across the sea, the arrow leads you ther
 L["With TomTom installed, its arrow shows the way instead."] = "Если TomTom установлен, путь показывает его стрелка."
 L["You're there"] = "Ты на месте"
 L["Your Way There"] = "Твой путь"
+
+-- Cheapest skill-up when the gold on hand won't buy what's missing (2026-10-22)
+L["You need about %s to buy what's missing. You have %s."] = "Чтобы купить недостающее, нужно около %s. У тебя %s."

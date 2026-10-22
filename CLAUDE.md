@@ -938,7 +938,7 @@ Queued. `Logic/SkillUp.lua` reads Tradeskills, inside a pcall, read only:
 
 ```lua
 _G.BlackthornesTS.Butler:NextSkillUp()
-  -- { { profession, skill, max, recipeID, itemID, name, tier, cost, queued } }
+  -- { { profession, skill, max, recipeID, itemID, name, tier, cost, queued, toBuy } }
 _G.BlackthornesTS.Butler:QueueSkillUp(recipeID)   -- true, or false and why
 ```
 
@@ -952,6 +952,15 @@ cap to 225, about X", or "You can train it at level N" while the level is
 short; no Queue button, and no line past the last rank (Cooking and First
 Aid stop after Journeyman). Without Tradeskills, no line. If either call
 changes, change `Logic/SkillUp.lua` too. Tested in `tools/test_skillup.lua`.
+
+Short of gold (a player asked, the owner approved the words 2026-10-22):
+`toBuy` is copper for the materials the bags and bank lack. When it is
+more than the purse (`GetMoney`), the line's second part is the red note
+"You need about X to buy what's missing. You have Y." (`SkillUp.ShortNote`)
+and the hover keeps the usual words above it. The pick follows
+Tradeskills' Level Up "Can afford" box; Butler has no setting of its own.
+`Funds`' `PLAYER_MONEY` redraw keeps it current. Tested in
+`tools/test_skillupgold.lua`.
 
 ## What Farmer calls here
 

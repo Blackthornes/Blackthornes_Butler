@@ -8,7 +8,9 @@
 --
 --   _G.BlackthornesTS.Butler:NextSkillUp()
 --     -- { { profession, skill, max, recipeID, itemID, name,
---     --     tier ("optimal" or "medium"), cost (copper; below 0 pays), queued } }
+--     --     tier ("optimal" or "medium"), cost (copper; below 0 pays), queued,
+--     --     toBuy (copper for what the bags and bank lack; 2026-10-22) } }
+--     -- Its pick follows the Level Up tab's "Can afford" box.
 --     -- a profession at its cap for now comes as { profession, english,
 --     -- skill, max, capped = true }: the line names the trainer's next rank
 --     -- (GoldGoals' RANKS, the owner 2026-10-20), and none past the last.
@@ -73,6 +75,7 @@ function SkillUp:Read()
                     sure = entry.tier ~= "medium",
                     cost = cost,
                     queued = entry.queued == true,
+                    toBuy = Whole(entry.toBuy),
                 }
             elseif entry.capped == true and skill and max and skill >= max and profession then
                 list[#list + 1] = self.Train(profession, entry.english, skill, max)
@@ -139,6 +142,26 @@ function SkillUp.Text(entry)
             or L.Format("%s %d/%d. A likely point for about %s.", entry.profession, entry.skill, entry.max, cost)
     end
     return title, detail
+end
+
+--- The gold on hand, or nil when the client won't say.
+function SkillUp.Purse()
+    local fn = rawget(_G, "GetMoney")
+    if type(fn) ~= "function" then return nil end
+    local ok, money = pcall(fn)
+    return ok and Whole(money) or nil
+end
+
+--- "You need about 47s to buy what's missing. You have 30s." when what
+--- the craft still needs to buy costs more than the purse (the owner
+--- approved the words 2026-10-22, the same as Tradeskills' Level Up tab),
+--- else nil.
+function SkillUp.ShortNote(entry, purse)
+    if not entry or entry.capped or not entry.toBuy then return nil end
+    purse = purse or SkillUp.Purse()
+    if not purse or entry.toBuy <= purse then return nil end
+    return L.Format("You need about %s to buy what's missing. You have %s.",
+        Items.FormatMoney(entry.toBuy), Items.FormatMoney(purse))
 end
 
 function SkillUp.Icon(entry)
