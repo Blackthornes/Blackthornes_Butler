@@ -346,7 +346,13 @@ The rows are Mail to the bank alt, so Fill mail sends them. A character on the p
 "Type a Name:" on the page, or `/bbutler bankalt Full Name`;
 `BankAlt:TypeName` wants first and last unless it is one of this
 account's characters, and `BankAlt:IsKnown` turns the Send To name amber
-when it is not). All account
+when it is not). Auction Items (a player asked, the owner said build
+it, 2026-10-22): with "Auction Items:" ticked under WHAT GOES THERE
+(`bankAltAuctions`, off unless ticked), whatever Butler's final word is
+Auction goes to the bank alt too, whatever its kind and in any When;
+Wait, Sell and the rest stay, and a stack worth less than a mail's
+postage (`Funds.POSTAGE`) stays (`BankAlt:Verdict`'s `worth`,
+`MayTake`). All account
 wide, never rename them. A BANK ALT page in Settings and `/bbutler
 bankalt [Full Name|off|first|vendor|leftovers]`. Tested in
 `tools/test_bankalt.lua`.

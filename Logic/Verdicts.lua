@@ -717,7 +717,7 @@ function STEPS.bankAlt(self, c)
     local choice, mailTo = self:Choice(c.itemID)
     if choice == "mail" and self:IsMe(mailTo) then return nil end
     local verdict, _, worth = self:Best(c.entry, unit, Said(c))
-    local bank, why, to = ns.BankAlt:Verdict(c.entry, verdict)
+    local bank, why, to = ns.BankAlt:Verdict(c.entry, verdict, worth)
     if bank then return bank, why, worth, true, to end
 end
 
