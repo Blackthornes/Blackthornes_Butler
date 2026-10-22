@@ -147,6 +147,7 @@ local function CreateRow(parent, height)
             GoalsUI:Enter(self)
         end
     end)
+    row:SetScript("OnClick", function(self) GoalsUI:Click(self) end)
     row:SetScript("OnLeave", function(self)
         self.hover:Hide()
         self.edge:SetShown(self.active == true)
@@ -412,6 +413,24 @@ function GoalsUI:EnterHead()
     GameTooltip:Show()
 end
 
+--- How many recipes a profession lists on the hover before "and N more".
+GoalsUI.RECIPES_SHOWN = 8
+
+--- A profession goal naming a recipe, with Tradeskills able to show the way.
+function GoalsUI.CanShowWay(goal)
+    if type(goal) ~= "table" or goal.kind ~= "profession" or not ns.GoldGoals.FirstRecipe(goal) then return false end
+    local ts = rawget(_G, "BlackthornesTS")
+    local learn = type(ts) == "table" and rawget(ts, "LearnNext")
+    return type(learn) == "table" and type(learn.ShowTheWayFor) == "function"
+end
+
+--- A click on a profession goal shows the way to the trainer who teaches
+--- its recipes (a player asked, 2026-10-22).
+function GoalsUI:Click(row)
+    if row.view == "all" or not GoalsUI.CanShowWay(row.data) then return end
+    ns.GoldGoals:ShowTheWay(row.data)
+end
+
 function GoalsUI:Enter(row)
     local data = row.data
     if not data then return end
@@ -443,6 +462,13 @@ function GoalsUI:Enter(row)
         for _, recipe in ipairs(goal.recipes or {}) do
             GameTooltip:AddDoubleLine(recipe.count == 1 and L.Format("%s: 1 recipe", recipe.name)
                 or L.Format("%s: %d recipes", recipe.name, recipe.count), Money(recipe.cost), 1, 1, 1, 1, 1, 1)
+            local list = recipe.list or {}
+            for index = 1, math.min(#list, GoalsUI.RECIPES_SHOWN) do
+                GameTooltip:AddDoubleLine("  " .. list[index].name, Money(list[index].cost), 0.8, 0.8, 0.8, 1, 1, 1)
+            end
+            if #list > GoalsUI.RECIPES_SHOWN then
+                GameTooltip:AddLine("  " .. L.Format("and %d more", #list - GoalsUI.RECIPES_SHOWN), Theme.Muted(true))
+            end
         end
         if #(goal.recipes or {}) == 0 and not (ns.Sisters and ns.Sisters.Butler("ts")) then
             GameTooltip:AddLine(L["With Blackthornes Tradeskills, this also counts recipes you can learn from trainers."],
@@ -453,6 +479,9 @@ function GoalsUI:Enter(row)
         GameTooltip:AddLine(L["The training only, not the mount."], Theme.Muted(true))
     end
     GameTooltip:AddDoubleLine(L["In all"], Money(goal.cost), 1, 0.82, 0, 1, 1, 1)
+    if GoalsUI.CanShowWay(goal) then
+        GameTooltip:AddLine(L["Click to show the way to your trainer."], 0.31, 0.88, 0.42, true)
+    end
     if goal.guessed or (goal.unknown or 0) > 0 then
         GameTooltip:AddLine(L["Prices may change once you visit your trainer."],
             Theme.Muted(true))

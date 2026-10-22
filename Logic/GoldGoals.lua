@@ -313,6 +313,47 @@ local function LearnCost()
     return nil
 end
 
+--- Each recipe Tradeskills names (2026-10-22, a player asked which one it
+--- was): { { recipeID, name, cost } }, cheapest first. A field of the wrong
+--- type is left out; an older Tradeskills gives none.
+function GG.RecipeList(recipes)
+    local list = {}
+    if type(recipes) ~= "table" then return list end
+    for _, recipe in ipairs(recipes) do
+        if type(recipe) == "table" and Number(recipe.recipeID) and type(recipe.name) == "string" then
+            list[#list + 1] = { recipeID = Number(recipe.recipeID), name = recipe.name, cost = Number(recipe.cost) or 0 }
+        end
+    end
+    return list
+end
+
+--- The first recipe a goal names, to show the way to its trainer.
+function GG.FirstRecipe(goal)
+    for _, group in ipairs(type(goal) == "table" and goal.recipes or {}) do
+        local recipe = group.list and group.list[1]
+        if recipe then return recipe end
+    end
+    return nil
+end
+
+--- Show the way to the trainer who teaches a goal's recipes, through
+--- Tradeskills' own Show the way (its arrow, "Guide Me:", TomTom and the
+--- spots the game saw), inside a pcall. True when it set one.
+function GG:ShowTheWay(goal)
+    local recipe = GG.FirstRecipe(goal)
+    if not recipe then return false end
+    local ts = rawget(_G, "BlackthornesTS")
+    local learn = type(ts) == "table" and rawget(ts, "LearnNext")
+    if type(learn) ~= "table" or type(learn.ShowTheWayFor) ~= "function" then return false end
+    for _, group in ipairs(goal.recipes) do
+        for _, each in ipairs(group.list or {}) do
+            local ok, done = pcall(learn.ShowTheWayFor, learn, each.recipeID)
+            if ok and done then return true end
+        end
+    end
+    return false
+end
+
 local function And(list)
     if #list == 1 then return list[1] end
     if #list == 2 then return L.Format("%s and %s", list[1], list[2]) end
@@ -340,7 +381,10 @@ local function ProfessionGoal(level, cap)
         if count > 0 then
             recipes = recipes + count
             recipeCost = recipeCost + (Number(recipe.cost) or 0)
-            names[#names + 1] = { name = profession.name or ENGLISH[line], count = count, cost = Number(recipe.cost) or 0 }
+            names[#names + 1] = {
+                name = profession.name or ENGLISH[line], count = count, cost = Number(recipe.cost) or 0,
+                list = GG.RecipeList(recipe.recipes),
+            }
         end
     end
 

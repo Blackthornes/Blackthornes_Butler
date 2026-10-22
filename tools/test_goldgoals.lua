@@ -64,9 +64,11 @@ _G.C_TradeSkillUI = {
 }
 
 local learnAsked = 0
+local shownWay
 _G.BlackthornesTS = { Butler = {
-    LearnCost = function() learnAsked = learnAsked + 1 return { [197] = { skill = 130, count = 9, cost = 7700 } } end,
-} }
+    LearnCost = function() learnAsked = learnAsked + 1 return { [197] = { skill = 130, count = 9, cost = 7700,
+        recipes = { { recipeID = 3914, name = "Brown Linen Pants", cost = 500 }, { recipeID = "bad" } } } } end,
+}, LearnNext = { ShowTheWayFor = function(_, id) shownWay = id return true end } }
 
 env.Enable(ns)
 local GG = ns.GoldGoals
@@ -181,9 +183,17 @@ suite.check("a click folds it", ns.charDB.folded.goldGoals == true and not Goals
     and UI.frame:GetHeight() < open)
 GoalsUI.head:GetScript("OnClick")(GoalsUI.head)
 suite.check("and opens it", GoalsUI.rows[1]:IsShown() and UI.frame:GetHeight() == open)
+GameTooltip.AddDoubleLine = function(self, left) self._lines[#self._lines + 1] = left end
 GoalsUI.rows[2]:GetScript("OnEnter")(GoalsUI.rows[2])
 local lines = table.concat(GameTooltip._lines, "\n")
 suite.check("a row's tooltip lists what it is for", lines:find("Expert Tailoring and 9 recipes", 1, true) ~= nil, lines)
+suite.check("the hover names each recipe", lines:find("Brown Linen Pants", 1, true) ~= nil, lines)
+suite.check("and says a click shows the way", lines:find("Click to show the way to your trainer.", 1, true) ~= nil, lines)
+GoalsUI.rows[2]:GetScript("OnClick")(GoalsUI.rows[2])
+suite.check("a click shows the way to the recipe's trainer", shownWay == 3914, tostring(shownWay))
+shownWay = nil
+GoalsUI.rows[1]:GetScript("OnClick")(GoalsUI.rows[1])
+suite.check("other goals do nothing on a click", shownWay == nil)
 
 -- 5. Every character.
 local data = GG:Data().characters

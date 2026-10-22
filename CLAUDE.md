@@ -904,7 +904,12 @@ goals, filled from one purse in order: class spells (`ClassTraining`'s
 ready spells, else the next level's), profession training (the next rank
 once the skill reaches it, from `GoldGoals.RANKS`, Classic's usual
 prices, plus Tradeskills' `Butler:LearnCost()`, the trainers' recipes the
-character could learn now) and riding (`GoldGoals.RIDING`). Each is
+character could learn now; since 2026-10-22, a player asked which recipe
+it meant, its `recipes` list names each on the goal's hover, up to
+`GoalsUI.RECIPES_SHOWN`, and a click on that row calls Tradeskills'
+`LearnNext:ShowTheWayFor(recipeID)`, inside a pcall, so its arrow,
+"Guide Me:", TomTom and seen spots lead to the trainer;
+`GG.RecipeList`, `GG:ShowTheWay`, `GoalsUI:Click`) and riding (`GoldGoals.RIDING`). Each is
 ready (green), saving (gold) or far (levels away, dim). The level cap is
 read from the game (`GoldGoals.MaxLevel`: 30 in the beta, 60 at release,
 60 when the game does not say); never hardcode it. A trainer's own price
