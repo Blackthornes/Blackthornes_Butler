@@ -839,12 +839,12 @@ function SettingsUI:BuildPages()
     controls.useTomTom:SetPoint("TOPLEFT", CONTROL_X, -2)
 
     -- Show the way to a trainer far away step by step (Logic/Travel.lua,
-    -- the same in every addon). Off unless ticked.
+    -- the same in every addon). On unless unticked.
     local guideRow = pages:Row("gold", 1, L["Guide Me:"],
         L["When the place is in another zone or across the sea, the arrow leads you there step by step."])
     controls.arrowRoute = Widgets.CreateCheckbox(guideRow, L["On"], function(checked)
         if ns.Travel then ns.Travel:SetOn(checked) end
-    end, false)
+    end, true)
     controls.arrowRoute:SetPoint("TOPLEFT", CONTROL_X, -2)
 
     -- Gold goals at the bottom of the window (Logic/GoldGoals.lua, the
@@ -1041,7 +1041,7 @@ function SettingsUI:Refresh()
     controls.voice:SetChecked(ns.db.voice ~= false)
     controls.learn:SetChecked(ns.db.learn ~= false)
     controls.classTraining:SetChecked(ns.ClassTraining:IsOn())
-    controls.arrowRoute:SetChecked(ns.db.arrowRoute == true)
+    controls.arrowRoute:SetChecked(ns.db.arrowRoute ~= false)
     controls.useTomTom:SetChecked(ns.db.useTomTom ~= false)
     controls.goldGoals:SetChecked(ns.GoldGoals:IsOn())
     controls.skillUp:SetChecked(ns.SkillUp:IsOn())

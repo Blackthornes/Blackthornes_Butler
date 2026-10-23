@@ -877,7 +877,7 @@ plan, Train all and the gold goal. Tested in
 
 The owner said build it (2026-10-21, from a mockup) in every addon: with
 "Guide Me:" ticked under CLASS TRAINING on the Gold page (`arrowRoute`,
-account wide, off unless ticked, never rename it), Show the way to a class
+account wide, on unless unticked, never rename it), Show the way to a class
 trainer in another zone or across the sea lists the steps in chat
 (flights this character knows, the boats and zeppelins of its side, its
 Hearthstone, walks through the zones between) and pins the first stop
