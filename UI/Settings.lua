@@ -45,7 +45,7 @@ local PAGES = {
     { key = "gold", text = L["GOLD"],
       tip = L["How much gold each of your characters keeps, topped up by mail"] },
     { key = "general", text = L["GENERAL"],
-      tip = L["Windows, tooltips, text size and debug"] },
+      tip = L["Windows, tooltips and text size"] },
     { key = "about", text = L["ABOUT"],
       tip = L["How these addons are made, the version, the Discord and the other Blackthornes addons"] },
 }
@@ -979,13 +979,8 @@ function SettingsUI:BuildPages()
 
     pages:Section("general", 2, L["ADVANCED"])
 
-    local debugRow = pages:Row("general", 2, L["Debug:"],
-        L["Extra chat messages to help track down a problem."])
-
-    controls.debug = Widgets.CreateCheckbox(debugRow, L["On"], function(checked)
-        ns.db.debug = checked
-    end, false)
-    controls.debug:SetPoint("TOPLEFT", CONTROL_X, -2)
+    -- Debug and the client check are typed only (/bbutler debug, probe;
+    -- the owner, 2026-10-23): players don't need them.
 
     -- Core/SisterNote.lua: one chat line, once, naming the Blackthornes
     -- addons the player does not have. Off here is off in all of them.
@@ -1014,11 +1009,6 @@ function SettingsUI:BuildPages()
         ns.WhatsNew:SetMotionOn(checked)
     end, true)
     controls.whatsNewMotion:SetPoint("TOPLEFT", CONTROL_X, -2)
-
-    local _, probeButton = CommandRow(pages, "general", 2, L["Client Check:"],
-        L["Lists in chat what the game lets Butler do."],
-        L["Check"], "probe")
-    controls.probe = probeButton
 
     -- The chat-only commands (help, jobs, lists, upgrademail, gold,
     -- training, goals and bankalt on its own) have no button here: they
@@ -1061,7 +1051,6 @@ function SettingsUI:Refresh()
     controls.useTomTom:SetChecked(ns.db.useTomTom ~= false)
     controls.goldGoals:SetChecked(ns.GoldGoals:IsOn())
     controls.skillUp:SetChecked(ns.SkillUp:IsOn())
-    controls.debug:SetChecked(ns.db.debug == true)
     controls.sisters:SetChecked(ns.SisterNote:IsOn())
     controls.whatsNewPopup:SetChecked(ns.WhatsNew:IsOn())
     controls.whatsNewMotion:SetChecked(ns.WhatsNew:IsMotionOn())

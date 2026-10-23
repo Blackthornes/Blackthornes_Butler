@@ -51,7 +51,6 @@ L["ONE CHARACTER"] = "UN PERSONAJE"
 L["WINDOWS"] = "VENTANAS"
 L["All characters"] = "Todos los personajes"
 L["ADVANCED"] = "AVANZADO"
-L["Check"] = "Revisar"
 L["Butler's settings have a window of their own."] = "La configuración de Butler tiene su propia ventana."
 L["Open Butler settings"] = "Abrir la configuración de Butler"
 L["Or type /bbutler settings, or click the minimap button."] =
@@ -803,7 +802,7 @@ L["Talk to a vendor first."] = "Habla primero con un vendedor."
 L["This vendor doesn't sell anything called %s."] = "Este vendedor no vende nada llamado %s."
 
 -- Settings (2026-10-15)
-L["Windows, tooltips, text size and debug"] = "Ventanas, descripciones, tamaño de texto y depuración"
+L["Windows, tooltips and text size"] = "Ventanas, descripciones emergentes y tamaño del texto"
 L["Open at Vendors:"] = "Abrir en vendedores:"
 L["Opens Butler at every vendor. Nothing sells until you click Sell."] =
     "Abre Butler en cada vendedor. No se vende nada hasta que hagas clic en Vender."
@@ -919,9 +918,6 @@ L["Set Default"] = "Restablecer"
 L["window set to default."] = "ventana devuelta a su sitio de siempre."
 L["Text Size:"] = "Tamaño de texto:"
 L["Window Style:"] = "Estilo de ventana:"
-L["Debug:"] = "Depuración:"
-L["Extra chat messages to help track down a problem."] =
-    "Mensajes extra en el chat para ayudar a encontrar un problema."
 L["Sister Addons:"] = "Addons hermanos:"
 L["Says once in chat which Blackthornes addons you don't have."] =
     "Dice una vez en el chat qué addons de Blackthornes no tienes."
@@ -930,8 +926,6 @@ L["What's New After Updates:"] = "Novedades tras actualizar:"
 L["Opens What's New the first time you play after an update."] =
     "Abre Novedades la primera vez que juegas tras una actualización."
 L["What's New Motion:"] = "Animación de Novedades:"
-L["Client Check:"] = "Revisión del juego:"
-L["Lists in chat what the game lets Butler do."] = "Muestra en el chat lo que el juego deja hacer a Butler."
 
 -- The Order page (rule order)
 L["ORDER"] = "ORDEN"

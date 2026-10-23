@@ -51,7 +51,6 @@ L["ONE CHARACTER"] = "EIN CHARAKTER"
 L["WINDOWS"] = "FENSTER"
 L["All characters"] = "Alle Charaktere"
 L["ADVANCED"] = "ERWEITERT"
-L["Check"] = "Prüfen"
 L["Butler's settings have a window of their own."] = "Die Einstellungen von Butler haben ein eigenes Fenster."
 L["Open Butler settings"] = "Einstellungen von Butler öffnen"
 L["Or type /bbutler settings, or click the minimap button."] =
@@ -803,7 +802,7 @@ L["Talk to a vendor first."] = "Sprich zuerst mit einem Händler."
 L["This vendor doesn't sell anything called %s."] = "Dieser Händler verkauft nichts namens %s."
 
 -- Settings (2026-10-15)
-L["Windows, tooltips, text size and debug"] = "Fenster, Tooltips, Textgröße und Debug"
+L["Windows, tooltips and text size"] = "Fenster, Tooltips und Textgröße"
 L["Open at Vendors:"] = "Bei Händlern öffnen:"
 L["Opens Butler at every vendor. Nothing sells until you click Sell."] =
     "Öffnet Butler bei jedem Händler. Verkauft wird erst, wenn du auf Verkaufen klickst."
@@ -919,9 +918,6 @@ L["Set Default"] = "Zurücksetzen"
 L["window set to default."] = "Fenster auf seinen Standardplatz zurückgesetzt."
 L["Text Size:"] = "Textgröße:"
 L["Window Style:"] = "Fensterstil:"
-L["Debug:"] = "Debug:"
-L["Extra chat messages to help track down a problem."] =
-    "Zusätzliche Chatnachrichten, um einem Problem auf die Spur zu kommen."
 L["Sister Addons:"] = "Schwester-Addons:"
 L["Says once in chat which Blackthornes addons you don't have."] =
     "Sagt einmal im Chat, welche Blackthornes-Addons dir noch fehlen."
@@ -930,8 +926,6 @@ L["What's New After Updates:"] = "Neuigkeiten nach Updates:"
 L["Opens What's New the first time you play after an update."] =
     "Öffnet die Neuigkeiten, wenn du nach einem Update zum ersten Mal spielst."
 L["What's New Motion:"] = "Neuigkeiten-Bewegung:"
-L["Client Check:"] = "Client-Prüfung:"
-L["Lists in chat what the game lets Butler do."] = "Zeigt im Chat, was das Spiel Butler erlaubt."
 
 -- The Order page (rule order)
 L["ORDER"] = "REIHENFOLGE"

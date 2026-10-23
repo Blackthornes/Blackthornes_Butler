@@ -52,7 +52,6 @@ L["ONE CHARACTER"] = "UN PERSONNAGE"
 L["WINDOWS"] = "FENÊTRES"
 L["All characters"] = "Tous les personnages"
 L["ADVANCED"] = "AVANCÉ"
-L["Check"] = "Vérifier"
 L["Butler's settings have a window of their own."] = "Les réglages de Butler ont leur propre fenêtre."
 L["Open Butler settings"] = "Ouvrir les réglages de Butler"
 L["Or type /bbutler settings, or click the minimap button."] =
@@ -804,7 +803,7 @@ L["Talk to a vendor first."] = "Parle d'abord à un marchand."
 L["This vendor doesn't sell anything called %s."] = "Ce marchand ne vend rien qui s'appelle %s."
 
 -- Settings (2026-10-15)
-L["Windows, tooltips, text size and debug"] = "Fenêtres, infobulles, taille du texte et débogage"
+L["Windows, tooltips and text size"] = "Fenêtres, infobulles et taille du texte"
 L["Open at Vendors:"] = "Ouvrir chez les marchands :"
 L["Opens Butler at every vendor. Nothing sells until you click Sell."] =
     "Ouvre Butler chez chaque marchand. Rien n'est vendu tant que tu ne cliques pas sur Vendre."
@@ -920,9 +919,6 @@ L["Set Default"] = "Par défaut"
 L["window set to default."] = "fenêtre remise à sa place par défaut."
 L["Text Size:"] = "Taille du texte :"
 L["Window Style:"] = "Style des fenêtres :"
-L["Debug:"] = "Débogage :"
-L["Extra chat messages to help track down a problem."] =
-    "Des messages en plus dans la discussion pour aider à trouver un problème."
 L["Sister Addons:"] = "Addons frères :"
 L["Says once in chat which Blackthornes addons you don't have."] =
     "Dit une fois dans la discussion quels addons Blackthornes tu n'as pas."
@@ -931,8 +927,6 @@ L["What's New After Updates:"] = "Nouveautés après mise à jour :"
 L["Opens What's New the first time you play after an update."] =
     "Ouvre les nouveautés la première fois que tu joues après une mise à jour."
 L["What's New Motion:"] = "Animation des nouveautés :"
-L["Client Check:"] = "Vérifier le jeu :"
-L["Lists in chat what the game lets Butler do."] = "Liste dans la discussion ce que le jeu laisse Butler faire."
 
 -- The Order page (rule order)
 L["ORDER"] = "ORDRE"

@@ -56,8 +56,17 @@ local controls = SettingsUI.controls
 suite.check("there is no minimap box", controls.minimap == nil)
 
 -- Debug.
-controls.debug:GetScript("OnClick")(controls.debug)
-suite.check("the debug box sets debug", ns.db.debug == true)
+-- Debug and the client check are typed only (the owner, 2026-10-23): no
+-- row, and help leaves them out.
+suite.check("there is no debug box", controls.debug == nil and controls.probe == nil)
+ns.HandleSlash("debug")
+suite.check("/bbutler debug turns debug on", ns.db.debug == true)
+ns.HandleSlash("debug off")
+suite.check("/bbutler debug off turns it off", ns.db.debug == false)
+local listed = {}
+for _, name in ipairs(ns.commandOrder) do listed[name] = true end
+suite.check("help leaves out debug and probe", not listed.debug and not listed.probe
+    and ns.commands.debug and ns.commands.probe)
 
 -- The sister note (Core/SisterNote.lua).
 suite.check("the sister addons box starts ticked", controls.sisters:GetChecked())
@@ -111,8 +120,8 @@ pages.describe:GetScript("OnClick")(pages.describe)
 suite.check("unticked, the window goes back", SettingsUI.frame:GetHeight() == before)
 
 -- Find a setting.
-pages.find:SetText("debug")
-pages:Search("debug")
+pages.find:SetText("motion")
+pages:Search("motion")
 local lit = 0
 for _, entry in ipairs(pages.searchables) do
     if entry.glow:IsShown() then lit = lit + 1 end
@@ -176,16 +185,16 @@ suite.check("and off turns it off", ns.db.goldMinimum == nil and goldBox:GetValu
 local ran = {}
 local realSlash = ns.HandleSlash
 ns.HandleSlash = function(text) ran[#ran + 1] = text end
-for _, key in ipairs({ "openWindow", "all", "probe", "sellTest" }) do
+for _, key in ipairs({ "openWindow", "all", "sellTest" }) do
     controls[key]:GetScript("OnClick")(controls[key])
 end
 ns.HandleSlash = realSlash
 suite.check("the command buttons run their commands",
-    table.concat(ran, ",") == "window,all,probe,selltest", table.concat(ran, ","))
+    table.concat(ran, ",") == "window,all,selltest", table.concat(ran, ","))
 
 -- Every command has a button or a control here, apart from the one that
 -- deletes the player's lists, which stays typed (a house rule).
-local covered = { tooltip = true, sisters = true, whatsnew = true, window = true, all = true, probe = true, selltest = true,
+local covered = { tooltip = true, sisters = true, whatsnew = true, window = true, all = true, selltest = true,
     vendor = true, mailbox = true, bank = true, settings = true, reset = true,
     sellbelow = true, freespace = true, whohas = true, goldmin = true, fillnext = true, altupgrades = true,
     joblogin = true, trash = true, quests = true, bankalt = true, greens = true, buy = true, order = true, skillup = true, bags = true }
