@@ -1418,6 +1418,11 @@ minimap button always shows: no row, no `/bbutler minimap`, and a saved
 and General so far; the plan's other pages (Verdicts, Pet & craft,
 Window) come with their features. `reset confirm`, which empties the
 player's lists, stays typed.
+Word choices are drop-downs, never < > pickers or word steppers (the
+owner, 2026-10-23): `Widgets.CreateChoice` takes a stepper's opts
+(min, max, step, value, format, onChange) on Pets' `Widgets.CreateDropdown`
+and answers `SetValue(value, silent)`, `GetValue()`, `.text` and
+`:Pick(value)` (what a menu click does); only numbers keep a +/- stepper.
 
 ## The house frame (Titanforged)
 
@@ -1462,7 +1467,7 @@ window to `BlizzardLook.Dress` (silver rim, a title tab where the plate
 sits, a silver-ringed portrait and the game's `UIPanelCloseButton`, with the
 same trim fields); and the widgets call `BlizzardLook.Button`, `.Checkbox`
 and `.Thumb` to wear the game's own texture files. Butler has no hanging
-tabs or dropdown yet, so its Settings row is a stepper like Text size. It
+tabs yet, and its Settings row is a drop-down like Text size. It
 never touches a Blizzard frame. Each file is checked once
 (`BlizzardLook.HasArt`); a client without one keeps that widget in the
 house look, and `/bbutler probe` lists what is missing. New widgets should
