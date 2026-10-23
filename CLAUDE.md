@@ -923,7 +923,7 @@ it meant, its `recipes` list names each on the goal's hover, up to
 `LearnNext:ShowTheWayFor(recipeID)`, inside a pcall, so its arrow,
 "Guide Me:", TomTom and seen spots lead to the trainer;
 `GG.RecipeList`, `GG:ShowTheWay`, `GoalsUI:Click`) and riding (`GoldGoals.RIDING`). Each profession is
-its own goal (Trent, 2026-10-23: "each should have their own";
+its own goal (the owner, 2026-10-23: "each should have their own";
 `ProfessionGoals`): its rank to train now and its own recipes share a row,
 "Expert Tailoring and 9 recipes", recipes alone read "9 Tailoring
 recipes", and one with only a later rank keeps a dim row; the ones to pay
