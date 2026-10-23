@@ -901,7 +901,8 @@ with one. Show the way to a class trainer aims it (`WayArrow:Aim`, the
 place kept per character in `wayArrowPlace`, the dial's spot in
 `wayArrowX`/`wayArrowY`; never rename them). It shows only while a place
 is set: its close gem, or opening the trainer or a vendor once you are
-there (`WayArrow:Reached`), puts it away. Only one Blackthornes arrow is
+there (`WayArrow:Reached`), puts it away. The dial takes no clicks and shows no hover text (the owner,
+2026-10-23): drag moves it and the red gem closes it. Only one Blackthornes arrow is
 on screen at a time (`_G.BlackthornesArrows`, as `"Butler"`). With TomTom
 installed and "Use TomTom:" ticked (`useTomTom`, on unless unticked, Gold
 page; `Logic/TomTom.lua`, the same file as Farmer's, Equipment's and
