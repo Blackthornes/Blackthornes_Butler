@@ -197,14 +197,14 @@ suite.check("/bbutler bankalt off", ns.db.bankAlt == nil and not ToBank("Tigerse
 ns.SettingsUI:Show()
 local controls = ns.SettingsUI.controls
 suite.check("Settings shows nobody picked", controls.bankAltPick:GetName() == "Nobody")
-controls.bankAltPick.next:GetScript("OnClick")(controls.bankAltPick.next)
+controls.bankAltPick:Pick(controls.bankAltPick.index + 1)
 suite.check("the picker picks a character", ns.db.bankAlt == "Banky Vault", tostring(ns.db.bankAlt))
-controls.bankAltWhen.minus:GetScript("OnClick")(controls.bankAltWhen.minus)
+controls.bankAltWhen:Pick(controls.bankAltWhen:GetValue() - 1)
 suite.check("the stepper sets when", ns.db.bankAltWhen == "vendor", tostring(ns.db.bankAltWhen))
 local box = controls.bankAltKinds.leather
 box:GetScript("OnClick")(box)
 suite.check("a tick box sets a kind", ns.db.bankAltKinds.leather == false)
-controls.bankAltList.next:GetScript("OnClick")(controls.bankAltList.next)
+controls.bankAltList:Pick(controls.bankAltList.index + 1)
 suite.check("the list picker picks a list", ns.db.bankAltList == "Gems", tostring(ns.db.bankAltList))
 local auctions = controls.bankAltAuctions
 auctions:GetScript("OnClick")(auctions)

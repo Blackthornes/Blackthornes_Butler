@@ -94,13 +94,13 @@ _G.BlackthornesTS = nil
 ns.HandleSlash("settings")
 local stepper = ns.SettingsUI.controls.vendorPrice
 suite.check("Settings shows it Always", stepper:GetValue() == ns.TooltipShift.ALWAYS)
-stepper.minus:GetScript("OnClick")(stepper.minus)
+stepper:Pick(stepper:GetValue() - 1)
 lines = Hover(2320)
 suite.check("Shift holds it back", #lines == 1 and (lines[1] or ""):find("Shift") ~= nil, tostring(lines[1]))
-stepper.minus:GetScript("OnClick")(stepper.minus)
+stepper:Pick(stepper:GetValue() - 1)
 suite.check("Off turns it off", ns.db.vendorPrice == false and #Hover(2320) == 0)
-stepper.plus:GetScript("OnClick")(stepper.plus)
-stepper.plus:GetScript("OnClick")(stepper.plus)
+stepper:Pick(stepper:GetValue() + 1)
+stepper:Pick(stepper:GetValue() + 1)
 suite.check("Always turns it back on", ns.db.vendorPrice == true and #Hover(2320) == 1)
 
 suite.check("the probe counts what it learned", VendorPrices:ProbeText():find("^2 learned") ~= nil,

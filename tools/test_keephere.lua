@@ -160,7 +160,7 @@ suite.check("the one playing first, then the others", names[1] == "Ana Thornfiel
     table.concat(names, ", "))
 suite.check("another character's number counts only for them", KeepHere:Count(901) == 7
     and KeepHere:CountFor("Player-1-0000BBBB", 901) == 2)
-controls.keepWho.next:GetScript("OnClick")(controls.keepWho.next)
+controls.keepWho:Pick(controls.keepWho.index + 1)
 suite.check("stepping to the other character", controls.keepWho:GetName() == "Bo Udderly",
     controls.keepWho:GetName())
 controls.keepRemove:GetScript("OnClick")(controls.keepRemove)
@@ -233,7 +233,7 @@ SettingsUI:Show()
 SettingsUI:SyncKeepHere()
 controls = SettingsUI.controls
 while controls.keepWhat:GetName() ~= "Elixir of Agility" do
-    controls.keepWhat.next:GetScript("OnClick")(controls.keepWhat.next)
+    controls.keepWhat:Pick(controls.keepWhat.index + 1)
 end
 suite.check("Settings says Keeping All", controls.keepAll.label:GetText() == "Keeping All"
     and controls.keepCount.editBox:GetText() == "", controls.keepAll.label:GetText())
