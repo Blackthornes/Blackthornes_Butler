@@ -530,7 +530,8 @@ function BagWindow:SizeScroll()
     end
 end
 
---- Free slots and the gold on every character along the foot; Sort at the
+--- Free slots, this character's gold and the gold on every character along
+--- the foot; Sort at the
 --- top right, on the tabs' row, clear of the close gem.
 function BagWindow:BuildFoot()
     local frame = self.frame
@@ -538,8 +539,13 @@ function BagWindow:BuildFoot()
     free:SetPoint("BOTTOMLEFT", PADDING, 11)
     self.freeLabel = free
 
+    -- This character's gold first and brighter, the total after it.
+    local mine = Theme.CreateLabel(frame, "normal", "text")
+    mine:SetPoint("LEFT", free, "RIGHT", 16, 0)
+    self.myGoldLabel = mine
+
     local gold = Theme.CreateLabel(frame, "small", "muted")
-    gold:SetPoint("LEFT", free, "RIGHT", 16, 0)
+    gold:SetPoint("LEFT", mine, "RIGHT", 16, 0)
     self.goldLabel = gold
 
     local sort = Widgets.CreateButton(frame, L["Sort"], function() BagWindow:Sort() end,
@@ -588,8 +594,10 @@ function BagWindow:UpdateFoot()
         local color = ns.FreeSpace.COLORS[ns.FreeSpace.Level(free)]
         self.freeLabel:SetTextColor(color[1], color[2], color[3])
     end
+    local mine = ns.BagView.MyGold()
+    self.myGoldLabel:SetText(mine and L.Format("Gold: %s", Items.FormatMoney(mine)) or "")
     local gold = ns.BagView.Gold()
-    self.goldLabel:SetText(gold and L.Format("Gold on all characters: %s", Items.FormatMoney(gold)) or "")
+    self.goldLabel:SetText(gold and L.Format("All characters: %s", Items.FormatMoney(gold)) or "")
     self.sortButton:SetShown(BagWindow.CanSort() and self.tab == "bags")
     if self.emptyBox then
         self.emptyBox:SetShown(self.tab == "bags")
