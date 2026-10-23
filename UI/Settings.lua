@@ -489,12 +489,6 @@ function SettingsUI:BuildPages()
     end, true)
     controls.openAtVendor:SetPoint("TOPLEFT", CONTROL_X, -2)
 
-    local testRow, testButton = CommandRow(pages, "selling", 1, L["Test Selling:"],
-        L["At a vendor, sells your cheapest grey to check how many Sell can do at once."],
-        L["Test"], "selltest")
-    controls.sellTest = testButton
-    controls.sellTestRow = testRow
-
     local buyRow = pages:Row("selling", 1, L["Buy More:"],
         L["Shift-click an item at a vendor to buy as many as you want, like 200."])
     controls.buyMany = Widgets.CreateCheckbox(buyRow, L["On"], function(checked)

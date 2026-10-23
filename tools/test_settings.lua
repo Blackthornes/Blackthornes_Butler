@@ -65,8 +65,8 @@ ns.HandleSlash("debug off")
 suite.check("/bbutler debug off turns it off", ns.db.debug == false)
 local listed = {}
 for _, name in ipairs(ns.commandOrder) do listed[name] = true end
-suite.check("help leaves out debug and probe", not listed.debug and not listed.probe
-    and ns.commands.debug and ns.commands.probe)
+suite.check("help leaves out debug, probe and selltest", not listed.debug and not listed.probe
+    and not listed.selltest and ns.commands.debug and ns.commands.probe and ns.commands.selltest)
 
 -- The sister note (Core/SisterNote.lua).
 suite.check("the sister addons box starts ticked", controls.sisters:GetChecked())
@@ -185,16 +185,16 @@ suite.check("and off turns it off", ns.db.goldMinimum == nil and goldBox:GetValu
 local ran = {}
 local realSlash = ns.HandleSlash
 ns.HandleSlash = function(text) ran[#ran + 1] = text end
-for _, key in ipairs({ "openWindow", "all", "sellTest" }) do
+for _, key in ipairs({ "openWindow", "all" }) do
     controls[key]:GetScript("OnClick")(controls[key])
 end
 ns.HandleSlash = realSlash
 suite.check("the command buttons run their commands",
-    table.concat(ran, ",") == "window,all,selltest", table.concat(ran, ","))
+    table.concat(ran, ",") == "window,all", table.concat(ran, ","))
 
 -- Every command has a button or a control here, apart from the one that
 -- deletes the player's lists, which stays typed (a house rule).
-local covered = { tooltip = true, sisters = true, whatsnew = true, window = true, all = true, selltest = true,
+local covered = { tooltip = true, sisters = true, whatsnew = true, window = true, all = true,
     vendor = true, mailbox = true, bank = true, settings = true, reset = true,
     sellbelow = true, freespace = true, whohas = true, goldmin = true, fillnext = true, altupgrades = true,
     joblogin = true, trash = true, quests = true, bankalt = true, greens = true, buy = true, order = true, skillup = true, bags = true }

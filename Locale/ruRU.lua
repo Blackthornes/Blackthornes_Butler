@@ -402,7 +402,6 @@ L["|cffe5604fselling from Butler is blocked|r (%s). The Sell button stays at one
 L["the game refused the call"] = "игра отклонила вызов"
 L["the item stayed"] = "вещь осталась"
 L["no gold came in"] = "золото не пришло"
-L["at a vendor, sell your cheapest grey item to test whether Butler may sell up to 12 a click"] = "у торговца продать самую дешёвую серую вещь, чтобы проверить, может ли Butler продавать до 12 за щелчок"
 
 -- Ammo
 L["quiver"] = "колчан"
@@ -786,9 +785,6 @@ L["This vendor doesn't sell anything called %s."] = "Этот торговец �
 L["Windows, tooltips and text size"] = "Окна, подсказки и размер текста"
 L["Open at Vendors:"] = "Открывать у торговцев:"
 L["Opens Butler at every vendor. Nothing sells until you click Sell."] = "Открывает Butler у каждого торговца. Ничего не продаётся, пока ты не нажмёшь «Продать»."
-L["Test Selling:"] = "Проверка продажи:"
-L["At a vendor, sells your cheapest grey to check how many Sell can do at once."] = "У торговца продаёт самую дешёвую серую вещь, чтобы проверить, сколько «Продать» может за раз."
-L["Test"] = "Тест"
 L["Buy More:"] = "Купить больше:"
 L["Shift-click an item at a vendor to buy as many as you want, like 200."] = "Щёлкни по предмету у торговца с Shift, чтобы купить сколько хочешь, например 200."
 L["Open at Mailboxes:"] = "Открывать у почты:"

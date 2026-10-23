@@ -16,8 +16,11 @@
 -- C_Container.UseContainerItem as protected on current retail. So, as
 -- Tradeskills' Sell marked button does (2026-10-07), the button is a secure
 -- one, and each click sells one stack through a "/use bag slot" line set
--- just before the click runs, only while a vendor is open. If /bbutler
--- selltest finds the game lets addon code sell, one click sells the next 12.
+-- just before the click runs, only while a vendor is open. If the game lets
+-- addon code sell, one click sells the next 12. There is no Test button
+-- (the owner, 2026-10-23): after the first click sells a stack, Butler
+-- quietly sells the next one from addon code and keeps what happened
+-- (`Selling:QuietTest`); /bbutler selltest still runs the old check.
 --
 -- The secure button sits inside the Butler window out of combat
 -- (UI:Dock), on the Sell line or at the window's foot, and goes back to
@@ -36,6 +39,8 @@ local Bags = ns.Bags
 Selling.BATCH = 12
 -- The pause between sales when one click sells several.
 Selling.GAP = 0.3
+-- How long after the first click's sale the quiet check waits.
+Selling.QUIET_WAIT = 1
 
 -- What Butler's button sold this visit, [itemID] = true: a buyback of one
 -- teaches Butler to keep it (Logic/Learning.lua).
@@ -235,6 +240,10 @@ function Selling:Create()
             Selling.soldIDs[item.itemID] = true
             Selling.sold = (Selling.sold or 0) + 1
             Selling.soldWorth = (Selling.soldWorth or 0) + (item.unit or 0) * (item.count or 1)
+            if Selling:TestResult() == nil then
+                -- Once the click's own sale has settled.
+                C_Timer.After(Selling.QUIET_WAIT, function() Selling:QuietTest(item) end)
+            end
         end
         Selling:Update()
     end)
@@ -389,12 +398,52 @@ function Selling:Test()
     end)
 end
 
+--- After a click sold a stack, sell the next Sell stack from addon code
+--- and keep whether the game let it, so later clicks sell up to 12. Says
+--- nothing: the button's words change when it works.
+function Selling:QuietTest(clicked)
+    if self:TestResult() ~= nil or self.selling or InCombat() then return end
+    if not self:MerchantOpen(true) then return end
+    local use = Items.Resolve("C_Container.UseContainerItem")
+    if not use then return end
+    local item
+    for _, candidate in ipairs(self:Queue()) do
+        local same = clicked and candidate.bag == clicked.bag and candidate.slot == clicked.slot
+        if not same and StillSell(candidate) then
+            item = candidate
+            break
+        end
+    end
+    if not item then return end
+
+    local before = type(GetMoney) == "function" and GetMoney() or 0
+    Selling.testing = true
+    local called, err = pcall(use, item.bag, item.slot)
+    Selling.testing = false
+
+    C_Timer.After(1, function()
+        local still = Bags.ReadSlot(item.bag, item.slot)
+        local gone = not (still and still.itemID == item.itemID)
+        local gained = (type(GetMoney) == "function" and GetMoney() or 0) > before
+        local works = called and gone and gained
+        if Selling:TestResult() ~= nil then return end
+        ns.db.sellTest = { at = time(), result = works and "works" or "blocked", quiet = true,
+            error = (not called and err) and tostring(err):sub(1, 120) or nil }
+        if gone then
+            Selling.soldIDs[item.itemID] = true
+            Selling.sold = (Selling.sold or 0) + 1
+            Selling.soldWorth = (Selling.soldWorth or 0) + (item.unit or 0) * (item.count or 1)
+        end
+        Selling:Update()
+    end)
+end
+
 --- One line for /bbutler probe.
 function Selling:ProbeText()
     local result = self:TestResult()
     if result == "works" then return "works: up to 12 a click" end
     if result == "blocked" then return "blocked: one stack a click" end
-    return "not tested: at a vendor, /bbutler selltest sells your cheapest grey item"
+    return "not tested: the second stack a Sell click sells checks it, or /bbutler selltest"
 end
 
 --------------------------------------------------------------------------------
@@ -434,5 +483,5 @@ function Selling:OnEnable()
     ns.RegisterEvent(self, "PLAYER_REGEN_ENABLED", function() Selling:Update() end)
 end
 
-ns.RegisterCommand("selltest", L["at a vendor, sell your cheapest grey item to test whether Butler may sell up to 12 a click"],
-    function() Selling:Test() end)
+-- Typed only (the owner, 2026-10-23): the first Sell click checks by itself.
+ns.RegisterHiddenCommand("selltest", function() Selling:Test() end)
