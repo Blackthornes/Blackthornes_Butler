@@ -14,6 +14,7 @@
 --   7. Turned off, the veil comes off and the window goes.
 --   8. Full bags: the trash can and its red glow sit on the cheapest
 --      stack's square in this window, never on the game's veiled bags.
+--   9. The foot shows this character's gold, then every character's.
 
 local env = dofile(lfs_cwd .. "/tools/testenv.lua")
 local suite = env.NewSuite("bagwindow")
@@ -249,6 +250,28 @@ do
     suite.check("the To Sell chip still finds both", vendorItem.sell and auctionItem.sell)
     ns.Verdicts.VerdictOf, ns.Sisters.AskAll = saveJudge, saveAsk
     ns.Verdicts.version = ns.Verdicts.version + 1
+end
+
+-- 9. The foot: this character's gold first, then every character's.
+do
+    local saveMoney, saveHoldings = _G.GetMoney, ns.Errands.Holdings
+    _G.GetMoney = function() return 864050 end
+    ns.Errands.Holdings = function()
+        return { { isCurrent = true, gold = 1 }, { gold = 1000000 } }
+    end
+    BagWindow:UpdateFoot()
+    local mine = BagWindow.myGoldLabel:GetText() or ""
+    local all = BagWindow.goldLabel:GetText() or ""
+    suite.check("the foot says this character's gold", mine:find("Gold: ", 1, true) == 1)
+    suite.check("from the purse now", BagView.MyGold() == 864050)
+    suite.check("and every character's after it", all:find("All characters: ", 1, true) == 1)
+    suite.check("adding the purse to the others", BagView.Gold() == 1864050)
+    ns.Errands.Holdings = function() return nil end
+    BagWindow:UpdateFoot()
+    suite.check("without Tradeskills this character's gold still shows",
+        (BagWindow.myGoldLabel:GetText() or "") ~= "" and (BagWindow.goldLabel:GetText() or "") == "")
+    _G.GetMoney, ns.Errands.Holdings = saveMoney, saveHoldings
+    BagWindow:UpdateFoot()
 end
 
 -- The probe line is read without raising.

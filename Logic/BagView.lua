@@ -527,6 +527,11 @@ function BagView.Free()
     return read and read.free or nil
 end
 
+--- The gold the character playing carries, or nil when the client won't say.
+function BagView.MyGold()
+    return tonumber((Items.Call({ "GetMoney" })))
+end
+
 --- The gold of every character on this realm and side Tradeskills knows,
 --- the one playing as it is now. nil without Tradeskills.
 function BagView.Gold()
