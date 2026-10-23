@@ -146,4 +146,14 @@ env.Fire("MERCHANT_CLOSED")
 Arrow:Clear()
 suite.check("its close puts it away", not Arrow.IsOn() and shared.wants.Butler == nil)
 
+-- "Guide Me:" is on until the player unticks it (Logic/Travel.lua).
+if ns.Travel and ns.Travel.IsOn then
+    local kept = ns.db.arrowRoute
+    ns.db.arrowRoute = nil
+    suite.check("Guide Me is on when never set", ns.Travel.IsOn())
+    ns.db.arrowRoute = false
+    suite.check("and off once unticked", not ns.Travel.IsOn())
+    ns.db.arrowRoute = kept
+end
+
 suite.done()
