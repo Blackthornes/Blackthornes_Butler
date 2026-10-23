@@ -200,7 +200,7 @@ end
 --- is its setter, the one the old tick box called; Shift is kept apart.
 function SettingsUI.TooltipShiftControl(row, key, isOn, setOn)
     local TooltipShift = ns.TooltipShift
-    local stepper = Widgets.CreateStepper(row, {
+    local stepper = Widgets.CreateChoice(row, {
         min = 0, max = 2, step = 1,
         format = function(value) return TooltipShift.NAMES[value] end,
         onChange = function(value)
@@ -218,13 +218,13 @@ function SettingsUI.TooltipShiftControl(row, key, isOn, setOn)
     return stepper
 end
 
--- The window styles, in the order the stepper steps through them.
+-- The window styles, in the order their drop-down lists them.
 local STYLES = { "titanforged", "blizzard" }
 local STYLE_LABELS = { titanforged = "Titanforged", blizzard = "Blizzard" }
 
 --- Titanforged or Blizzard, with Reload under it while the pick differs
---- from what is drawn, as the Text size row has. Butler has no dropdown, so
---- it is a stepper like Text size.
+--- from what is drawn, as the Text size row has. A drop-down, like Text
+--- size.
 function SettingsUI.WindowStyleControl(row, x)
     local reload
     local function Drawn()
@@ -232,7 +232,7 @@ function SettingsUI.WindowStyleControl(row, x)
         return Look and Look.Style() or "titanforged"
     end
 
-    local stepper = Widgets.CreateStepper(row, {
+    local stepper = Widgets.CreateChoice(row, {
         min = 1, max = #STYLES, step = 1,
         format = function(value) return STYLE_LABELS[STYLES[value]] end,
         onChange = function(value)
@@ -264,40 +264,37 @@ function SettingsUI.WindowStyleControl(row, x)
     return stepper
 end
 
---- Steps through the player's characters on this realm and side, by full
---- name, wrapped rather than cut short. :SetNames(list), :GetName().
+--- The player's characters on this realm and side by full name, in a
+--- drop-down (the owner, 2026-10-23: drop-downs, never < > pickers), as
+--- wide as the longest name so none is cut short. Also lists and items.
+--- :SetNames(list), :GetName(), :Select(name); .index is the one picked,
+--- and :Pick(index) is what a click on a line of its menu does.
 function SettingsUI.CharacterPicker(row, x, onChange)
-    local picker = CreateFrame("Frame", nil, row)
-    picker:SetSize(180, 24)
-    picker:SetPoint("TOPLEFT", x, 0)
-    picker.names, picker.index = {}, 1
-
-    local text = Theme.CreateLabel(picker, "small", "text", "CENTER")
-    text:SetPoint("LEFT", 26, 0)
-    text:SetPoint("RIGHT", -26, 0)
-    text:SetWordWrap(true)
-    picker.text = text
+    local picker = Widgets.CreateDropdown(row, {}, nil,
+        { width = 180, placeholder = L["No characters yet"] })
+    picker:SetPoint("TOPLEFT", x, -1)
+    picker.names, picker.index, picker.least = {}, 1, 180
+    picker.text = picker.label
 
     local function Show()
         local count = #picker.names
         picker.index = math.max(1, math.min(picker.index, math.max(1, count)))
-        text:SetText(picker.names[picker.index] or L["No characters yet"])
-        picker.prev:SetLabelColor(picker.index <= 1 and "dim" or nil)
-        picker.next:SetLabelColor(picker.index >= count and "dim" or nil)
+        local options = {}
+        for index, name in ipairs(picker.names) do options[index] = { text = name, value = index } end
+        picker.options = options
+        -- Grows to the longest name; never narrower than `least`.
+        picker:SetWidth(Widgets.DropdownWidth(options, picker.least))
+        picker:SetValue(count > 0 and picker.index or nil)
     end
 
-    local function Step(direction)
-        local wanted = picker.index + direction
-        if wanted < 1 or wanted > #picker.names then return end
-        picker.index = wanted
+    function picker:Pick(index)
+        if self.menu then self.menu:Hide() end
+        index = tonumber(index)
+        if not index or index < 1 or index > #self.names or index == self.index then return end
+        self.index = index
         Show()
         if onChange then onChange() end
     end
-
-    picker.prev = Widgets.CreateButton(picker, "<", function() Step(-1) end, { width = 22, height = 20 })
-    picker.prev:SetPoint("LEFT", 0, 0)
-    picker.next = Widgets.CreateButton(picker, ">", function() Step(1) end, { width = 22, height = 20 })
-    picker.next:SetPoint("RIGHT", 0, 0)
 
     function picker:SetNames(names)
         local current = self.names[self.index]
@@ -468,7 +465,8 @@ function SettingsUI:SyncLists()
     for _, name in ipairs(sorted) do choices[#choices + 1] = name end
     controls.listsMailTo:SetNames(choices)
     controls.listsMailTo:Select(picked)
-    controls.listsMailTo.prev:SetLabelColor((not list or controls.listsMailTo.index <= 1) and "dim" or nil)
+    -- Dim with no list to set it for.
+    controls.listsMailTo:SetAlpha(list and 1 or 0.45)
 
     if not controls.listsKeep.editBox:HasFocus() then
         controls.listsKeep:SetText(rule.keep and tostring(rule.keep) or "")
@@ -717,7 +715,7 @@ function SettingsUI:BuildPages()
 
     local whenRow = pages:Row("bankalt", 1, L["When:"],
         L["Before Everything sends what you tick, even things that sell well. Before a Vendor lets the auction house and disenchanting go first. Only Leftovers sends what's left."])
-    controls.bankAltWhen = Widgets.CreateStepper(whenRow, {
+    controls.bankAltWhen = Widgets.CreateChoice(whenRow, {
         min = 1, max = #ns.BankAlt.WHEN, step = 1,
         format = function(value) return ns.BankAlt.WHEN_LABELS[ns.BankAlt.WHEN[value]] end,
         onChange = function(value) ns.BankAlt:SetWhen(ns.BankAlt.WHEN[value]) end,
@@ -740,6 +738,7 @@ function SettingsUI:BuildPages()
     controls.listsPick = SettingsUI.CharacterPicker(listRow, 0, function()
         SettingsUI:SyncLists()
     end)
+    controls.listsPick.least = COLUMN_WIDTH
     controls.listsPick:SetWidth(COLUMN_WIDTH)
 
     local mailToRow = pages:Row("lists", 1, L["Mail To:"], nil)

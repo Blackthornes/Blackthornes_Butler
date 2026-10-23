@@ -84,7 +84,7 @@ suite.check("the steppers show Always", controls.whoHas:GetValue() == Shift.ALWA
 suite.check("nothing is written for a player who never picks", ns.db.tooltipShift == nil)
 
 -- 2 and 3. Who has it on Shift.
-controls.whoHas.minus:GetScript("OnClick")(controls.whoHas.minus)
+controls.whoHas:Pick(controls.whoHas:GetValue() - 1)
 suite.check("one step down is Shift, and it is kept", ns.db.tooltipShift and ns.db.tooltipShift.whoHas == true
     and ns.db.whoHas == true and controls.whoHas.text:GetText() == "Shift")
 lines = Hover()
@@ -94,7 +94,7 @@ suite.check("and the hint comes after it, once", lines[#lines] == HINT and Count
     and Find(lines, "Butler: Sell") == #lines - 1, table.concat(lines, " / "))
 
 -- Both on Shift: the hint still goes on once.
-controls.verdictTip.minus:GetScript("OnClick")(controls.verdictTip.minus)
+controls.verdictTip:Pick(controls.verdictTip:GetValue() - 1)
 lines = Hover()
 suite.check("both on Shift: only the hint", #lines == 1 and lines[1] == HINT, table.concat(lines, " / "))
 
@@ -116,7 +116,7 @@ shiftDown = false
 -- In the second after login, before the verdict's hook is in, Who has it
 -- on Shift adds the hint itself.
 ns.VerdictTip.installed = nil
-controls.verdictTip.plus:GetScript("OnClick")(controls.verdictTip.plus)
+controls.verdictTip:Pick(controls.verdictTip:GetValue() + 1)
 Clear(GameTooltip)
 postCalls[1].fn(GameTooltip, { id = 701 })
 suite.check("without the verdict's hook, Who has it adds the hint", GameTooltip._lines[1] == HINT
@@ -124,12 +124,12 @@ suite.check("without the verdict's hook, Who has it adds the hint", GameTooltip.
 ns.VerdictTip.installed = "post call"
 
 -- 5. Off and back to Always.
-controls.whoHas.minus:GetScript("OnClick")(controls.whoHas.minus)
+controls.whoHas:Pick(controls.whoHas:GetValue() - 1)
 suite.check("Off turns Who has it off", ns.db.whoHas == false and controls.whoHas.text:GetText() == "Off")
 lines = Hover()
 suite.check("and it shows nothing, no hint", Find(lines, "Your characters have") == nil and Count(lines, HINT) == 0)
-controls.whoHas.plus:GetScript("OnClick")(controls.whoHas.plus)
-controls.whoHas.plus:GetScript("OnClick")(controls.whoHas.plus)
+controls.whoHas:Pick(controls.whoHas:GetValue() + 1)
+controls.whoHas:Pick(controls.whoHas:GetValue() + 1)
 suite.check("Always turns it on and forgets Shift", ns.db.whoHas == true and ns.db.tooltipShift.whoHas == nil)
 refreshed = 0
 Shift.shared.OnModifier("LSHIFT")

@@ -135,7 +135,7 @@ end
 suite.check("an empty search lights nothing", lit == 0)
 
 -- Text size, saved as a word, waits for a reload.
-controls.textSize.plus:GetScript("OnClick")(controls.textSize.plus)
+controls.textSize:Pick(controls.textSize:GetValue() + 1)
 suite.check("Text size saves Large", ns.db.textSize == "large")
 suite.check("and offers Reload", controls.textSize.reload:IsShown())
 suite.check("under the stepper, at its right edge", controls.textSize.reload._point[1] == "TOPRIGHT"
@@ -149,9 +149,32 @@ suite.check("the Window style's Reload sits the same way", controls.windowStyle.
 -- column. Nothing on a row reaches past its column now.
 suite.check("the style box fits its longest word", controls.windowStyle:GetWidth()
     >= ns.Theme.TextWidth("small", "Titanforged") + 22 * 2 + 8)
-controls.textSize.minus:GetScript("OnClick")(controls.textSize.minus)
+controls.textSize:Pick(controls.textSize:GetValue() - 1)
 suite.check("back to Normal needs no reload", ns.db.textSize == "normal"
     and not controls.textSize.reload:IsShown())
+
+-- Word choices are drop-downs (the owner, 2026-10-23), the pickers too.
+controls.textSize:GetScript("OnMouseDown")(controls.textSize)
+suite.check("Text size opens a menu of its words", controls.textSize.menu:IsShown()
+    and #controls.textSize.options == 3)
+controls.textSize.entries[2]:GetScript("OnClick")()
+suite.check("a line of it picks Large and closes it", ns.db.textSize == "large"
+    and not controls.textSize.menu:IsShown())
+controls.textSize:Pick(1)
+do
+    local picked = 0
+    local picker = SettingsUI.CharacterPicker(CreateFrame("Frame"), 0, function() picked = picked + 1 end)
+    suite.check("an empty picker says so", picker.text:GetText() == "No characters yet" and picker:GetName() == nil)
+    picker:SetNames({ "Ana Stormwind", "Bob Wither" })
+    suite.check("then shows the first whole name", picker:GetName() == "Ana Stormwind"
+        and picker.text:GetText() == "Ana Stormwind")
+    picker:GetScript("OnMouseDown")(picker)
+    picker.entries[2]:GetScript("OnClick")()
+    suite.check("a line of its menu picks that one", picker:GetName() == "Bob Wither" and picker.index == 2
+        and picked == 1)
+    picker:SetNames({ "Cid Hale", "Bob Wither" })
+    suite.check("and the pick stays through a new list", picker:GetName() == "Bob Wither" and picked == 1)
+end
 
 -- Sell below: gold, silver and copper boxes, saved when the player leaves
 -- a box or presses Enter, not on every key.

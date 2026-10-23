@@ -422,7 +422,7 @@ function BagWindow:BuildHeader()
 
     local words = {}
     for _, key in ipairs(ns.BagView.GROUPS) do words[#words + 1] = ns.BagView.GROUP_WORDS[key] end
-    local group = Widgets.CreateStepper(frame, {
+    local group = Widgets.CreateChoice(frame, {
         min = 1, max = #ns.BagView.GROUPS, step = 1,
         value = BagWindow.GroupIndex(),
         format = function(v) return ns.BagView.GROUP_WORDS[ns.BagView.GROUPS[v]] end,
@@ -1186,7 +1186,7 @@ function BagWindow:AddSettings(pages, controls, x)
     local groupRow = pages:Row("general", 2, L["Group By:"], nil)
     local words = {}
     for _, key in ipairs(ns.BagView.GROUPS) do words[#words + 1] = ns.BagView.GROUP_WORDS[key] end
-    local group = Widgets.CreateStepper(groupRow, {
+    local group = Widgets.CreateChoice(groupRow, {
         min = 1, max = #ns.BagView.GROUPS, step = 1, value = BagWindow.GroupIndex(),
         format = function(v) return ns.BagView.GROUP_WORDS[ns.BagView.GROUPS[v]] end,
         onChange = function(v) ns.BagView:SetGroupBy(ns.BagView.GROUPS[v]) end,
@@ -1198,7 +1198,7 @@ function BagWindow:AddSettings(pages, controls, x)
     local sizeRow = pages:Row("general", 2, L["Item Size:"], nil)
     local sizeWords = {}
     for _, key in ipairs(ns.BagView.SIZES) do sizeWords[#sizeWords + 1] = ns.BagView.SIZE_WORDS[key] end
-    local size = Widgets.CreateStepper(sizeRow, {
+    local size = Widgets.CreateChoice(sizeRow, {
         min = 1, max = #ns.BagView.SIZES, step = 1, value = BagWindow.SizeIndex(),
         format = function(v) return ns.BagView.SIZE_WORDS[ns.BagView.SIZES[v]] end,
         onChange = function(v) ns.BagView:SetItemSize(ns.BagView.SIZES[v]) end,
