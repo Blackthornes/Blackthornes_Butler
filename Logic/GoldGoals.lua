@@ -368,7 +368,7 @@ function GG:ShowTheWay(goal)
     return false
 end
 
---- One goal for each profession (Trent, 2026-10-23: "each should have
+--- One goal for each profession (the owner, 2026-10-23: "each should have
 --- their own"): the rank to train now and, with Tradeskills, the trainers'
 --- recipes it could learn now; else its next rank, levels away. The ones to
 --- pay for now come first, cheapest first, then the ones levels away.
