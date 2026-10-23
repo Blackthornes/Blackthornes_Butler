@@ -43,6 +43,10 @@ quest starter, no vendor value, Always sell, price still loading, grey,
 else Look at it) and groups them Sell, Look at it, Keep (`Verdicts:Groups`,
 kept until `Bags.version` or `Verdicts.version` moves). `Logic/Selling.lua`
 is the Sell button (see the findings file for why it is secure).
+There is no Test Selling row (the owner, 2026-10-23): untested, the
+first click's sale is followed by one from addon code
+(`Selling:QuietTest`), kept in `sellTest` with `quiet`, which says whether
+later clicks sell up to 12; `/bbutler selltest` is typed only.
 Every button sits by the line it acts on (the owner, 2026-10-12: "the
 buttons in Butler should go by the action that they need take"): Sell on
 the Sell group's heading, Disenchant on Disenchant's, Move to bank on

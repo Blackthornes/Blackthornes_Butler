@@ -416,7 +416,6 @@ L["|cffe5604fselling from Butler is blocked|r (%s). The Sell button stays at one
 L["the game refused the call"] = "el juego rechazó la llamada"
 L["the item stayed"] = "el objeto se quedó"
 L["no gold came in"] = "no entró oro"
-L["at a vendor, sell your cheapest grey item to test whether Butler may sell up to 12 a click"] = "en un vendedor, vende tu objeto gris más barato para probar si Butler puede vender hasta 12 por clic"
 
 -- Ammo
 L["quiver"] = "carcaj"
@@ -806,10 +805,6 @@ L["Windows, tooltips and text size"] = "Ventanas, descripciones emergentes y tam
 L["Open at Vendors:"] = "Abrir en vendedores:"
 L["Opens Butler at every vendor. Nothing sells until you click Sell."] =
     "Abre Butler en cada vendedor. No se vende nada hasta que hagas clic en Vender."
-L["Test Selling:"] = "Probar venta:"
-L["At a vendor, sells your cheapest grey to check how many Sell can do at once."] =
-    "En un vendedor, vende tu gris más barato para ver cuántos puede vender Vender de una vez."
-L["Test"] = "Prueba"
 L["Buy More:"] = "Comprar más:"
 L["Shift-click an item at a vendor to buy as many as you want, like 200."] =
     "Haz Mayús-clic en un objeto de un vendedor para comprar los que quieras, como 200."

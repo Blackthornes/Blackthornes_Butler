@@ -93,7 +93,15 @@ suite.check("one stack a click, through a /use line", button:GetAttribute("type"
     and button:GetAttribute("macrotext") == "/use 0 1")
 button:GetScript("PostClick")(button)
 suite.check("nothing is left aimed at a slot after", button:GetAttribute("macrotext") == nil)
-suite.check("counted", Selling.sold == 1)
+-- No Test button (the owner, 2026-10-23): untested, the click's own sale
+-- is followed by one from addon code, which says whether batches work.
+suite.check("then the next stack is sold quietly to check", #fake.used == 1 and Selling.sold == 2,
+    tostring(#fake.used) .. "," .. tostring(Selling.sold))
+suite.check("and what it found is kept", ns.db.sellTest and ns.db.sellTest.result == "works"
+    and ns.db.sellTest.quiet == true)
+suite.check("so the button sells a batch now", Selling:CanSellBatch())
+-- One stack a click again for the next checks.
+ns.db.sellTest = { result = "blocked" }
 
 -- A slot that changed under the button is left alone.
 fake.bags[0][1] = { bag = 0, slot = 1, id = 300, name = "Linen Cloth", quality = 1, price = 13 }

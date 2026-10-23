@@ -415,7 +415,6 @@ L["|cffe5604fselling from Butler is blocked|r (%s). The Sell button stays at one
 L["the game refused the call"] = "游戏拒绝了这个调用"
 L["the item stayed"] = "物品还在"
 L["no gold came in"] = "没有收到金币"
-L["at a vendor, sell your cheapest grey item to test whether Butler may sell up to 12 a click"] = "在商人处卖掉你最便宜的灰色物品，测试 Butler 能不能每次点击卖 12 组"
 
 -- Ammo
 L["quiver"] = "箭袋"
@@ -805,10 +804,6 @@ L["Windows, tooltips and text size"] = "窗口、鼠标提示和文字大小"
 L["Open at Vendors:"] = "在商人处打开："
 L["Opens Butler at every vendor. Nothing sells until you click Sell."] =
     "每次找商人时都打开 Butler。你点出售之前什么都不会卖。"
-L["Test Selling:"] = "测试出售："
-L["At a vendor, sells your cheapest grey to check how many Sell can do at once."] =
-    "在商人处卖掉你最便宜的灰色物品，看看出售一次能卖多少。"
-L["Test"] = "测试"
 L["Buy More:"] = "买更多："
 L["Shift-click an item at a vendor to buy as many as you want, like 200."] =
     "在商人处按住 Shift 点击一件物品，想买多少就买多少，比如 200 个。"
