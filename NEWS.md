@@ -34,7 +34,6 @@ Fixes and changes:
 
 - Spells you skip leave the class training plan.
 - Disenchant Greens Here leaves greens that sell for more.
-- Sell checks batch selling by itself, so there's no test row.
 
 ## 0.17.0
 
