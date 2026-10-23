@@ -118,7 +118,7 @@ level = 18
 GG:Changed()
 result = GG:Goals()
 suite.check("the next level's spells, dim", result.goals[1].level == 20 and result.goals[1].state == "far")
-suite.check("recipes still count", result.goals[2].label == "9 recipes", result.goals[2].label)
+suite.check("recipes still count", result.goals[2].label == "9 Tailoring recipes", result.goals[2].label)
 level = 22
 
 -- The level cap: 30 in the beta leaves riding out.
@@ -142,7 +142,7 @@ _G.BlackthornesTS = ts
 professions[197].maxSkillLevel, professions[197].skillLevel = 300, 260
 professions[2948].maxSkillLevel, professions[2948].skillLevel = 300, 260
 GG:Changed()
-suite.check("an Artisan has no rank left", GG:Goals().goals[2].label == "9 recipes", GG:Goals().goals[2].label)
+suite.check("an Artisan has no rank left", GG:Goals().goals[2].label == "9 Tailoring recipes", GG:Goals().goals[2].label)
 professions[197].maxSkillLevel, professions[197].skillLevel = 150, 130
 professions[2948].maxSkillLevel, professions[2948].skillLevel = 150, 130
 
@@ -225,6 +225,42 @@ suite.check("a goal you can pay now is ready though a far one comes first",
     filled[2].state == "ready" and filled[2].have == 45 * 100 and filledMet == 1)
 suite.check("the far one gets the rest", filled[1].state == "far" and filled[1].have == 2 * G + 20 * 100 - 45 * 100)
 suite.check("and the one after it nothing", filled[3].have == 0)
+
+-- Each profession its own goal (2026-10-23): a rank and another
+-- profession's recipes are two rows, cheapest first, and each click goes to
+-- its own trainer.
+professions[2948] = nil
+professions[197] = { professionName = "Tailoring", skillLevel = 130, maxSkillLevel = 300 }
+professions[333] = { professionName = "Enchanting", skillLevel = 130, maxSkillLevel = 150 }
+_G.C_TradeSkillUI.GetAllProfessionTradeSkillLines = function() return { 197, 333, 129 } end
+GG:Changed()
+local split = GG:Goals().goals
+suite.check("class, two professions and riding", #split == 4, #split)
+suite.check("the cheaper one first: the rank", split[2].kind == "profession"
+    and split[2].label == "Expert Enchanting" and split[2].cost == 5000, split[2].label)
+suite.check("then the other profession's recipes, named", split[3].kind == "profession"
+    and split[3].label == "9 Tailoring recipes" and split[3].cost == 7700, split[3].label)
+local askedLine, askedTeaches, shownPlace
+_G.BlackthornesTS.LearnNext.TrainerFor = function(_, line, teaches)
+    askedLine, askedTeaches = line, teaches
+    return { kind = "trainer", name = "Enchanting Trainer", zone = "Stormwind City", x = 50, y = 50 }
+end
+_G.BlackthornesTS.LearnNext.ShowTheWay = function(_, row) shownPlace = row.place.name return true end
+shownWay = nil
+suite.check("the rank's row can show the way", GoalsUI.CanShowWay(split[2]))
+GG:ShowTheWay(split[2])
+suite.check("the rank's click goes to its trainer", shownPlace == "Enchanting Trainer"
+    and askedLine == 333 and askedTeaches == 225 and shownWay == nil, tostring(shownPlace))
+shownPlace = nil
+GG:ShowTheWay(split[3])
+suite.check("the recipes' click goes to the recipe's trainer", shownPlace == nil and shownWay == 3914)
+level = 18
+GG:Changed()
+local waiting = GG:Goals().goals
+suite.check("a rank levels away keeps its own row, after the rest",
+    waiting[2].label == "9 Tailoring recipes" and waiting[3].label == "Expert Enchanting at level 20"
+    and waiting[3].state == "far", waiting[3] and waiting[3].label)
+level = 22
 
 UI:Hide()
 

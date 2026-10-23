@@ -299,6 +299,7 @@ function GG:NextRank(line, profession, cap)
     local cost, guess = self:PriceOf(rank[1], rank[4])
     return {
         spell = rank[1], cost = cost, guess = guess, level = level, profession = profession.name,
+        line = line, teaches = (index + 1) * 75,
         name = GG.SpellName(rank[1]) or L.Format("%s %s", RANK_WORDS[index], profession.name or ENGLISH[line]),
     }
 end
@@ -336,15 +337,28 @@ function GG.FirstRecipe(goal)
     return nil
 end
 
---- Show the way to the trainer who teaches a goal's recipes, through
---- Tradeskills' own Show the way (its arrow, "Guide Me:", TomTom and the
---- spots the game saw), inside a pcall. True when it set one.
+--- Show the way for a goal, through Tradeskills' own Show the way (its
+--- arrow, "Guide Me:", TomTom and the spots the game saw), inside a pcall:
+--- the trainer of a rank to train now first, so the cap goes up before the
+--- recipes; once that is trained, the trainer who teaches its recipes
+--- (2026-10-23). True when it set one.
 function GG:ShowTheWay(goal)
-    local recipe = GG.FirstRecipe(goal)
-    if not recipe then return false end
+    if type(goal) ~= "table" then return false end
     local ts = rawget(_G, "BlackthornesTS")
     local learn = type(ts) == "table" and rawget(ts, "LearnNext")
-    if type(learn) ~= "table" or type(learn.ShowTheWayFor) ~= "function" then return false end
+    if type(learn) ~= "table" then return false end
+    if type(learn.TrainerFor) == "function" and type(learn.ShowTheWay) == "function" then
+        for _, rank in ipairs(goal.ranks or {}) do
+            if rank.line and not goal.level then
+                local found, place = pcall(learn.TrainerFor, learn, rank.line, rank.teaches)
+                if found and type(place) == "table" then
+                    local ok, done = pcall(learn.ShowTheWay, learn, { place = place, name = rank.name })
+                    if ok and done then return true end
+                end
+            end
+        end
+    end
+    if not GG.FirstRecipe(goal) or type(learn.ShowTheWayFor) ~= "function" then return false end
     for _, group in ipairs(goal.recipes) do
         for _, each in ipairs(group.list or {}) do
             local ok, done = pcall(learn.ShowTheWayFor, learn, each.recipeID)
@@ -354,64 +368,63 @@ function GG:ShowTheWay(goal)
     return false
 end
 
-local function And(list)
-    if #list == 1 then return list[1] end
-    if #list == 2 then return L.Format("%s and %s", list[1], list[2]) end
-    return L.Format("%s and %s", table.concat(list, ", ", 1, #list - 1), list[#list])
-end
-
-local function ProfessionGoal(level, cap)
+--- One goal for each profession (Trent, 2026-10-23: "each should have
+--- their own"): the rank to train now and, with Tradeskills, the trainers'
+--- recipes it could learn now; else its next rank, levels away. The ones to
+--- pay for now come first, cheapest first, then the ones levels away.
+local function ProfessionGoals(level, cap)
     local professions = GG.Professions()
     local learn = LearnCost() or {}
     local now, later = {}, {}
-    local recipes, recipeCost, names = 0, 0, {}
     local lines = {}
     for line in pairs(professions) do lines[#lines + 1] = line end
     table.sort(lines)
     for _, line in ipairs(lines) do
         local profession = professions[line]
+        local name = profession.name or ENGLISH[line]
         local rank = GG:NextRank(line, profession, cap)
-        if rank and rank.level <= level then
-            now[#now + 1] = rank
-        elseif rank then
-            later[#later + 1] = rank
-        end
         local recipe = learn[line]
         local count = recipe and Number(recipe.count) or 0
-        if count > 0 then
-            recipes = recipes + count
-            recipeCost = recipeCost + (Number(recipe.cost) or 0)
-            names[#names + 1] = {
-                name = profession.name or ENGLISH[line], count = count, cost = Number(recipe.cost) or 0,
-                list = GG.RecipeList(recipe.recipes),
+        local recipeCost = count > 0 and (Number(recipe.cost) or 0) or 0
+        local ready = rank and rank.level <= level
+        if ready or count > 0 then
+            local parts, ranks, recipes = {}, {}, {}
+            local cost, guess = recipeCost, false
+            if ready then
+                parts[1] = rank.name
+                ranks[1] = rank
+                cost, guess = cost + rank.cost, rank.guess
+            end
+            if count > 0 then
+                if ready then
+                    parts[2] = count == 1 and L["1 recipe"] or L.Format("%d recipes", count)
+                else
+                    parts[1] = count == 1 and L.Format("1 %s recipe", name)
+                        or L.Format("%d %s recipes", count, name)
+                end
+                recipes[1] = { name = name, count = count, cost = recipeCost, list = GG.RecipeList(recipe.recipes) }
+            end
+            now[#now + 1] = {
+                kind = "profession", cost = cost, guessed = guess, ranks = ranks, recipes = recipes,
+                label = #parts == 2 and L.Format("%s and %s", parts[1], parts[2]) or parts[1],
+            }
+        elseif rank then
+            later[#later + 1] = {
+                kind = "profession", cost = rank.cost, guessed = rank.guess, ranks = { rank }, recipes = {},
+                level = rank.level, label = L.Format("%s at level %d", rank.name, rank.level),
             }
         end
     end
-
-    if #now > 0 or recipes > 0 then
-        local parts, cost, guess = {}, recipeCost, false
-        for _, rank in ipairs(now) do
-            parts[#parts + 1] = rank.name
-            cost = cost + rank.cost
-            guess = guess or rank.guess
-        end
-        if recipes > 0 then
-            parts[#parts + 1] = recipes == 1 and L["1 recipe"] or L.Format("%d recipes", recipes)
-        end
-        return {
-            kind = "profession", cost = cost, guessed = guess, ranks = now, recipes = names,
-            label = And(parts),
-        }
-    end
-    if #later > 0 then
-        table.sort(later, function(a, b) return a.level < b.level end)
-        local rank = later[1]
-        return {
-            kind = "profession", cost = rank.cost, guessed = rank.guess, ranks = { rank }, recipes = {},
-            level = rank.level, label = L.Format("%s at level %d", rank.name, rank.level),
-        }
-    end
-    return nil
+    table.sort(now, function(x, y)
+        if x.cost ~= y.cost then return x.cost < y.cost end
+        return x.label < y.label
+    end)
+    table.sort(later, function(x, y)
+        if x.level ~= y.level then return x.level < y.level end
+        return x.label < y.label
+    end)
+    for _, goal in ipairs(later) do now[#now + 1] = goal end
+    return now
 end
 
 local function KnowsAny(spells)
@@ -505,10 +518,15 @@ function GG:Goals()
     local cap = self.MaxLevel()
     local result = { goals = {}, purse = purse, level = level, cap = cap }
     if self:IsOn() then
-        for _, make in ipairs({ ClassGoal, ProfessionGoal, RidingGoal }) do
-            local ok, goal = pcall(make, level, cap)
-            if ok and goal then result.goals[#result.goals + 1] = goal end
+        local function Add(goal) result.goals[#result.goals + 1] = goal end
+        local ok, goal = pcall(ClassGoal, level, cap)
+        if ok and goal then Add(goal) end
+        local listed, list = pcall(ProfessionGoals, level, cap)
+        if listed and type(list) == "table" then
+            for _, each in ipairs(list) do Add(each) end
         end
+        ok, goal = pcall(RidingGoal, level, cap)
+        if ok and goal then Add(goal) end
     end
     result.aside = math.min(purse, self.SetAside())
     result.met = self.Fill(result.goals, purse - result.aside)

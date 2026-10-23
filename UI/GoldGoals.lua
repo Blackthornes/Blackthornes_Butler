@@ -418,14 +418,20 @@ GoalsUI.RECIPES_SHOWN = 8
 
 --- A profession goal naming a recipe, with Tradeskills able to show the way.
 function GoalsUI.CanShowWay(goal)
-    if type(goal) ~= "table" or goal.kind ~= "profession" or not ns.GoldGoals.FirstRecipe(goal) then return false end
+    if type(goal) ~= "table" or goal.kind ~= "profession" then return false end
     local ts = rawget(_G, "BlackthornesTS")
     local learn = type(ts) == "table" and rawget(ts, "LearnNext")
-    return type(learn) == "table" and type(learn.ShowTheWayFor) == "function"
+    if type(learn) ~= "table" then return false end
+    if not goal.level and #(goal.ranks or {}) > 0
+        and type(learn.TrainerFor) == "function" and type(learn.ShowTheWay) == "function" then
+        return true
+    end
+    return ns.GoldGoals.FirstRecipe(goal) ~= nil and type(learn.ShowTheWayFor) == "function"
 end
 
---- A click on a profession goal shows the way to the trainer who teaches
---- its recipes (a player asked, 2026-10-22).
+--- A click on a profession goal shows the way to the trainer of the rank
+--- to train now, else the one who teaches its recipes (a player asked,
+--- 2026-10-22).
 function GoalsUI:Click(row)
     if row.view == "all" or not GoalsUI.CanShowWay(row.data) then return end
     ns.GoldGoals:ShowTheWay(row.data)
