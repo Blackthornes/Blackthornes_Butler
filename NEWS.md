@@ -23,6 +23,18 @@ tell a friend: no hype, no questions to the reader, no exclamation marks
 outside the thanks line, no dashes as punctuation, no "now you can". The
 tool prints a note for a shipped line that reads like an advert.
 
+## 0.18.0
+
+- Jobs has a Profession Leveling group with the next skill point for each profession. You turn it on with Cheapest Skill-Up on the Gold page of Settings.
+- Each profession gets its own goal under Gold Goals, and a click shows the way to the trainer.
+- Bank Alt can take the items that would go to the auction house. You pick it on the Bank Alt page.
+- An item's tooltip can say what a vendor charges for it. You pick it on the General page.
+
+Fixes and changes:
+
+- Spells you skip leave the class training plan.
+- Disenchant Greens Here leaves greens that sell for more.
+
 ## 0.17.0
 
 - Butler Bags has an Empty Slots box next to Sort, and the free space count is bigger.
