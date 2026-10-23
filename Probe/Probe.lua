@@ -219,6 +219,6 @@ function Probe:Run()
     if ns.BagWindow then Line("bag window", ns.BagWindow:ProbeText()) end
 end
 
-ns.RegisterCommand("probe", "check what this client supports for bags, vendors and mail (reads only)", function()
+ns.RegisterHiddenCommand("probe", function()
     ns.KeepCheck("probe", Probe.Run, Probe)
 end)

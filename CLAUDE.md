@@ -1467,8 +1467,7 @@ replacing the last one; chat adds "Saved for Claude, /reload to write it."
 It wraps `/bts probe` (Tradeskills, saved under `BlackthornesTSDB.global`),
 `/beq probe` and `/beq arrow check` (Equipment), `/bpet probe` and `/bpet
 arrow check` (Pets), `/farm arrow check` and `/farm gathering check`
-(Farmer, which has no probe), and `/bbutler probe` (Butler). Each has a
-Settings button. Never rename `lastProbe`; a new check that players run for
+(Farmer, which has no probe), and `/bbutler probe` (Butler). None has a Settings button (the owner, 2026-10-23: checks and debug are typed only, so players never see them; `RegisterHiddenCommand` keeps them out of help, Tradeskills' short help leaves them out). Never rename `lastProbe`; a new check that players run for
 a report goes through `ns.KeepCheck` too, and a fix to it belongs in all
 five.
 

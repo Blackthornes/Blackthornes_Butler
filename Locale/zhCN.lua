@@ -50,7 +50,6 @@ L["ONE CHARACTER"] = "单个角色"
 L["WINDOWS"] = "窗口"
 L["All characters"] = "所有角色"
 L["ADVANCED"] = "高级"
-L["Check"] = "检查"
 L["Butler's settings have a window of their own."] = "Butler 的设置有自己的窗口。"
 L["Open Butler settings"] = "打开 Butler 设置"
 L["Or type /bbutler settings, or click the minimap button."] =
@@ -802,7 +801,7 @@ L["Talk to a vendor first."] = "先和一个商人说话。"
 L["This vendor doesn't sell anything called %s."] = "这个商人不卖叫 %s 的东西。"
 
 -- Settings (2026-10-15)
-L["Windows, tooltips, text size and debug"] = "窗口、提示、文字大小和调试"
+L["Windows, tooltips and text size"] = "窗口、鼠标提示和文字大小"
 L["Open at Vendors:"] = "在商人处打开："
 L["Opens Butler at every vendor. Nothing sells until you click Sell."] =
     "每次找商人时都打开 Butler。你点出售之前什么都不会卖。"
@@ -918,9 +917,6 @@ L["Set Default"] = "恢复默认"
 L["window set to default."] = "窗口已放回默认位置。"
 L["Text Size:"] = "文字大小："
 L["Window Style:"] = "窗口样式："
-L["Debug:"] = "调试："
-L["Extra chat messages to help track down a problem."] =
-    "额外的聊天信息，帮忙找出问题。"
 L["Sister Addons:"] = "姊妹插件："
 L["Says once in chat which Blackthornes addons you don't have."] =
     "在聊天框说一次你还没有哪些 Blackthornes 插件。"
@@ -929,8 +925,6 @@ L["What's New After Updates:"] = "更新后显示更新内容："
 L["Opens What's New the first time you play after an update."] =
     "更新后第一次玩时打开更新内容。"
 L["What's New Motion:"] = "更新内容动画："
-L["Client Check:"] = "游戏检查："
-L["Lists in chat what the game lets Butler do."] = "在聊天框里列出游戏允许 Butler 做什么。"
 
 -- The Order page (rule order)
 L["ORDER"] = "顺序"
