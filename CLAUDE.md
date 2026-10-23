@@ -922,7 +922,14 @@ it meant, its `recipes` list names each on the goal's hover, up to
 `GoalsUI.RECIPES_SHOWN`, and a click on that row calls Tradeskills'
 `LearnNext:ShowTheWayFor(recipeID)`, inside a pcall, so its arrow,
 "Guide Me:", TomTom and seen spots lead to the trainer;
-`GG.RecipeList`, `GG:ShowTheWay`, `GoalsUI:Click`) and riding (`GoldGoals.RIDING`). Each is
+`GG.RecipeList`, `GG:ShowTheWay`, `GoalsUI:Click`) and riding (`GoldGoals.RIDING`). Each profession is
+its own goal (Trent, 2026-10-23: "each should have their own";
+`ProfessionGoals`): its rank to train now and its own recipes share a row,
+"Expert Tailoring and 9 recipes", recipes alone read "9 Tailoring
+recipes", and one with only a later rank keeps a dim row; the ones to pay
+for now come first, cheapest first. A click goes to the rank's trainer
+first (Tradeskills' `LearnNext:TrainerFor` and `:ShowTheWay`), then the
+recipes' trainer. Each is
 ready (green), saving (gold) or far (levels away, dim). The level cap is
 read from the game (`GoldGoals.MaxLevel`: 30 in the beta, 60 at release,
 60 when the game does not say); never hardcode it. A trainer's own price

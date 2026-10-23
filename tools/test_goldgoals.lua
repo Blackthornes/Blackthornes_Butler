@@ -80,7 +80,7 @@ suite.check("three goals", #goals == 3, #goals)
 suite.check("class spells first, both ready ones", goals[1].kind == "class" and goals[1].count == 2
     and goals[1].cost == 16 * G and goals[1].label == "Class spells: 2 to train", goals[1].label)
 suite.check("then the profession: Expert and the trainers' recipes", goals[2].kind == "profession"
-    and goals[2].label == "Expert Tailoring and 9 Tailoring recipes" and goals[2].cost == 4500 + 7700, goals[2].label)
+    and goals[2].label == "Expert Tailoring and 9 recipes" and goals[2].cost == 4500 + 7700, goals[2].label)
 suite.check("Tradeskills is asked once", learnAsked == 1)
 suite.check("then riding, at level 40", goals[3].kind == "riding" and goals[3].level == 40
     and goals[3].cost == 900000 and goals[3].guessed, goals[3].label)
@@ -186,7 +186,7 @@ suite.check("and opens it", GoalsUI.rows[1]:IsShown() and UI.frame:GetHeight() =
 GameTooltip.AddDoubleLine = function(self, left) self._lines[#self._lines + 1] = left end
 GoalsUI.rows[2]:GetScript("OnEnter")(GoalsUI.rows[2])
 local lines = table.concat(GameTooltip._lines, "\n")
-suite.check("a row's tooltip lists what it is for", lines:find("Expert Tailoring and 9 Tailoring recipes", 1, true) ~= nil, lines)
+suite.check("a row's tooltip lists what it is for", lines:find("Expert Tailoring and 9 recipes", 1, true) ~= nil, lines)
 suite.check("the hover names each recipe", lines:find("Brown Linen Pants", 1, true) ~= nil, lines)
 suite.check("and says a click shows the way", lines:find("Click to show the way to your trainer.", 1, true) ~= nil, lines)
 GoalsUI.rows[2]:GetScript("OnClick")(GoalsUI.rows[2])
@@ -217,7 +217,7 @@ suite.check("the panel goes and the window shrinks back", not GoalsUI.panel:IsSh
 ns.HandleSlash("goals on")
 suite.check("on again", GoalsUI.panel:IsShown())
 ns.HandleSlash("goals")
-suite.check("the command lists them", env.ChatText():find("Expert Tailoring and 9 Tailoring recipes", 1, true) ~= nil)
+suite.check("the command lists them", env.ChatText():find("Expert Tailoring and 9 recipes", 1, true) ~= nil)
 -- A goal levels away takes only what the goals you can buy now leave.
 local filled = { { cost = 2 * G, level = 20 }, { cost = 45 * 100 }, { cost = 100 * G, level = 40 } }
 local filledMet = GG.Fill(filled, 2 * G + 20 * 100)
@@ -226,16 +226,20 @@ suite.check("a goal you can pay now is ready though a far one comes first",
 suite.check("the far one gets the rest", filled[1].state == "far" and filled[1].have == 2 * G + 20 * 100 - 45 * 100)
 suite.check("and the one after it nothing", filled[3].have == 0)
 
--- A rank and another profession's recipes (2026-10-23): the row names whose
--- recipes they are, and a click goes to the rank's trainer first.
+-- Each profession its own goal (2026-10-23): a rank and another
+-- profession's recipes are two rows, cheapest first, and each click goes to
+-- its own trainer.
 professions[2948] = nil
 professions[197] = { professionName = "Tailoring", skillLevel = 130, maxSkillLevel = 300 }
 professions[333] = { professionName = "Enchanting", skillLevel = 130, maxSkillLevel = 150 }
 _G.C_TradeSkillUI.GetAllProfessionTradeSkillLines = function() return { 197, 333, 129 } end
 GG:Changed()
-local mixed = GG:Goals().goals[2]
-suite.check("the row names the rank and the recipes' profession",
-    mixed.label == "Expert Enchanting and 9 Tailoring recipes", mixed.label)
+local split = GG:Goals().goals
+suite.check("class, two professions and riding", #split == 4, #split)
+suite.check("the cheaper one first: the rank", split[2].kind == "profession"
+    and split[2].label == "Expert Enchanting" and split[2].cost == 5000, split[2].label)
+suite.check("then the other profession's recipes, named", split[3].kind == "profession"
+    and split[3].label == "9 Tailoring recipes" and split[3].cost == 7700, split[3].label)
 local askedLine, askedTeaches, shownPlace
 _G.BlackthornesTS.LearnNext.TrainerFor = function(_, line, teaches)
     askedLine, askedTeaches = line, teaches
@@ -243,17 +247,20 @@ _G.BlackthornesTS.LearnNext.TrainerFor = function(_, line, teaches)
 end
 _G.BlackthornesTS.LearnNext.ShowTheWay = function(_, row) shownPlace = row.place.name return true end
 shownWay = nil
-suite.check("a click can show the way", GoalsUI.CanShowWay(mixed))
-GG:ShowTheWay(mixed)
-suite.check("the click goes to the rank's trainer first", shownPlace == "Enchanting Trainer"
+suite.check("the rank's row can show the way", GoalsUI.CanShowWay(split[2]))
+GG:ShowTheWay(split[2])
+suite.check("the rank's click goes to its trainer", shownPlace == "Enchanting Trainer"
     and askedLine == 333 and askedTeaches == 225 and shownWay == nil, tostring(shownPlace))
-professions[333].maxSkillLevel = 225
-GG:Changed()
-local trained = GG:Goals().goals[2]
 shownPlace = nil
-GG:ShowTheWay(trained)
-suite.check("once it's trained, the recipes' trainer", trained.label == "9 Tailoring recipes"
-    and shownPlace == nil and shownWay == 3914, trained.label)
+GG:ShowTheWay(split[3])
+suite.check("the recipes' click goes to the recipe's trainer", shownPlace == nil and shownWay == 3914)
+level = 18
+GG:Changed()
+local waiting = GG:Goals().goals
+suite.check("a rank levels away keeps its own row, after the rest",
+    waiting[2].label == "9 Tailoring recipes" and waiting[3].label == "Expert Enchanting at level 20"
+    and waiting[3].state == "far", waiting[3] and waiting[3].label)
+level = 22
 
 UI:Hide()
 
