@@ -4,6 +4,18 @@ Versions follow [semantic versioning](https://semver.org): the middle number
 moves for new behaviour, the last for fixes alone. The newest version goes at
 the top; a release is refused if its version has no section here.
 
+## 0.18.0
+
+For WoW: Forever (interface 16001). Files were added and the TOC changed, so
+restart the game fully after updating (`/reload` is not enough).
+
+- **Profession Leveling:** a group under Jobs shows the next skill point for each profession. Turn it on with Cheapest Skill-Up on the Gold page of Settings.
+- **Gold Goals:** each profession gets its own goal. A goal names its recipes, and a click shows the way to the trainer.
+- **Bank Alt:** Auction Items sends what would go to the auction house to your bank alt. It's on the Bank Alt page.
+- **Vendor Price:** an item's tooltip says what a vendor charges for it. It's on the General page.
+- **Class training:** spells you skip leave the plan.
+- **Bug fixes:** Disenchant Greens Here leaves greens that sell for more, Sell checks batch selling by itself, and several bug fixes for the Gold page.
+
 ## 0.17.0
 
 For WoW: Forever (interface 16001). No files were added, so `/reload` is enough after updating.
