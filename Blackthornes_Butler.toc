@@ -47,6 +47,7 @@ UI\Theme.lua
 UI\BlizzardLook.lua
 UI\Widgets.lua
 UI\Titanforged.lua
+UI\FoldWindow.lua
 UI\About.lua
 UI\WhatsNew.lua
 UI\SettingsPages.lua

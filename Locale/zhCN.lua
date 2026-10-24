@@ -1164,3 +1164,6 @@ L["Your Way There"] = "前往路线"
 L["You need about %s to buy what's missing. You have %s."] = "买齐缺少的材料大约需要%s。你有%s。"
 -- Gold goals: a click shows the way to the trainer (2026-10-22)
 L["Click to show the way to your trainer."] = "点击显示前往训练师的路线。"
+-- The fold gem beside a window's close gem (2026-10-24)
+L["Collapse this window"] = "收起这个窗口"
+L["Expand this window"] = "展开这个窗口"

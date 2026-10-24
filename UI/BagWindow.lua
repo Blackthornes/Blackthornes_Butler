@@ -365,6 +365,14 @@ function BagWindow:Build()
         if ns.BagView.seen then ns.BagView:ClearNew() end
         if ns.Trash then ns.Trash:Changed() end
     end)
+    -- The fold gem beside the close gem (UI/FoldWindow.lua). Folded, the
+    -- squares are out of sight, so the trash can leaves them.
+    if ns.FoldWindow then
+        ns.FoldWindow:Add(frame, { onToggle = function(folded)
+            if not folded then BagWindow:Changed(true) end
+            if ns.Trash then ns.Trash:Changed() end
+        end })
+    end
     if type(UISpecialFrames) == "table" then table.insert(UISpecialFrames, "BlackthornesButlerBags") end
     self.frame = frame
 
@@ -1133,6 +1141,7 @@ end
 
 --- True while the window is up on Your bags, where the squares are.
 function BagWindow:ShowsBags()
+    if ns.FoldWindow and self.frame and ns.FoldWindow:IsFolded(self.frame) then return false end
     return self:IsShown() and (self.tab or "bags") == "bags"
 end
 
@@ -1148,6 +1157,7 @@ end
 
 function BagWindow:Show()
     self:Build()
+    if ns.FoldWindow then ns.FoldWindow:Unfold(self.frame) end
     if self.frame:IsShown() then return end
     ns.BagView:NoteSeen()
     self:RestorePosition()

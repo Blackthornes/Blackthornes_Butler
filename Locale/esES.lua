@@ -1165,3 +1165,6 @@ L["Your Way There"] = "Tu camino"
 L["You need about %s to buy what's missing. You have %s."] = "Necesitas unos %s para comprar lo que falta. Tienes %s."
 -- Gold goals: a click shows the way to the trainer (2026-10-22)
 L["Click to show the way to your trainer."] = "Haz clic para ver el camino hasta tu instructor."
+-- The fold gem beside a window's close gem (2026-10-24)
+L["Collapse this window"] = "Plegar esta ventana"
+L["Expand this window"] = "Desplegar esta ventana"
