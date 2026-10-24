@@ -139,6 +139,15 @@ function UI:Build()
         if ns.Errands then ns.Errands:TellTradeskills(false) end
     end)
 
+    -- The fold gem beside the close gem (UI/FoldWindow.lua): the window
+    -- folds to its plate and opens again.
+    if ns.FoldWindow then
+        ns.FoldWindow:Add(frame, { onToggle = function(folded)
+            if not folded then UI:Refresh() end
+            UI:PlaceButtons()
+        end })
+    end
+
     -- Escape closes it, like the game's own windows.
     if type(UISpecialFrames) == "table" then
         table.insert(UISpecialFrames, "BlackthornesButlerWindow")
@@ -1736,6 +1745,8 @@ end
 function UI:Dock(button)
     local frame = self.frame
     if not (button and frame) or UI.InFight() then return false end
+    -- Folded to its plate, the window has no room for one.
+    if ns.FoldWindow and ns.FoldWindow:IsFolded(frame) then return false end
     UI.docked[button] = true
     if button:GetParent() ~= frame then button:SetParent(frame) end
     -- Its parent's size, so its own units are the window's.
@@ -2235,6 +2246,7 @@ end
 function UI:Show(view)
     self:Build()
     if view then self:SetView(view) end
+    if ns.FoldWindow then ns.FoldWindow:Unfold(self.frame) end
     if not self.frame:IsShown() then
         -- Ask the other addons afresh each time the window opens: a goal
         -- met, a craft queued or a level gained since the last look.

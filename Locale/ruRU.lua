@@ -1119,3 +1119,6 @@ L["Your Way There"] = "Твой путь"
 L["You need about %s to buy what's missing. You have %s."] = "Чтобы купить недостающее, нужно около %s. У тебя %s."
 -- Gold goals: a click shows the way to the trainer (2026-10-22)
 L["Click to show the way to your trainer."] = "Нажми, чтобы увидеть путь к твоему наставнику."
+-- The fold gem beside a window's close gem (2026-10-24)
+L["Collapse this window"] = "Свернуть это окно"
+L["Expand this window"] = "Развернуть это окно"
