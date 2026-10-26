@@ -539,8 +539,9 @@ function BagView.Gold()
     local list = errands and errands:Holdings()
     if type(list) ~= "table" then return nil end
     local total, any = 0, false
+    local me = ns.Everyone and ns.Everyone.Me(list)
     for _, entry in ipairs(list) do
-        if type(entry) == "table" then
+        if type(entry) == "table" and (not ns.Everyone or ns.Everyone.SameSide(entry, me)) then
             if entry.isCurrent == true then
                 local money = Items.Call({ "GetMoney" })
                 money = tonumber(money) or tonumber(entry.gold)
