@@ -23,6 +23,17 @@ tell a friend: no hype, no questions to the reader, no exclamation marks
 outside the thanks line, no dashes as punctuation, no "now you can". The
 tool prints a note for a shipped line that reads like an advert.
 
+## 1.0.0
+
+- Butler counts only the characters on your realm and side.
+- The Bags window foot shows this character's gold beside everyone's.
+- Arrow Size picks 50%, 75% or 100% for the guide arrow.
+- A small gem beside the close button folds a window down to its title.
+
+Fixes and changes:
+
+- Word choices in Settings are now drop-downs.
+
 ## 0.18.0
 
 - Jobs has a Profession Leveling group with the next skill point for each profession. You turn it on with Cheapest Skill-Up on the Gold page of Settings.
