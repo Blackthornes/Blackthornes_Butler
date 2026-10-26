@@ -73,7 +73,7 @@ function WhoHas:Changed()
     self.stale = true
 end
 
---- Every character's items, by item ID, from one Holdings() call. Nil
+--- Every character's items on this realm and side, by item ID, from one Holdings() call. Nil
 --- without Tradeskills or when its answer is no use.
 function WhoHas.Build()
     local butler = ns.Everyone and ns.Everyone.Tradeskills()
@@ -82,10 +82,12 @@ function WhoHas.Build()
     if not ok or type(list) ~= "table" then return nil end
 
     local lookup = {}
+    local me = ns.Everyone.Me(list)
     for _, entry in ipairs(list) do
         -- An old record of the character playing (beside its GUID one) is
         -- the same character with an older count: only the live one counts.
         local skip = type(entry) ~= "table" or (entry.playing == true and entry.isCurrent ~= true)
+            or not ns.Everyone.SameSide(entry, me)
         local name = not skip and (Text(entry.name) or Text(entry.short))
         if name then
             local character = { name = name, isCurrent = entry.isCurrent == true }

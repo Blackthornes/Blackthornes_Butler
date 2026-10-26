@@ -51,6 +51,41 @@ local names = {}
 -- Asking Tradeskills
 --------------------------------------------------------------------------------
 
+--- A realm or side as Tradeskills gives it, folded for comparing (case and
+--- spaces left out), or nil when it is not given ("?" is what Tradeskills
+--- writes for a realm it could not read).
+local function Place(value)
+    if type(value) ~= "string" then return nil end
+    value = value:gsub("%s+", ""):lower()
+    if value == "" or value == "?" then return nil end
+    return value
+end
+
+--- The entry for the character playing in a Holdings list (the first
+--- `isCurrent` one; Tradeskills lists it first), or nil.
+function Everyone.Me(list)
+    for _, entry in ipairs(type(list) == "table" and list or {}) do
+        if type(entry) == "table" and entry.isCurrent == true then return entry end
+    end
+    return nil
+end
+
+--- Is a Holdings entry on the realm and side of the character playing
+--- (`me`)? The one test every list of the player's characters asks, so
+--- characters on other realms or the other side never show. The character
+--- playing, under any of its records, always is. A realm or side not given,
+--- on either, is not held against it.
+function Everyone.SameSide(entry, me)
+    if type(entry) ~= "table" then return false end
+    if entry.isCurrent == true or entry.playing == true then return true end
+    if type(me) ~= "table" then return true end
+    local realm, theirs = Place(me.realm), Place(entry.realm)
+    if realm and theirs and realm ~= theirs then return false end
+    local side, theirSide = Place(me.faction), Place(entry.faction)
+    if side and theirSide and side ~= theirSide then return false end
+    return true
+end
+
 --- Tradeskills' Butler table when it is loaded and answers Holdings.
 function Everyone.Tradeskills()
     local global = rawget(_G, "BlackthornesTS")
@@ -103,7 +138,8 @@ local function Self()
     }
 end
 
---- Every character, as Tradeskills has them, checked field by field. A
+--- Every character on this realm and side, as Tradeskills has them,
+--- checked field by field. A
 --- field of the wrong type counts as not given. Nil when Tradeskills is
 --- not loaded or its answer is no use; the character playing is then the
 --- only one.
@@ -114,12 +150,14 @@ function Everyone:Read()
     if not ok or type(list) ~= "table" then return nil end
 
     local characters = {}
+    local me = Everyone.Me(list)
     for _, entry in ipairs(list) do
         -- An old record of the character playing (beside its GUID one) is
         -- the same character with an older count: only the live one
         -- counts, as on the tooltip (UI/WhoHas.lua).
         local oldSelf = type(entry) == "table" and entry.playing == true and entry.isCurrent ~= true
-        if type(entry) == "table" and Text(entry.key) and not oldSelf then
+        if type(entry) == "table" and Text(entry.key) and not oldSelf
+            and Everyone.SameSide(entry, me) then
             characters[#characters + 1] = {
                 key = entry.key,
                 name = Text(entry.name) or entry.key,

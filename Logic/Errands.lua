@@ -244,12 +244,9 @@ local function AllNames()
     local list, me = Holdings()
     myName = me and (Text(me.short) or Text(me.name)) or nil
     myNames = MyNames(list)
-    local realm = me and Text(me.realm)
-    local faction = me and Text(me.faction)
     for _, entry in ipairs(list or {}) do
         local name = type(entry) == "table" and (Text(entry.short) or Text(entry.name))
-        if name and (not realm or not Text(entry.realm) or Text(entry.realm) == realm)
-            and (not faction or not Text(entry.faction) or Text(entry.faction) == faction) then
+        if name and ns.Everyone.SameSide(entry, me) then
             names[#names + 1] = name
         end
     end
@@ -268,14 +265,10 @@ function Errands:NameOf(key)
     if not byKeyCache or byKeyVersion ~= version then
         byKeyCache, byKeyVersion = {}, version
         local list, me = Holdings()
-        local realm = me and Text(me.realm)
-        local faction = me and Text(me.faction)
         for _, entry in ipairs(list or {}) do
             local name = type(entry) == "table" and (Text(entry.short) or Text(entry.name))
             local entryKey = type(entry) == "table" and Text(entry.key)
-            if name and entryKey and not Mine(entry)
-                and (not realm or not Text(entry.realm) or Text(entry.realm) == realm)
-                and (not faction or not Text(entry.faction) or Text(entry.faction) == faction) then
+            if name and entryKey and not Mine(entry) and ns.Everyone.SameSide(entry, me) then
                 byKeyCache[entryKey] = name
             end
         end
@@ -343,15 +336,12 @@ end
 function Errands:Characters()
     local list, me = Holdings()
     if not list then return {} end
-    local realm = me and Text(me.realm)
-    local faction = me and Text(me.faction)
 
     local names, seen = {}, {}
     for _, entry in ipairs(list) do
         local short = type(entry) == "table" and (Text(entry.short) or Text(entry.name))
         if short and not Mine(entry) and not self:IsMe(short) and not seen[short]
-            and (not realm or not Text(entry.realm) or Text(entry.realm) == realm)
-            and (not faction or not Text(entry.faction) or Text(entry.faction) == faction) then
+            and ns.Everyone.SameSide(entry, me) then
             seen[short] = true
             names[#names + 1] = short
         end

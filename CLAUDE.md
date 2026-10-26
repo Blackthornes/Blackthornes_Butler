@@ -378,6 +378,15 @@ _G.BlackthornesTS.Butler:Holdings()
   --     bags, bank, mail ([itemID] = count copies), bagsAt, bankAt, mailAt } }
 ```
 
+Only characters on the realm and side of the one playing are listed
+(the owner, 2026-10-26): `Everyone.SameSide(entry, me)` is the one test
+All characters (`Everyone:Read`), Who has it (`WhoHas.Build`), the Bags
+window's gold (`BagView.Gold`), the Always mail picker
+(`Errands:Characters`), Equipment's alt names (`Errands:NameOf`) and the
+gold fund (`Funds:Characters`) ask. The one playing, under any of its
+records, always passes and counts once; a realm or side Tradeskills does
+not give (nil or "?") is not held against a record. Nothing saved
+changes. Tested in `tools/test_samerealm.lua`.
 The playing character's bags are Butler's own read (`Bags.slots`), the
 freshest there is. Without Tradeskills (or when it raises) the view shows
 only those bags and says so. Butler saves nothing for this view. Smooth
