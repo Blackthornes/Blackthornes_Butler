@@ -1142,6 +1142,7 @@ L["It takes you to %s"] = "Er bringt dich nach %s"
 L["Walk to %s"] = "Geh nach %s"
 L["toward %s"] = "Richtung %s"
 L["Guide Me:"] = "Führ mich:"
+L["Arrow Size:"] = "Pfeilgröße:"
 L["The way to your %s trainer, with a pin on the first stop:"] = "Der Weg zu deinem %s-Lehrer, mit einer Markierung am ersten Halt:"
 
 L["%d yd"] = "%d m"

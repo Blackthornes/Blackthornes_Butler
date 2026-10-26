@@ -1096,6 +1096,7 @@ L["It takes you to %s"] = "Он перенесет тебя в %s"
 L["Walk to %s"] = "Иди в %s"
 L["toward %s"] = "в сторону %s"
 L["Guide Me:"] = "Веди меня:"
+L["Arrow Size:"] = "Размер стрелки:"
 L["The way to your %s trainer, with a pin on the first stop:"] = "Путь к твоему учителю (%s), метка стоит на первой остановке:"
 
 L["%d yd"] = "%d м"

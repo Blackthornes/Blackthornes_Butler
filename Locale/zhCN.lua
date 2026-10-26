@@ -1141,6 +1141,7 @@ L["It takes you to %s"] = "它会把你带到%s"
 L["Walk to %s"] = "走到%s"
 L["toward %s"] = "朝%s方向"
 L["Guide Me:"] = "为我引路："
+L["Arrow Size:"] = "箭头大小："
 L["The way to your %s trainer, with a pin on the first stop:"] = "前往你的%s训练师的路线，第一站已标在地图上："
 
 L["%d yd"] = "%d码"
