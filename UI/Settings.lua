@@ -846,6 +846,19 @@ function SettingsUI:BuildPages()
     end, true)
     controls.arrowRoute:SetPoint("TOPLEFT", CONTROL_X, -2)
 
+    -- How big the whole arrow is drawn, 100% unless picked (the owner,
+    -- 2026-10-26). The arrow keeps its spot.
+    local arrowSizeRow = pages:Row("gold", 1, L["Arrow Size:"], nil)
+    controls.arrowSize = Widgets.CreateChoice(arrowSizeRow, {
+        min = 50, max = 100, step = 25, value = 100,
+        format = function(percent) return ("%d%%"):format(percent) end,
+        onChange = function(percent)
+            if ns.WayArrowUI then ns.WayArrowUI:SetSize(percent) end
+        end,
+    })
+    ns.SettingsPages.FitStepper(controls.arrowSize, { "50%", "75%", "100%" })
+    controls.arrowSize:SetPoint("TOPLEFT", CONTROL_X, -2)
+
     -- Gold goals at the bottom of the window (Logic/GoldGoals.lua, the
     -- owner said build it 2026-10-13).
     pages:Section("gold", 1, L["GOLD GOALS"])
@@ -1041,6 +1054,7 @@ function SettingsUI:Refresh()
     controls.learn:SetChecked(ns.db.learn ~= false)
     controls.classTraining:SetChecked(ns.ClassTraining:IsOn())
     controls.arrowRoute:SetChecked(ns.db.arrowRoute ~= false)
+    controls.arrowSize:SetValue(ns.WayArrowUI and ns.WayArrowUI.Size() or 100, true)
     controls.useTomTom:SetChecked(ns.db.useTomTom ~= false)
     controls.goldGoals:SetChecked(ns.GoldGoals:IsOn())
     controls.skillUp:SetChecked(ns.SkillUp:IsOn())
