@@ -23,6 +23,14 @@ tell a friend: no hype, no questions to the reader, no exclamation marks
 outside the thanks line, no dashes as punctuation, no "now you can". The
 tool prints a note for a shipped line that reads like an advert.
 
+## 1.0.1
+
+- The window has tabs: Your Bags, All Characters and Settings. Settings is the last tab, at the bottom right.
+
+Fixes and changes:
+
+- Various UI improvements.
+
 ## 1.0.0
 
 - Butler counts only the characters on your realm and side.
