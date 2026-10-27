@@ -778,7 +778,7 @@ L["Nobody"] = "没有人"
 -- Buy more: any amount of a vendor item at once (UI/BuyMany.lua)
 -- ======================================================================
 L["Buy more"] = "买更多"
-L["How many?"] = "要几个？"
+L["How Many:"] = "数量："
 L["Cancel"] = "取消"
 L["Stop"] = "停下"
 L["Buying %s..."] = "正在购买 %s..."
