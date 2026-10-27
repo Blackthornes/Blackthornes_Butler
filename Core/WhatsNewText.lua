@@ -5,6 +5,9 @@
 local _, ns = ...
 
 ns.WHATS_NEW = {
+    { version = "1.0.1", lines = {
+        "The window has tabs: Your Bags, All Characters and Settings. Settings is the last tab, at the bottom right.",
+    } },
     { version = "1.0.0", lines = {
         "Butler counts only the characters on your realm and side.",
         "The Bags window foot shows this character's gold beside everyone's.",
@@ -16,8 +19,5 @@ ns.WHATS_NEW = {
         "Each profession gets its own goal under Gold Goals, and a click shows the way to the trainer.",
         "Bank Alt can take the items that would go to the auction house. You pick it on the Bank Alt page.",
         "An item's tooltip can say what a vendor charges for it. You pick it on the General page.",
-    } },
-    { version = "0.17.0", lines = {
-        "Butler Bags has an Empty Slots box next to Sort, and the free space count is bigger.",
     } },
 }
