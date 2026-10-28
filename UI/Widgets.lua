@@ -1419,10 +1419,33 @@ function Widgets.CreateRowList(parent, opts)
         list.fadeTop, list.fadeBottom = fadeTop, fadeBottom
     end
 
+    -- With opts.heightFor, each row is as tall as its lines need (a long
+    -- note in German ran three lines and over the rows under it, a
+    -- player's report, 2026-10-21): heightFor(row, data) gives the height
+    -- once the row is filled, never less than rowHeight, and the rows are
+    -- stacked until the list is full.
+    local heightFor = opts.heightFor
+
+    -- How many rows are on screen now (laid out by Refresh when rows grow).
+    local shownCount = 0
+
     local function VisibleRowCount()
+        if heightFor then return shownCount end
         local height = list:GetHeight()
         if not height or height <= 0 then return 0 end
         return math.floor(height / rowHeight)
+    end
+
+    local function ListHeight()
+        local height = tonumber(list:GetHeight())
+        return height and height > 0 and height or 0
+    end
+
+    --- The height a filled row needs.
+    local function Fit(row)
+        local ok, height = pcall(heightFor, row, row.data)
+        height = ok and tonumber(height) or rowHeight
+        return math.max(rowHeight, math.ceil(height))
     end
 
     -- True while Refresh sets the scrollbar itself (see there).
@@ -1498,12 +1521,88 @@ function Widgets.CreateRowList(parent, opts)
         return row
     end
 
+    -- A row kept out of sight, filled to measure rows that are not on
+    -- screen (how far the list can scroll).
+    local measureRow
+
+    local function Measure(data)
+        if not measureRow then
+            measureRow = CreateFrame("Button", nil, list)
+            measureRow:SetPoint("TOPLEFT", 0, 0)
+            measureRow:SetPoint("RIGHT", scrollbar, "LEFT", -6, 0)
+            measureRow:SetHeight(rowHeight)
+            measureRow:Hide()
+            if opts.createRow then opts.createRow(measureRow) end
+        end
+        measureRow:Hide()
+        measureRow.data = data
+        if opts.updateRow then pcall(opts.updateRow, measureRow, data) end
+        local height = Fit(measureRow)
+        measureRow:Hide()
+        measureRow.data = nil
+        return height
+    end
+
+    -- The furthest it scrolls when rows grow, kept until the rows or the
+    -- list's size change.
+    local most, mostFor, mostAt
+
     function list:MaxOffset()
-        return math.max(0, #self.data - VisibleRowCount())
+        if not heightFor then
+            return math.max(0, #self.data - VisibleRowCount())
+        end
+        local room = ListHeight()
+        local width = tonumber(self:GetWidth()) or 0
+        local at = room .. ":" .. width
+        if mostFor == self.data and mostAt == at then return most end
+        local used, index = 0, #self.data
+        while index >= 1 do
+            local height = Measure(self.data[index])
+            if used + height > room and used > 0 then break end
+            used = used + height
+            index = index - 1
+        end
+        most, mostFor, mostAt = math.max(0, index), self.data, at
+        return most
+    end
+
+    --- Lay the rows out from the offset, each as tall as it needs, until
+    --- the list is full. A row that would run past the foot waits for a
+    --- scroll.
+    local function Stack(self, stillOver)
+        local room = ListHeight()
+        local used, shown, index = 0, 0, 1
+        while true do
+            local data = self.data[index + self.offset]
+            if not data then break end
+            local row = AcquireRow(index)
+            row.data = data
+            row.dataIndex = index + self.offset
+            if not (stillOver and row == hovered) then Unlight(row) end
+            row.stripe:SetColorTexture(Theme.Unpack(index % 2 == 0 and "glassAlt" or "glass"))
+            if opts.updateRow then opts.updateRow(row, data, index + self.offset) end
+            local height = Fit(row)
+            if index > 1 and used + height > room then
+                row.data = nil
+                row:Hide()
+                break
+            end
+            row:SetHeight(height)
+            row:SetPoint("TOPLEFT", 0, -used)
+            row:Show()
+            used = used + height
+            shown = index
+            index = index + 1
+        end
+        for rest = shown + 1, #self.rows do
+            self.rows[rest].data = nil
+            self.rows[rest]:Hide()
+        end
+        shownCount = shown
+        return shown
     end
 
     function list:Refresh()
-        local visible = VisibleRowCount()
         local maxOffset = self:MaxOffset()
 
         if self.offset > maxOffset then self.offset = maxOffset end
@@ -1513,7 +1612,9 @@ function Widgets.CreateRowList(parent, opts)
         -- hidden row is under no mouse.
         local stillOver = hovered and UnderMouse(hovered)
 
-        for index = 1, visible do
+        local visible = heightFor and Stack(self, stillOver) or VisibleRowCount()
+
+        for index = 1, heightFor and 0 or visible do
             local row = AcquireRow(index)
             local data = self.data[index + self.offset]
 
@@ -1539,8 +1640,10 @@ function Widgets.CreateRowList(parent, opts)
             end
         end
 
-        for index = visible + 1, #self.rows do
-            self.rows[index]:Hide()
+        if not heightFor then
+            for index = visible + 1, #self.rows do
+                self.rows[index]:Hide()
+            end
         end
 
         -- A scroll or a redraw hands the row under a still mouse new data,
@@ -1583,6 +1686,7 @@ function Widgets.CreateRowList(parent, opts)
     --- starts from the top.
     function list:SetData(data, keepPlace)
         self.data = data or {}
+        mostFor = nil
         if not keepPlace then self.offset = 0 end
         self:Refresh()
     end
