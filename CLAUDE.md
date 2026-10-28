@@ -1235,7 +1235,8 @@ the owner 2026-10-16). Keep, Mail, Bank, Wait and Look at it never get
 it. A red glow lies round that slot too, pulsing slowly (the owner,
 2026-10-19; `Trash:Glow`, `Media/Trash/PickGlow.tga` from the same tool,
 `Trash.GLOW_REACH`), our own frame with no mouse, shown and hidden with
-the can. Butler never deletes: a click picks the item up
+the can. The can never deletes (Swap when full is the one place Butler
+does): a click picks the item up
 (`C_Container.PickupContainerItem`, after reading the slot again) and says
 to drop it outside the bags, where the game's own box asks first. The can
 is Butler's own button on UIParent, anchored to the game's item button
@@ -1248,6 +1249,26 @@ Farmer has the same can by its own prices (its `UI/Trash.lua`, same art
 and tool) and stands down while `_G.BlackthornesButler.Trash` exists, so
 only one shows; keep `ns.Trash` on the global, or change Farmer's
 `Trash.ButlerHasIt` too.
+
+## Swap when full
+
+A player asked on Classic Era, the owner said build it from a mockup and
+then asked for the same here (2026-10-28): with the bags full, a popup
+beside the loot window offers to swap the item the trash can would pick
+(`Trash:Pick`) for loot worth more that has nowhere to go
+(`SwapWhenFull:BestLoot`, `Fits`: no stack with room, no profession bag
+that takes it), each at Butler's own worth. `UI/SwapWhenFull.lua`: Swap
+destroys the cheap item in that one click (the owner: ticking the box
+means the player wants Butler to do it; the only place Butler deletes,
+`Swap:Take` picks the slot up, checks the cursor holds that item, then
+`DeleteCursorItem`), and once its slot is empty and the loot window is
+still open, Butler loots that item (`FollowSwap`, `LootSlot`). Not Now
+and the close gem put it away until the next loot window; hidden in a
+fight. "Swap When Full:" on the General page (`swapWhenFull`, account
+wide, off unless ticked, never rename it). `/bbutler probe` has a "swap
+when full" line. The same file as Classic Era Butler's; a fix to one
+belongs in both. Tested in `tools/test_swapwhenfull.lua`. Not yet seen
+in game.
 
 ## The Bags window
 
