@@ -180,6 +180,10 @@ function UI:Build()
         onClick = function(data, button) UI:Clicked(data, button) end,
         onEnter = function(row, data) UI:Enter(row, data) end,
         onLeave = function() GameTooltip:Hide() end,
+        -- A row grows to fit its longest note, so a long German or
+        -- French reason wraps onto a third line instead of running over
+        -- the row below (a player's report, 2026-10-28).
+        heightFor = function(row) return UI.RowHeight(row) end,
         -- The buttons on group lines (Sell, Disenchant, Bank, Log out)
         -- follow their line as the list scrolls.
         onRefresh = function() UI:PlaceButtons() end,
@@ -428,6 +432,41 @@ function UI.FitWorth(row)
         width = math.max(width, math.ceil(Theme.TextWidth("small", text)) + 4)
     end
     row.worth:SetWidth(math.min(width, UI.WORTH_MOST))
+end
+
+-- How tall a label's text stands: the game's own measure, never less than
+-- its width says (a label laid out this frame can answer short), and the
+-- width's count alone where the game says nothing.
+local function TextHeight(label, size, width)
+    local text = label:GetText()
+    if type(text) ~= "string" or text == "" then return 0 end
+    local lines = math.max(1, math.ceil(Theme.TextWidth(size, text) / math.max(1, width)))
+    local guess = lines * ((Theme.sizes[size] or 11) + 2)
+    local ok, height = pcall(label.GetStringHeight, label)
+    if ok and type(height) == "number" and height > guess then return height end
+    return guess
+end
+
+-- Room above and below the tallest piece of a row: two lines still fit
+-- in ROW_HEIGHT, as before.
+UI.ROW_PAD = 4
+
+--- How tall a row must be to show all of its text, at least ROW_HEIGHT.
+function UI.RowHeight(row)
+    local ok, rowWidth = pcall(row.GetWidth, row)
+    rowWidth = ok and tonumber(rowWidth) or 0
+    local ok2, worthWidth = pcall(row.worth.GetWidth, row.worth)
+    worthWidth = ok2 and tonumber(worthWidth) or UI.WORTH_WIDTH
+    local nameWidth = 184
+    local reasonWidth = rowWidth - 34 - nameWidth - 8 - 8 - worthWidth - 6
+    if reasonWidth < 40 then reasonWidth = 40 end
+    local tallest = math.max(
+        TextHeight(row.name, "small", nameWidth),
+        TextHeight(row.reason, "small", reasonWidth),
+        TextHeight(row.worth, "small", worthWidth))
+    local shown = row.action and row.action.IsShown and row.action:IsShown()
+    if shown == true then tallest = math.max(tallest, 22) end
+    return math.max(ROW_HEIGHT, math.ceil(tallest + UI.ROW_PAD))
 end
 
 function UI.UpdateRow(row, data)
