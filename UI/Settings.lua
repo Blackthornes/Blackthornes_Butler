@@ -97,6 +97,14 @@ function SettingsUI:Build()
         Theme.Border(frame, "borderLit")
     end
 
+    -- The fold gem beside the close gem, as on every other tab
+    -- (UI/FoldWindow.lua), so the corner never changes between tabs.
+    if ns.FoldWindow then
+        ns.FoldWindow:Add(frame, { onToggle = function(folded)
+            if not folded then SettingsUI:Refresh() end
+        end })
+    end
+
     frame:SetScript("OnDragStart", function(self) self:StartMoving() end)
     frame:SetScript("OnDragStop", function(self)
         self:StopMovingOrSizing()
