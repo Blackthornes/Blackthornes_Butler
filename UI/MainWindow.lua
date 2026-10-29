@@ -227,7 +227,7 @@ function UI:Build()
             if message then ns.Print(message) end
         end
     end
-    self.mailButton = Widgets.CreateButton(frame, L["Fill mail"], function()
+    self.mailButton = Widgets.CreateButton(frame, L["Fill Mail"], function()
             local _, message = ns.Errands:FillMail(UI.footMail)
             if message then ns.Print(message) end
         end,
@@ -487,7 +487,7 @@ function UI.UpdateRow(row, data)
         -- squeezed into lines that run over the row (seen in game
         -- 2026-10-12). The worth is still on the row's tooltip.
         row.worth:SetText("")
-        row.action:SetText(L["Fill mail"])
+        row.action:SetText(L["Fill Mail"])
         row.action.tooltipText = L.Format("Fills in a mail to %s. Check it, then press Send.", to)
         if (data.worth or 0) > 0 then
             row.action.tooltipText = row.action.tooltipText .. "\n"
@@ -672,10 +672,10 @@ function UI.UpdateTrainRow(row, data)
         end
         row.worth:SetText("")
         if training.trainerOpen and training.atClassTrainer then
-            row.action:SetText(training.buying and L["Training..."] or L["Train all"])
+            row.action:SetText(training.buying and L["Training..."] or L["Train All"])
             row.action:Show()
         elseif spot then
-            row.action:SetText(L["Show the way"])
+            row.action:SetText(L["Show the Way"])
             row.action:Show()
         else
             row.worth:SetText(training.CostText(plan.cost, plan.unknown, count))

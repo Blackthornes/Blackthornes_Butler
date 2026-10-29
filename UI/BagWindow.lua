@@ -958,11 +958,11 @@ function BagWindow:HeadingButton(kind)
         end
     end
     if kind == "mail" then
-        button = Widgets.CreateButton(self.content, L["Fill mail"], Run(ns.Errands.FillMail), { height = 18, primary = true })
+        button = Widgets.CreateButton(self.content, L["Fill Mail"], Run(ns.Errands.FillMail), { height = 18, primary = true })
     else
         button = Widgets.CreateButton(self.content, L["Move to bank"], Run(ns.Errands.MoveToBank), { height = 18, primary = true })
     end
-    button:SetWidth(Theme.TextWidth("small", kind == "mail" and L["Fill mail"] or L["Move to bank"]) + 24)
+    button:SetWidth(Theme.TextWidth("small", kind == "mail" and L["Fill Mail"] or L["Move to bank"]) + 24)
     button:Hide()
     self.headingButtons[kind] = button
     return button
