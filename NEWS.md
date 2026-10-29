@@ -23,6 +23,15 @@ tell a friend: no hype, no questions to the reader, no exclamation marks
 outside the thanks line, no dashes as punctuation, no "now you can". The
 tool prints a note for a shipped line that reads like an advert.
 
+## 1.1.0
+
+- One minimap button now covers every Blackthornes addon you have. Click it to pick one. Turn it off with Combine Addon Buttons on the General page.
+- Swap When Full offers to swap your cheapest item for better loot when your bags are full. It is off until you tick Swap When Full on the General page.
+
+Fixes and changes:
+
+- Several bug fixes for rows that cut off long notes.
+
 ## 1.0.1
 
 - The window has tabs: Your Bags, All Characters and Settings. Settings is the last tab, at the bottom right.
