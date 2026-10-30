@@ -172,14 +172,15 @@ function MinimapButton:JoinShared()
         settings = function() if ns.SettingsUI then ns.SettingsUI:Toggle() end end,
         db = function() return ns.db end,
     })
-    -- And the one Blackthornes window (UI/SharedWindow.lua). Until this
-    -- addon's pages move in, its rail button opens its own window.
+    -- And for the one Blackthornes window (UI/SharedWindow.lua).
     if ns.SharedWindow then
         ns.SharedWindow:Join({
             key = "butler", order = 5, name = "Butler", icon = ICON,
             open = function() MinimapButton:Open() end,
             settings = function() if ns.SettingsUI then ns.SettingsUI:Toggle() end end,
             db = function() return ns.db end,
+            -- Butler's pages show in it (UI/ButlerTabs.lua).
+            host = ns.ButlerTabs and ns.ButlerTabs.host or nil,
         })
     end
 end

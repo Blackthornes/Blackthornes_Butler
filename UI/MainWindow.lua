@@ -146,6 +146,8 @@ function UI:Build()
         UI:HideMenu()
         if ns.Selling then ns.Selling:Update() end
         if ns.Errands then ns.Errands:TellTradeskills(false) end
+        -- Inside the one window, it closes with this one.
+        if ns.ButlerTabs then ns.ButlerTabs:Closed(frame) end
     end)
 
     -- The fold gem beside the close gem (UI/FoldWindow.lua): the window
@@ -1717,7 +1719,11 @@ function UI:PlaceGoals()
     else
         frame:SetHeight(HEIGHT + extra)
     end
-    if left and top and frame:IsShown() then
+    -- Laid in the one window, it fills that window's area and keeps no
+    -- place of its own.
+    local hosted = ns.ButlerTabs and ns.ButlerTabs.area
+        and frame:GetParent() == ns.ButlerTabs.area
+    if left and top and frame:IsShown() and not hosted then
         frame:ClearAllPoints()
         frame:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT", left, top)
         self:SavePosition()
@@ -2370,6 +2376,9 @@ end
 
 --- Bring the window up, on `view` ("bags" or "all") when one is given.
 function UI:Show(view)
+    -- With "One Window:" ticked, the one window opens on Butler instead
+    -- (UI/ButlerTabs.lua), and lays this window in.
+    if ns.ButlerTabs and ns.ButlerTabs:Route(view) then return end
     self:Build()
     if view then self:SetView(view) end
     if ns.FoldWindow then ns.FoldWindow:Unfold(self.frame) end
