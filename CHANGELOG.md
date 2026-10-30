@@ -10,7 +10,7 @@ For WoW: Forever (interface 16001). Files were added, so restart the game fully 
 
 - **Settings:** The General page now holds how the windows look. Effects is new there.
 - **Bags window:** The Bags, Bank and Everyone tabs hang below the window, like the other Blackthornes windows.
-- **Look:** The Gold page has an Arrow section. Lists moved next to Bank Alt. An empty list lets you clear your search.
+- **Bug fixes:** Various bug fixes for Butler.
 
 ## 1.1.0
 

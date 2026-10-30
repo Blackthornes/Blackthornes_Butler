@@ -30,7 +30,7 @@ tool prints a note for a shipped line that reads like an advert.
 
 Fixes and changes:
 
-- The Gold page has an Arrow section. Lists moved next to Bank Alt. An empty list lets you clear your search.
+- Various bug fixes for Butler.
 
 ## 1.1.0
 
