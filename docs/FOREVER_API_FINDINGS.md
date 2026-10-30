@@ -46,3 +46,17 @@ The Ammo row (Logic/Ammo.lua) reads the vendor with `GetMerchantNumItems`,
 and retail read the quantity differently. `/bbutler probe` lists which of
 these the client has and what weapon and ammo bag Butler sees; whether
 Forever keeps ammo and quivers at all is still to be seen.
+
+## The one window's docking (not yet seen in game)
+
+`UI/SharedWindow.lua` (2026-10-30) docks the one window beside the game's
+own windows by screen position only; it never moves, hides or writes a
+Blizzard frame. What it expects of Forever's retail engine, from the
+retail client, not yet seen in game: `AUCTION_HOUSE_SHOW`/`AUCTION_HOUSE_CLOSED`
+with `AuctionHouseFrame`, `MAIL_SHOW`/`MAIL_CLOSED` with `MailFrame`,
+`MERCHANT_SHOW`/`MERCHANT_CLOSED` with `MerchantFrame`, and
+`TRAINER_SHOW`/`TRAINER_CLOSED` with `ClassTrainerFrame`. The retail
+client can close these through `PLAYER_INTERACTION_MANAGER_FRAME_HIDE`
+(its argument an `Enum.PlayerInteractionType`: MailInfo 17, Merchant 5,
+Trainer 7, Auctioneer 21) without the old close event, so that event
+undocks too. Every event is registered inside a pcall.
