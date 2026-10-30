@@ -23,6 +23,15 @@ tell a friend: no hype, no questions to the reader, no exclamation marks
 outside the thanks line, no dashes as punctuation, no "now you can". The
 tool prints a note for a shipped line that reads like an advert.
 
+## 1.2.0
+
+- The General page holds Windows, Addons, Butler and Tooltips. Effects is a new choice there and starts on Full.
+- Bags, Bank and Everyone hang below the Bags window like every other window tab. An empty list offers Clear Search.
+
+Fixes and changes:
+
+- The Gold page has an Arrow section. Lists joined the Bank Alt page.
+
 ## 1.1.0
 
 - One minimap button now covers every Blackthornes addon you have. Click it to pick one. Turn it off with Combine Addon Buttons on the General page.

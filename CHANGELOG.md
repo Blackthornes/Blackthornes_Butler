@@ -4,6 +4,14 @@ Versions follow [semantic versioning](https://semver.org): the middle number
 moves for new behaviour, the last for fixes alone. The newest version goes at
 the top; a release is refused if its version has no section here.
 
+## 1.2.0
+
+For WoW: Forever (interface 16001). Files were added, so restart the game fully after updating (`/reload` is not enough).
+
+- **Settings:** The General page holds Windows, Addons, Butler and Tooltips. Effects is a new choice there and starts on Full.
+- **Bags window:** Bags, Bank and Everyone hang below the Bags window like every other window tab. An empty list offers Clear Search.
+- **Look:** The Gold page has an Arrow section. Lists joined the Bank Alt page.
+
 ## 1.1.0
 
 For WoW: Forever (interface 16001). Files were added, so restart the game fully after updating (`/reload` is not enough).
