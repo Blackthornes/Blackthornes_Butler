@@ -25,12 +25,12 @@ tool prints a note for a shipped line that reads like an advert.
 
 ## 1.2.0
 
-- The General page holds Windows, Addons, Butler and Tooltips. Effects is a new choice there and starts on Full.
-- Bags, Bank and Everyone hang below the Bags window like every other window tab. An empty list offers Clear Search.
+- The General page now holds how the windows look. Effects is new there.
+- The Bags, Bank and Everyone tabs hang below the window, like the other Blackthornes windows.
 
 Fixes and changes:
 
-- The Gold page has an Arrow section. Lists joined the Bank Alt page.
+- The Gold page has an Arrow section. Lists moved next to Bank Alt. An empty list lets you clear your search.
 
 ## 1.1.0
 

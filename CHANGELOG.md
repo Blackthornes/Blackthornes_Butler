@@ -8,9 +8,9 @@ the top; a release is refused if its version has no section here.
 
 For WoW: Forever (interface 16001). Files were added, so restart the game fully after updating (`/reload` is not enough).
 
-- **Settings:** The General page holds Windows, Addons, Butler and Tooltips. Effects is a new choice there and starts on Full.
-- **Bags window:** Bags, Bank and Everyone hang below the Bags window like every other window tab. An empty list offers Clear Search.
-- **Look:** The Gold page has an Arrow section. Lists joined the Bank Alt page.
+- **Settings:** The General page now holds how the windows look. Effects is new there.
+- **Bags window:** The Bags, Bank and Everyone tabs hang below the window, like the other Blackthornes windows.
+- **Look:** The Gold page has an Arrow section. Lists moved next to Bank Alt. An empty list lets you clear your search.
 
 ## 1.1.0
 
