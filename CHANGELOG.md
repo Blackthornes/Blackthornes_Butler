@@ -4,6 +4,14 @@ Versions follow [semantic versioning](https://semver.org): the middle number
 moves for new behaviour, the last for fixes alone. The newest version goes at
 the top; a release is refused if its version has no section here.
 
+## 1.2.0
+
+For WoW: Forever (interface 16001). Files were added, so restart the game fully after updating (`/reload` is not enough).
+
+- **Settings:** The General page now holds how the windows look. Effects is new there.
+- **Bags window:** The Bags, Bank and Everyone tabs hang below the window, like the other Blackthornes windows.
+- **Bug fixes:** Various bug fixes for Butler.
+
 ## 1.1.0
 
 For WoW: Forever (interface 16001). Files were added, so restart the game fully after updating (`/reload` is not enough).

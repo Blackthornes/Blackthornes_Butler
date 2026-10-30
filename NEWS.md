@@ -23,6 +23,15 @@ tell a friend: no hype, no questions to the reader, no exclamation marks
 outside the thanks line, no dashes as punctuation, no "now you can". The
 tool prints a note for a shipped line that reads like an advert.
 
+## 1.2.0
+
+- The General page now holds how the windows look. Effects is new there.
+- The Bags, Bank and Everyone tabs hang below the window, like the other Blackthornes windows.
+
+Fixes and changes:
+
+- Various bug fixes for Butler.
+
 ## 1.1.0
 
 - One minimap button now covers every Blackthornes addon you have. Click it to pick one. Turn it off with Combine Addon Buttons on the General page.
