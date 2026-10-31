@@ -166,7 +166,10 @@ function SettingsUI:Build()
     local fit = pages.Fit
     pages.Fit = function(page)
         fit(page)
-        if ns.ButlerTabs then ns.ButlerTabs:Need("settings", frame:GetWidth(), frame:GetHeight()) end
+        -- What the pages asked for: laid into the one window the frame
+        -- fills the area, so its own size would only say how big that is.
+        local need = page.need or { frame:GetWidth(), frame:GetHeight() }
+        if ns.ButlerTabs then ns.ButlerTabs:Need("settings", need[1], need[2]) end
     end
     self.pages:Fit()
 
