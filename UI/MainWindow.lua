@@ -364,10 +364,19 @@ function UI.CreateRow(row)
     row.icon:SetSize(ROW_HEIGHT - 6, ROW_HEIGHT - 6)
     row.icon:SetPoint("LEFT", 6, 0)
     if row.icon.SetTexCoord then row.icon:SetTexCoord(0.07, 0.93, 0.07, 0.93) end
+    -- The thin quality ring and the stack's count in the corner (UI/ItemLook.lua).
+    if ns.ItemLook then ns.ItemLook.Attach(row.icon) end
 
     row.fold = Theme.CreateLabel(row, "normal", "accent", "CENTER")
     row.fold:SetPoint("CENTER", row, "LEFT", 14, 0)
     row.fold:SetWidth(16)
+
+    -- A group heading's mark, in the verdict's colour (UI/Marks.lua).
+    row.mark = row:CreateTexture(nil, "ARTWORK")
+    row.mark:SetSize(12, 12)
+    row.mark:SetPoint("LEFT", 21, 0)
+    row.mark:Hide()
+    if ns.Marks then ns.Marks.Attach(row.mark) end
 
     row.name = Theme.CreateLabel(row, "small", "text")
     row.name:SetPoint("LEFT", 34, 0)
@@ -499,12 +508,39 @@ function UI.UpdateRow(row, data)
     end
 end
 
+-- Which mark each verdict group wears (UI/Marks.lua's kinds).
+UI.MARK_FOR = {
+    craft = "craft", sell = "sell", auction = "list", disenchant = "disenchant",
+    mail = "mail", bank = "bank", look = "look", wait = "waiting", keep = "keep",
+}
+
+--- Take a row's ring, corner count and mark away, before it is drawn again
+--- as whatever it shows now.
+function UI.ClearLook(row)
+    if ns.ItemLook and row.icon then
+        ns.ItemLook.SetQuality(row.icon, nil)
+        ns.ItemLook.SetCount(row.icon, nil)
+    end
+    if row.mark then
+        if ns.Marks then ns.Marks.Set(row.mark, nil) else row.mark:Hide() end
+    end
+end
+
+--- A group heading's mark, and its words in the mark's colour.
+function UI.MarkHeading(row, verdict)
+    local kind = UI.MARK_FOR[verdict]
+    if not (kind and ns.Marks and row.mark) then return end
+    ns.Marks.Set(row.mark, kind)
+    ns.Marks.Paint(row.name, kind)
+end
+
 function UI.DrawRow(row, data)
     local openEdge = rawget(row, "openEdge")
     if openEdge then openEdge:Hide() end
     row.worth:SetTextColor(Theme.Unpack("text"))
     row.reason:SetTextColor(Theme.Unpack("muted"))
     if row.action then row.action:Hide() end
+    UI.ClearLook(row)
     if data.type == "ammo" then return UI.UpdateAmmoRow(row, data) end
     if data.type == "everyone" then return UI.UpdateItemRow(row, data) end
     if data.type == "holder" then return UI.UpdateHolderRow(row, data) end
@@ -524,6 +560,7 @@ function UI.DrawRow(row, data)
         row.fold:SetText(data.folded and "+" or "-")
         row.name:SetTextColor(Theme.Unpack("accent"))
         row.name:SetText(group.label:upper())
+        UI.MarkHeading(row, group.verdict)
         row.reason:SetText(Plural(group.count, group.one or L["item"], group.many or L["items"]))
         row.worth:SetText(group.worth > 0 and Items.FormatMoney(group.worth) or "")
         return
@@ -533,7 +570,13 @@ function UI.DrawRow(row, data)
     row.icon:Show()
     row.icon:SetTexture(data.icon or [[Interface\Icons\INV_Misc_QuestionMark]])
     row.name:SetTextColor(QualityColor(data.quality))
-    row.name:SetText(data.count > 1 and L.Format("%s x%d", data.name, data.count) or data.name)
+    if ns.ItemLook then
+        ns.ItemLook.SetQuality(row.icon, data.quality)
+        ns.ItemLook.SetCount(row.icon, data.count)
+        row.name:SetText(data.name)
+    else
+        row.name:SetText(data.count > 1 and L.Format("%s x%d", data.name, data.count) or data.name)
+    end
     row.reason:SetText(data.reason or "")
     -- Bought to disenchant reads in the tag's violet, as on Tradeskills' tab.
     if data.bought then
@@ -602,6 +645,7 @@ function UI.UpdateQuestBuyRow(row, data)
         or [[Interface\Icons\INV_Misc_QuestionMark]])
     local quality = Items.Call({ "C_Item.GetItemQualityByID" }, item.itemID)
     row.name:SetTextColor(QualityColor(tonumber(quality)))
+    if ns.ItemLook then ns.ItemLook.SetQuality(row.icon, tonumber(quality)) end
     row.name:SetText(ns.Jobs.ItemName(item.itemID))
     local text, money = ns.QuestBuy:Text(item)
     row.reason:SetText(text)
@@ -735,6 +779,7 @@ function UI.UpdateItemRow(row, data)
     row.icon:Show()
     row.icon:SetTexture(item.icon or [[Interface\Icons\INV_Misc_QuestionMark]])
     row.name:SetTextColor(QualityColor(item.quality))
+    if ns.ItemLook then ns.ItemLook.SetQuality(row.icon, item.quality) end
     row.name:SetText(item.name)
     row.reason:SetText(ns.Everyone.Summary(item))
     row.worth:SetText(tostring(item.total))
