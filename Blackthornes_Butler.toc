@@ -44,6 +44,8 @@ Logic\ListRules.lua
 Logic\VendorPrices.lua
 
 UI\Theme.lua
+UI\ItemLook.lua
+UI\Marks.lua
 UI\BlizzardLook.lua
 UI\Widgets.lua
 UI\SpotMarker.lua
