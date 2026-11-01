@@ -4,6 +4,13 @@ Versions follow [semantic versioning](https://semver.org): the middle number
 moves for new behaviour, the last for fixes alone. The newest version goes at
 the top; a release is refused if its version has no section here.
 
+## 1.4.2
+
+For WoW: Forever (interface 16001). `/reload` is enough after updating.
+
+- **Bags window:** The Bags window always shows your empty slots, so the Empty Slots tick box is gone.
+- **Bug fixes:** Various bug fixes for Butler.
+
 ## 1.4.1
 
 For WoW: Forever (interface 16001). `/reload` is enough after updating.
