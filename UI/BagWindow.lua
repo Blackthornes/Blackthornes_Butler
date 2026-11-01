@@ -452,14 +452,43 @@ function BagWindow:BuildHeader()
         self.chips[key] = chip
         row[#row + 1] = chip
     end
-    local x = PADDING
-    for _, chip in ipairs(row) do
-        chip:SetPoint("TOPLEFT", frame, "TOPLEFT", x, -52)
-        x = x + chip:GetWidth() + 4
+    -- The chips stop short of "Group By:" and wrap onto rows of their own
+    -- under it when the words run long (a larger text size, or another
+    -- language), and the well moves down by the rows added.
+    local labelLeft = WIDTH - SORT_RIGHT - (group:GetWidth() or 0) - 6
+        - Theme.TextWidth("small", L["Group By:"])
+    local widths = {}
+    for i, chip in ipairs(row) do widths[i] = chip:GetWidth() or 0 end
+    local places, rows = BagWindow.ChipPlaces(widths, PADDING,
+        labelLeft - BagWindow.CHIP_GAP, WIDTH - PADDING)
+    for i, chip in ipairs(row) do
+        chip:SetPoint("TOPLEFT", frame, "TOPLEFT", places[i].x,
+            -52 - (places[i].row - 1) * BagWindow.CHIP_ROW)
     end
+    self.chipRows = rows
+    self.wellTop = WELL_TOP + (rows - 1) * BagWindow.CHIP_ROW
 
     self:PaintTabs()
     self:PaintChips()
+end
+
+BagWindow.CHIP_GAP = 8    -- kept clear before "Group By:"
+BagWindow.CHIP_ROW = 26   -- a row of chips under the first
+
+--- Where each chip goes: the first row ends at firstRight (short of
+--- "Group By:"), the rows under it at right. Returns { x, row } for each
+--- and how many rows. A chip wider than the room still gets a row alone.
+function BagWindow.ChipPlaces(widths, left, firstRight, right)
+    local places, rowNum, x = {}, 1, left
+    for i, w in ipairs(widths) do
+        local edge = rowNum == 1 and firstRight or right
+        if x > left and x + w > edge then
+            rowNum, x = rowNum + 1, left
+        end
+        places[i] = { x = x, row = rowNum }
+        x = x + w + 4
+    end
+    return places, rowNum
 end
 
 function BagWindow.GroupIndex()
@@ -497,7 +526,7 @@ end
 function BagWindow:BuildWell()
     local frame = self.frame
     local well = Theme.CreatePanel(frame, "panel", "border")
-    well:SetPoint("TOPLEFT", PADDING, -WELL_TOP)
+    well:SetPoint("TOPLEFT", PADDING, -(self.wellTop or WELL_TOP))
     well:SetPoint("BOTTOMRIGHT", -PADDING, FOOT)
     if Theme.Recess then Theme.Recess(well) end
     self.well = well

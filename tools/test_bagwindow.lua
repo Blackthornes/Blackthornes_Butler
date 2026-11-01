@@ -277,6 +277,27 @@ do
     BagWindow:UpdateFoot()
 end
 
+-- 10. The chips never run under "Group By:": they stop short of it and
+--     wrap onto a row of their own, and the well moves down to match
+--     (a player's screenshot, 2026-11-01: "For My Goals" covered it).
+do
+    local places, rows = BagWindow.ChipPlaces({ 50, 40, 60, 50 }, 18, 300, 502)
+    suite.check("short chips sit on one row", rows == 1 and places[4].row == 1)
+    places, rows = BagWindow.ChipPlaces({ 90, 80, 120, 110 }, 18, 300, 502)
+    local fits = true
+    for i, p in ipairs(places) do
+        local w = ({ 90, 80, 120, 110 })[i]
+        local edge = p.row == 1 and 300 or 502
+        if p.x + w > edge then fits = false end
+    end
+    suite.check("long chips wrap before the label", rows == 2 and fits)
+    suite.check("the wrapped row starts at the left", places[3].row == 2 and places[3].x == 18)
+    places, rows = BagWindow.ChipPlaces({ 400 }, 18, 300, 502)
+    suite.check("a chip wider than the room still gets a place", rows == 1 and places[1].x == 18)
+    suite.check("the well sits under every chip row",
+        BagWindow.wellTop == 82 + ((BagWindow.chipRows or 1) - 1) * BagWindow.CHIP_ROW)
+end
+
 -- The probe line is read without raising.
 suite.check("the probe says what it found", type(BagWindow:ProbeText()) == "string")
 
