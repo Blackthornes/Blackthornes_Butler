@@ -578,13 +578,6 @@ function BagWindow:BuildFoot()
     sort:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -SORT_RIGHT, -EDGE_PAD - 6)
     self.sortButton = sort
     sort:SetShown(BagWindow.CanSort())
-
-    -- Empty Slots: each way of grouping keeps its own choice (BagView).
-    local empty = Widgets.CreateCheckbox(frame, L["Empty Slots"], function(on)
-        ns.BagView:SetShowsEmpty(on)
-    end, ns.BagView:ShowsEmpty())
-    empty:SetPoint("RIGHT", sort, "LEFT", -12, 0)
-    self.emptyBox = empty
 end
 
 
@@ -623,10 +616,6 @@ function BagWindow:UpdateFoot()
     local gold = ns.BagView.Gold()
     self.goldLabel:SetText(gold and L.Format("All characters: %s", Items.FormatMoney(gold)) or "")
     self.sortButton:SetShown(BagWindow.CanSort() and self.tab == "bags")
-    if self.emptyBox then
-        self.emptyBox:SetShown(self.tab == "bags")
-        self.emptyBox:SetChecked(ns.BagView:ShowsEmpty())
-    end
     if self.sortButton.SetEnabled then self.sortButton:SetEnabled(not InCombat()) end
 end
 
