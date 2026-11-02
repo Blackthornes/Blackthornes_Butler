@@ -4,6 +4,12 @@ Versions follow [semantic versioning](https://semver.org): the middle number
 moves for new behaviour, the last for fixes alone. The newest version goes at
 the top; a release is refused if its version has no section here.
 
+## 1.5.0
+
+For WoW: Forever (interface 16001). `/reload` is enough after updating.
+
+- **Full Stacks Only.** A new tick box on the Bank Alt page, under WHAT GOES THERE. Ticked, Butler only mails full stacks to your bank alt and leaves smaller ones in your bags. Off unless ticked. Deutsch, French, Spanish, Russian and Simplified Chinese included.
+
 ## 1.4.3
 
 For WoW: Forever (interface 16001). `/reload` is enough after updating.
