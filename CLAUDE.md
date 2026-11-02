@@ -356,7 +356,12 @@ it, 2026-10-22): with "Auction Items:" ticked under WHAT GOES THERE
 Auction goes to the bank alt too, whatever its kind and in any When;
 Wait, Sell and the rest stay, and a stack worth less than a mail's
 postage (`Funds.POSTAGE`) stays (`BankAlt:Verdict`'s `worth`,
-`MayTake`). All account
+`MayTake`). Full Stacks Only (a player asked, the owner said build it,
+2026-11-02): with "Full Stacks Only:" ticked under WHAT GOES THERE
+(`bankAltFullStacks`, off unless ticked), `MayTake` lets only full
+stacks go (`BankAlt:FullStack`: the count reaches the item's stack size;
+an item that doesn't stack, or one the client can't size yet, goes), so
+smaller stacks stay in the bags. All account
 wide, never rename them. A BANK ALT page in Settings and `/bbutler
 bankalt [Full Name|off|first|vendor|leftovers]`. Tested in
 `tools/test_bankalt.lua`.
