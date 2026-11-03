@@ -2005,3 +2005,33 @@ same.
   compared, concatenated or formatted, so read client values inside a pcall.
   Registering an event the client does not know raises too, which is why
   `ns.RegisterEvent` wraps it.
+
+## Big files (read these in pieces)
+
+Reading a huge file whole fills the context and the thread dies. Sizes are
+from 2026-11-03 and only grow. Find more with `find . -name '*.lua' | xargs wc -lc | sort -n`.
+
+- Never read a file below whole. Use `grep -n` to find the spot, then read
+  about 150 lines at a time (Read with `offset` and `limit`).
+- Never read data tables or locale files whole. Grep them for one key.
+- CLAUDE.md is big too. Grep it for a heading, then read that part only.
+- Generated files (`Data/`) are written by their `tools/` script. Never edit
+  them by hand, and never open them to see what they hold.
+
+Data tables (generated, grep only): `Data/ForeverItems.lua` 1467 lines, 159 KB; `Data/ClassSpells.lua` 1538 lines, 87 KB.
+
+Locale (grep one key, never read): `Locale/ruRU` 1151 lines, 112 KB; `frFR`, `deDE`, `esES`, `zhCN` are each about 1197 lines, 84 to 89 KB.
+
+Code:
+- `UI/MainWindow.lua` 2542 lines, 106 KB: the Butler window and its groups.
+- `UI/Widgets.lua` 2082 lines, 77 KB: shared widgets.
+- `Logic/Verdicts.lua` 1896 lines, 83 KB: the rules that decide each item.
+- `Logic/Jobs.lua` 1449 lines, 61 KB: jobs on other characters.
+- `UI/Settings.lua` 1387 lines, 62 KB: Settings pages.
+- `UI/BagWindow.lua` 1342 lines, 51 KB: the Bags window.
+- `Logic/ClassTraining.lua` 1041 lines, 42 KB: class training.
+- `Logic/Errands.lua` 914 lines, 38 KB: mailbox and bank errands.
+
+Over 800 lines, same rule: `UI/WhatsNew.lua`, `UI/SharedWindow.lua`, `UI/SettingsPages.lua`, `Logic/Travel.lua`.
+
+The same file lives in several addons: `UI/SharedWindow.lua`, `UI/WhatsNew.lua`, `UI/SettingsPages.lua`, `Logic/Travel.lua`, `Logic/ClassTraining.lua`. A fix to one belongs in all.
