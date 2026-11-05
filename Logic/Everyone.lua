@@ -25,6 +25,18 @@ local _, ns = ...
 
 local L = ns.L
 
+--- One key for a realm name, the same on every account of one player.
+--- Forever's GetRealmName names the server behind the realm, and each of a
+--- player's accounts can sit on a different one ("CAMWOW US2 Realm 7 PvE"
+--- on one, "CAMWOW US2 Realm 3 PvE" on the other), so the key drops spaces,
+--- case and the "Realm N" part (as Tradeskills' RealmKey does).
+local function RealmKey(name)
+    if type(name) ~= "string" or name == "" or name == "?" then return nil end
+    local key = name:lower():gsub("%s", ""):gsub("realm%d+", "")
+    if key == "" then return nil end
+    return key
+end
+
 local Everyone = ns.NewModule("Everyone")
 
 local Items = ns.Items
@@ -79,7 +91,7 @@ function Everyone.SameSide(entry, me)
     if type(entry) ~= "table" then return false end
     if entry.isCurrent == true or entry.playing == true then return true end
     if type(me) ~= "table" then return true end
-    local realm, theirs = Place(me.realm), Place(entry.realm)
+    local realm, theirs = RealmKey(me.realm), RealmKey(entry.realm)
     if realm and theirs and realm ~= theirs then return false end
     local side, theirSide = Place(me.faction), Place(entry.faction)
     if side and theirSide and side ~= theirSide then return false end

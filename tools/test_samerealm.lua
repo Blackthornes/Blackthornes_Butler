@@ -35,6 +35,12 @@ suite.check("the one playing always counts", Everyone.SameSide({ isCurrent = tru
 suite.check("another realm is left out", not Everyone.SameSide({ realm = "X" }, { realm = "Y" }))
 suite.check("the other side is left out", not Everyone.SameSide({ realm = "Y", faction = "Horde" }, { realm = "Y", faction = "Alliance" }))
 suite.check("a realm not given is kept", Everyone.SameSide({ realm = "?" }, { realm = "Y" }))
+-- A second account on one realm: Forever names a different server
+-- ("Realm 7" against "Realm 3") for each account (2026-11-05).
+suite.check("the other account's server is this realm",
+    Everyone.SameSide({ realm = "CAMWOW US2 Realm 3 PvE" }, { realm = "CAMWOW US2 Realm 7 PvE" }))
+suite.check("another kind of realm is still left out",
+    not Everyone.SameSide({ realm = "CAMWOW US2 Realm 4 PvP" }, { realm = "CAMWOW US2 Realm 7 PvE" }))
 
 local names = {}
 for _, character in ipairs(Everyone:Read() or {}) do names[#names + 1] = character.name end
