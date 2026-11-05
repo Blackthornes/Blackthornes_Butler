@@ -23,6 +23,12 @@ tell a friend: no hype, no questions to the reader, no exclamation marks
 outside the thanks line, no dashes as punctuation, no "now you can". The
 tool prints a note for a shipped line that reads like an advert.
 
+## 1.5.3
+
+Fixes and changes:
+
+- The box that asks how many to split now shows over the Bags window.
+
 ## 1.5.2
 
 Fixes and changes:
