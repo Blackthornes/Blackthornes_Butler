@@ -47,6 +47,18 @@
 local _, ns = ...
 local L = ns.L or setmetatable({ Format = string.format }, { __index = function(_, key) return key end })
 
+--- One key for a realm name, the same on every account of one player.
+--- Forever's GetRealmName names the server behind the realm, and each of a
+--- player's accounts can sit on a different one ("CAMWOW US2 Realm 7 PvE"
+--- on one, "CAMWOW US2 Realm 3 PvE" on the other), so the key drops spaces,
+--- case and the "Realm N" part (as Tradeskills' RealmKey does).
+local function RealmKey(name)
+    if type(name) ~= "string" or name == "" or name == "?" then return nil end
+    local key = name:lower():gsub("%s", ""):gsub("realm%d+", "")
+    if key == "" then return nil end
+    return key
+end
+
 local CT = ns.NewModule("ClassTraining")
 
 -- Moves whenever the list should be worked out again.
@@ -500,7 +512,7 @@ function CT.SameSide(guid, note, player, sides)
     local realm = Text(note.realm) or side.realm
     local faction = Text(note.faction) or side.faction
     if not (player.faction and faction and faction == player.faction) then return false end
-    if realm and player.realm then return realm == player.realm end
+    if RealmKey(realm) and RealmKey(player.realm) then return RealmKey(realm) == RealmKey(player.realm) end
     local here, there = ServerOf(player.guid), ServerOf(guid)
     return here ~= nil and here == there
 end
