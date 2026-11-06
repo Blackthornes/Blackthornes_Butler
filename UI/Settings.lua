@@ -1071,6 +1071,12 @@ function SettingsUI:BuildPages()
     end, true)
     controls.trashCan:SetPoint("TOPLEFT", CONTROL_X, -2)
 
+    local throwRow = pages:Row("general", 1, L["Throw Away Button:"], nil)
+    controls.throwAwayButton = Widgets.CreateCheckbox(throwRow, L["On"], function(checked)
+        if ns.ThrowAway then ns.ThrowAway:SetEnabled(checked) end
+    end, false)
+    controls.throwAwayButton:SetPoint("TOPLEFT", CONTROL_X, -2)
+
     local swapRow = pages:Row("general", 1, L["Swap When Full:"], nil)
     controls.swapWhenFull = Widgets.CreateCheckbox(swapRow, L["On"], function(checked)
         if ns.SwapWhenFull then ns.SwapWhenFull:SetEnabled(checked) end
@@ -1162,6 +1168,7 @@ function SettingsUI:Refresh()
     controls.openAtBank:SetChecked(ns.db.openAtBank ~= false)
     controls.freeSpace:SetChecked(ns.db.freeSpace ~= false)
     controls.trashCan:SetChecked(ns.db.trashCan ~= false)
+    controls.throwAwayButton:SetChecked(ns.db.throwAwayButton == true)
     controls.swapWhenFull:SetChecked(ns.db.swapWhenFull == true)
     controls.buyMany:SetChecked(ns.BuyMany:IsOn())
     controls.whoHas:Sync()

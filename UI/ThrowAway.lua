@@ -352,8 +352,7 @@ function ThrowAway:ProbeText()
     local parts = { self:Enabled() and "on" or "off" }
     parts[#parts + 1] = (self.button and self.button:IsShown()) and "showing" or "hidden"
     if self.pick then parts[#parts + 1] = "mode " .. tostring(self.Mode(self.pick)) end
-    parts[#parts + 1] = Global("DeleteCursorItem") == nil and rawget(_G, "DeleteCursorItem") and "can delete"
-        or (type(rawget(_G, "DeleteCursorItem")) == "function" and "can delete" or "no DeleteCursorItem")
+    parts[#parts + 1] = type(rawget(_G, "DeleteCursorItem")) == "function" and "can delete" or "no DeleteCursorItem"
     return table.concat(parts, "; ")
 end
 
