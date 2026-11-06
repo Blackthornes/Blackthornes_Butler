@@ -1251,8 +1251,8 @@ the owner 2026-10-16). Keep, Mail, Bank, Wait and Look at it never get
 it. A red glow lies round that slot too, pulsing slowly (the owner,
 2026-10-19; `Trash:Glow`, `Media/Trash/PickGlow.tga` from the same tool,
 `Trash.GLOW_REACH`), our own frame with no mouse, shown and hidden with
-the can. The can never deletes (Swap when full is the one place Butler
-does): a click picks the item up
+the can. The can never deletes (Swap when full and the Throw Away button are
+the only places Butler does): a click picks the item up
 (`C_Container.PickupContainerItem`, after reading the slot again) and says
 to drop it outside the bags, where the game's own box asks first. The can
 is Butler's own button on UIParent, anchored to the game's item button
@@ -1286,6 +1286,29 @@ when full" line. The same file as Classic Era Butler's; a fix to one
 belongs in both. Tested in `tools/test_swapwhenfull.lua`. Not yet seen
 in game.
 
+
+## The Throw Away button
+
+A player asked on Discord, the owner said build it from a mockup whose
+words he approved (2026-11-06): with the bags full, a gold plaque
+(`UI/Plaque.lua`, the same file as Pets', Equipment's and Farmer's; a fix
+to it belongs in all) sits under the bag window that shows (Butler Bags,
+else the game's combined bag, else its first bag), placed by screen
+position on UIParent, never on a game frame. `UI/ThrowAway.lua` shows it
+only while the trash can shows a pick (`Trash.pick`; `Trash:Place` and
+`Trash:Hide` call `ThrowAway:Update`), so the can's rules hold; hidden in
+a fight, at a vendor and while the cursor holds something. "Throw Away
+NAME" and "Worth X, the least in your bags"; the first click turns it red,
+"Click Again" and "To throw away NAME", for `ARMED` (3) seconds or until
+the mouse leaves; the second reads the slot again (its key must match),
+picks it up, checks the cursor holds that item and destroys it
+(`DeleteCursorItem`, like `Swap:Take`), and chat says "Threw away NAME."
+Green or better is never destroyed here: "Pick Up NAME", "Worth X. The
+game asks before it goes.", and a click is `Trash:Take`. Two short stacks
+say "Stack These NAME", "Nothing is thrown away", one click. "Throw Away
+Button:" under BUTLER on the General page (`throwAwayButton`, account
+wide, off unless ticked, never rename it). `/bbutler probe` has a "throw
+away" line. Tested in `tools/test_throwaway.lua`. Not yet seen in game.
 ## The Bags window
 
 Players kept asking for a bag window in our style, and the owner said
