@@ -1284,7 +1284,13 @@ fight. "Swap When Full:" on the General page (`swapWhenFull`, account
 wide, off unless ticked, never rename it). `/bbutler probe` has a "swap
 when full" line. The same file as Classic Era Butler's; a fix to one
 belongs in both. Tested in `tools/test_swapwhenfull.lua`. Not yet seen
-in game.
+in game. Quest loot always gets the offer (the owner, 2026-11-06): loot
+the game flags as a quest item, item class 12 or an item an open quest
+collects (`Swap.IsQuestLoot`) comes before other loot whatever its worth,
+against `Trash:Pick`, else the cheapest Wait item (`Swap.QUEST_FROM`,
+`Trash:Pick(bags, from)`); Keep, Mail, Bank and Look at it never. The
+popup then says "Your bags are full. You need this for a quest." and the
+row "Quest item". Tested in `tools/test_swapquest.lua`.
 
 ## The Throw Away button (taken out)
 
