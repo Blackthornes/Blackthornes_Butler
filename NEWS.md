@@ -23,6 +23,10 @@ tell a friend: no hype, no questions to the reader, no exclamation marks
 outside the thanks line, no dashes as punctuation, no "now you can". The
 tool prints a note for a shipped line that reads like an advert.
 
+## 1.6.0
+
+- When your bags are full, a Throw Away button under your bags clears out the item worth the least. It starts off. Turn it on in Settings, on the General page.
+
 ## 1.5.4
 
 Fixes and changes:

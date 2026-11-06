@@ -4,6 +4,12 @@ Versions follow [semantic versioning](https://semver.org): the middle number
 moves for new behaviour, the last for fixes alone. The newest version goes at
 the top; a release is refused if its version has no section here.
 
+## 1.6.0
+
+For WoW: Forever (interface 16001). A full restart is needed after updating, because files were added.
+
+- **Throw Away button.** When your bags are full, a gold button under your bags names the item worth the least. Click it, then Click Again, and that item is thrown away. Green or better items are only picked up, and the game asks first. Turn it on in Settings, on the General page, under BUTLER: Throw Away Button:. It starts off.
+
 ## 1.5.4
 
 For WoW: Forever (interface 16001). `/reload` is enough after updating.
