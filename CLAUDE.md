@@ -1290,7 +1290,10 @@ collects (`Swap.IsQuestLoot`) comes before other loot whatever its worth,
 against `Trash:Pick`, else the cheapest Wait item (`Swap.QUEST_FROM`,
 `Trash:Pick(bags, from)`); Keep, Mail, Bank and Look at it never. The
 popup then says "Your bags are full. You need this for a quest." and the
-row "Quest item". Tested in `tools/test_swapquest.lua`.
+row "Quest item". Swap itself never destroys a quest item: `Swap:Take` reads
+the bag item again and refuses one the game flags, item class 12 or an
+open quest collects (2026-11-07; Not Now and the close gem destroy nothing).
+Tested in `tools/test_swapquest.lua` and `tools/test_swapwhenfull.lua`.
 
 ## The Throw Away button (taken out)
 
