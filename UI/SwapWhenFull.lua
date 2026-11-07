@@ -250,6 +250,12 @@ function Swap:Take()
         self:Changed()
         return false
     end
+    -- Never destroy a quest item, whatever the verdicts said (the owner,
+    -- 2026-11-07): the bag item is read again here, last of all.
+    if now.quest or entry.quest or self.IsQuestLoot(entry.itemID) then
+        self:Changed()
+        return false
+    end
     local names = { "C_Container.PickupContainerItem", "PickupContainerItem" }
     ns.Items.Call(names, entry.bag, entry.slot)
     -- Destroy only what is really on the cursor: the item the popup named.
