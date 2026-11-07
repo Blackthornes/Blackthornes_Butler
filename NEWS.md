@@ -23,6 +23,11 @@ tell a friend: no hype, no questions to the reader, no exclamation marks
 outside the thanks line, no dashes as punctuation, no "now you can". The
 tool prints a note for a shipped line that reads like an advert.
 
+## 1.7.2
+
+Fixes and changes:
+- Items you always mail now wait for a full stack when your bank alt only takes full stacks.
+
 ## 1.7.1
 
 Fixes and changes:
