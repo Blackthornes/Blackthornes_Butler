@@ -361,7 +361,10 @@ postage (`Funds.POSTAGE`) stays (`BankAlt:Verdict`'s `worth`,
 (`bankAltFullStacks`, off unless ticked), `MayTake` lets only full
 stacks go (`BankAlt:FullStack`: the count reaches the item's stack size;
 an item that doesn't stack, or one the client can't size yet, goes), so
-smaller stacks stay in the bags. All account
+smaller stacks stay in the bags. It covers an Always mail item whose
+character is the bank alt too (2026-11-07, a player's report): a short
+stack is Keep, "On your Always mail list, waiting for a full stack"
+(`STEPS.mailList`). All account
 wide, never rename them. A BANK ALT page in Settings and `/bbutler
 bankalt [Full Name|off|first|vendor|leftovers]`. Tested in
 `tools/test_bankalt.lua`.
