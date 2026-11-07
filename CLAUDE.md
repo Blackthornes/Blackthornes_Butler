@@ -463,6 +463,13 @@ Tradeskills' `UI/QueueMailPanel.lua` reads it.
   asks it once more last.
   Tradeskills' `FillMail` refuses it too, and its third return, the full
   name filled in, is what the chat line says.
+  A character on the player's other account can be named too (Trent,
+  2026-11-07, a player with three accounts): with Tradeskills' Share
+  Craft Queue ticked on both accounts, its `mailTo` and a mail step in
+  `Jobs()` can name a linked character (same realm and side) whose own
+  queue needs the item. Butler takes the full name as for any alt; a
+  linked character never gets a line of its own (no Log out). Tested in
+  `tools/test_linkedmail.lua`.
   An item both this character's queue and an alt's want is a Mail row
   (2026-10-11, the owner: Butler handles queued crafts made on another
   character): `mailCount` is what Tradeskills spares once this
