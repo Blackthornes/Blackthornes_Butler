@@ -1328,7 +1328,7 @@ popup then says "Your bags are full. You need this for a quest." and the
 row "Quest item". Swap itself never destroys a quest item: `Swap:Take` reads
 the bag item again and refuses one the game flags, item class 12 or an
 open quest collects (2026-11-07; Not Now and the close gem destroy nothing).
-Tested in `tools/test_swapquest.lua` and `tools/test_swapwhenfull.lua`.
+No swap is offered while two short stacks of one item fit in one slot (`Trash:Merge`, the same check the trash can makes first): stacking them makes room without destroying anything (2026-11-07). Tested in `tools/test_swapquest.lua` and `tools/test_swapwhenfull.lua`.
 
 ## The Throw Away button (taken out)
 
