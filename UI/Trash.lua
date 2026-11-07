@@ -362,7 +362,6 @@ function Trash:Hide()
         -- never carries it away.
         if Ask(self.can, "GetParent") ~= UIParent then pcall(self.can.SetParent, self.can, UIParent) end
     end
-    if ns.ThrowAway then ns.ThrowAway:Update() end
 end
 
 --- Lay the can on the picked item's button.
@@ -394,7 +393,6 @@ function Trash:Place(frames, bags)
     glow:SetPoint("TOPLEFT", button, "TOPLEFT", -reach, reach)
     glow:SetPoint("BOTTOMRIGHT", button, "BOTTOMRIGHT", reach, -reach)
     glow:Show()
-    if ns.ThrowAway then ns.ThrowAway:Update() end
 end
 
 --- Look again once the burst is over, if a bag window is open.
