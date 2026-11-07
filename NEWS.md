@@ -23,6 +23,12 @@ tell a friend: no hype, no questions to the reader, no exclamation marks
 outside the thanks line, no dashes as punctuation, no "now you can". The
 tool prints a note for a shipped line that reads like an advert.
 
+## 1.7.1
+
+Fixes and changes:
+
+- When two stacks can fit in one slot, Butler no longer offers to destroy an item to make room. Stacking them does it with nothing lost.
+
 ## 1.7.0
 
 - Butler can keep a number of an item across all your characters, bank too. Right-click an item to set it, or find it in Settings on the Errands page. Anything over that number is handled as usual.
