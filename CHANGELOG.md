@@ -4,6 +4,12 @@ Versions follow [semantic versioning](https://semver.org): the middle number
 moves for new behaviour, the last for fixes alone. The newest version goes at
 the top; a release is refused if its version has no section here.
 
+## 1.7.2
+
+For WoW: Forever (interface 16001). `/reload` is enough after updating.
+
+- **Always Mail and Full Stacks Only.** Items on your Always Mail list now wait for a full stack when the bank alt has Full Stacks Only ticked. Keep lines now say so.
+
 ## 1.7.1
 
 For WoW: Forever (interface 16001). `/reload` is enough after updating.
