@@ -4,6 +4,14 @@ Versions follow [semantic versioning](https://semver.org): the middle number
 moves for new behaviour, the last for fixes alone. The newest version goes at
 the top; a release is refused if its version has no section here.
 
+## 1.6.1
+
+For WoW: Forever (interface 16001). `/reload` is enough after updating.
+
+- **Throw Away button.** The Throw Away button is gone. Butler never throws anything away on its own now.
+- **Swap When Full.** When the game marks loot as a quest item, Butler always offers to swap for it, even if other loot is worth more. It swaps out the cheapest thing it can.
+- **Swap When Full.** Swap never throws away a quest item.
+
 ## 1.6.0
 
 For WoW: Forever (interface 16001). A full restart is needed after updating, because files were added.
