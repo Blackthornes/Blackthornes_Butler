@@ -23,6 +23,12 @@ tell a friend: no hype, no questions to the reader, no exclamation marks
 outside the thanks line, no dashes as punctuation, no "now you can". The
 tool prints a note for a shipped line that reads like an advert.
 
+## 1.8.0
+
+New:
+
+- The Bags window has a new Group By choice called By Bag. Each bag gets its own section, with its name and how many slots are free.
+
 ## 1.7.2
 
 Fixes and changes:
