@@ -354,9 +354,10 @@ when it is not). Auction Items (a player asked, the owner said build
 it, 2026-10-22): with "Auction Items:" ticked under WHAT GOES THERE
 (`bankAltAuctions`, off unless ticked), whatever Butler's final word is
 Auction goes to the bank alt too, whatever its kind and in any When;
-Wait, Sell and the rest stay, and a stack worth less than a mail's
-postage (`Funds.POSTAGE`) stays (`BankAlt:Verdict`'s `worth`,
-`MayTake`). Full Stacks Only (a player asked, the owner said build it,
+Wait, Sell and the rest stay, and a stack worth less than its share of
+a mail's postage stays (`BankAlt.StackPostage`: `Funds.POSTAGE` over the
+12 stacks a mail holds, about 3c; the owner, 2026-11-09, after a player's
+cheap stacks all stayed; `BankAlt:Verdict`'s `worth`, `MayTake`). Full Stacks Only (a player asked, the owner said build it,
 2026-11-02): with "Full Stacks Only:" ticked under WHAT GOES THERE
 (`bankAltFullStacks`, off unless ticked), `MayTake` lets only full
 stacks go (`BankAlt:FullStack`: the count reaches the item's stack size;
