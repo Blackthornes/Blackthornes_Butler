@@ -29,6 +29,7 @@ tool prints a note for a shipped line that reads like an advert.
 
 Fixes and changes:
 
+- Cheap auction items now go to your bank alt too, not just pricey ones.
 - Holding Shift over a tooltip no longer causes an error.
 
 ## 1.8.0

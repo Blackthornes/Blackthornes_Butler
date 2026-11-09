@@ -9,6 +9,7 @@ the top; a release is refused if its version has no section here.
 For WoW: Forever (interface 16001). `/reload` is enough after updating.
 
 - **Each kind to its own character.** On the Bank Alt page, under WHAT GOES THERE, a drop-down beside each kind sends it to the bank alt, one of your characters, or a name you type. The row then says who it goes to, like Ore, bars and stone, for NAME.
+- **Auction Items to the bank alt.** Cheap stacks now go too. Postage is paid once a mail, so each stack only needs to be worth its share, about 3c.
 - **Shift tooltips.** Holding Shift over a tooltip no longer throws a Lua error.
 
 ## 1.8.0
