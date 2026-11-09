@@ -852,6 +852,9 @@ L["When:"] = "Quand :"
 L["Before Everything sends what you tick, even things that sell well. Before a Vendor lets the auction house and disenchanting go first. Only Leftovers sends what's left."] =
     "Avant tout envoie ce que tu coches, même ce qui se vend bien. Avant le marchand laisse passer d'abord l'hôtel des ventes et le désenchantement. Seulement les restes envoie ce qui reste."
 L["Type a Name:"] = "Taper un nom :"
+L["Bank Alt"] = "Personnage banque"
+L["Type a Name..."] = "Taper un nom..."
+L["%s, for %s"] = "%s, pour %s"
 L["For a character on your other account. Type the whole name, first and last."] =
     "Pour un personnage de ton autre compte. Tape le nom complet, prénom et nom."
 L["First Last"] = "Prénom Nom"

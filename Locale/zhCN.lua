@@ -850,6 +850,9 @@ L["When:"] = "什么时候："
 L["Before Everything sends what you tick, even things that sell well. Before a Vendor lets the auction house and disenchanting go first. Only Leftovers sends what's left."] =
     "最优先会寄出你勾选的东西，连卖得好的也寄。在商人之前会先让拍卖行和分解来。只寄剩下的只寄剩下来的东西。"
 L["Type a Name:"] = "输入名字："
+L["Bank Alt"] = "银行小号"
+L["Type a Name..."] = "输入名字..."
+L["%s, for %s"] = "%s，给 %s"
 L["For a character on your other account. Type the whole name, first and last."] =
     "给你另一个账号上的角色用。输入完整的名字，名和姓都要。"
 L["First Last"] = "名字 姓氏"
