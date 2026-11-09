@@ -821,6 +821,15 @@ function SettingsUI:BuildPages()
     end, true)
     controls.openAtBank:SetPoint("TOPLEFT", CONTROL_X, -2)
 
+    -- Mail running out on any of your characters (Logic/MailRunsOut.lua,
+    -- the owner said build it 2026-11-09). Off unless ticked.
+    pages:Section("selling", 1, L["MAILBOX"])
+    local runsOutRow = pages:Row("selling", 1, L["Mail Running Out:"], nil)
+    controls.mailRunsOut = Widgets.CreateCheckbox(runsOutRow, L["On"], function(checked)
+        ns.MailRunsOut:SetOn(checked)
+    end, false)
+    controls.mailRunsOut:SetPoint("TOPLEFT", CONTROL_X, -2)
+
     -- The owner asked 2026-10-14: on the disenchanter, break every green.
     pages:Section("selling", 1, L["DISENCHANTING"])
 
@@ -1468,6 +1477,7 @@ function SettingsUI:Refresh()
     controls.jobsAtLogin:SetChecked(ns.db.jobsAtLogin ~= false)
     controls.questItems:SetChecked(ns.Quests:IsOn())
     controls.questBuy:SetChecked(ns.db.questBuy == true)
+    controls.mailRunsOut:SetChecked(ns.db.mailRunsOut == true)
     controls.openAtBank:SetChecked(ns.db.openAtBank ~= false)
     controls.freeSpace:SetChecked(ns.db.freeSpace ~= false)
     controls.trashCan:SetChecked(ns.db.trashCan ~= false)
