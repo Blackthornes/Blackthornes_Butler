@@ -851,6 +851,9 @@ L["When:"] = "Wann:"
 L["Before Everything sends what you tick, even things that sell well. Before a Vendor lets the auction house and disenchanting go first. Only Leftovers sends what's left."] =
     "Vor allem anderen schickt alles Angehakte, auch was sich gut verkauft. Vor dem Händler lässt Auktionshaus und Entzaubern zuerst. Nur der Rest schickt, was übrig bleibt."
 L["Type a Name:"] = "Name eingeben:"
+L["Bank Alt"] = "Bankcharakter"
+L["Type a Name..."] = "Name eingeben..."
+L["%s, for %s"] = "%s, für %s"
 L["For a character on your other account. Type the whole name, first and last."] =
     "Für einen Charakter auf deinem anderen Account. Gib den ganzen Namen ein, Vor- und Nachname."
 L["First Last"] = "Vorname Nachname"
