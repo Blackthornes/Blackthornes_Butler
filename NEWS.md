@@ -23,6 +23,14 @@ tell a friend: no hype, no questions to the reader, no exclamation marks
 outside the thanks line, no dashes as punctuation, no "now you can". The
 tool prints a note for a shipped line that reads like an advert.
 
+## 1.9.0
+
+- Send each kind of item to its own character from the Bank Alt page.
+
+Fixes and changes:
+
+- Holding Shift over a tooltip no longer causes an error.
+
 ## 1.8.0
 
 New:

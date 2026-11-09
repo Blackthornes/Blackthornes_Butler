@@ -5,13 +5,13 @@
 local _, ns = ...
 
 ns.WHATS_NEW = {
+    { version = "1.9.0", lines = {
+        "Send each kind of item to its own character from the Bank Alt page.",
+    } },
     { version = "1.8.0", lines = {
         "The Bags window has a new Group By choice called By Bag. Each bag gets its own section, with its name and how many slots are free.",
     } },
     { version = "1.7.0", lines = {
         "Butler can keep a number of an item across all your characters, bank too. Right-click an item to set it, or find it in Settings on the Errands page. Anything over that number is handled as usual.",
-    } },
-    { version = "1.6.0", lines = {
-        "When your bags are full, a Throw Away button under your bags clears out the item worth the least. It starts off. Turn it on in Settings, on the General page.",
     } },
 }
