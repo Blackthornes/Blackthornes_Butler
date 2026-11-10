@@ -23,6 +23,13 @@ tell a friend: no hype, no questions to the reader, no exclamation marks
 outside the thanks line, no dashes as punctuation, no "now you can". The
 tool prints a note for a shipped line that reads like an advert.
 
+## 1.10.0
+
+- See what is inside a mail just by hovering over it in your inbox.
+- A little Pick button next to the To box lists your characters and the last name you mailed.
+- Butler can warn you when mail is about to run out, so nothing gets sent back.
+- Gear your class can never wear now goes under Sell.
+
 ## 1.9.0
 
 - Send each kind of item to its own character from the Bank Alt page.
