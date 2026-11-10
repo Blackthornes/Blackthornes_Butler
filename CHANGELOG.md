@@ -4,6 +4,14 @@ Versions follow [semantic versioning](https://semver.org): the middle number
 moves for new behaviour, the last for fixes alone. The newest version goes at
 the top; a release is refused if its version has no section here.
 
+## 1.11.0
+
+For WoW: Forever (interface 16001). `/reload` is enough after updating.
+
+- **Bank tab remembers your bank.** The Bags window's Bank tab now keeps a copy of each character's bank while the bank is open, and shows it after you walk away. With Tradeskills, it uses whichever copy is newer.
+- **Quest items that trade.** A quest item no open quest needs, that you can sell or mail, now follows your lists, the bank alt, mail and auction like any other item. Quest items you still need, bound ones and ones that start a quest stay kept.
+- **Skill point greens.** Butler now breaks a green for a sure Enchanting point only while selling it pays at most twice what breaking it gives. Past that, it goes to its best price. Always Disenchant still lifts the limit.
+
 ## 1.10.0
 
 For WoW: Forever (interface 16001). Files were added and the TOC changed, so quit the game and start it again after updating.
