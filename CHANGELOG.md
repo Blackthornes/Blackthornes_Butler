@@ -4,6 +4,15 @@ Versions follow [semantic versioning](https://semver.org): the middle number
 moves for new behaviour, the last for fixes alone. The newest version goes at
 the top; a release is refused if its version has no section here.
 
+## 1.10.0
+
+For WoW: Forever (interface 16001). Files were added and the TOC changed, so quit the game and start it again after updating.
+
+- **Mail Running Out.** A new Mail Running Out: row under MAILBOX on the Errands page (or the Errands page's tick box). Ticked, Butler warns when a character's mail will run out in 3 days or less, puts that character first in your jobs, and says so at login. It starts unticked.
+- **Name Picker.** A small Pick button sits beside the To box on the Send Mail page. It lists the last name you mailed and your own characters, and a click fills the box. Name Picker: under MAIL AND BANK on the Errands page. It starts on.
+- **Mail Contents.** Hover a mail in your inbox to see what is in it: the items, the gold, what they are worth and when it runs out. Mail Contents: under MAILBOX on the Errands page. It starts on.
+- **Soulbound gear your class can never wear.** Butler now puts it under Sell when a vendor pays more than breaking it would, instead of leaving it under Look at it. Needs Equipment and Tradeskills.
+
 ## 1.9.0
 
 For WoW: Forever (interface 16001). `/reload` is enough after updating.
