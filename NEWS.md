@@ -23,6 +23,12 @@ tell a friend: no hype, no questions to the reader, no exclamation marks
 outside the thanks line, no dashes as punctuation, no "now you can". The
 tool prints a note for a shipped line that reads like an advert.
 
+## 1.11.1
+
+Fixes and changes:
+
+- The Pick button by the To box and the mail hover now start off. Turn them on in Settings if you want them.
+
 ## 1.11.0
 
 - The Bank tab in your Bags window now remembers your bank after you leave it.
