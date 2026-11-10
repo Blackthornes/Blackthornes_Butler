@@ -23,6 +23,12 @@ tell a friend: no hype, no questions to the reader, no exclamation marks
 outside the thanks line, no dashes as punctuation, no "now you can". The
 tool prints a note for a shipped line that reads like an advert.
 
+## 1.11.0
+
+- The Bank tab in your Bags window now remembers your bank after you leave it.
+- Quest items you don't need anymore can now be sold, mailed or put on the auction house.
+- Butler won't break a green for a skill point when selling it pays a lot more.
+
 ## 1.10.0
 
 - See what is inside a mail just by hovering over it in your inbox.
