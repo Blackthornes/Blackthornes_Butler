@@ -392,10 +392,13 @@ cheap stacks all stayed; `BankAlt:Verdict`'s `worth`, `MayTake`). Full Stacks On
 (`bankAltFullStacks`, off unless ticked), `MayTake` lets only full
 stacks go (`BankAlt:FullStack`: the count reaches the item's stack size;
 an item that doesn't stack, or one the client can't size yet, goes), so
-smaller stacks stay in the bags. It covers an Always mail item whose
-character is the bank alt too (2026-11-07, a player's report): a short
-stack is Keep, "On your Always mail list, waiting for a full stack"
-(`STEPS.mailList`). All account
+smaller stacks stay in the bags. It covers every Always mail item too,
+whoever it goes to (2026-11-07 for the bank alt, 2026-11-11 for anyone,
+players' reports): a short stack is Keep, "On your Always mail list,
+waiting for a full stack" (`STEPS.mailList`), and so is a mail Butler
+learned, "You usually mail this to NAME, waiting for a full stack"
+(`STEPS.mailHabit`; both ask `Short` in `Logic/Verdicts.lua`). Queued
+crafts' shares, upgrades and the disenchanter still go as they are. All account
 wide, never rename them. A BANK ALT page in Settings and `/bbutler
 bankalt [Full Name|off|first|vendor|leftovers]`. Tested in
 `tools/test_bankalt.lua`.
