@@ -4,6 +4,13 @@ Versions follow [semantic versioning](https://semver.org): the middle number
 moves for new behaviour, the last for fixes alone. The newest version goes at
 the top; a release is refused if its version has no section here.
 
+## 1.12.0
+
+For WoW: Forever (interface 16001). `/reload` is enough after updating.
+
+- **Clear Items on the jobs menu.** Right-click a character's jobs line and pick Clear Items to forget that character's saved bags, bank, mail and gold, so old counts stop sending you there. It asks you to click again first. Gold notes also drop once the gold is taken.
+- **Full Stacks Only for all mail.** With Full Stacks Only: ticked, a short stack on your Always mail list, or one Butler learned to mail, waits in your bags until it is a full stack, whoever it goes to.
+
 ## 1.11.1
 
 For WoW: Forever (interface 16001). `/reload` is enough after updating.

@@ -5,6 +5,10 @@
 local _, ns = ...
 
 ns.WHATS_NEW = {
+    { version = "1.12.0", lines = {
+        "Right-click a character on the jobs list to clear what it was carrying. That way you stop getting sent to log in on it.",
+        "Full Stacks Only now works for every mail. Short stacks wait until they are full.",
+    } },
     { version = "1.11.0", lines = {
         "The Bank tab in your Bags window now remembers your bank after you leave it.",
         "Quest items you don't need anymore can now be sold, mailed or put on the auction house.",
@@ -15,8 +19,5 @@ ns.WHATS_NEW = {
         "A little Pick button next to the To box lists your characters and the last name you mailed.",
         "Butler can warn you when mail is about to run out, so nothing gets sent back.",
         "Gear your class can never wear now goes under Sell.",
-    } },
-    { version = "1.9.0", lines = {
-        "Send each kind of item to its own character from the Bank Alt page.",
     } },
 }
