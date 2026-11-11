@@ -23,6 +23,11 @@ tell a friend: no hype, no questions to the reader, no exclamation marks
 outside the thanks line, no dashes as punctuation, no "now you can". The
 tool prints a note for a shipped line that reads like an advert.
 
+## 1.12.0
+
+- Right-click a character on the jobs list to clear what it was carrying. That way you stop getting sent to log in on it.
+- Full Stacks Only now works for every mail. Short stacks wait until they are full.
+
 ## 1.11.1
 
 Fixes and changes:
