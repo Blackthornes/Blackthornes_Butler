@@ -1275,4 +1275,4 @@ L["You have mail that runs out in %d days."] = "你有邮件将在%d天后过期
 L["Clear Items"] = "清除物品"
 L["Forget this character's saved bags, bank, mail and gold. Log in on them to read it again."] = "忘记此角色已保存的背包、银行、邮件和金币。登录该角色即可重新读取。"
 L["Cleared saved items for %s."] = "已清除%s的已保存物品。"
-L["Click Again"] = "再点一次"
+L["Confirm"] = "确认"

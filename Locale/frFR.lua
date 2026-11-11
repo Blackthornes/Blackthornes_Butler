@@ -1277,4 +1277,4 @@ L["You have mail that runs out in %d days."] = "Tu as du courrier qui expire dan
 L["Clear Items"] = "Oublier les objets"
 L["Forget this character's saved bags, bank, mail and gold. Log in on them to read it again."] = "Oublie les sacs, la banque, le courrier et l'or enregistrés de ce personnage. Connecte-toi avec lui pour tout relire."
 L["Cleared saved items for %s."] = "Objets enregistrés de %s oubliés."
-L["Click Again"] = "Clique encore"
+L["Confirm"] = "Confirmer"
