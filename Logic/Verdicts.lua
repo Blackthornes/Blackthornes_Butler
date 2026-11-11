@@ -1527,8 +1527,8 @@ function Verdicts:Best(entry, unit, said, noBelow)
             return "wait", L.Format("Selling for about %s right now, usually about %s",
                 Items.FormatMoney(now), Items.FormatMoney(usual)), usual
         end
-        local text = slow and L.Format("Auction about %s each, sells slowly", Items.FormatMoney(auction))
-            or L.Format("Auction about %s each", Items.FormatMoney(auction))
+        local text = slow and L.Format("Auction: you get about %s each, sells slowly", Items.FormatMoney(auction))
+            or L.Format("Auction: you get about %s each", Items.FormatMoney(auction))
         return "auction", text, auction
     end
 
