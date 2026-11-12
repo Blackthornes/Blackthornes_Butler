@@ -5,6 +5,10 @@
 local _, ns = ...
 
 ns.WHATS_NEW = {
+    { version = "1.15.0", lines = {
+        "Windows now remember where you drag them, so they come back in the same spot.",
+        "A new button on the General page puts every window back where it started.",
+    } },
     { version = "1.14.0", lines = {
         "You can mark an item Always Auction, so it goes up for auction even when a vendor pays more.",
         "You can mail items to anyone, not just your own characters.",
@@ -15,9 +19,5 @@ ns.WHATS_NEW = {
         "Alt + right-click an item in the Bags window to open Butler's item menu.",
         "Auction rows now show about what you get after the auction cut.",
         "Buttons that ask for a second click now say Confirm.",
-    } },
-    { version = "1.12.0", lines = {
-        "Right-click a character on the jobs list to clear what it was carrying. That way you stop getting sent to log in on it.",
-        "Full Stacks Only now works for every mail. Short stacks wait until they are full.",
     } },
 }
