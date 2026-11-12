@@ -23,6 +23,13 @@ tell a friend: no hype, no questions to the reader, no exclamation marks
 outside the thanks line, no dashes as punctuation, no "now you can". The
 tool prints a note for a shipped line that reads like an advert.
 
+## 1.14.0
+
+- You can mark an item Always Auction, so it goes up for auction even when a vendor pays more.
+- You can mail items to anyone, not just your own characters.
+- A new Mail Rules list shows every mail rule in one place.
+- A new box mutes every sound from all the Blackthornes addons at once. It starts off.
+
 ## 1.13.0
 
 - Alt + right-click an item in the Bags window to open Butler's item menu.
