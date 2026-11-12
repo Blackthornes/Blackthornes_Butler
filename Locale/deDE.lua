@@ -1311,3 +1311,9 @@ L["That's the character you're playing."] = "Das ist der Charakter, den du spiel
 L["This isn't one of your characters."] = "Das ist keiner deiner Charaktere."
 L["Type an item's name or ID."] = "Gib den Namen oder die ID eines Gegenstands ein."
 L["Your List"] = "Deine Liste"
+
+-- Mute All Sounds (2026-11-12)
+L["Mute All Sounds:"] = "Alle Sounds stumm:"
+L["turn every Blackthornes sound off or back on (on/off)"] = "alle Blackthornes-Sounds aus- oder wieder einschalten (on/off)"
+L["All Blackthornes sounds are off. /bbutler mute off turns them back on."] = "Alle Blackthornes-Sounds sind aus. Mit /bbutler mute off schaltest du sie wieder ein."
+L["Blackthornes sounds are back on."] = "Blackthornes-Sounds sind wieder an."
