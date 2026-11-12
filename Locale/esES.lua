@@ -1288,3 +1288,9 @@ L["Clear Items"] = "Olvidar objetos"
 L["Forget this character's saved bags, bank, mail and gold. Log in on them to read it again."] = "Olvida las bolsas, el banco, el correo y el oro guardados de este personaje. Conéctate con él para volver a leerlos."
 L["Cleared saved items for %s."] = "Objetos guardados de %s olvidados."
 L["Confirm"] = "Confirmar"
+
+-- Mute All Sounds (2026-11-12)
+L["Mute All Sounds:"] = "Silenciar todos los sonidos:"
+L["turn every Blackthornes sound off or back on (on/off)"] = "apaga o vuelve a encender todos los sonidos de Blackthornes (on/off)"
+L["All Blackthornes sounds are off. /bbutler mute off turns them back on."] = "Todos los sonidos de Blackthornes están apagados. /bbutler mute off los vuelve a encender."
+L["Blackthornes sounds are back on."] = "Los sonidos de Blackthornes vuelven a estar encendidos."

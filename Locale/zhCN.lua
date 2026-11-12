@@ -1287,3 +1287,9 @@ L["Clear Items"] = "清除物品"
 L["Forget this character's saved bags, bank, mail and gold. Log in on them to read it again."] = "忘记此角色已保存的背包、银行、邮件和金币。登录该角色即可重新读取。"
 L["Cleared saved items for %s."] = "已清除%s的已保存物品。"
 L["Confirm"] = "确认"
+
+-- Mute All Sounds (2026-11-12)
+L["Mute All Sounds:"] = "全部静音："
+L["turn every Blackthornes sound off or back on (on/off)"] = "关闭或重新打开所有 Blackthornes 音效（on/off）"
+L["All Blackthornes sounds are off. /bbutler mute off turns them back on."] = "所有 Blackthornes 音效已关闭。输入 /bbutler mute off 可重新打开。"
+L["Blackthornes sounds are back on."] = "Blackthornes 音效已重新打开。"
