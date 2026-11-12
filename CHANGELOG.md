@@ -4,6 +4,16 @@ Versions follow [semantic versioning](https://semver.org): the middle number
 moves for new behaviour, the last for fixes alone. The newest version goes at
 the top; a release is refused if its version has no section here.
 
+## 1.14.0
+
+For WoW: Forever (interface 16001). A full restart is needed after updating, because a file was added.
+
+- **Always Auction.** The right-click menu has a new Always Auction choice, under Always Sell. An item on that list goes under Auction even when a vendor pays more. The list is on the Order page of Settings.
+- **Mail to anyone.** Always Mail To now takes any name. Pick from your characters, Other Players (names you typed before) or Type a Name.
+- **Mail Rules.** The Bank Alt page of Settings has a Mail Rules list of every mail rule. Click one to change who gets it, or right-click to change or remove it. Add Rule makes a new one.
+- **Mute All Sounds.** A new Mute All Sounds: row under Effects on the General page (or `/bbutler mute on|off`) quiets every sound from every Blackthornes addon at once. It starts off.
+- **Deutsch.** The new words are in Deutsch, and in Simplified Chinese, French, Spanish and Russian.
+
 ## 1.13.0
 
 For WoW: Forever (interface 16001). `/reload` is enough after updating.
