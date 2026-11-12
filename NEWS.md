@@ -23,6 +23,16 @@ tell a friend: no hype, no questions to the reader, no exclamation marks
 outside the thanks line, no dashes as punctuation, no "now you can". The
 tool prints a note for a shipped line that reads like an advert.
 
+## 1.13.0
+
+- Alt + right-click an item in the Bags window to open Butler's item menu.
+- Auction rows now show about what you get after the auction cut.
+- Buttons that ask for a second click now say Confirm.
+
+Fixes and changes:
+- Several bug fixes for the Bags window and auction prices.
+
+
 ## 1.12.0
 
 - Right-click a character on the jobs list to clear what it was carrying. That way you stop getting sent to log in on it.
