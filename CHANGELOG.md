@@ -4,6 +4,16 @@ Versions follow [semantic versioning](https://semver.org): the middle number
 moves for new behaviour, the last for fixes alone. The newest version goes at
 the top; a release is refused if its version has no section here.
 
+## 1.13.0
+
+For WoW: Forever (interface 16001). `/reload` is enough after updating.
+
+- **Alt + right-click in the Bags window.** Alt + right-click an item square to open Butler's item menu, the same one a row opens in the Butler window. A small hint at the bottom of the window says how. Turn the window on with "Use Butler Bags:" on the General page of Settings.
+- **Auction rows show what you get.** An Auction row now shows the real auction price, and today's price when it is higher, then about what you get after the auction cut and the deposit.
+- **Confirm buttons say Confirm.** The second click on a two-click button now reads Confirm.
+- **Deutsch.** The new words are in Deutsch, and in Simplified Chinese, French, Spanish and Russian.
+
+
 ## 1.12.0
 
 For WoW: Forever (interface 16001). `/reload` is enough after updating.
