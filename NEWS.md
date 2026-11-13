@@ -23,6 +23,11 @@ tell a friend: no hype, no questions to the reader, no exclamation marks
 outside the thanks line, no dashes as punctuation, no "now you can". The
 tool prints a note for a shipped line that reads like an advert.
 
+## 1.15.1
+
+Fixes and changes:
+- The right-click menu now fits all of its rows.
+
 ## 1.15.0
 
 - Windows now remember where you drag them, so they come back in the same spot.
