@@ -1820,9 +1820,7 @@ owner's standard for rows (2026-10-15): Title Case labels ending ":",
 one-word controls ("On", "Show", "Open"), and a hover only when it is
 needed (a row given nil shows no tooltip and nothing under it). The
 minimap button always shows: no row, no `/bbutler minimap`, and a saved
-`minimapHidden` is kept but not read. Butler has Errands, Bank alt, Gold
-and General so far; the plan's other pages (Verdicts, Pet & craft,
-Window) come with their features. `reset confirm`, which empties the
+`minimapHidden` is kept but not read. `reset confirm`, which empties the
 player's lists, stays typed.
 Word choices are drop-downs, never < > pickers or word steppers (the
 owner, 2026-10-23): `Widgets.CreateChoice` takes a stepper's opts
@@ -1849,8 +1847,8 @@ Tradeskills' copies (by way of Pets). Butler's emblem is the **satchel**
 out, drawn here so it reads at the 36 px the portrait shows it. The Butler
 window wears the full frame, its list in a well (`Theme.Recess`); Settings
 has the plate and close gem but no portrait, which would sit over its first
-heading. Butler has no Window effects setting, so `Motion.Level()` is always
-"full" and the glint always runs. Anything placed inside a dressed window
+heading. Glows and glints follow Effects (`effectsLevel`, `Motion.Level()`).
+Anything placed inside a dressed window
 stays 6 pixels in from its edge, or it covers the rim.
 
 List rows are dark glass, as in the other addons (the owner picked it
@@ -1891,8 +1889,8 @@ the one picked) and puts out the halos; `Titanforged:Dress` hands the
 window to `BlizzardLook.Dress` (silver rim, a title tab where the plate
 sits, a silver-ringed portrait and the game's `UIPanelCloseButton`, with the
 same trim fields); and the widgets call `BlizzardLook.Button`, `.Checkbox`
-and `.Thumb` to wear the game's own texture files. Butler has no hanging
-tabs yet, and its Settings row is a drop-down like Text size. It
+and `.Thumb` to wear the game's own texture files. Its Settings row is a
+drop-down like Text size. It
 never touches a Blizzard frame. Each file is checked once
 (`BlizzardLook.HasArt`); a client without one keeps that widget in the
 house look, and `/bbutler probe` lists what is missing. New widgets should
@@ -2208,14 +2206,11 @@ same.
   writes the CHANGELOG section changes it too; `tools/check_release.py`
   refuses a tag it does not match, and `tools/test_check_release.py` fails
   while the two disagree. This rule is in every addon's notes.
-- **Every reply that ships code ends with the GitHub Desktop steps,** naming
-  the branch: merge the PR on github.com (Ready for review, then Merge pull
-  request); in GitHub Desktop switch **Current branch** to **main** and click
-  **Pull origin**; then say whether the game needs `/reload` or a full restart
-  (a full restart when a file is added, removed or renamed, or the TOC
-  changes). For a release, add: History, right-click the newest commit,
-  Create Tag, `vX.Y.Z`, Push origin. Remind him to pull `main` first, or the
-  tag lands on an old commit and nothing runs.
+- **Every reply that ships code says the PR is ready and whether the game
+  needs `/reload` or a full restart** (a full restart when a file is added,
+  removed or renamed, or the TOC changes). Merging, pulling and tagging go
+  through the project's own steps, never by hand on github.com or in
+  GitHub Desktop.
 - **CurseForge descriptions are features only.** Leave out privacy notes and
   any explanation of public emotes or their switches. Those belong in the
   README and CHANGELOG.
@@ -2230,7 +2225,7 @@ same.
   last together, so every place a character is named (menus, buttons,
   chat lines, lists, the mail's To line) shows the whole name, made to fit
   by growing or wrapping, never "Bob B." or the first name alone.
-  Tradeskills' `Recipes:GetShortCharacterName` returns the full name now.
+  Tradeskills' `Recipes:GetShortCharacterName` returns the full name.
 - **Forever is not retail for classes either.** The owner: "keep in mind this is
   WoW: Forever." Hunters have classic-style talent trees, held on Forever in
   one trait tree per class (see Equipment's findings). Never assume a retail
@@ -2255,7 +2250,7 @@ same.
   craft pane in one frame (now `Recipes:NothingNewMidCraft` skips the
   re-read mid-run and `CraftPanel:RefreshInSlices` spreads the pane over
   frames). Visuals and usability are never traded away for speed. This
-  rule is in all four addons' notes; keep them the same.
+  rule is in every addon's notes; keep them the same.
 - **The client is WoW: Forever, a retail engine** (`## Interface: 16001`,
   modern Lua), not 1.12. Instances hand addons secret values that raise when
   compared, concatenated or formatted, so read client values inside a pcall.
