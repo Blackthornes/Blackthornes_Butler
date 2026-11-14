@@ -1319,6 +1319,13 @@ L["Puts every Blackthornes window back where it started. Your settings and data 
 L["Every window is back in its first spot."] = "Cada ventana ha vuelto a su primer sitio."
 L["put every Blackthornes window back where it started (reset)"] = "devolver cada ventana de Blackthornes a su sitio de inicio (reset)"
 L["Type /bbutler windows reset to put every window back in its first spot."] = "Escribe /bbutler windows reset para devolver cada ventana a su primer sitio."
+
+-- Craft Details (2026-11-14)
+L["Craft Details:"] = "Detalles de fabricación:"
+L["Butler: Craft %s"] = "Butler: Fabricar %s"
+L["With %s."] = "Con %s."
+L["Needs %s."] = "Necesita %s."
+L["About %s more than selling it."] = "Unos %s más que venderlo."
 L["Sell Anyway"] = "Vender igual"
 L["Costs more to make"] = "Cuesta más fabricarlo"
 L["Usually %s, now %s"] = "Suele valer %s, ahora %s"
