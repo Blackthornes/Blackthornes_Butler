@@ -1196,6 +1196,7 @@ L["Collapse this window"] = "Plegar esta ventana"
 L["Expand this window"] = "Desplegar esta ventana"
 -- Swap When Full: the popup beside the loot window (2026-10-28)
 L["Swap When Full:"] = "Cambiar si está lleno:"
+L["When your bags are full and you loot a quest item or something worth more, Butler offers to throw out your cheapest junk to make room. Nothing goes until you click Swap."] = "Cuando tus bolsas están llenas y despojas un objeto de misión o algo que vale más, Butler te ofrece tirar tu basura más barata para hacer sitio. No se tira nada hasta que pulses Cambiar."
 L["Bags Full"] = "Bolsas llenas"
 L["Your bags are full. This is worth more than what you have."] = "Tus bolsas están llenas. Esto vale más que lo que tienes."
 L["Your bags are full. You need this for a quest."] = "Tus bolsas están llenas. Necesitas esto para una misión."

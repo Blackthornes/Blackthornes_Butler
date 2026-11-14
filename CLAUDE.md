@@ -1499,7 +1499,8 @@ means the player wants Butler to do it; the only place Butler deletes,
 still open, Butler loots that item (`FollowSwap`, `LootSlot`). Not Now
 and the close gem put it away until the next loot window; hidden in a
 fight. "Swap When Full:" on the General page (`swapWhenFull`, account
-wide, off unless ticked, never rename it). `/bbutler probe` has a "swap
+wide, off unless ticked, never rename it), its hover saying what it
+offers and that nothing goes until Swap is clicked (2026-11-14). `/bbutler probe` has a "swap
 when full" line. The same file as Classic Era Butler's; a fix to one
 belongs in both. Tested in `tools/test_swapwhenfull.lua`. Not yet seen
 in game. Quest loot always gets the offer (the owner, 2026-11-06): loot

@@ -1681,7 +1681,8 @@ function SettingsUI:BuildPages()
     end, true)
     controls.trashCan:SetPoint("TOPLEFT", CONTROL_X, -2)
 
-    local swapRow = pages:Row("general", 1, L["Swap When Full:"], nil)
+    local swapRow = pages:Row("general", 1, L["Swap When Full:"],
+        L["When your bags are full and you loot a quest item or something worth more, Butler offers to throw out your cheapest junk to make room. Nothing goes until you click Swap."])
     controls.swapWhenFull = Widgets.CreateCheckbox(swapRow, L["On"], function(checked)
         if ns.SwapWhenFull then ns.SwapWhenFull:SetEnabled(checked) end
     end, false)
