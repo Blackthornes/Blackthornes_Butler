@@ -411,6 +411,8 @@ function UI.RowAction(data)
     if to then
         local _, message = ns.Errands:FillMail(to)
         if message then ns.Print(message) end
+    elseif data.verdict == "wait" and data.itemID and data.wait then
+        ns.Verdicts:SellAnyway(data.itemID)
     elseif data.type == "ammo" then
         ns.Ammo:Buy()
     elseif data.type == "job" and data.step and data.step.kind == "buy" then
@@ -586,6 +588,16 @@ function UI.DrawRow(row, data)
         row.reason:SetTextColor(Theme.Unpack("muted"))
     end
     row.worth:SetText((data.worth or 0) > 0 and Items.FormatMoney(data.worth) or "")
+    -- Wait for a better price: the short why in amber and Sell Anyway in
+    -- the worth column's place (the numbers are on the hover).
+    if data.wait and data.verdict == "wait" and row.action then
+        row.reason:SetText(data.wait.short or data.reason or "")
+        row.reason:SetTextColor(Theme.Unpack("warn"))
+        row.worth:SetText("")
+        row.action:SetText(L["Sell Anyway"])
+        row.action.tooltipText = L["Sell Anyway moves it to Auction for this visit."]
+        row.action:Show()
+    end
 end
 
 --- A gold top-up: who it goes to, what they have and keep, and how much.
@@ -1180,8 +1192,25 @@ function UI:Enter(row, data)
     if data.bought then
         GameTooltip:AddLine(L.Format("%d bought on the auction house to disenchant", data.bought), 0.73, 0.55, 1)
     end
+    if data.wait and data.verdict == "wait" then UI.WaitLines(GameTooltip, data.wait) end
     GameTooltip:AddLine(L["Right-click to always keep, sell or bank it"], Theme.Unpack("muted"))
     GameTooltip:Show()
+end
+
+--- Why it waits, with the numbers Butler knows: what one costs to make,
+--- what it sells for now and what it usually goes for.
+function UI.WaitLines(tip, wait)
+    tip:AddLine(" ")
+    tip:AddLine(L["Wait for a Better Price"], Theme.Unpack("warn"))
+    local function Money(label, copper)
+        if type(copper) == "number" and copper > 0 then
+            tip:AddDoubleLine(label, Items.FormatMoney(copper), 1, 1, 1, 1, 1, 1)
+        end
+    end
+    Money(L["Costs to Make:"], wait.cost)
+    Money(L["Sells for Now:"], wait.now)
+    Money(L["Usual Price:"], wait.usual)
+    tip:AddLine(L["Sell Anyway moves it to Auction for this visit."], Theme.Unpack("muted"))
 end
 
 --- An item in All characters: the item's own tooltip, then who has it.
@@ -1336,6 +1365,15 @@ function UI:BuildMenu()
     end
     menu.Pick = Pick
 
+    -- Sell Anyway, first for a row that waits for a better price (the owner
+    -- said build it from a mockup, 2026-11-14).
+    menu.sellAnyway = UI.MenuRow(menu, L["Sell Anyway"], function()
+        local data = UI.menu.data
+        UI:HideMenu()
+        if data and data.itemID then ns.Verdicts:SellAnyway(data.itemID) end
+    end)
+    menu.sellAnyway:SetPoint("TOPLEFT", 8, -26)
+    menu.sellAnyway:Hide()
     menu.keep = UI.MenuRow(menu, L["Always Keep"], function() Pick("keep") end)
     menu.keep:SetPoint("TOPLEFT", 8, -26)
     menu.sell = UI.MenuRow(menu, L["Always Sell"], function() Pick("sell") end)
@@ -1601,6 +1639,14 @@ function UI:ShowMenu(data, stay)
     menu.mail:SetActive(choice == "mail")
     menu.disenchant:SetActive(choice == "disenchant")
     menu.bought:SetActive(data.bought)
+    local waits = data.verdict == "wait" and data.wait ~= nil and data.itemID ~= nil
+    menu.sellAnyway:SetShown(waits)
+    menu.keep:ClearAllPoints()
+    if waits then
+        menu.keep:SetPoint("TOPLEFT", menu.sellAnyway, "BOTTOMLEFT", 0, 0)
+    else
+        menu.keep:SetPoint("TOPLEFT", menu, "TOPLEFT", 8, -26)
+    end
     menu.keep:Show()
     menu.sell:Show()
     menu.bank:Show()
@@ -1675,11 +1721,11 @@ function UI:ShowMenu(data, stay)
     menu.decide:SetShown(decides)
     menu.decide:SetText(learned and L["Forget what Butler learned"] or L["Let Butler Decide"])
 
-    local rows = 3 + (canList and 1 or 0) + (canBreak and 1 or 0) + (canMark and 1 or 0) + (canMail and 1 or 0) + (upgradeTo and 2 or 0)
+    local rows = 3 + (waits and 1 or 0) + (canList and 1 or 0) + (canBreak and 1 or 0) + (canMark and 1 or 0) + (canMail and 1 or 0) + (upgradeTo and 2 or 0)
         + (ns.KeepHere and 1 or 0) + (ns.KeepAcross and 1 or 0) + (decides and 1 or 0)
     menu:SetHeight(30 + rows * MENU_ROW)
-    UI.FitMenu(menu, { menu.keep, menu.sell, menu.auction, menu.bank, menu.disenchant, menu.bought, menu.mail,
-        menu.hold, menu.holdAll, menu.keepHere, menu.keepAcross, menu.decide })
+    UI.FitMenu(menu, { menu.sellAnyway, menu.keep, menu.sell, menu.auction, menu.bank, menu.disenchant, menu.bought,
+        menu.mail, menu.hold, menu.holdAll, menu.keepHere, menu.keepAcross, menu.decide })
 
     if stay and menu:IsShown() then return end
     local x, y = 0, 0
@@ -1699,7 +1745,7 @@ function UI:ShowJobMenu(data)
     menu.data = data
     menu.away = 0
     menu.title:SetText(data.job.name)
-    for _, button in ipairs({ menu.keep, menu.sell, menu.bank, menu.disenchant, menu.bought, menu.mail,
+    for _, button in ipairs({ menu.sellAnyway, menu.auction, menu.keep, menu.sell, menu.bank, menu.disenchant, menu.bought, menu.mail,
         menu.hold, menu.holdAll, menu.keepHere, menu.keepAcross, menu.decide, menu.back, menu.keepSave, menu.keepAll }) do
         button:Hide()
     end
@@ -1801,7 +1847,7 @@ function UI:ShowMailMenu()
     local others = ns.MailRules and ns.MailRules:OtherNames() or {}
     menu.title:SetText(L.Format("Always mail %s to", rule and (rule.name or "?") or UI.ItemTitle(data)))
 
-    for _, button in ipairs({ menu.keep, menu.sell, menu.bank, menu.mail, menu.bought, menu.hold, menu.holdAll,
+    for _, button in ipairs({ menu.sellAnyway, menu.auction, menu.keep, menu.sell, menu.bank, menu.mail, menu.bought, menu.hold, menu.holdAll,
         menu.decide, menu.keepHere, menu.keepAcross, menu.disenchant, menu.auction, menu.ignoreJobs,
         menu.clearItems, menu.keepSave, menu.keepAll }) do
         button:Hide()
@@ -1909,7 +1955,7 @@ function UI:ShowKeepMenu()
     if not data or not ns.KeepHere then return end
     menu.away = 0
     menu.title:SetText(L.Format("Keep %s on this character", UI.ItemTitle(data)))
-    for _, button in ipairs({ menu.keep, menu.sell, menu.bank, menu.disenchant, menu.bought, menu.mail,
+    for _, button in ipairs({ menu.sellAnyway, menu.auction, menu.keep, menu.sell, menu.bank, menu.disenchant, menu.bought, menu.mail,
         menu.hold, menu.holdAll, menu.keepHere, menu.keepAcross, menu.decide, menu.ignoreJobs, menu.clearItems }) do
         button:Hide()
     end
