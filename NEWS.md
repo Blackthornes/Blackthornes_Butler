@@ -23,6 +23,15 @@ tell a friend: no hype, no questions to the reader, no exclamation marks
 outside the thanks line, no dashes as punctuation, no "now you can". The
 tool prints a note for a shipped line that reads like an advert.
 
+## 1.16.0
+
+- Butler tells you why an item should wait, and Sell Anyway sells it when you disagree.
+- A new Craft Details box on the General page adds what a craft makes and needs to the tooltip. It starts off.
+Fixes and changes:
+- The tooltip says why an item is going to be mailed.
+- Show the way skips class trainers that don't teach your level.
+- Swap When Full has a hover that says nothing goes until you click Swap.
+
 ## 1.15.1
 
 Fixes and changes:

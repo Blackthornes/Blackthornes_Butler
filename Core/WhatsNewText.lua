@@ -5,6 +5,10 @@
 local _, ns = ...
 
 ns.WHATS_NEW = {
+    { version = "1.16.0", lines = {
+        "Butler tells you why an item should wait, and Sell Anyway sells it when you disagree.",
+        "A new Craft Details box on the General page adds what a craft makes and needs to the tooltip. It starts off.",
+    } },
     { version = "1.15.0", lines = {
         "Windows now remember where you drag them, so they come back in the same spot.",
         "A new button on the General page puts every window back where it started.",
@@ -14,10 +18,5 @@ ns.WHATS_NEW = {
         "You can mail items to anyone, not just your own characters.",
         "A new Mail Rules list shows every mail rule in one place.",
         "A new box mutes every sound from all the Blackthornes addons at once. It starts off.",
-    } },
-    { version = "1.13.0", lines = {
-        "Alt + right-click an item in the Bags window to open Butler's item menu.",
-        "Auction rows now show about what you get after the auction cut.",
-        "Buttons that ask for a second click now say Confirm.",
     } },
 }

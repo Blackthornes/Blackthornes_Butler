@@ -4,6 +4,15 @@ Versions follow [semantic versioning](https://semver.org): the middle number
 moves for new behaviour, the last for fixes alone. The newest version goes at
 the top; a release is refused if its version has no section here.
 
+## 1.16.0
+
+For WoW: Forever (interface 16001). `/reload` is enough after updating.
+
+- **Why an item waits.** A row Butler says to wait on now shows why, in amber, such as "Costs more to make" or "Usually 5g, now 3g". Hover it for the costs and prices. A new Sell Anyway button, also first in the right-click menu, sells it when you disagree.
+- **Craft Details.** A new Craft Details box under Tooltips on the General page (starts off) names the product and the materials on a Craft row's tooltip.
+- **Mail reason.** The tooltip now says why an item is going to be mailed, under Butler's mail line.
+- **Fixes.** Show the way skips class trainers that don't teach your level. Swap When Full has a hover in Settings that says nothing goes until you click Swap.
+
 ## 1.15.1
 
 For WoW: Forever (interface 16001). `/reload` is enough after updating.
