@@ -23,6 +23,11 @@ tell a friend: no hype, no questions to the reader, no exclamation marks
 outside the thanks line, no dashes as punctuation, no "now you can". The
 tool prints a note for a shipped line that reads like an advert.
 
+## 1.16.1
+
+Fixes and changes:
+- The keyring opens again when you use Butler Bags.
+
 ## 1.16.0
 
 - Butler tells you why an item should wait, and Sell Anyway sells it when you disagree.
