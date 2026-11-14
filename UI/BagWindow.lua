@@ -104,13 +104,51 @@ local function GameFrame(name)
     return type(frame) == "table" and frame or nil
 end
 
+-- The keyring is a bag Butler Bags doesn't show, so its game window is never
+-- veiled and opening it never opens or closes this window.
+function BagWindow.KeyringID()
+    local enum = rawget(_G, "Enum")
+    local index = type(enum) == "table" and type(enum.BagIndex) == "table" and enum.BagIndex.Keyring
+    if type(index) == "number" then return index end
+    local classic = rawget(_G, "KEYRING_CONTAINER")
+    if type(classic) == "number" then return classic end
+    return -2
+end
+
+function BagWindow.IsKeyring(bag)
+    return type(bag) == "number" and bag == BagWindow.KeyringID()
+end
+
+function BagWindow.HoldsKeyring(frame)
+    if type(frame) ~= "table" then return false end
+    for _, method in ipairs({ "GetBagID", "GetID" }) do
+        local fn = frame[method]
+        if type(fn) == "function" then
+            local ok, bag = pcall(fn, frame)
+            if ok and type(bag) == "number" then return BagWindow.IsKeyring(bag) end
+        end
+    end
+    return false
+end
+
+-- Veils a shown game bag window, or lifts the veil off the keyring's (the
+-- game reuses its bag windows, so one veiled as a bag can come back holding
+-- the keyring). False when it has to wait for a fight to end.
+local function CoverFrame(frame)
+    if BagWindow.HoldsKeyring(frame) then
+        if ns.Veil:Covers(frame) then return ns.Veil:Uncover(frame) end
+        return true
+    end
+    return ns.Veil:Cover(frame)
+end
+
 function BagWindow:CoverGame()
     if not self:On() then return end
     local waiting = false
     for _, name in ipairs(GAME_FRAMES) do
         local frame = GameFrame(name)
         if frame and frame.IsShown and frame:IsShown() then
-            if not ns.Veil:Cover(frame) then waiting = true end
+            if not CoverFrame(frame) then waiting = true end
         end
     end
     self.coverWaiting = waiting
@@ -145,8 +183,9 @@ local function Settle()
     end
 end
 
-local function Saw(kind)
+local function Saw(kind, bag)
     if not BagWindow:On() then return end
+    if BagWindow.IsKeyring(bag) then return end
     if not pending then
         pending = {}
         C_Timer.After(0, Settle)
@@ -160,6 +199,8 @@ local HOOKS = {
     OpenAllBags = "open", OpenBackpack = "open",
     CloseAllBags = "close", CloseBackpack = "close",
 }
+-- These take the bag as their first value, so the keyring's can be left out.
+local TAKES_BAG = { ToggleBag = true }
 
 function BagWindow:Hook()
     if self.hooked then return end
@@ -168,7 +209,8 @@ function BagWindow:Hook()
     self.hooked = true
     for name, kind in pairs(HOOKS) do
         if type(rawget(_G, name)) == "function" then
-            pcall(hook, name, function() Saw(kind) end)
+            local takesBag = TAKES_BAG[name]
+            pcall(hook, name, function(bag) Saw(kind, takesBag and bag or nil) end)
         end
     end
     -- A game bag window that shows while Butler Bags is on goes under the
@@ -177,7 +219,7 @@ function BagWindow:Hook()
         local frame = GameFrame(name)
         if frame and type(frame.HookScript) == "function" then
             pcall(frame.HookScript, frame, "OnShow", function(shown)
-                if BagWindow:On() and not ns.Veil:Cover(shown) then BagWindow.coverWaiting = true end
+                if BagWindow:On() and not CoverFrame(shown) then BagWindow.coverWaiting = true end
             end)
         end
     end

@@ -1623,6 +1623,13 @@ Bags:" under BAGS on the General page, and `/bbutler bags [on|off]`
   tab only (`BagWindow:PlaceHint`: beside the gold when it fits, else on
   its own line under it). No tooltip line and no drag and drop (the
   owner). Tested in `tools/test_bagaltmenu.lua`.
+- **The keyring** (a player's report, 2026-11-14: it didn't open or show):
+  Butler Bags doesn't show the keyring, so the game's window holding it
+  (`BagWindow.HoldsKeyring`, its bag ID `BagWindow.KeyringID()`:
+  `Enum.BagIndex.Keyring`, else `KEYRING_CONTAINER`, else -2) is never
+  veiled, and one veiled as a bag and reused for the keyring has its veil
+  lifted when it shows (`CoverFrame`). `ToggleBag` on the keyring never
+  opens or closes Butler's window. Tested in `tools/test_bagkeyring.lua`.
 
 Saved, account wide, never rename them: `bagWindow` (off unless ticked),
 `bagGroupBy`, `bagItemSize`, `bagItemLevel`, `bagNewGlow`, `bagEmptySlots` (unread), `bagScale`,
