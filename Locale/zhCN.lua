@@ -1195,6 +1195,7 @@ L["Collapse this window"] = "收起这个窗口"
 L["Expand this window"] = "展开这个窗口"
 -- Swap When Full: the popup beside the loot window (2026-10-28)
 L["Swap When Full:"] = "背包满时交换："
+L["When your bags are full and you loot a quest item or something worth more, Butler offers to throw out your cheapest junk to make room. Nothing goes until you click Swap."] = "背包满了时，如果你拾取到任务物品或更值钱的东西，Butler 会提议丢掉你最便宜的杂物来腾出空间。在你点击“交换”之前，什么都不会丢。"
 L["Bags Full"] = "背包已满"
 L["Your bags are full. This is worth more than what you have."] = "你的背包满了。这件比你包里的东西更值钱。"
 L["Your bags are full. You need this for a quest."] = "你的背包满了。你的任务需要这件物品。"
