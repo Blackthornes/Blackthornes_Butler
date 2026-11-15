@@ -1630,6 +1630,19 @@ Bags:" under BAGS on the General page, and `/bbutler bags [on|off]`
   veiled, and one veiled as a bag and reused for the keyring has its veil
   lifted when it shows (`CoverFrame`). `ToggleBag` on the keyring never
   opens or closes Butler's window. Tested in `tools/test_bagkeyring.lua`.
+- **In a fight** (a player's report, 2026-11-15: it wouldn't open in
+  combat). Its squares are the game's item buttons, so the game may guard
+  the window, and then addon code can't show or hide it in a fight
+  (`BagWindow:Locked`). So it is readied before any fight (`Secure`: built,
+  placed, squares made, at login and when turned on; in a fight it waits
+  for `PLAYER_REGEN_ENABLED`), and `SecureHandlerWrapScript` lines on the
+  game's bag windows show and hide it from the game's own guarded code,
+  only in a fight and never for the keyring; the game's windows are only
+  wrapped, never touched. A guarded window's close gem gets a secure
+  cover, up only in a fight (`SecureClose`). Not guarded, `Settle` shows
+  and hides it as before, in a fight too. Drawing happens in its OnShow
+  (`Opened`), whoever shows it. Tested in `tools/test_bagwindow.lua`. Not
+  yet seen in game.
 
 Saved, account wide, never rename them: `bagWindow` (off unless ticked),
 `bagGroupBy`, `bagItemSize`, `bagItemLevel`, `bagNewGlow`, `bagEmptySlots` (unread), `bagScale`,
