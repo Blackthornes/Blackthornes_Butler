@@ -262,6 +262,37 @@ suite.check("a rank levels away keeps its own row, after the rest",
     and waiting[3].state == "far", waiting[3] and waiting[3].label)
 level = 22
 
+
+-- 6. A small screen: the window stops at the screen's foot and the goals scroll.
+for i = 1, 20 do
+    data["Player-1-X" .. i] = { name = "Alt Number" .. i, level = 18, className = "Warrior", money = 1 * G,
+        goals = { { kind = "class", cost = 1 * G, label = "Class spells: 1 to train" } }, at = 1 }
+end
+local tallScreen = UIParent._height
+local mostCharacters = GoalsUI.MOST_CHARACTERS
+GoalsUI.MOST_CHARACTERS = 30
+UI:SetView("bags")
+UI:SetView("all")
+local roomy = UI.frame:GetHeight()
+UIParent._height = 700
+UI:SetView("bags")
+UI:SetView("all")
+local room = UI:ScreenRoom()
+suite.check("the screen's room is read", room and room < 700, tostring(room))
+suite.check("the window keeps on screen", UI.frame:GetHeight() <= math.max(500, room),
+    UI.frame:GetHeight())
+suite.check("and is no taller than when there was room", UI.frame:GetHeight() <= roomy)
+suite.check("the goals scroll", GoalsUI:Most() > 0 and GoalsUI.bar:IsShown(), GoalsUI:Most())
+GoalsUI:ScrollBy(100000)
+suite.check("scrolling stops at the last row", GoalsUI.bar:GetValue() == GoalsUI:Most(), GoalsUI.bar:GetValue())
+GoalsUI:ScrollBy(-100000)
+suite.check("and back at the top", GoalsUI.bar:GetValue() == 0)
+for i = 1, 20 do data["Player-1-X" .. i] = nil end
+GoalsUI.MOST_CHARACTERS = mostCharacters
+UIParent._height = tallScreen
+UI:SetView("bags")
+suite.check("a few goals don't scroll", GoalsUI:Most() == 0 and not GoalsUI.bar:IsShown(), GoalsUI:Most())
+
 UI:Hide()
 
 for name, value in pairs(saved) do _G[name] = value end

@@ -1168,6 +1168,12 @@ from each one's note in `goldGoalsData.characters[guid]`, gold from
 Tradeskills' `Holdings` when it has it), with how many goals are met.
 "Gold goals" on the Gold page (`goldGoals`, on unless unticked) and
 `/bbutler goals [on|off]`. Never rename `goldGoals` or `goldGoalsData`.
+The window never runs off the screen (Trent's report, 2026-11-15): it
+stops at the room under its top (`UI:ScreenRoom`, `SCREEN_MARGIN` from
+the foot), the item list gives up height down to `LIST_MIN`, and past
+that the goals scroll inside their panel (`GoalsUI:Draw(view,
+maxHeight)`, `ScrollBy`, the wheel and a bar); an unhosted window moves
+up to fit. Nothing is saved for it.
 Tested in `tools/test_goldgoals.lua`. Not yet seen in game.
 
 ## The cheapest skill-up
