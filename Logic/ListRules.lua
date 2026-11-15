@@ -42,8 +42,8 @@ end
 
 --- The player's lists from Tradeskills: { { name, id, items } } in their
 --- order, empty without Tradeskills.
-function ListRules:Lists()
-    return ns.BankAlt and ns.BankAlt:Lists() or {}
+function ListRules:Lists(fresh)
+    return ns.BankAlt and ns.BankAlt:Lists(fresh) or {}
 end
 
 --- A list's rules here: { mailTo, keep }, a fresh table, empty for none.

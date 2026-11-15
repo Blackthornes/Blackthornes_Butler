@@ -960,7 +960,7 @@ function SettingsUI:SyncLists()
     local controls = self.controls
     if not (controls and controls.listsPick and ns.ListRules) then return end
     local lists = {}
-    for _, list in ipairs(ns.ListRules:Lists()) do
+    for _, list in ipairs(ns.ListRules:Lists(true)) do
         if list.id ~= nil then lists[#lists + 1] = list end
     end
     self.listsState = lists

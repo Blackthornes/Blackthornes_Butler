@@ -302,10 +302,12 @@ end
 
 --- The player's shopping lists from Tradeskills, read once per
 --- Verdicts.version (so once each time the window opens): { { name, id,
---- items = { [itemID] = want } } }. Empty without Tradeskills.
-function BankAlt:Lists()
+--- items = { [itemID] = want } } }. Empty without Tradeskills. `fresh`
+--- reads them again whatever is kept (Settings asks so, since a list made
+--- in Tradeskills after the window opened never moved the version).
+function BankAlt:Lists(fresh)
     local version = ns.Verdicts and ns.Verdicts.version
-    if self.lists and self.listsVersion == version then return self.lists end
+    if not fresh and self.lists and self.listsVersion == version then return self.lists end
     local lists = {}
     local butler = ns.Errands and ns.Errands.Tradeskills("Lists")
     if butler then
