@@ -19,10 +19,14 @@ local printed = {}
 local oldPrint = ns.Print
 ns.Print = function(...) printed[#printed + 1] = table.concat({ ... }, " ") end
 
--- Nothing chosen: no reset row.
+-- Nothing chosen: the row still shows, dim, and a click does nothing.
 UI:Show()
 UI:ShowMenu({ itemID = 2840, name = "Copper Bar" })
-suite.check("no reset row for an item with no choices", not UI.menu.decide:IsShown())
+local empty = UI.menu.decide
+suite.check("the reset row shows on an item with no choices", empty:IsShown() and empty.empty == true)
+empty:GetScript("OnClick")(empty)
+suite.check("a click with nothing to reset does nothing",
+    not empty.armed and empty.label:GetText() == "Reset This Item", empty.label:GetText())
 UI:HideMenu()
 
 -- Choices of every kind for Copper Bar, and one for Linen Cloth.
