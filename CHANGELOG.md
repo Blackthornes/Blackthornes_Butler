@@ -4,6 +4,14 @@ Versions follow [semantic versioning](https://semver.org): the middle number
 moves for new behaviour, the last for fixes alone. The newest version goes at
 the top; a release is refused if its version has no section here.
 
+## 1.17.0
+
+For WoW: Forever (interface 16001). `/reload` is enough after updating.
+
+- **Reset This Item.** The right-click menu has a new Reset This Item line on every item. Click it, then click Confirm, and Butler forgets every choice you made for that item and decides for it again. Other items and your settings stay as they are.
+- **Bags in a fight.** Butler Bags now opens and closes in combat.
+- **Fixes.** The Tradeskills lists box on the Lists page reads your lists fresh each time.
+
 ## 1.16.1
 
 For WoW: Forever (interface 16001). `/reload` is enough after updating.
