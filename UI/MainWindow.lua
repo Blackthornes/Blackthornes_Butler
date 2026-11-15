@@ -1406,6 +1406,8 @@ function UI:BuildMenu()
     menu.decide = UI.MenuRow(menu, L["Reset This Item"], function(self)
         local data = UI.menu.data
         if type(data) ~= "table" or not data.itemID then return UI:HideMenu() end
+        -- Nothing picked for this item yet: the row stays, dim, and does nothing.
+        if self.empty then return end
         if not self.armed then
             UI.ArmClear(self, true)
             return
@@ -1746,11 +1748,13 @@ function UI:ShowMenu(data, stay)
     if ns.KeepAcross then last = menu.keepAcross end
     menu.decide:ClearAllPoints()
     menu.decide:SetPoint("TOPLEFT", last, "BOTTOMLEFT", 0, 0)
-    -- Reset This Item, whenever the player made any choice for it (a list,
-    -- a keep number, a habit Butler learned, a held mail, Sell Anyway).
-    local decides = ns.Verdicts:HasOwnChoices(data.itemID)
+    -- Reset This Item on every item (the owner, 2026-11-15). With no choice
+    -- made for it (a list, a keep number, a habit Butler learned, a held
+    -- mail, Sell Anyway) it shows dim and a click does nothing.
+    local decides = true
+    menu.decide.empty = not ns.Verdicts:HasOwnChoices(data.itemID)
+    menu.decide:Show()
     UI.ArmClear(menu.decide, false)
-    menu.decide:SetShown(decides)
 
     local rows = 3 + (waits and 1 or 0) + (canList and 1 or 0) + (canBreak and 1 or 0) + (canMark and 1 or 0) + (canMail and 1 or 0) + (upgradeTo and 2 or 0)
         + (ns.KeepHere and 1 or 0) + (ns.KeepAcross and 1 or 0) + (decides and 1 or 0)
@@ -1829,7 +1833,7 @@ function UI.ArmClear(row, on)
             end)
         end
     else
-        row.label:SetTextColor(Theme.Unpack("text"))
+        row.label:SetTextColor(Theme.Unpack(rawget(row, "empty") and "dim" or "text"))
     end
     local menu = UI.menu
     local refit = rawget(row, "refit")

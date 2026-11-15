@@ -325,8 +325,10 @@ Tested in `tools/test_alwaysauction.lua`.
 
 Trent asked (2026-11-15): one right-click line clears every choice the
 player made for an item. The item menu's old "Let Butler Decide" row is
-now **Reset This Item** (`menu.decide`), shown whenever
-`Verdicts:HasOwnChoices(itemID)` says the item has any. The first click
+now **Reset This Item** (`menu.decide`), shown on every item (the
+owner, 2026-11-15); with nothing to reset
+(`Verdicts:HasOwnChoices(itemID)` false) it is dim and a click does
+nothing (`menu.decide.empty`). The first click
 arms it to a red "Confirm" for `UI.CLEAR_ARMED` seconds (`UI.ArmClear`,
 which reads `idleText`), the second calls `Verdicts:ResetItem(itemID)`
 and chat says "Butler will decide for NAME again." It clears, for that
