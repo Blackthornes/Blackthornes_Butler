@@ -23,6 +23,13 @@ tell a friend: no hype, no questions to the reader, no exclamation marks
 outside the thanks line, no dashes as punctuation, no "now you can". The
 tool prints a note for a shipped line that reads like an advert.
 
+## 1.17.0
+
+- A new Reset This Item line is in the right-click menu of every item. It clears every choice you made for that item.
+- Butler Bags now opens in a fight.
+Fixes and changes:
+- The Tradeskills lists box on the Lists page shows your latest lists.
+
 ## 1.16.1
 
 Fixes and changes:
