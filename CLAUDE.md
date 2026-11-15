@@ -321,6 +321,22 @@ first; a Farmer goal or this character's craft queue keeps it. Posting
 is still done by hand or with Tradeskills; there is no post button yet.
 Tested in `tools/test_alwaysauction.lua`.
 
+## Reset This Item
+
+Trent asked (2026-11-15): one right-click line clears every choice the
+player made for an item. The item menu's old "Let Butler Decide" row is
+now **Reset This Item** (`menu.decide`), shown whenever
+`Verdicts:HasOwnChoices(itemID)` says the item has any. The first click
+arms it to a red "Confirm" for `UI.CLEAR_ARMED` seconds (`UI.ArmClear`,
+which reads `idleText`), the second calls `Verdicts:ResetItem(itemID)`
+and chat says "Butler will decide for NAME again." It clears, for that
+item only: the Always keep, sell, auction, bank, disenchant and mail
+lists, what Butler learned, this character's Keep on This Character,
+Keep Across Characters, `noUpgradeMail[itemID]` and Sell Anyway. Global
+settings, other items, other characters' keep numbers, list rules,
+`noUpgradesFor`, `upgradeMailed` and Tradeskills' Bought to disenchant
+mark stay. No new saved key. Tested in `tools/test_resetitem.lua`.
+
 ## Craft When It Pays More
 
 A player asked, the owner said build it (2026-10-19, from a mockup, words

@@ -184,6 +184,47 @@ function Verdicts:SetChoice(itemID, choice, to)
     self:Changed(true)
 end
 
+--- True when the player made any choice of their own for this item: an
+--- Always list, a keep number here or across characters, a habit Butler
+--- learned, a held upgrade mail or Sell Anyway (Reset This Item).
+function Verdicts:HasOwnChoices(itemID)
+    if not itemID then return false end
+    if self:Choice(itemID) ~= nil then return true end
+    if ns.Learning and ns.Learning:Get(itemID) ~= nil then return true end
+    if ns.KeepHere and (ns.KeepHere:Count(itemID) or 0) > 0 then return true end
+    if ns.KeepAcross and (ns.KeepAcross:Count(itemID) or 0) > 0 then return true end
+    if type(List("noUpgradeMail")[itemID]) == "table" and next(List("noUpgradeMail")[itemID]) then return true end
+    if self.sellAnyway and self.sellAnyway[itemID] then return true end
+    return false
+end
+
+--- Reset This Item (the owner said build it, 2026-11-15): clears every
+--- choice the player made for this one item, so Butler decides again.
+--- Other items, global settings, other characters' keep numbers, list
+--- rules and Tradeskills' marks are left alone.
+function Verdicts:ResetItem(itemID)
+    if not itemID then return false end
+    List("alwaysKeep")[itemID] = nil
+    List("alwaysSell")[itemID] = nil
+    List("alwaysAuction")[itemID] = nil
+    List("alwaysBank")[itemID] = nil
+    List("alwaysDisenchant")[itemID] = nil
+    List("alwaysMail")[itemID] = nil
+    if ns.Learning then ns.Learning:Forget(itemID) end
+    if ns.KeepHere and (ns.KeepHere:Count(itemID) or 0) > 0 then pcall(ns.KeepHere.Set, ns.KeepHere, itemID, 0) end
+    if ns.KeepAcross and (ns.KeepAcross:Count(itemID) or 0) > 0 then pcall(ns.KeepAcross.Set, ns.KeepAcross, itemID, 0) end
+    List("noUpgradeMail")[itemID] = nil
+    if self.sellAnyway then self.sellAnyway[itemID] = nil end
+    self:Changed(true)
+    local settings = ns.SettingsUI
+    if settings then
+        for _, sync in ipairs({ "SyncKeepHere", "SyncKeepAcross", "SyncMailRules", "SyncHeld" }) do
+            if type(settings[sync]) == "function" then pcall(settings[sync], settings) end
+        end
+    end
+    return true
+end
+
 --------------------------------------------------------------------------------
 -- Judging
 --------------------------------------------------------------------------------

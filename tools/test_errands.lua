@@ -332,9 +332,15 @@ UI:ShowMenu({ itemID = 401, name = "Bolt of Wool" })
 suite.check("and says so", UI.menu.bank.label:GetText() == "Always Bank (now)" and UI.menu.decide:IsShown())
 suite.check("the menu's lines are dark glass rows, the pick marked in gold",
     UI.menu.bank.active == true and UI.menu.bank.mark:IsShown() and UI.menu.keep.active == false
-    and rawget(UI.menu.keep, "highlight") ~= nil and UI.menu.decide.label:GetText() == "Let Butler Decide")
+    and rawget(UI.menu.keep, "highlight") ~= nil and UI.menu.decide.label:GetText() == "Reset This Item")
+do
+local heldTimers, runTimers = {}, _G.C_Timer.After
+_G.C_Timer.After = function(_, fn) heldTimers[#heldTimers + 1] = fn end
 UI.menu.decide:GetScript("OnClick")(UI.menu.decide)
-suite.check("Let Butler decide takes it off", ns.db.alwaysBank[401] == nil)
+UI.menu.decide:GetScript("OnClick")(UI.menu.decide)
+_G.C_Timer.After = runTimers
+end
+suite.check("Reset This Item takes it off", ns.db.alwaysBank[401] == nil)
 
 -- Always mail to: the player's characters on this realm and side.
 local names = Errands:Characters()
@@ -362,8 +368,14 @@ suite.check("bound to this character it is kept instead",
 UI:ShowMenu({ itemID = 405, name = "Bound thing", bound = true })
 suite.check("bound gear is not offered for mail", not UI.menu.mail:IsShown())
 UI:ShowMenu({ itemID = 404, name = "Copper Ore" })
+do
+local heldTimers, runTimers = {}, _G.C_Timer.After
+_G.C_Timer.After = function(_, fn) heldTimers[#heldTimers + 1] = fn end
 UI.menu.decide:GetScript("OnClick")(UI.menu.decide)
-suite.check("Let Butler decide takes it off the mail list", ns.db.alwaysMail[404] == nil)
+UI.menu.decide:GetScript("OnClick")(UI.menu.decide)
+_G.C_Timer.After = runTimers
+end
+suite.check("Reset This Item takes it off the mail list", ns.db.alwaysMail[404] == nil)
 
 -- Never a mail to the character playing (a player found one, 2026-10-11):
 -- the Always mail list is account wide, so it can name this character, and

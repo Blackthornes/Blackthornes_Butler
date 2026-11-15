@@ -1279,7 +1279,7 @@ end
 -- A small window of Butler's own, never the game's dropdown menus: Always
 -- Keep, Always Sell, Always Bank, Always Disenchant (green or better),
 -- Always Mail To (which turns the menu into a list of the player's
--- characters), and Let Butler Decide once one is picked. A thin gold rim
+-- characters), and Reset This Item once one is picked. A thin gold rim
 -- round dark glass rows, the pick it holds now marked with a gold edge.
 --------------------------------------------------------------------------------
 
@@ -1400,7 +1400,39 @@ function UI:BuildMenu()
     menu.bought:SetPoint("TOPLEFT", menu.bank, "BOTTOMLEFT", 0, 0)
     menu.mail = UI.MenuRow(menu, L["Always Mail To..."], function() UI:ShowMailMenu() end)
     menu.mail:SetPoint("TOPLEFT", menu.bank, "BOTTOMLEFT", 0, 0)
-    menu.decide = UI.MenuRow(menu, L["Let Butler Decide"], function() Pick(nil) end)
+    -- Reset This Item (the owner said build it, 2026-11-15): clears every
+    -- choice the player made for this item. The first click arms it, red
+    -- "Confirm" for UI.CLEAR_ARMED seconds; the second resets.
+    menu.decide = UI.MenuRow(menu, L["Reset This Item"], function(self)
+        local data = UI.menu.data
+        if type(data) ~= "table" or not data.itemID then return UI:HideMenu() end
+        if not self.armed then
+            UI.ArmClear(self, true)
+            return
+        end
+        UI.ArmClear(self, false)
+        UI:HideMenu()
+        if ns.Verdicts:ResetItem(data.itemID) then
+            ns.Print(L.Format("Butler will decide for %s again.", UI.ItemTitle(data) or tostring(data.itemID)))
+        end
+    end)
+    menu.decide.idleText = L["Reset This Item"]
+    menu.decide.refit = function()
+        UI.FitMenu(menu, { menu.sellAnyway, menu.keep, menu.sell, menu.auction, menu.bank, menu.disenchant, menu.bought,
+            menu.mail, menu.hold, menu.holdAll, menu.keepHere, menu.keepAcross, menu.decide })
+    end
+    menu.decide:SetScript("OnEnter", function(self)
+        Widgets.SetRowLight(self, 1)
+        if GameTooltip then
+            GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+            GameTooltip:SetText(L["Clears every choice you made for this item. Butler decides again."], 1, 1, 1, 1, true)
+            GameTooltip:Show()
+        end
+    end)
+    menu.decide:SetScript("OnLeave", function(self)
+        Widgets.SetRowLight(self, 0)
+        if GameTooltip then GameTooltip:Hide() end
+    end)
     -- Keep a number on this character (Logic/KeepHere.lua, a player asked,
     -- the owner said build it 2026-10-17): its own page with a box.
     menu.keepHere = UI.MenuRow(menu, L["Keep on This Character..."], function() UI:ShowKeepMenu() end)
@@ -1714,12 +1746,11 @@ function UI:ShowMenu(data, stay)
     if ns.KeepAcross then last = menu.keepAcross end
     menu.decide:ClearAllPoints()
     menu.decide:SetPoint("TOPLEFT", last, "BOTTOMLEFT", 0, 0)
-    -- Also there for what Butler learned from the player (a buyback, a
-    -- habit), which it forgets.
-    local learned = choice == nil and ns.Learning and ns.Learning:Get(data.itemID) or nil
-    local decides = choice ~= nil or learned ~= nil
+    -- Reset This Item, whenever the player made any choice for it (a list,
+    -- a keep number, a habit Butler learned, a held mail, Sell Anyway).
+    local decides = ns.Verdicts:HasOwnChoices(data.itemID)
+    UI.ArmClear(menu.decide, false)
     menu.decide:SetShown(decides)
-    menu.decide:SetText(learned and L["Forget what Butler learned"] or L["Let Butler Decide"])
 
     local rows = 3 + (waits and 1 or 0) + (canList and 1 or 0) + (canBreak and 1 or 0) + (canMark and 1 or 0) + (canMail and 1 or 0) + (upgradeTo and 2 or 0)
         + (ns.KeepHere and 1 or 0) + (ns.KeepAcross and 1 or 0) + (decides and 1 or 0)
@@ -1788,7 +1819,7 @@ UI.CLEAR_ARMED = 4
 function UI.ArmClear(row, on)
     row.armed = on and true or false
     row.armedAt = on and (type(GetTime) == "function" and GetTime() or 0) or nil
-    row:SetText(on and L["Confirm"] or L["Clear Items"])
+    row:SetText(on and L["Confirm"] or rawget(row, "idleText") or L["Clear Items"])
     if on then
         row.label:SetTextColor(Theme.Unpack("loss"))
         local at = row.armedAt
@@ -1801,7 +1832,10 @@ function UI.ArmClear(row, on)
         row.label:SetTextColor(Theme.Unpack("text"))
     end
     local menu = UI.menu
-    if menu and menu.ignoreJobs and row:IsShown() then UI.FitMenu(menu, { menu.ignoreJobs, row }) end
+    local refit = rawget(row, "refit")
+    if refit then
+        if row:IsShown() then refit() end
+    elseif menu and menu.ignoreJobs and row:IsShown() then UI.FitMenu(menu, { menu.ignoreJobs, row }) end
 end
 
 --- The menu as wide as its widest button or title, so a long name (never
