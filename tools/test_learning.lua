@@ -172,8 +172,14 @@ suite.check("no vendor, no sale", not ns.db.learnTally.sells[303])
 
 UI:ShowMenu({ itemID = 300, name = "Linen Cloth", count = 3 })
 suite.check("the menu offers to forget what was learned", UI.menu.decide:IsShown()
-    and UI.menu.decide.label:GetText() == "Forget what Butler learned", UI.menu.decide.label:GetText())
+    and UI.menu.decide.label:GetText() == "Reset This Item", UI.menu.decide.label:GetText())
+do
+local heldTimers, runTimers = {}, _G.C_Timer.After
+_G.C_Timer.After = function(_, fn) heldTimers[#heldTimers + 1] = fn end
 UI.menu.decide:GetScript("OnClick")(UI.menu.decide)
+UI.menu.decide:GetScript("OnClick")(UI.menu.decide)
+_G.C_Timer.After = runTimers
+end
 suite.check("and forgets it", Learning:Get(300) == nil and not ns.db.learnTally.sells[300])
 suite.check("so the cloth is up to Butler again", Judge(0, 7) == "look")
 

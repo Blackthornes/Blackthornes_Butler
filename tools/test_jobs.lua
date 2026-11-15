@@ -435,7 +435,7 @@ local heldTimers = {}
 local runTimers = _G.C_Timer.After
 _G.C_Timer.After = function(_, fn) heldTimers[#heldTimers + 1] = fn end
 suite.check("Clear Items shows for another character", clear and clear:IsShown())
-suite.check("it says Clear Items", clear.label:GetText() == "Clear Items")
+suite.check("it says Clear Items", clear.label:GetText() == "Clear Items", clear.label:GetText())
 clear:GetScript("OnClick")(clear)
 suite.check("the first click only arms it", clearedName == nil and clear.label:GetText() == "Confirm"
     and UI.menu:IsShown())
