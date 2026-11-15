@@ -2099,36 +2099,54 @@ function UI:Refresh(force)
 end
 
 --- The gold goals under the list: the window grows by their height, so
---- the list keeps its own, and its top stays where it is.
+--- the list keeps its own, and its top stays where it is. The window never
+--- grows past the screen: the goals scroll inside their panel, the list
+--- gives up room down to LIST_MIN, and a window whose foot would run off
+--- the bottom moves up.
+local LIST_MIN = 160
+local SCREEN_MARGIN = 40
+
+function UI:ScreenRoom()
+    local frame = self.frame
+    local ok, room = pcall(function()
+        local screen = UIParent:GetHeight() * UIParent:GetEffectiveScale()
+        local scale = frame:GetEffectiveScale()
+        if not (screen and scale and scale > 0) then return nil end
+        local reach = ns.ButlerTabs and ns.ButlerTabs.REACH or 0
+        return screen / scale - SCREEN_MARGIN - reach
+    end)
+    if ok and type(room) == "number" and room > 0 then return room end
+    return nil
+end
+
 function UI:PlaceGoals()
     local goalsUI = ns.GoldGoalsUI
     if not (goalsUI and goalsUI.panel) then return end
-    local ok, height = pcall(goalsUI.Draw, goalsUI, self.view)
-    height = ok and height or 0
-    if not ok then
-        goalsUI.panel:Hide()
-        ns.Debug("gold goals:", tostring(height))
+    local room = self:ScreenRoom()
+    local cap = room and math.max(HEIGHT, math.floor(room)) or nil
+    local panelMax
+    if cap then
+        local list = HEIGHT - HEADER - FOOT - PADDING
+        panelMax = cap - HEIGHT + math.max(0, list - LIST_MIN) - 6
     end
+    local ok, height = pcall(goalsUI.Draw, goalsUI, self.view, panelMax)
+    if not ok then goalsUI.panel:Hide(); ns.Debug("gold goals:", tostring(height)) end
+    height = ok and height or 0
     local extra = height > 0 and height + 6 or 0
-    if extra == self.goalsExtra then return end
-    self.goalsExtra = extra
+    local windowHeight = HEIGHT + extra
+    if cap then windowHeight = math.min(cap, windowHeight) end
+    if extra == self.goalsExtra and windowHeight == self.goalsHeight then return end
+    self.goalsExtra, self.goalsHeight = extra, windowHeight
     self.well:SetPoint("BOTTOMRIGHT", -PADDING, FOOT + extra)
     local frame = self.frame
     local left, top = frame:GetLeft(), frame:GetTop()
-    if ns.ButlerTabs then
-        -- Every tab is one size, so the Settings tab grows with it.
-        ns.ButlerTabs:Need("bags", nil, HEIGHT + extra)
-    else
-        frame:SetHeight(HEIGHT + extra)
-    end
-    -- Laid in the one window, it fills that window's area and keeps no
-    -- place of its own.
-    local hosted = ns.ButlerTabs and ns.ButlerTabs.area
-        and frame:GetParent() == ns.ButlerTabs.area
-    if left and top and frame:IsShown() and not hosted then
-        frame:ClearAllPoints()
-        frame:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT", left, top)
-        self:SavePosition()
+    if ns.ButlerTabs then ns.ButlerTabs:Need("bags", nil, windowHeight) else frame:SetHeight(windowHeight) end
+    local hosted = ns.ButlerTabs and ns.ButlerTabs.area and frame:GetParent() == ns.ButlerTabs.area
+    if type(left) == "number" and type(top) == "number" and frame:IsShown() and not hosted then
+        local reach = ns.ButlerTabs and ns.ButlerTabs.REACH or 0
+        local floor = windowHeight + reach + 6
+        if top < floor then top = floor end
+        frame:ClearAllPoints(); frame:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT", left, top); self:SavePosition()
     end
     if ns.Selling then ns.Selling:Update() end
 end

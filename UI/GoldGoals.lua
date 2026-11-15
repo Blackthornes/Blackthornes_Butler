@@ -23,6 +23,14 @@ local HEAD = 22
 local SEGMENTS = 12
 local GOAL_ROW = 40
 local CHARACTER_ROW = 30
+-- The goals scroll once they would make the window taller than the screen.
+-- A number, or nil (a frame can answer nothing).
+local function Num(v)
+    return type(v) == "number" and v or nil
+end
+
+local SCROLL_STEP = 40
+local TOP = 4 + HEAD + 2 + 6 + 6
 -- Characters shown in All characters before "and N more".
 GoalsUI.MOST_CHARACTERS = 4
 
@@ -61,7 +69,7 @@ end
 --- Fill a bar to `p` (0 to 1) in the state's colour.
 function GoalsUI.SetBar(bar, p, state)
     bar.p, bar.state = p or 0, state or "saving"
-    local width = (tonumber(bar:GetWidth()) or 0) - 2
+    local width = (Num(bar:GetWidth()) or 0) - 2
     local fill = bar.fill
     if bar.p <= 0 or width <= 0 then
         fill:Hide()
@@ -87,7 +95,7 @@ end
 function GoalsUI.SetSegments(holder, goals)
     local count = math.max(1, #goals)
     local gap = 4
-    local width = tonumber(holder:GetWidth()) or 0
+    local width = Num(holder:GetWidth()) or 0
     local each = (width - gap * (count - 1)) / count
     for index = 1, math.max(count, #holder.parts) do
         local part = holder.parts[index]
@@ -100,7 +108,7 @@ function GoalsUI.SetSegments(holder, goals)
             end
             part:ClearAllPoints()
             part:SetPoint("TOPLEFT", (each + gap) * (index - 1), 0)
-            part:SetSize(math.max(1, each), tonumber(holder:GetHeight()) or 6)
+            part:SetSize(math.max(1, each), Num(holder:GetHeight()) or 6)
             local goal = goals[index]
             local state = goal and goal.state
             if state == "ready" then
@@ -198,14 +206,73 @@ function GoalsUI:Build(window)
     segments:SetPoint("TOPRIGHT", head, "BOTTOMRIGHT", -2, -2)
     self.segments = segments
 
+    -- The rows sit in a scroll frame, so a long list scrolls instead of
+    -- making the window run off the screen.
+    local scroll = CreateFrame("ScrollFrame", nil, panel)
+    scroll:SetPoint("TOPLEFT", 6, -TOP)
+    scroll:SetPoint("BOTTOMRIGHT", -6, 6)
+    local content = CreateFrame("Frame", nil, scroll)
+    content:SetSize(10, 10)
+    scroll:SetScrollChild(content)
+    if scroll.SetScript then
+        scroll:SetScript("OnSizeChanged", function(_, width)
+            if width and width > 0 then content:SetWidth(width) end
+        end)
+    end
+    self.scroll, self.content = scroll, content
+
+    local bar = ns.Widgets and ns.Widgets.CreateScrollbar and ns.Widgets.CreateScrollbar(panel, "metal")
+    if bar then
+        bar:SetPoint("TOPRIGHT", panel, "TOPRIGHT", -4, -TOP)
+        bar:SetPoint("BOTTOMRIGHT", panel, "BOTTOMRIGHT", -4, 6)
+        bar.onValueChanged = function(value) scroll:SetVerticalScroll(value) end
+        bar:Hide()
+        self.bar = bar
+    end
+    panel:EnableMouseWheel(true)
+    panel:SetScript("OnMouseWheel", function(_, delta) GoalsUI:ScrollBy(-delta * SCROLL_STEP) end)
+
     self.rows = {}
     return panel
+end
+
+--- How far the rows can scroll, 0 when they all fit.
+function GoalsUI:Most()
+    if not self.scroll then return 0 end
+    local view = self.viewHeight or Num(self.scroll:GetHeight()) or 0
+    return math.max(0, (self.contentHeight or 0) - view)
+end
+
+function GoalsUI:ScrollBy(pixels)
+    if not self.scroll then return end
+    local most = self:Most()
+    local now = Num(self.scroll:GetVerticalScroll()) or 0
+    local value = math.max(0, math.min(most, now + pixels))
+    self.scroll:SetVerticalScroll(value)
+    if self.bar then self.bar:SetValue(value) end
+end
+
+function GoalsUI:SizeScroll()
+    local most = self:Most()
+    local now = math.min(Num(self.scroll:GetVerticalScroll()) or 0, most)
+    self.scroll:SetVerticalScroll(now)
+    self.scroll:SetPoint("BOTTOMRIGHT", most > 0 and -16 or -6, 6)
+    local bar = self.bar
+    if bar then
+        bar:SetMinMaxValues(0, most)
+        bar:SetValue(now)
+        if bar.SizeThumb then
+            local view = self.viewHeight or 0
+            bar:SizeThumb(view, math.max(view, self.contentHeight or 0))
+        end
+        bar:SetShown(most > 0)
+    end
 end
 
 function GoalsUI:GoalRow(index)
     local row = self.rows[index]
     if row then return row end
-    row = CreateRow(self.panel, GOAL_ROW)
+    row = CreateRow(self.content or self.panel, GOAL_ROW)
     row.icon = row:CreateTexture(nil, "ARTWORK")
     row.icon:SetSize(24, 24)
     row.icon:SetPoint("LEFT", 6, 0)
@@ -278,7 +345,9 @@ function GoalsUI.DetailText(goal, previous)
 end
 
 --- Lay the panel out and draw it. Returns its height, 0 when hidden.
-function GoalsUI:Draw(view)
+--- maxHeight, when given, is the most the panel may take; past it the
+--- rows scroll.
+function GoalsUI:Draw(view, maxHeight)
     local GG = ns.GoldGoals
     if not (self.panel and GG and GG:IsOn()) then
         if self.panel then self.panel:Hide() end
@@ -315,7 +384,6 @@ function GoalsUI:Draw(view)
     end
     self.head.fold:SetText(folded and "+" or "-")
 
-    local top = 4 + HEAD + 2 + 6 + 6
     local count = folded and 0 or #rows
     for index, row in ipairs(self.rows) do
         if index > count then row:Hide() end
@@ -324,8 +392,8 @@ function GoalsUI:Draw(view)
         local row = self:GoalRow(index)
         row:SetHeight(height)
         row:ClearAllPoints()
-        row:SetPoint("TOPLEFT", 6, -(top + (index - 1) * height))
-        row:SetPoint("TOPRIGHT", -6, -(top + (index - 1) * height))
+        row:SetPoint("TOPLEFT", 0, -((index - 1) * height))
+        row:SetPoint("TOPRIGHT", 0, -((index - 1) * height))
         Band(row, index)
         row.data = rows[index]
         row.view = view
@@ -336,7 +404,20 @@ function GoalsUI:Draw(view)
         end
         row:Show()
     end
-    local total = top + count * height + 6
+    -- All the rows when they fit; else as many as the room leaves,
+    -- never less than one, and the rest scroll.
+    local full = count * height
+    local shown = full
+    if maxHeight and TOP + full + 6 > maxHeight then
+        shown = math.min(full, math.max(height, maxHeight - TOP - 6))
+    end
+    self.contentHeight, self.viewHeight = full, shown
+    local width = self.panel:GetWidth()
+    width = (type(width) == "number" and width or 0) - 12
+    if width > 0 then self.content:SetWidth(width) end
+    self.content:SetHeight(math.max(1, full))
+    self:SizeScroll()
+    local total = TOP + shown + 6
     self.panel:SetHeight(total)
     self.panel:Show()
     return total
