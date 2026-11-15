@@ -10,6 +10,7 @@
 --   5. On two lists, the higher one wins; a rename keeps the rule (by id).
 --   6. Never mailed to the character playing, nor soulbound.
 --   7. The rule can be turned off on the Order page.
+--   8. Settings reads the lists fresh, so a new list shows.
 
 local env = dofile(lfs_cwd .. "/tools/testenv.lua")
 local suite = env.NewSuite("listrules")
@@ -146,6 +147,18 @@ suite.check("the page lists the lists", controls.listsPick:GetName() == "Fabric"
 suite.check("Mail To never offers the one playing", (function()
     for _, name in ipairs(controls.listsMailTo.names) do if name == "Me Here" then return false end end
     return true
+end)())
+
+-- A list made in Tradeskills after Butler last read them shows when the
+-- page draws again, though nothing moved the verdicts (Trent saw "None").
+ns.SettingsUI:Hide()
+local keptVersion = Verdicts.version
+lists[#lists + 1] = { name = "Ore", id = 9, items = { [2770] = 20 } }
+ns.SettingsUI:Show()
+suite.check("the verdicts did not move", Verdicts.version == keptVersion)
+suite.check("a new list shows", (function()
+    for _, name in ipairs(controls.listsPick.names) do if name == "Ore" then return true end end
+    return false
 end)())
 
 suite.done()
