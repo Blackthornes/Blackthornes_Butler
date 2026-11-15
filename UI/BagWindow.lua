@@ -64,6 +64,16 @@ local function InCombat()
     return ok and value == true
 end
 
+-- In a fight the window can't be shown, hidden or moved by addon code once
+-- the game guards it (its squares are the game's own item buttons).
+function BagWindow:Locked()
+    local frame = self.frame
+    if not (frame and InCombat()) then return false end
+    if type(frame.IsProtected) ~= "function" then return false end
+    local ok, protected = pcall(frame.IsProtected, frame)
+    return ok and protected and true or false
+end
+
 local function QualityColor(quality)
     local r, g, b = Items.QualityRGB(quality or 1)
     if not r then return 1, 1, 1 end
@@ -88,6 +98,7 @@ function BagWindow:SetOn(on)
     if on then
         self:Hook()
         self:CoverGame()
+        self:Secure()
     else
         self:UncoverGame()
         self:Hide()
@@ -174,6 +185,14 @@ local function Settle()
     local seen = pending
     pending = nil
     if not (seen and BagWindow:On()) then return end
+    -- In a fight the game guards the window: the secure lines on the game's
+    -- bag windows (BagWindow:Secure) show and hide it with them.
+    if BagWindow:Locked() then return end
+    if InCombat() then
+        -- Follow the game's own bags, so the two can't drift apart.
+        if BagWindow.GameBagsShown() then BagWindow:Show() else BagWindow:Hide() end
+        return
+    end
     if seen.toggle then
         BagWindow:Toggle()
     elseif seen.open then
@@ -223,6 +242,102 @@ function BagWindow:Hook()
             end)
         end
     end
+end
+
+--- True while any of the game's bag windows (not the keyring) is shown.
+function BagWindow.GameBagsShown()
+    for _, name in ipairs(GAME_FRAMES) do
+        local frame = GameFrame(name)
+        if frame and not BagWindow.HoldsKeyring(frame) and type(frame.IsShown) == "function" then
+            local ok, shown = pcall(frame.IsShown, frame)
+            if ok and shown then return true end
+        end
+    end
+    return false
+end
+
+-- Run by the game, in its own guarded code, when one of its bag windows
+-- shows or hides in a fight. Out of a fight Settle does the work.
+local SHOW_BODY = [[
+    if not PlayerInCombat() then return end
+    local game = self
+    if game:GetID() == owner:GetAttribute("keyring") then return end
+    local bags = owner:GetFrameRef("bags")
+    if bags and bags:IsProtected() and not bags:IsShown() then bags:Show() end
+]]
+local HIDE_BODY = [[
+    if not PlayerInCombat() then return end
+    local keyring = owner:GetAttribute("keyring")
+    local closing = self
+    if closing:GetID() == keyring then return end
+    for i = 1, owner:GetAttribute("count") or 0 do
+        local game = owner:GetFrameRef("g" .. i)
+        if game and game:IsShown() and game:GetID() ~= keyring then return end
+    end
+    local bags = owner:GetFrameRef("bags")
+    if bags and bags:IsProtected() and bags:IsShown() then bags:Hide() end
+]]
+local CLOSE_BODY = [[
+    local gem = self
+    local bags = gem:GetFrameRef("bags")
+    if bags then bags:Hide() end
+]]
+
+--- Ready the window before any fight: built, placed and its squares made,
+--- with secure lines on the game's bag windows so it can still open and
+--- close with them in a fight. Never in a fight; it waits for one to end.
+function BagWindow:Secure()
+    if self.secured or not self:On() then return end
+    if InCombat() then
+        self.secureWaiting = true
+        return
+    end
+    self.secureWaiting = nil
+    self.secured = true
+    local frame = self:Build()
+    self:RestorePosition()
+    self:MakeButtons(function() BagWindow:SecureClose() end)
+
+    local wrap = rawget(_G, "SecureHandlerWrapScript")
+    if type(wrap) ~= "function" then return end
+    local ok, header = pcall(CreateFrame, "Frame", nil, UIParent, "SecureHandlerBaseTemplate")
+    if not (ok and header and type(header.SetFrameRef) == "function") then return end
+    self.header = header
+    pcall(header.SetFrameRef, header, "bags", frame)
+    pcall(header.SetAttribute, header, "keyring", BagWindow.KeyringID())
+    local count = 0
+    for _, name in ipairs(GAME_FRAMES) do
+        local game = GameFrame(name)
+        if game then
+            count = count + 1
+            pcall(header.SetFrameRef, header, "g" .. count, game)
+            pcall(wrap, game, "OnShow", header, SHOW_BODY)
+            pcall(wrap, game, "OnHide", header, HIDE_BODY)
+        end
+    end
+    pcall(header.SetAttribute, header, "count", count)
+end
+
+--- A secure button over the close gem, up only in a fight, so the gem still
+--- closes a guarded window. Made only when the game guards the window, since
+--- a guarded child would guard it too.
+function BagWindow:SecureClose()
+    if self.closeCover or InCombat() then return end
+    local frame, close = self.frame, self.trim and self.trim.closeButton
+    if not (frame and close and type(frame.IsProtected) == "function") then return end
+    local ok, protected = pcall(frame.IsProtected, frame)
+    if not (ok and protected) then return end
+    local made, cover = pcall(CreateFrame, "Button", nil, close, "SecureHandlerClickTemplate")
+    if not (made and cover and type(cover.SetFrameRef) == "function") then return end
+    cover:SetAllPoints(close)
+    cover:SetFrameLevel((close:GetFrameLevel() or 0) + 5)
+    pcall(cover.RegisterForClicks, cover, "AnyUp")
+    pcall(cover.SetFrameRef, cover, "bags", frame)
+    pcall(cover.SetAttribute, cover, "_onclick", CLOSE_BODY)
+    cover:SetScript("OnEnter", function() local f = close:GetScript("OnEnter"); if f then f(close) end end)
+    cover:SetScript("OnLeave", function() local f = close:GetScript("OnLeave"); if f then f(close) end end)
+    cover:Hide()
+    self.closeCover = cover
 end
 
 --------------------------------------------------------------------------------
@@ -408,6 +523,9 @@ function BagWindow:Build()
         self:StopMovingOrSizing()
         BagWindow:SavePosition()
     end)
+    -- The work of opening runs here, so it also runs when the game's guarded
+    -- code shows the window in a fight.
+    frame:SetScript("OnShow", function() BagWindow:Opened() end)
     frame:SetScript("OnHide", function()
         GameTooltip:Hide()
         -- Closing the bags is looking at them, as with the game's own.
@@ -1371,12 +1489,19 @@ end
 
 function BagWindow:Show()
     self:Build()
+    -- In a fight a guarded window is shown only by the game's own code.
+    if self:Locked() then return end
     if ns.FoldWindow then ns.FoldWindow:Unfold(self.frame) end
     if self.frame:IsShown() then return end
-    ns.BagView:NoteSeen()
     self:RestorePosition()
     self.frame:Show()
     if ns.Motion and ns.Motion.Open then pcall(ns.Motion.Open, ns.Motion, self.frame) end
+end
+
+--- What opening the window does, from its OnShow: nothing here moves or
+--- sizes it, so it is safe in a fight.
+function BagWindow:Opened()
+    ns.BagView:NoteSeen()
     if ns.Titanforged and ns.Titanforged.Opened then pcall(ns.Titanforged.Opened, ns.Titanforged, self.frame) end
     self:CoverGame()
     self:Draw()
@@ -1386,7 +1511,7 @@ function BagWindow:Show()
 end
 
 function BagWindow:Hide()
-    if self.frame then self.frame:Hide() end
+    if self.frame and not self:Locked() then self.frame:Hide() end
 end
 
 function BagWindow:Toggle()
@@ -1494,13 +1619,20 @@ end
 --------------------------------------------------------------------------------
 
 function BagWindow:OnEnable()
-    if self:On() then self:Hook() end
+    if self:On() then
+        self:Hook()
+        self:Secure()
+    end
     ns.RegisterEvent(self, "PLAYER_REGEN_ENABLED", function()
+        if BagWindow.closeCover then BagWindow.closeCover:Hide() end
+        if BagWindow.secureWaiting then BagWindow:Secure() end
         if BagWindow.coverWaiting then BagWindow:CoverGame() end
         if BagWindow.uncoverWaiting then BagWindow:UncoverGame() end
         if BagWindow.layoutWaiting then BagWindow:Changed() end
     end)
     ns.RegisterEvent(self, "PLAYER_REGEN_DISABLED", function()
+        -- Still allowed as the fight starts: the close gem's secure cover.
+        if BagWindow.closeCover then BagWindow.closeCover:Show() end
         if BagWindow.sortButton then BagWindow:UpdateFoot() end
     end)
     for _, event in ipairs({ "MAIL_SHOW", "MAIL_CLOSED", "BANKFRAME_OPENED", "BANKFRAME_CLOSED", "PLAYER_MONEY" }) do

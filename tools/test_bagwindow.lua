@@ -333,6 +333,83 @@ do
     suite.check("the window sits under the game's pop-ups", frame:GetFrameStrata() == "HIGH")
 end
 
+-- In a fight (a player's report, 2026-11-15: Butler Bags wouldn't open in
+-- combat). The window is readied before any fight, the game's guarded code
+-- shows and hides it once it is guarded, and addon code never tries.
+do
+    BagWindow:SetOn(true)
+    EndFrame()
+    local frame = BagWindow:Build()
+    local wraps = {}
+    _G.SecureHandlerWrapScript = function(game, script, header, body)
+        wraps[#wraps + 1] = { game = game, script = script, header = header, body = body }
+    end
+    BagWindow.secured, BagWindow.header = nil, nil
+
+    -- Readied while out of a fight: wrapped on the game's bag windows.
+    _G.InCombatLockdown = function() return true end
+    BagWindow:Secure()
+    suite.check("in a fight readying waits", BagWindow.secureWaiting == true and #wraps == 0)
+    _G.InCombatLockdown = function() return false end
+    env.Fire("PLAYER_REGEN_ENABLED")
+    EndFrame()
+    suite.check("readied once the fight ends", BagWindow.secured == true and not BagWindow.secureWaiting)
+    local shows, hides = 0, 0
+    for _, w in ipairs(wraps) do
+        if w.script == "OnShow" then shows = shows + 1 end
+        if w.script == "OnHide" then hides = hides + 1 end
+    end
+    suite.check("the game's bag windows carry show and hide lines", shows >= 1 and shows == hides)
+    suite.check("the lines run only in a fight",
+        wraps[1] and wraps[1].body:find("PlayerInCombat", 1, true) ~= nil)
+    suite.check("the lines never touch the game's own windows",
+        wraps[1] and not wraps[1].body:find("self:Hide", 1, true) and not wraps[1].body:find("self:Show", 1, true))
+
+    -- Guarded and in a fight: addon code leaves it to the game.
+    BagWindow:Hide()
+    EndFrame()
+    local calls = 0
+    local realShow, realHide = frame.Show, frame.Hide
+    frame.Show = function(f) calls = calls + 1; return realShow(f) end
+    frame.Hide = function(f) calls = calls + 1; return realHide(f) end
+    frame.IsProtected = function() return true end
+    _G.InCombatLockdown = function() return true end
+    suite.check("guarded in a fight counts as locked", BagWindow:Locked() == true)
+    BagWindow:Show()
+    BagWindow:Hide()
+    _G.ToggleAllBags()
+    EndFrame()
+    suite.check("locked, addon code never shows or hides it", calls == 0)
+
+    -- Not guarded: the ordinary Show still works in a fight.
+    frame.IsProtected = function() return false end
+    _G.ContainerFrameCombinedBags._shown = true
+    _G.OpenAllBags()
+    EndFrame()
+    suite.check("not guarded, it opens in a fight with the game's bags", frame:IsShown())
+    _G.ContainerFrameCombinedBags._shown = false
+    _G.CloseAllBags()
+    EndFrame()
+    suite.check("and closes with them", not frame:IsShown())
+
+    -- Shown by anyone, it draws itself.
+    local drew = 0
+    local realDraw = BagWindow.Draw
+    BagWindow.Draw = function(...) drew = drew + 1; return realDraw(...) end
+    _G.InCombatLockdown = function() return false end
+    frame:Show()
+    local onShow = frame:GetScript("OnShow")
+    if onShow then onShow(frame) end
+    suite.check("shown by the game's lines, it still draws", drew >= 1)
+
+    frame.Show, frame.Hide, frame.IsProtected, BagWindow.Draw = realShow, realHide, nil, realDraw
+    _G.SecureHandlerWrapScript, _G.InCombatLockdown = nil, nil
+    _G.ContainerFrameCombinedBags._shown = true
+    BagWindow:Hide()
+    BagWindow:SetOn(false)
+    EndFrame()
+end
+
 -- Suites share one Lua state: take the game's bag calls away again.
 _G.hooksecurefunc, _G.ToggleAllBags, _G.OpenAllBags, _G.CloseAllBags = nil, nil, nil, nil
 _G.ContainerFrameCombinedBags = nil
