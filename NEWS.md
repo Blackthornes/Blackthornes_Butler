@@ -23,6 +23,16 @@ tell a friend: no hype, no questions to the reader, no exclamation marks
 outside the thanks line, no dashes as punctuation, no "now you can". The
 tool prints a note for a shipped line that reads like an advert.
 
+## 1.18.0
+
+- A slim Butler Bar can sit under the vendor, mailbox and bank windows.
+- Butler can mark the game's bag squares.
+- Settings has a Keep page and an All Addons page.
+- The window docks at more places, including the bank and the profession window.
+Fixes and changes:
+- The item menu is lighter on your game.
+- The window gives height back when gold goals shrink.
+
 ## 1.17.1
 
 Fixes and changes:
