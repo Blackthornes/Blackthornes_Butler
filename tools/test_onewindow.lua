@@ -73,6 +73,23 @@ do
     SettingsUI.pages:ShowDescriptions(false)
     frame.GetWidth, frame.GetHeight = getW, getH
 end
+-- Gold goals gone: the room they took goes back, never below the one
+-- window's own height (2026-11-16).
+do
+    local getH = area.GetHeight
+    local _, base = SW.BaseSize()
+    local _, needH = Tabs:Size()
+    hub.frame:SetHeight(base + 300)
+    area.GetHeight = function() return needH + 300 end
+    Tabs:Grow()
+    suite.check("a page that needs less gives the room back", hub.frame:GetHeight() == base)
+    hub.frame:SetHeight(base + 300)
+    area.GetHeight = function() return needH + 100 end
+    Tabs:Grow()
+    suite.check("only as much as it no longer needs", hub.frame:GetHeight() == base + 200)
+    area.GetHeight = getH
+    hub.frame:SetHeight(base)
+end
 Tabs:Open("all")
 suite.check("All Characters back in the area", UI.frame:IsShown() and UI.view == "all"
     and UI.frame:GetParent() == area)

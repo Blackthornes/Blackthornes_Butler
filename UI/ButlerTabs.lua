@@ -436,6 +436,14 @@ function ButlerTabs:Grow()
     end
     if okH and type(areaH) == "number" and areaH > 0 and areaH < height then
         one:SetHeight(one:GetHeight() + (height - areaH))
+    elseif okH and type(areaH) == "number" and areaH > height then
+        -- Gold goals gone or smaller: give the room back, never below the
+        -- one window's own height.
+        local SharedWindow = ns.SharedWindow
+        local base = SharedWindow and SharedWindow.BaseSize and select(2, SharedWindow.BaseSize())
+        local want = one:GetHeight() - (areaH - height)
+        if base and want < base then want = base end
+        if want < one:GetHeight() then one:SetHeight(want) end
     end
     if ns.SharedWindow and ns.SharedWindow.Fit then ns.SharedWindow.Fit(one) end
 end

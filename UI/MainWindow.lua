@@ -2108,6 +2108,11 @@ end
 --- the bottom moves up.
 local LIST_MIN = 160
 local SCREEN_MARGIN = 40
+--- The most the goals may add to the window's height, however tall the
+--- screen; past it they scroll inside their panel. Without it Butler grew
+--- to nearly the screen's height and, in the one window, left that height
+--- behind for every addon after it (2026-11-16).
+UI.GOALS_MAX_EXTRA = 200
 
 function UI:ScreenRoom()
     local frame = self.frame
@@ -2127,6 +2132,7 @@ function UI:PlaceGoals()
     if not (goalsUI and goalsUI.panel) then return end
     local room = self:ScreenRoom()
     local cap = room and math.max(HEIGHT, math.floor(room)) or nil
+    cap = math.min(cap or math.huge, HEIGHT + UI.GOALS_MAX_EXTRA)
     local panelMax
     if cap then
         local list = HEIGHT - HEADER - FOOT - PADDING
