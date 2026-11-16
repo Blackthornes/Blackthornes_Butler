@@ -33,12 +33,16 @@
 --  13. The free side: it docks on the right when that fits, on the left
 --      when only that fits, and shrinks to the bigger gap when neither
 --      does (never under the smallest size); undocked it has its own size.
+--  15. Shelves: pieces in their first spot line up down the top shelf in
+--      order, a dragged or hidden one takes no room, the ones after it are
+--      laid again when one shows, hides or changes height, the right shelf
+--      stands left of the game's quest list, and nothing moves in a fight.
 --  14. Two game windows at once (the character sheet at a vendor, heard by
 --      HookScript): it docks beside the newest and goes back beside the
 --      other when that one closes.
 
 local NAMES = { "CreateFrame", "UIParent", "C_Timer", "time", "BlackthornesWindow",
-    "UISpecialFrames", "GetCursorPosition", "GetTime", "MailFrame", "OpenMailFrame", "MerchantFrame", "AuctionHouseFrame", "Enum", "CharacterFrame", "ContainerFrame1" }
+    "UISpecialFrames", "GetCursorPosition", "GetTime", "MailFrame", "OpenMailFrame", "MerchantFrame", "AuctionHouseFrame", "Enum", "CharacterFrame", "ContainerFrame1", "BlackthornesShelves", "ObjectiveTrackerFrame" }
 local saved = {}
 for _, name in ipairs(NAMES) do saved[name] = _G[name] end
 
@@ -506,6 +510,71 @@ do
     assert(SW.Place() == nil, "and lets go")
     UIParent.width = savedW
     SW.Open("gamma")
+end
+
+-- 15. Shelves.
+do
+    UIParent.width = 1000
+    local function Piece(h)
+        local f = Object()
+        f.height = h
+        return f
+    end
+    local arrow, bar, gold = Piece(160), Piece(30), Piece(20)
+    local laid = {}
+    local barFree = true
+    SW.ShelfJoin("arrow.test", { frame = arrow, place = function() laid[#laid + 1] = "arrow" end })
+    SW.ShelfJoin("xpbar.test", { frame = bar, free = function() return barFree end,
+        place = function() laid[#laid + 1] = "bar" end })
+    SW.ShelfJoin("goldbar.test", { frame = gold, place = function() laid[#laid + 1] = "gold" end })
+    local stack = 0
+    SW.ShelfJoin("notice", { shown = function() return stack > 0 end, height = function() return stack end })
+    local top = SW.SHELVES.top
+    local point, x, y = SW.ShelfSpot("goldbar.test")
+    assert(point == "TOP" and x == 0 and y == top.y, "the first piece takes the shelf's top")
+    local _, _, ya = SW.ShelfSpot("arrow.test")
+    assert(ya == top.y - 20 - top.gap, "the arrow under the gold bar")
+    local _, _, yb = SW.ShelfSpot("xpbar.test")
+    assert(yb == ya - 160 - top.gap, "the bar under the arrow")
+    local _, _, yn = SW.ShelfSpot("notice")
+    assert(yn == yb - 30 - top.gap, "notes last")
+    barFree = false
+    local _, _, yn2 = SW.ShelfSpot("notice")
+    assert(yn2 == yb, "a dragged piece takes no room")
+    barFree = true
+    arrow:Hide()
+    local _, _, yb2 = SW.ShelfSpot("xpbar.test")
+    assert(yb2 == ya, "a hidden piece takes no room")
+    laid = {}
+    SW.ShelfChanged("arrow.test")
+    assert(#laid == 1 and laid[1] == "bar", "only the shown pieces after it are laid again")
+    laid = {}
+    arrow:Show()
+    arrow:Fire("OnShow")
+    assert(#laid == 1 and laid[1] == "bar", "showing is heard by itself")
+    SW.ShelfJoin("arrow.test", { frame = arrow, place = function() end })
+    assert(#arrow.hooks.OnShow == 1, "joined again, it is watched once")
+    local fight = _G.InCombatLockdown
+    _G.InCombatLockdown = function() return true end
+    laid = {}
+    SW.ShelfChanged("goldbar.test")
+    assert(#laid == 0, "nothing moves in a fight")
+    _G.InCombatLockdown = fight
+    SW.events.scripts.OnEvent(SW.events, "PLAYER_REGEN_ENABLED")
+    assert(#laid >= 1, "laid once the fight ends")
+    local card = Object()
+    card.height = 80
+    SW.ShelfJoin("travel.test", { shelf = "right", frame = card })
+    local rp, rx, ry = SW.ShelfSpot("travel.test")
+    assert(rp == "TOPRIGHT" and rx == SW.SHELVES.right.x and ry == SW.SHELVES.right.y, "the right shelf, in from the edge")
+    ObjectiveTrackerFrame = Object()
+    ObjectiveTrackerFrame.left = 760
+    local _, rx2 = SW.ShelfSpot("travel.test")
+    assert(rx2 == 760 - 1000 - SW.SHELVES.right.gap, "left of the quest list")
+    ObjectiveTrackerFrame:Hide()
+    local _, rx3 = SW.ShelfSpot("travel.test")
+    assert(rx3 == SW.SHELVES.right.x, "quest list hidden: in from the edge")
+    BlackthornesShelves.pieces = {}
 end
 
 SW.SetOn(false)

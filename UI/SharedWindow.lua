@@ -1177,6 +1177,198 @@ function SharedWindow.Left(key)
     end
 end
 
+--------------------------------------------------------------------------------
+-- Shelves for small pieces (the owner said build it, 2026-11-16, from the
+-- Pets and Tradeskills UI cleanup mockups). Before, every addon picked its
+-- own first spot for its arrow, notices, bars and cards, and several were
+-- the same spot. Now a piece the player has not dragged asks a shelf for
+-- the next free place: the top shelf runs down from the top middle, the
+-- right shelf down the right side, left of the game's quest list. A dragged
+-- piece keeps its spot and leaves the shelf alone; no saved key changes.
+--
+-- The board is shared by every copy in `_G.BlackthornesShelves`, so
+-- pieces from all five addons line up together. Each piece joins with
+--   SharedWindow.ShelfJoin(key, { shelf = "top" or "right", order = n,
+--       frame = f, free = fn, shown = fn, height = fn, place = fn })
+-- `free()` is true while it sits in its first spot (not dragged);
+-- `place()` is called to lay it again when a piece above it comes, goes or
+-- changes height. `frame`, `shown` and `height` are optional: without a
+-- frame, `shown` and `height` (in UIParent units) say how much room it
+-- takes (the notice stack).
+--------------------------------------------------------------------------------
+
+SharedWindow.SHELVES = {
+    top = { anchor = "TOP", x = 0, y = -120, gap = 8 },
+    right = { anchor = "TOPRIGHT", x = -40, y = -250, gap = 8 },
+}
+-- Pieces on each shelf, in order. Pieces that come and go a lot (notices)
+-- sit last, so nothing above them jumps when one shows.
+SharedWindow.SHELF_ORDER = {
+    goldbar = 10, arrow = 20, xpbar = 30, shards = 40, sellmarked = 50, mailtally = 55,
+    goldgoal = 60, upgrade = 70, notice = 90,
+    auctions = 10, travel = 20,
+}
+-- The game's quest list, read only: the right shelf stands left of it.
+SharedWindow.QUEST_LIST = { "ObjectiveTrackerFrame", "QuestWatchFrame", "WatchFrame" }
+
+local shelves = rawget(_G, "BlackthornesShelves")
+if type(shelves) ~= "table" then
+    shelves = {}
+    _G.BlackthornesShelves = shelves
+end
+shelves.pieces = shelves.pieces or {}
+
+local function ParentScale()
+    local ok, scale = pcall(UIParent.GetEffectiveScale, UIParent)
+    if ok and type(scale) == "number" and scale > 0 then return scale end
+    return 1
+end
+
+local function PieceShown(piece)
+    if type(piece.shown) == "function" then
+        local ok, shown = pcall(piece.shown)
+        return ok and shown and true or false
+    end
+    local frame = piece.frame
+    if type(frame) ~= "table" then return false end
+    local ok, shown = pcall(frame.IsShown, frame)
+    return ok and shown and true or false
+end
+
+local function PieceFree(piece)
+    if type(piece.free) ~= "function" then return true end
+    local ok, free = pcall(piece.free)
+    return ok and free and true or false
+end
+
+--- How tall a piece stands, in UIParent units.
+local function PieceHeight(piece)
+    if type(piece.height) == "function" then
+        local ok, height = pcall(piece.height)
+        if ok and type(height) == "number" then return height end
+    end
+    local frame = piece.frame
+    if type(frame) ~= "table" then return 0 end
+    local ok, height, scale = pcall(function() return frame:GetHeight(), frame:GetEffectiveScale() end)
+    if not (ok and type(height) == "number") then return 0 end
+    if type(scale) ~= "number" or scale <= 0 then scale = ParentScale() end
+    return height * scale / ParentScale()
+end
+
+--- Where the right shelf stands across: left of the game's quest list
+--- when that shows, else in from the right edge. In UIParent units, from
+--- the right edge (so negative).
+local function RightShelfX()
+    local shelf = SharedWindow.SHELVES.right
+    local okW, width = pcall(UIParent.GetWidth, UIParent)
+    if not (okW and type(width) == "number" and width > 0) then return shelf.x end
+    for _, name in ipairs(SharedWindow.QUEST_LIST) do
+        local list = rawget(_G, name)
+        if type(list) == "table" then
+            local ok, shown, left, scale = pcall(function()
+                return list:IsShown(), list:GetLeft(), list:GetEffectiveScale()
+            end)
+            if ok and shown and type(left) == "number" and type(scale) == "number" then
+                local x = left * scale / ParentScale() - width - shelf.gap
+                if x < shelf.x then return x end
+            end
+        end
+    end
+    return shelf.x
+end
+
+--- Join a shelf, or update a piece that joined before (the newest copy's
+--- functions win). Gives the piece's first place.
+function SharedWindow.ShelfJoin(key, piece)
+    if type(key) ~= "string" or type(piece) ~= "table" then return end
+    local kind = key:match("^([^%.]+)")
+    piece.key = key
+    piece.shelf = SharedWindow.SHELVES[piece.shelf] and piece.shelf or "top"
+    piece.order = tonumber(piece.order) or SharedWindow.SHELF_ORDER[kind] or 80
+    local old = shelves.pieces[key]
+    shelves.pieces[key] = piece
+    local frame = piece.frame
+    if type(frame) == "table" and type(frame.HookScript) == "function"
+        and not (old and old.frame == frame and old.hooked) then
+        local function Moved() SharedWindow.ShelfChanged(key) end
+        pcall(frame.HookScript, frame, "OnShow", Moved)
+        pcall(frame.HookScript, frame, "OnHide", Moved)
+        pcall(frame.HookScript, frame, "OnSizeChanged", Moved)
+        piece.hooked = true
+    elseif old and old.hooked and old.frame == frame then
+        piece.hooked = true
+    end
+end
+
+--- The place a piece takes on its shelf: anchor point, x and y, in
+--- UIParent units (divide by the piece's own scale before SetPoint).
+--- Pieces before it that show and sit in their first spot take room.
+function SharedWindow.ShelfSpot(key)
+    local piece = shelves.pieces[key]
+    local name = piece and piece.shelf or "top"
+    local shelf = SharedWindow.SHELVES[name]
+    local order = piece and piece.order or 0
+    local y = shelf.y
+    local list = {}
+    for other, entry in pairs(shelves.pieces) do
+        if other ~= key and entry.shelf == name then list[#list + 1] = entry end
+    end
+    table.sort(list, function(a, b)
+        if a.order ~= b.order then return a.order < b.order end
+        return a.key < b.key
+    end)
+    for _, entry in ipairs(list) do
+        if entry.order > order or (entry.order == order and entry.key > key) then break end
+        if PieceShown(entry) and PieceFree(entry) then
+            local height = PieceHeight(entry)
+            if height > 0 then y = y - height - shelf.gap end
+        end
+    end
+    local x = name == "right" and RightShelfX() or shelf.x
+    return shelf.anchor, x, y
+end
+
+--- Something on a shelf came, went or changed height: lay again every
+--- piece after it that sits in its first spot. Put off a moment so a burst
+--- lays once, and never in a fight.
+function SharedWindow.ShelfChanged(key)
+    if shelves.pending then return end
+    shelves.pending = true
+    local function Lay()
+        shelves.pending = nil
+        if InFight() then
+            shelves.afterFight = true
+            return
+        end
+        SharedWindow.ShelfLay(key)
+    end
+    if C_Timer and C_Timer.After then C_Timer.After(0, Lay) else Lay() end
+end
+
+function SharedWindow.ShelfLay(key)
+    local from = key and shelves.pieces[key]
+    for other, piece in pairs(shelves.pieces) do
+        local after = not from or (piece.shelf == from.shelf and other ~= key
+            and (piece.order > from.order or (piece.order == from.order and other > key)))
+        if after and type(piece.place) == "function" and PieceShown(piece) and PieceFree(piece) then
+            pcall(piece.place)
+        end
+    end
+end
+
+--- One ladder of layers for every addon's frames (Farmer's UI cleanup,
+--- 2026-11-16): panels that stay up while you play sit low, pieces that
+--- pop up on their own (arrows, notes, the loot feed) in the middle, and
+--- windows the player opens on purpose on top. Menus and tooltips are the
+--- game's own, above all of them.
+SharedWindow.LAYERS = { panel = "LOW", popup = "MEDIUM", window = "DIALOG" }
+function SharedWindow.Layer(frame, kind)
+    local strata = SharedWindow.LAYERS[kind]
+    if type(frame) == "table" and strata and frame.SetFrameStrata then
+        pcall(frame.SetFrameStrata, frame, strata)
+    end
+end
+
 --- Places with no event of their own (the character sheet) are heard by
 --- HookScript on the game's frame, read only, once for every copy. A hook
 --- set by an older copy is never doubled: the shared table remembers it.
@@ -1214,8 +1406,16 @@ if CreateFrame then
     end
     pcall(events.RegisterEvent, events, "PLAYER_INTERACTION_MANAGER_FRAME_HIDE")
     pcall(events.RegisterEvent, events, "PLAYER_LOGIN")
+    pcall(events.RegisterEvent, events, "PLAYER_REGEN_ENABLED")
     events:SetScript("OnEvent", function(_, event, kind)
         if event == "PLAYER_LOGIN" then SharedWindow.HookPlaces() return end
+        if event == "PLAYER_REGEN_ENABLED" then
+            if shelves.afterFight and IsDrawer() then
+                shelves.afterFight = nil
+                SharedWindow.ShelfLay()
+            end
+            return
+        end
         if not IsDrawer() then return end
         if event == "PLAYER_INTERACTION_MANAGER_FRAME_HIDE" then
             local ok, key = pcall(SharedWindow.InteractionPlace, kind)
