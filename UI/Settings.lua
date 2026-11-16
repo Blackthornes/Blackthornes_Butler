@@ -37,6 +37,8 @@ local TITLE = "Blackthornes Butler"
 local PAGES = {
     { key = "selling", text = L["ERRANDS"],
       tip = L["Selling at a vendor, mail and the bank, and your Always keep, sell and bank lists"] },
+    { key = "keep", text = L["KEEP"],
+      tip = L["What each character keeps, and upgrades for your other characters"] },
     { key = "order", text = L["ORDER"],
       tip = L["The order Butler asks its rules in, and which ones are on"] },
     { key = "bankalt", text = L["BANK ALT"],
@@ -1091,14 +1093,30 @@ function SettingsUI:BuildPages()
     local pages = self.pages
 
     -- Selling: the vendor on the left, the player's lists on the right.
-    pages:Section("selling", 1, L["AT A VENDOR"])
-
-    local vendorRow = pages:Row("selling", 1, L["Open at Vendors:"],
-        L["Opens Butler at every vendor. Nothing sells until you click Sell."])
-    controls.openAtVendor = Widgets.CreateCheckbox(vendorRow, L["On"], function(checked)
+    -- Where Butler opens by itself: one row, a tick a place (2026-11-16,
+    -- from a mockup). The saved keys are as they were.
+    pages:Section("selling", 1, L["OPEN BUTLER"])
+    local openWords = {
+        L["Opens Butler at every vendor. Nothing sells until you click Sell."],
+        L["Opens Butler at every mailbox. Fill Mail fills in the mail and you press Send. Needs Blackthornes Tradeskills."],
+        L["Opens Butler at the bank when there's something to move."],
+    }
+    local openRow = pages:Row("selling", 1, L["Open Butler At:"], table.concat(openWords, " "))
+    controls.openAtVendor = Widgets.CreateCheckbox(openRow, L["Vendors"], function(checked)
         ns.db.openAtVendor = checked
     end, true)
-    controls.openAtVendor:SetPoint("TOPLEFT", CONTROL_X, -2)
+    controls.openAtMailbox = Widgets.CreateCheckbox(openRow, L["Mailboxes"], function(checked)
+        ns.db.openAtMailbox = checked
+    end, true)
+    controls.openAtBank = Widgets.CreateCheckbox(openRow, L["The Bank"], function(checked)
+        ns.db.openAtBank = checked
+    end, true)
+    SettingsUI.Hover(controls.openAtVendor, openWords[1])
+    SettingsUI.Hover(controls.openAtMailbox, openWords[2])
+    SettingsUI.Hover(controls.openAtBank, openWords[3])
+    SettingsUI.Flow(openRow, { controls.openAtVendor, controls.openAtMailbox, controls.openAtBank })
+
+    pages:Section("selling", 1, L["AT A VENDOR"])
 
     local buyRow = pages:Row("selling", 1, L["Buy More:"],
         L["Shift-click an item at a vendor to buy as many as you want, like 200."])
@@ -1108,13 +1126,6 @@ function SettingsUI:BuildPages()
     controls.buyMany:SetPoint("TOPLEFT", CONTROL_X, -2)
 
     pages:Section("selling", 1, L["MAIL AND BANK"])
-
-    local mailRow = pages:Row("selling", 1, L["Open at Mailboxes:"],
-        L["Opens Butler at every mailbox. Fill Mail fills in the mail and you press Send. Needs Blackthornes Tradeskills."])
-    controls.openAtMailbox = Widgets.CreateCheckbox(mailRow, L["On"], function(checked)
-        ns.db.openAtMailbox = checked
-    end, true)
-    controls.openAtMailbox:SetPoint("TOPLEFT", CONTROL_X, -2)
 
     local nextRow = pages:Row("selling", 1, L["Fill the Next Mail:"],
         L["After you send one, Butler fills the next character's mail."])
@@ -1155,33 +1166,26 @@ function SettingsUI:BuildPages()
     end, false)
     controls.questBuy:SetPoint("TOPLEFT", CONTROL_X, -2)
 
-    local bankRow = pages:Row("selling", 1, L["Open at the Bank:"],
-        L["Opens Butler at the bank when there's something to move."])
-    controls.openAtBank = Widgets.CreateCheckbox(bankRow, L["On"], function(checked)
-        ns.db.openAtBank = checked
-    end, true)
-    controls.openAtBank:SetPoint("TOPLEFT", CONTROL_X, -2)
-
     -- Mail running out on any of your characters (Logic/MailRunsOut.lua,
     -- the owner said build it 2026-11-09). Off unless ticked.
-    pages:Section("selling", 1, L["MAILBOX"])
-    local runsOutRow = pages:Row("selling", 1, L["Mail Running Out:"], nil)
+    pages:Section("selling", 2, L["MAILBOX"])
+    local runsOutRow = pages:Row("selling", 2, L["Mail Running Out:"], nil)
     controls.mailRunsOut = Widgets.CreateCheckbox(runsOutRow, L["On"], function(checked)
         ns.MailRunsOut:SetOn(checked)
     end, false)
     controls.mailRunsOut:SetPoint("TOPLEFT", CONTROL_X, -2)
 
     -- What a mail holds, on its row's tooltip in the inbox (2026-11-09).
-    local mailContentsRow = pages:Row("selling", 1, L["Mail Contents:"], nil)
+    local mailContentsRow = pages:Row("selling", 2, L["Mail Contents:"], nil)
     controls.mailContents = Widgets.CreateCheckbox(mailContentsRow, L["On"], function(checked)
         ns.MailContents:SetEnabled(checked)
     end, false)
     controls.mailContents:SetPoint("TOPLEFT", CONTROL_X, -2)
 
     -- The owner asked 2026-10-14: on the disenchanter, break every green.
-    pages:Section("selling", 1, L["DISENCHANTING"])
+    pages:Section("selling", 2, L["DISENCHANTING"])
 
-    local greensRow = pages:Row("selling", 1, L["Disenchant Greens Here:"],
+    local greensRow = pages:Row("selling", 2, L["Disenchant Greens Here:"],
         L["On your disenchanter, greens go under Disenchant unless selling pays more. Crafted greens, upgrades and things you need are still kept."])
     controls.disenchantGreens = Widgets.CreateCheckbox(greensRow, L["On"], function(checked)
         ns.Verdicts:SetDisenchantGreens(checked)
@@ -1192,7 +1196,7 @@ function SettingsUI:BuildPages()
     -- takes a green only when breaking it pays as much as selling it,
     -- unless this is ticked. Levelling Enchanting takes it either way
     -- (the owner, 2026-10-17).
-    local alwaysRow = pages:Row("selling", 1, L["Always Disenchant:"],
+    local alwaysRow = pages:Row("selling", 2, L["Always Disenchant:"],
         L["Greens go to your disenchanter even when selling them pays more."])
     controls.alwaysDisenchant = Widgets.CreateCheckbox(alwaysRow, L["On"], function(checked)
         ns.Verdicts:SetAlwaysDisenchant(checked)
@@ -1201,7 +1205,7 @@ function SettingsUI:BuildPages()
 
     -- Asked 2026-10-11: anything worth less than this joins Sell. It only
     -- ever adds to Sell; nothing sells until the player clicks.
-    pages:Section("selling", 2, L["JUNK"])
+    pages:Section("selling", 2, L["JUNK AND CRAFTING"])
 
     local belowRow = pages:Row("selling", 2, L["Sell Below:"],
         L["Anything worth less than this goes under Sell. 0 turns it off."])
@@ -1212,8 +1216,6 @@ function SettingsUI:BuildPages()
 
     -- A player asked, the owner said build it (2026-10-19): say when a
     -- known craft earns more than selling. Off unless ticked.
-    pages:Section("selling", 2, L["CRAFTING"])
-
     local craftRow = pages:Row("selling", 2, L["Craft When It Pays More:"],
         L["Butler checks the recipes you know and says when crafting earns more than selling. Needs Blackthornes Tradeskills."])
     controls.craftPays = Widgets.CreateCheckbox(craftRow, L["On"], function(checked)
@@ -1221,9 +1223,9 @@ function SettingsUI:BuildPages()
     end)
     controls.craftPays:SetPoint("TOPLEFT", CONTROL_X, -2)
 
-    pages:Section("selling", 2, L["YOUR LISTS"])
+    pages:Section("keep", 1, L["YOUR LISTS"])
 
-    local learnRow = pages:Row("selling", 2, L["Learn From You:"],
+    local learnRow = pages:Row("keep", 1, L["Learn From You:"],
         L["Butler learns what you keep, sell and mail. Your right-click picks always win."])
     controls.learn = Widgets.CreateCheckbox(learnRow, L["On"], function(checked)
         ns.db.learn = checked
@@ -1233,29 +1235,29 @@ function SettingsUI:BuildPages()
 
     -- Upgrades held back from a character (the owner asked 2026-10-12):
     -- right-click an upgrade under Mail to hold it back; undone here.
-    pages:Section("selling", 2, L["UPGRADES FOR YOUR CHARACTERS"])
+    pages:Section("keep", 1, L["UPGRADES FOR YOUR CHARACTERS"])
 
-    local altRow = pages:Row("selling", 2, L["Mail Upgrades to Alts:"],
+    local altRow = pages:Row("keep", 1, L["Mail Upgrades to Alts:"],
         L["Gear that's an upgrade for another of your characters goes under Mail. Needs Blackthornes Equipment."])
     controls.altUpgrades = Widgets.CreateCheckbox(altRow, L["On"], function(checked)
         ns.Verdicts:SetAltUpgrades(checked)
     end)
     controls.altUpgrades:SetPoint("TOPLEFT", CONTROL_X, -2)
 
-    local heldRow = pages:Row("selling", 2, L["Character:"],
+    local heldRow = pages:Row("keep", 1, L["Character:"],
         L["Pick a character to see what you hold back from them."])
     controls.heldPick = SettingsUI.CharacterPicker(heldRow, CONTROL_X, function()
         SettingsUI:SyncHeld()
     end)
 
-    local allRow = pages:Row("selling", 2, L["Mail Them Upgrades:"], nil)
+    local allRow = pages:Row("keep", 1, L["Mail Them Upgrades:"], nil)
     controls.heldAll = Widgets.CreateCheckbox(allRow, L["On"], function(checked)
         local name = controls.heldPick:GetName()
         if name then ns.Verdicts:HoldAllUpgrades(name, not checked) end
     end)
     controls.heldAll:SetPoint("TOPLEFT", CONTROL_X, -2)
 
-    local itemsRow = pages:Row("selling", 2, L["Items Held Back:"],
+    local itemsRow = pages:Row("keep", 1, L["Items Held Back:"],
         L["Lets these items go to this character again."])
     controls.heldItems = Widgets.CreateButton(itemsRow, L["Undo"], function()
         local name = controls.heldPick:GetName()
@@ -1270,16 +1272,16 @@ function SettingsUI:BuildPages()
     -- How many of an item each character keeps (Logic/KeepHere.lua, a
     -- player asked, the owner said build it 2026-10-17). Set with a
     -- right-click in the Butler window; seen and changed here.
-    pages:Section("selling", 2, L["KEEP ON EACH CHARACTER"])
+    pages:Section("keep", 2, L["KEEP ON EACH CHARACTER"])
 
-    local keepWhoRow = pages:Row("selling", 2, L["Character:"],
+    local keepWhoRow = pages:Row("keep", 2, L["Character:"],
         L["Right-click an item in the Butler window to keep some on the character you're on."])
     controls.keepWho = SettingsUI.CharacterPicker(keepWhoRow, CONTROL_X, function()
         controls.keepWhat.index = 1
         SettingsUI:SyncKeepHere()
     end)
 
-    local keepWhatRow = pages:Row("selling", 2, L["Item:"], nil)
+    local keepWhatRow = pages:Row("keep", 2, L["Item:"], nil)
     controls.keepWhat = SettingsUI.CharacterPicker(keepWhatRow, CONTROL_X, function()
         SettingsUI:SyncKeepHere()
     end)
@@ -1289,7 +1291,7 @@ function SettingsUI:BuildPages()
         return state.guids[controls.keepWho.index], state.items[controls.keepWhat.index]
     end
 
-    local keepCountRow = pages:Row("selling", 2, L["Keep:"], L["0 takes it off the list. Keep All keeps every one."])
+    local keepCountRow = pages:Row("keep", 2, L["Keep:"], L["0 takes it off the list. Keep All keeps every one."])
     local function SaveCount()
         local who, what = KeepPicked()
         if not (who and what) then return end
@@ -1315,7 +1317,7 @@ function SettingsUI:BuildPages()
     end, { width = 100, height = 20 })
     controls.keepAll:SetPoint("LEFT", controls.keepCount, "RIGHT", 6, 0)
 
-    local keepRemoveRow = pages:Row("selling", 2, L["Remove:"], nil)
+    local keepRemoveRow = pages:Row("keep", 2, L["Remove:"], nil)
     controls.keepRemove = Widgets.CreateButton(keepRemoveRow, L["Remove"], function()
         local who, what = KeepPicked()
         if not (who and what) then return end
@@ -1328,7 +1330,7 @@ function SettingsUI:BuildPages()
     -- owner said build it from a mockup 2026-11-07): one number an item for
     -- the account, a row each with what is kept, what all the characters
     -- have and whether that's enough. A click opens who has them.
-    local acrossHead = pages:Section("selling", 2, L["KEEP ACROSS CHARACTERS"])
+    local acrossHead = pages:Section("keep", 2, L["KEEP ACROSS CHARACTERS"])
     controls.acrossAdd = Widgets.CreateButton(acrossHead, L["Add Item"], function()
         if ns.KeepAcrossUI then ns.KeepAcrossUI:Open() end
     end, { height = 18 })
@@ -1338,17 +1340,17 @@ function SettingsUI:BuildPages()
     acrossList:SetWidth(COLUMN_WIDTH)
     acrossList.fixedHeight = 40
     acrossList:SetHeight(40)
-    pages:Place("selling", 2, acrossList, 4)
+    pages:Place("keep", 2, acrossList, 4)
     controls.acrossList = acrossList
     SettingsUI.BuildAcrossHeader(acrossList)
 
-    local acrossBankRow = pages:Row("selling", 2, L["Count Bank:"], nil)
+    local acrossBankRow = pages:Row("keep", 2, L["Count Bank:"], nil)
     controls.acrossBank = Widgets.CreateCheckbox(acrossBankRow, L["On"], function(checked)
         if ns.KeepAcross then ns.KeepAcross:SetCountsBank(checked) end
     end)
     controls.acrossBank:SetPoint("TOPLEFT", CONTROL_X, 0)
 
-    local acrossMailRow = pages:Row("selling", 2, L["Count Mail:"], nil)
+    local acrossMailRow = pages:Row("keep", 2, L["Count Mail:"], nil)
     controls.acrossMail = Widgets.CreateCheckbox(acrossMailRow, L["On"], function(checked)
         if ns.KeepAcross then ns.KeepAcross:SetCountsMail(checked) end
     end)
@@ -1357,7 +1359,7 @@ function SettingsUI:BuildPages()
     local acrossFoot = CreateFrame("Frame", nil, pages.pages.selling.content)
     acrossFoot:SetSize(COLUMN_WIDTH, 16)
     acrossFoot.fixedHeight = 16
-    pages:Place("selling", 2, acrossFoot, 6)
+    pages:Place("keep", 2, acrossFoot, 6)
     controls.acrossCount = Theme.CreateLabel(acrossFoot, "small", "muted")
     controls.acrossCount:SetPoint("LEFT", 0, 0)
     local acrossSaves = Theme.CreateLabel(acrossFoot, "small", "dim", "RIGHT")

@@ -48,4 +48,23 @@ end
 suite.check("searching a tick's name lights its row", lit >= 1)
 pages:Search("")
 
+-- Open Butler At: one row, three ticks, the keys they always wrote.
+suite.check("the three places start as saved", controls.openAtVendor:GetChecked()
+    and controls.openAtMailbox:GetChecked() and controls.openAtBank:GetChecked())
+Tick(controls.openAtBank)
+suite.check("The Bank unticked saves openAtBank off", ns.db.openAtBank == false
+    and ns.db.openAtVendor ~= false and ns.db.openAtMailbox ~= false)
+
+-- The Keep page holds the lists and keep groups; Errands the rest.
+local function Has(page, label)
+    for _, shownRow in ipairs(pages.pages[page].rows) do
+        if shownRow.labelText == label then return true end
+    end
+    return false
+end
+suite.check("Keep has its own page", pages.pages.keep ~= nil and Has("keep", "Learn From You:")
+    and Has("keep", "Mail Upgrades to Alts:") and Has("keep", "Count Bank:"))
+suite.check("Errands keeps the vendor and mail rows", Has("selling", "Open Butler At:")
+    and Has("selling", "Buy More:") and Has("selling", "Sell Below:") and not Has("selling", "Count Bank:"))
+
 suite.done()

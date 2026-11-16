@@ -2204,6 +2204,21 @@ and remembers them for the session. `SettingsUI.TooltipShiftControl` (a
 box per line) is gone from Butler. Tested in `tools/test_settingsrows.lua`
 and `tools/test_tooltipshift.lua`. Not yet seen in game.
 
+## The Keep page and Open Butler At
+
+The owner said build it (2026-11-16, from a mockup). Settings has a KEEP
+page (key `keep`) after ERRANDS: YOUR LISTS and UPGRADES FOR YOUR
+CHARACTERS on the left, KEEP ON EACH CHARACTER and KEEP ACROSS CHARACTERS
+on the right, moved as they were from ERRANDS (key `selling`, unchanged).
+ERRANDS starts with OPEN BUTLER: "Open Butler At:" with a tick for Vendors,
+Mailboxes and The Bank (`openAtVendor`, `openAtMailbox`, `openAtBank`, as
+saved before; `/bbutler vendor` and the like are as they were). MAILBOX and
+DISENCHANTING moved to the right column, and JUNK and CRAFTING share the
+heading JUNK AND CRAFTING. MAIL AND BANK kept its heading (the mockup left
+it out; it still has five rows). The KEEP page's hover line ("What each
+character keeps, and upgrades for your other characters") was not on the
+mockup. Tested in `tools/test_settingsrows.lua`. Not yet seen in game.
+
 # Standing rules in full
 
 Moved word for word from CLAUDE.md (2026-11-16), which keeps a short form of each.

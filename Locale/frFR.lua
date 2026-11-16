@@ -44,7 +44,6 @@ L["No characters yet"] = "Pas encore de personnages"
 L["AT A VENDOR"] = "CHEZ LE MARCHAND"
 L["On"] = "Activé"
 L["MAIL AND BANK"] = "COURRIER ET BANQUE"
-L["JUNK"] = "CAMELOTE"
 L["YOUR LISTS"] = "TES LISTES"
 L["GOLD FUND"] = "CAISSE D'OR"
 L["ONE CHARACTER"] = "UN PERSONNAGE"
@@ -820,13 +819,11 @@ L["This vendor doesn't sell anything called %s."] = "Ce marchand ne vend rien qu
 
 -- Settings (2026-10-15)
 L["Windows, tooltips and text size"] = "Fenêtres, infobulles et taille du texte"
-L["Open at Vendors:"] = "Ouvrir chez les marchands :"
 L["Opens Butler at every vendor. Nothing sells until you click Sell."] =
     "Ouvre Butler chez chaque marchand. Rien n'est vendu tant que tu ne cliques pas sur Vendre."
 L["Buy More:"] = "Acheter plus :"
 L["Shift-click an item at a vendor to buy as many as you want, like 200."] =
     "Fais Maj-clic sur un objet chez un marchand pour en acheter autant que tu veux, comme 200."
-L["Open at Mailboxes:"] = "Ouvrir aux boîtes aux lettres :"
 L["Opens Butler at every mailbox. Fill Mail fills in the mail and you press Send. Needs Blackthornes Tradeskills."] =
     "Ouvre Butler à chaque boîte aux lettres. Remplir le courrier remplit le courrier et c'est toi qui cliques sur Envoyer. Il faut Blackthornes Tradeskills."
 L["Fill the Next Mail:"] = "Remplir le courrier suivant :"
@@ -842,7 +839,6 @@ L["Opens Butler at login when this character has crafting or mail to do."] =
 L["Quest Items:"] = "Objets de quête :"
 L["Keeps what your quests need and lists what's still missing."] =
     "Garde ce dont tes quêtes ont besoin et liste ce qui manque encore."
-L["Open at the Bank:"] = "Ouvrir à la banque :"
 -- Mail contents on the inbox tooltip
 L["Mail Contents:"] = "Contenu du courrier :"
 L["IN THIS MAIL"] = "DANS CE COURRIER"
@@ -1143,7 +1139,6 @@ L["Needs Blackthornes Tradeskills to see your other characters."] = "Il faut Bla
 L["Queue"] = "File"
 L["Added 1 craft to your Tradeskills queue."] = "1 fabrication ajoutée à ta file Tradeskills."
 L["Added %d crafts to your Tradeskills queue."] = "%d fabrications ajoutées à ta file Tradeskills."
-L["CRAFTING"] = "ARTISANAT"
 L["Craft When It Pays More:"] = "Fabriquer quand ça rapporte plus :"
 L["Butler checks the recipes you know and says when crafting earns more than selling. Needs Blackthornes Tradeskills."] = "Butler vérifie les recettes que tu connais et te dit quand fabriquer rapporte plus que vendre. Il faut Blackthornes Tradeskills."
 L["Make %s, about %s more than selling it"] = "Fabrique %s, environ %s de plus qu'en le vendant"
@@ -1343,3 +1338,10 @@ L["Who Has It"] = "Qui l'a"
 L["Vendor Price"] = "Prix marchand"
 L["Craft Details"] = "Détails de fabrication"
 L["Craft Details:"] = "Détails de fabrication :"
+L["OPEN BUTLER"] = "OUVRIR BUTLER"
+L["Open Butler At:"] = "Ouvrir Butler :"
+L["Vendors"] = "Chez les marchands"
+L["Mailboxes"] = "Aux boîtes aux lettres"
+L["The Bank"] = "À la banque"
+L["JUNK AND CRAFTING"] = "CAMELOTE ET ARTISANAT"
+L["What each character keeps, and upgrades for your other characters"] = "Ce que chaque personnage garde, et les améliorations pour tes autres personnages"

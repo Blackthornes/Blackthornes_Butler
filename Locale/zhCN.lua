@@ -42,7 +42,6 @@ L["No characters yet"] = "还没有角色"
 L["AT A VENDOR"] = "在商人处"
 L["On"] = "开启"
 L["MAIL AND BANK"] = "邮件和银行"
-L["JUNK"] = "垃圾"
 L["YOUR LISTS"] = "你的清单"
 L["GOLD FUND"] = "金币储备"
 L["ONE CHARACTER"] = "单个角色"
@@ -818,13 +817,11 @@ L["This vendor doesn't sell anything called %s."] = "这个商人不卖叫 %s �
 
 -- Settings (2026-10-15)
 L["Windows, tooltips and text size"] = "窗口、鼠标提示和文字大小"
-L["Open at Vendors:"] = "在商人处打开："
 L["Opens Butler at every vendor. Nothing sells until you click Sell."] =
     "每次找商人时都打开 Butler。你点出售之前什么都不会卖。"
 L["Buy More:"] = "买更多："
 L["Shift-click an item at a vendor to buy as many as you want, like 200."] =
     "在商人处按住 Shift 点击一件物品，想买多少就买多少，比如 200 个。"
-L["Open at Mailboxes:"] = "在邮箱处打开："
 L["Opens Butler at every mailbox. Fill Mail fills in the mail and you press Send. Needs Blackthornes Tradeskills."] =
     "每次打开邮箱时都打开 Butler。填写邮件会帮你填好邮件，发送由你来点。需要 Blackthornes Tradeskills。"
 L["Fill the Next Mail:"] = "填写下一封邮件："
@@ -840,7 +837,6 @@ L["Opens Butler at login when this character has crafting or mail to do."] =
 L["Quest Items:"] = "任务物品："
 L["Keeps what your quests need and lists what's still missing."] =
     "保留你的任务需要的东西，并列出还缺什么。"
-L["Open at the Bank:"] = "在银行处打开："
 -- Mail contents on the inbox tooltip
 L["Mail Contents:"] = "邮件内容："
 L["IN THIS MAIL"] = "此邮件内含"
@@ -1141,7 +1137,6 @@ L["Needs Blackthornes Tradeskills to see your other characters."] = "需要 Blac
 L["Queue"] = "加入队列"
 L["Added 1 craft to your Tradeskills queue."] = "已将 1 次制作加入你的 Tradeskills 队列。"
 L["Added %d crafts to your Tradeskills queue."] = "已将 %d 次制作加入你的 Tradeskills 队列。"
-L["CRAFTING"] = "制作"
 L["Craft When It Pays More:"] = "收益更高时制作："
 L["Butler checks the recipes you know and says when crafting earns more than selling. Needs Blackthornes Tradeskills."] = "管家会查看你会的配方，在制作比出售赚得更多时告诉你。需要 Blackthornes Tradeskills。"
 L["Make %s, about %s more than selling it"] = "制作%s，比出售多赚约%s"
@@ -1341,3 +1336,10 @@ L["Who Has It"] = "谁有它"
 L["Vendor Price"] = "商人价格"
 L["Craft Details"] = "制作详情"
 L["Craft Details:"] = "制作详情："
+L["OPEN BUTLER"] = "打开 BUTLER"
+L["Open Butler At:"] = "在这些地方打开 Butler："
+L["Vendors"] = "商人"
+L["Mailboxes"] = "邮箱"
+L["The Bank"] = "银行"
+L["JUNK AND CRAFTING"] = "垃圾与制作"
+L["What each character keeps, and upgrades for your other characters"] = "每个角色保留什么，以及给你其他角色的升级装备"
