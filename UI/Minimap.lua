@@ -178,6 +178,8 @@ function MinimapButton:JoinShared()
             key = "butler", order = 5, name = "Butler", icon = ICON,
             open = function() MinimapButton:Open() end,
             settings = function() if ns.SettingsUI then ns.SettingsUI:Toggle() end end,
+            -- The settings every Blackthornes addon shares (the rail's gear).
+            allAddons = function() if ns.SettingsUI then ns.SettingsUI:ShowAllAddons() end end,
             db = function() return ns.db end,
             -- Butler's pages show in it (UI/ButlerTabs.lua).
             host = ns.ButlerTabs and ns.ButlerTabs.host or nil,

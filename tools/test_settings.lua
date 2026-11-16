@@ -86,6 +86,37 @@ SettingsUI:Hide()
 SettingsUI:Show()
 suite.check("it opens again on the page left", pages.shown == "general")
 
+-- All Addons: the rows every Blackthornes addon shares, once.
+do
+    local onAll, onGeneral = {}, {}
+    for _, row in ipairs(pages.pages.all.rows) do onAll[row.labelText] = true end
+    for _, row in ipairs(pages.pages.general.rows) do onGeneral[row.labelText] = true end
+    for _, label in ipairs({ "Window Style:", "Text Size:", "Effects:", "Mute All Sounds:",
+        "Combine Addon Buttons:", "One Window:", "Window Spots:", "Sister Addons:", "What's New:",
+        "After Updates:" }) do
+        suite.check("on All Addons: " .. label, onAll[label] and not onGeneral[label])
+    end
+    suite.check("Window Size stays Butler's own", onGeneral["Window Size:"] and not onAll["Window Size:"])
+    local after = controls.whatsNewAfter
+    after:Sync()
+    suite.check("After Updates reads what is saved", after:GetValue() == "motion", after:GetValue())
+    ns.WhatsNew:SetMotionOn(false)
+    after:Sync()
+    suite.check("motion off reads Show", after:GetValue() == "show", after:GetValue())
+    ns.WhatsNew:SetOn(false)
+    after:Sync()
+    suite.check("off reads Off", after:GetValue() == "off", after:GetValue())
+    ns.WhatsNew:SetOn(true)
+    ns.WhatsNew:SetMotionOn(true)
+    SettingsUI:Refresh()
+    local One = ns.ButlerTabs and ns.ButlerTabs.One()
+    local inOne = One ~= nil and One.On() == true
+    suite.check("All Addons is off the switch only in the one window", pages:Hidden("all") == inOne)
+    SettingsUI:ShowAllAddons()
+    suite.check("the gear opens it", pages.shown == "all")
+    pages:Show("general")
+end
+
 -- Open at a vendor: on unless unticked, saved as the box says.
 suite.check("Open at a vendor starts ticked", controls.openAtVendor:GetChecked())
 controls.openAtVendor:GetScript("OnClick")(controls.openAtVendor)
@@ -98,6 +129,8 @@ suite.check("/bbutler vendor turns it back on, and the box follows",
 local minimapRow, styleRow
 for _, row in ipairs(pages.pages.general.rows) do
     if row.labelText == "Free Bag Space:" then minimapRow = row end
+end
+for _, row in ipairs(pages.pages.all.rows) do
     if row.labelText == "Window Style:" then styleRow = row end
 end
 suite.check("descriptions start hidden", ns.db.settingsDescriptions == false
@@ -120,8 +153,8 @@ pages.describe:GetScript("OnClick")(pages.describe)
 suite.check("unticked, the window goes back", SettingsUI.frame:GetHeight() == before)
 
 -- Find a setting.
-pages.find:SetText("motion")
-pages:Search("motion")
+pages.find:SetText("after updates")
+pages:Search("after updates")
 local lit = 0
 for _, entry in ipairs(pages.searchables) do
     if entry.glow:IsShown() then lit = lit + 1 end

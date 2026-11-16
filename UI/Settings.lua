@@ -43,6 +43,10 @@ local PAGES = {
       tip = L["Mail whole kinds of items to one of your characters"] },
     { key = "gold", text = L["GOLD"],
       tip = L["How much gold each of your characters keeps, topped up by mail"] },
+    -- The settings every Blackthornes addon shares (2026-11-16): reached
+    -- by the one window's gear while One Window is on, so it is left off
+    -- the switch then; on the switch while each addon has its own window.
+    { key = "all", text = L["All Addons"] },
     { key = "general", text = L["GENERAL"],
       tip = L["Windows, tooltips and text size"] },
     { key = "about", text = L["ABOUT"],
@@ -1564,36 +1568,27 @@ function SettingsUI:BuildPages()
     end, { width = 100, height = 20 })
     controls.goldUsual:SetPoint("TOPLEFT", CONTROL_X, 0)
 
-    -- General: the windows every Blackthornes addon shares first, then
-    -- Butler's own; the addons, tooltips and bags on the right (the
-    -- unified look, card 13).
-    pages:Section("general", 1, L["WINDOWS"])
+    -- All Addons: the rows every Blackthornes addon shares, shown once in
+    -- the one window behind its gear (the owner said build it,
+    -- 2026-11-16). General keeps only Butler's own. No setting was renamed
+    -- and no saved choice changed.
+    pages:Section("all", 1, L["ALL BLACKTHORNES ADDONS"])
 
     -- Asked 2026-10-10: the game's own look for players who would rather
     -- the windows matched the rest of their screen. Read at login, so it
     -- waits for /reload as Text size does. See UI/BlizzardLook.lua.
-    local styleRow = pages:Row("general", 1, L["Window Style:"], nil)
+    local styleRow = pages:Row("all", 1, L["Window Style:"], nil)
     controls.windowStyle = SettingsUI.WindowStyleControl(styleRow, CONTROL_X)
 
     -- Bigger letters in the same windows, as Tradeskills has. Every size
     -- is read as text is drawn, so it waits for /reload.
-    local textRow = pages:Row("general", 1, L["Text Size:"], nil)
+    local textRow = pages:Row("all", 1, L["Text Size:"], nil)
     controls.textSize = ns.SettingsPages.TextSizeControl(textRow, CONTROL_X, function() return ns.db end)
-
-    -- The size the window's grip saves, for Your Bags, All Characters and
-    -- Settings alike.
-    local sizeRow = pages:Row("general", 1, L["Window Size:"], nil)
-    controls.windowScale = ns.SettingsPages.WindowSizeControl(sizeRow, CONTROL_X,
-        function() return math.floor(((ns.db and ns.db.windowScale) or 1) * 100 + 0.5) end,
-        function(percent)
-            ns.UI:SetWindowScale(percent / 100)
-            if ns.ButlerTabs and SettingsUI.frame then ns.ButlerTabs.ApplyScale(SettingsUI.frame) end
-        end)
 
     -- How much the windows move: they rise in, glow and glint at Full,
     -- only fade at Subtle and stay still at Off. Full until picked, and the
     -- same choice as every Blackthornes addon (UI/SharedChoices.lua).
-    local effectsRow = pages:Row("general", 1, L["Effects:"], nil)
+    local effectsRow = pages:Row("all", 1, L["Effects:"], nil)
     local Motion = ns.Motion
     local effectNames = { full = L["Full"], subtle = L["Subtle"], off = L["Off"] }
     local function EffectIndex()
@@ -1613,7 +1608,7 @@ function SettingsUI:BuildPages()
 
     -- Quiets every sound every Blackthornes addon plays (UI/SharedChoices.lua,
     -- a player asked, 2026-11-12). Off unless ticked; ticked in one is ticked in all.
-    local muteRow = pages:Row("general", 1, L["Mute All Sounds:"], nil)
+    local muteRow = pages:Row("all", 1, L["Mute All Sounds:"], nil)
     controls.muteSounds = Widgets.CreateCheckbox(muteRow, L["On"], function(checked)
         SettingsUI:SetMuteSounds(checked)
     end, false)
@@ -1621,7 +1616,7 @@ function SettingsUI:BuildPages()
 
     -- One minimap button for every Blackthornes addon (UI/SharedMinimap.lua,
     -- the owner, 2026-10-28): ticked unless unticked, the same in all five.
-    local combineRow = pages:Row("general", 1, L["Combine Addon Buttons:"], nil)
+    local combineRow = pages:Row("all", 1, L["Combine Addon Buttons:"], nil)
     controls.combineButtons = Widgets.CreateCheckbox(combineRow, L["On"], function(checked)
         if ns.SharedMinimap then ns.SharedMinimap.SetCombined(checked) end
     end, true)
@@ -1630,11 +1625,42 @@ function SettingsUI:BuildPages()
     -- One window for every Blackthornes addon (UI/SharedWindow.lua, the
     -- owner, 2026-10-30): on unless unticked, the same in all five. Ticked
     -- or not, Settings opens again where it now belongs.
-    local oneRow = pages:Row("general", 1, L["One Window:"], nil)
+    local oneRow = pages:Row("all", 1, L["One Window:"], nil)
     controls.oneWindow = Widgets.CreateCheckbox(oneRow, L["On"], function(checked)
         SettingsUI:SetOneWindow(checked)
     end, true)
     controls.oneWindow:SetPoint("TOPLEFT", CONTROL_X, -2)
+
+    local positionRow = pages:Row("all", 1, L["Window Spots:"],
+        L["Puts every Blackthornes window back where it started. Your settings and data stay the same."])
+
+    local reset = Widgets.CreateButton(positionRow, L["Set Default"], function()
+        SettingsUI:ResetAllWindows()
+    end, { width = 110, height = 20 })
+    reset:SetPoint("TOPLEFT", CONTROL_X, 0)
+    controls.resetPositions = reset
+
+    -- Core/SisterNote.lua: one chat line, once, naming the Blackthornes
+    -- addons the player does not have. Off here is off in all of them.
+    local sistersRow = pages:Row("all", 1, L["Sister Addons:"],
+        L["Says once in chat which Blackthornes addons you don't have."])
+    controls.sisters = Widgets.CreateCheckbox(sistersRow, L["On"], function(checked)
+        ns.SisterNote:SetOn(checked)
+    end, true)
+    controls.sisters:SetPoint("TOPLEFT", CONTROL_X, -2)
+
+    -- UI/WhatsNew.lua: one window after an update for every Blackthornes
+    -- addon. Off here is off in all of them, as the sister note is. One
+    -- drop-down for the two boxes it had (UI/SettingsPages.lua).
+    pages:Section("all", 2, L["WHAT'S NEW"])
+    local _, whatsNewButton = CommandRow(pages, "all", 2, L["What's New:"], nil,
+        L["Open"], "whatsnew")
+    controls.whatsnew = whatsNewButton
+
+    local afterRow = pages:Row("all", 2, L["After Updates:"],
+        L["Opens What's New the first time you play after an update."])
+    controls.whatsNewAfter = ns.SettingsPages.AfterUpdatesControl(afterRow, CONTROL_X,
+        function() return ns.WhatsNew end)
 
     -- The minimap button always shows (the owner, 2026-10-15), so it has
     -- no row here.
@@ -1652,14 +1678,15 @@ function SettingsUI:BuildPages()
         L["Open"], "all")
     controls.all = allButton
 
-    local positionRow = pages:Row("general", 1, L["Window Spots:"],
-        L["Puts every Blackthornes window back where it started. Your settings and data stay the same."])
-
-    local reset = Widgets.CreateButton(positionRow, L["Set Default"], function()
-        SettingsUI:ResetAllWindows()
-    end, { width = 110, height = 20 })
-    reset:SetPoint("TOPLEFT", CONTROL_X, 0)
-    controls.resetPositions = reset
+    -- The size the window's grip saves, for Your Bags, All Characters and
+    -- Settings alike.
+    local sizeRow = pages:Row("general", 1, L["Window Size:"], nil)
+    controls.windowScale = ns.SettingsPages.WindowSizeControl(sizeRow, CONTROL_X,
+        function() return math.floor(((ns.db and ns.db.windowScale) or 1) * 100 + 0.5) end,
+        function(percent)
+            ns.UI:SetWindowScale(percent / 100)
+            if ns.ButlerTabs and SettingsUI.frame then ns.ButlerTabs.ApplyScale(SettingsUI.frame) end
+        end)
 
     local voiceRow = pages:Row("general", 1, L["Butler's Voice:"], nil)
     controls.voice = Widgets.CreateCheckbox(voiceRow, L["On"], function(checked)
@@ -1688,38 +1715,8 @@ function SettingsUI:BuildPages()
     end, false)
     controls.swapWhenFull:SetPoint("TOPLEFT", CONTROL_X, -2)
 
-    pages:Section("general", 2, L["ADDONS"])
-
     -- Debug and the client check are typed only (/bbutler debug, probe;
     -- the owner, 2026-10-23): players don't need them.
-
-    -- Core/SisterNote.lua: one chat line, once, naming the Blackthornes
-    -- addons the player does not have. Off here is off in all of them.
-    local sistersRow = pages:Row("general", 2, L["Sister Addons:"],
-        L["Says once in chat which Blackthornes addons you don't have."])
-    controls.sisters = Widgets.CreateCheckbox(sistersRow, L["On"], function(checked)
-        ns.SisterNote:SetOn(checked)
-    end, true)
-    controls.sisters:SetPoint("TOPLEFT", CONTROL_X, -2)
-
-    -- UI/WhatsNew.lua: one window after an update for every Blackthornes
-    -- addon. Off here is off in all of them, as the sister note is.
-    local _, whatsNewButton = CommandRow(pages, "general", 2, L["What's New:"], nil,
-        L["Open"], "whatsnew")
-    controls.whatsnew = whatsNewButton
-
-    local whatsNewRow = pages:Row("general", 2, L["What's New After Updates:"],
-        L["Opens What's New the first time you play after an update."])
-    controls.whatsNewPopup = Widgets.CreateCheckbox(whatsNewRow, L["On"], function(checked)
-        ns.WhatsNew:SetOn(checked)
-    end, true)
-    controls.whatsNewPopup:SetPoint("TOPLEFT", CONTROL_X, -2)
-
-    local whatsNewMotionRow = pages:Row("general", 2, L["What's New Motion:"], nil)
-    controls.whatsNewMotion = Widgets.CreateCheckbox(whatsNewMotionRow, L["On"], function(checked)
-        ns.WhatsNew:SetMotionOn(checked)
-    end, true)
-    controls.whatsNewMotion:SetPoint("TOPLEFT", CONTROL_X, -2)
 
     pages:Section("general", 2, L["TOOLTIPS"])
 
@@ -1798,8 +1795,7 @@ function SettingsUI:Refresh()
     controls.goldGoals:SetChecked(ns.GoldGoals:IsOn())
     controls.skillUp:SetChecked(ns.SkillUp:IsOn())
     controls.sisters:SetChecked(ns.SisterNote:IsOn())
-    controls.whatsNewPopup:SetChecked(ns.WhatsNew:IsOn())
-    controls.whatsNewMotion:SetChecked(ns.WhatsNew:IsMotionOn())
+    controls.whatsNewAfter:Sync()
     controls.sellBelow:SetValue(ns.Verdicts:SellBelow() or 0)
     controls.goldMinimum:SetValue(ns.Funds:Minimum() or 0)
     local names = {}
@@ -1832,7 +1828,15 @@ function SettingsUI:Refresh()
     local One = ns.ButlerTabs and ns.ButlerTabs.One()
     controls.oneWindow:SetChecked(One ~= nil and One.On() == true)
     if ns.RuleOrderUI then ns.RuleOrderUI:Refresh() end
+    -- In the one window, All Addons is behind its gear, not on the switch.
+    self.pages:SetHidden("all", One ~= nil and One.On() == true)
     self.pages:Refresh()
+end
+
+--- Open Settings on the All Addons page (the one window's gear).
+function SettingsUI:ShowAllAddons()
+    self:Show()
+    if self.pages then self.pages:Show("all") end
 end
 
 --------------------------------------------------------------------------------
