@@ -309,8 +309,10 @@ end
 --- a vendor, out of combat, while the Butler window is up and not moving.
 function Selling:Update()
     local button = self.button
+    -- With the Butler bar up under the vendor's window the button sits there.
+    local onBar = ns.PlaceBar ~= nil and ns.PlaceBar:Shows("vendor")
     local show = self:MerchantOpen() and not InCombat()
-        and ns.UI and ns.UI:IsShown() and not ns.UI.dragging and ns.UI.view ~= "all"
+        and (onBar or (ns.UI and ns.UI:IsShown() and not ns.UI.dragging and ns.UI.view ~= "all"))
 
     if not show then
         if button and not InCombat() then button:Hide() end
@@ -323,6 +325,16 @@ function Selling:Update()
     button:SetText(text)
     button.tooltipText = tip
 
+    if onBar then
+        ns.UI:SellShown(false)
+        if count == 0 or not ns.PlaceBar:PlaceSell(button) then
+            button:Hide()
+        else
+            button:Show()
+        end
+        ns.PlaceBar:Fit()
+        return
+    end
     if count == 0 or not self:Place() then
         button:Hide()
         ns.UI:SellShown(false)

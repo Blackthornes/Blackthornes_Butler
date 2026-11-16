@@ -93,9 +93,8 @@ ns.HandleSlash("tooltip")
 suite.check("/bbutler tooltip turns it off", ns.db.verdictTip == false and #Hover(GameTooltip, 701, button) == 0)
 ns.HandleSlash("settings")
 local box = ns.SettingsUI.controls.verdictTip
-suite.check("Settings shows it off", box:GetValue() == ns.TooltipShift.OFF)
-box:Pick(box:GetValue() + 1)
-box:Pick(box:GetValue() + 1)
+suite.check("Settings shows it off", not box:GetChecked())
+box:GetScript("OnClick")(box)
 suite.check("Always turns it on", ns.db.verdictTip == true and #Hover(GameTooltip, 701, button) == 1)
 
 suite.check("the probe says how it is hooked", VerdictTip:ProbeText():find("post call", 1, true) ~= nil)

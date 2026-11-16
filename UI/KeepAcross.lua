@@ -77,10 +77,6 @@ function KeepAcrossUI:Build()
     frame:SetToplevel(true)
     frame:SetClampedToScreen(true)
     frame:EnableMouse(true)
-    frame:SetMovable(true)
-    frame:RegisterForDrag("LeftButton")
-    frame:SetScript("OnDragStart", frame.StartMoving)
-    frame:SetScript("OnDragStop", frame.StopMovingOrSizing)
     frame:Hide()
     Theme.Fill(frame, "window")
     if ns.Titanforged then
@@ -146,7 +142,7 @@ function KeepAcrossUI:Build()
     self.cancelButton = cancel
 
     self.frame = frame
-    if ns.SharedWindow and ns.SharedWindow.KeepSpot then ns.SharedWindow.KeepSpot(frame, "butler.keepacross") end
+    if ns.Boxes then ns.Boxes.Add(frame, "butler.keepacross") end
     return frame
 end
 
@@ -208,6 +204,7 @@ function KeepAcrossUI:Open(itemID, title)
     self.frame:ClearAllPoints()
     self.frame:SetPoint("CENTER", UIParent, "CENTER", 0, 80)
     self.frame:Show()
+    if ns.Boxes then ns.Boxes.Settle(self.frame, "butler.keepacross") end
     if self.asking then
         if self.itemBox.editBox.SetFocus then self.itemBox.editBox:SetFocus() end
     elseif self.box.editBox.SetFocus then

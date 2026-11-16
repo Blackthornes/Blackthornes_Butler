@@ -26,33 +26,33 @@ local ns = env.Load()
 local L = ns.L
 suite.check("English shows English", L["Sell"] == "Sell")
 suite.check("a group's title in English", ns.Verdicts.LABELS.sell == "Sell")
-suite.check("the settings rows in English", SettingsLabels(ns)["Free Bag Space:"] == true)
+suite.check("the settings rows in English", SettingsLabels(ns)["Bag Helpers:"] == true)
 
 -- A German client.
 ns = env.Load("deDE")
 L = ns.L
 suite.check("a group's title in Deutsch", ns.Verdicts.LABELS.sell == "Verkaufen", ns.Verdicts.LABELS.sell)
 local labels = SettingsLabels(ns)
-suite.check("the settings rows speak Deutsch", labels["Freier Taschenplatz:"] == true)
-suite.check("and none is left in English", labels["Free Bag Space:"] == nil)
+suite.check("the settings rows speak Deutsch", labels["Taschenhelfer:"] == true)
+suite.check("and none is left in English", labels["Bag Helpers:"] == nil)
 suite.check("a word with no German line falls back to English",
     L["A string nobody translated"] == "A string nobody translated")
 suite.check("and formats in English", L.Format("%d stacks, %s", 3, "grey") == "3 stacks, grey")
 
 -- Simplified Chinese, French, Spanish (both clients) and Russian.
 local OTHERS = {
-    { "zhCN", "Simplified Chinese", "出售", "背包空位：" },
-    { "frFR", "French", "Vendre", "Place libre dans les sacs :" },
-    { "esES", "Spanish", "Vender", "Espacio libre en bolsas:" },
-    { "esMX", "Spanish (Mexico)", "Vender", "Espacio libre en bolsas:" },
-    { "ruRU", "Russian", "Продать", "Место в сумках:" },
+    { "zhCN", "Simplified Chinese", "出售", "背包助手：" },
+    { "frFR", "French", "Vendre", "Aides de sacs :" },
+    { "esES", "Spanish", "Vender", "Ayudas de bolsas:" },
+    { "esMX", "Spanish (Mexico)", "Vender", "Ayudas de bolsas:" },
+    { "ruRU", "Russian", "Продать", "Помощники для сумок:" },
 }
 for _, lang in ipairs(OTHERS) do
     ns = env.Load(lang[1])
     suite.check("a group's title in " .. lang[2], ns.Verdicts.LABELS.sell == lang[3], ns.Verdicts.LABELS.sell)
     labels = SettingsLabels(ns)
     suite.check("the settings rows speak " .. lang[2], labels[lang[4]] == true)
-    suite.check("and none is left in English in " .. lang[2], labels["Free Bag Space:"] == nil)
+    suite.check("and none is left in English in " .. lang[2], labels["Bag Helpers:"] == nil)
     suite.check("a missing line falls back to English in " .. lang[2],
         ns.L["A string nobody translated"] == "A string nobody translated")
 end

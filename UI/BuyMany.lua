@@ -133,6 +133,7 @@ function BuyManyUI:Build()
     end)
 
     self.frame = frame
+    if ns.Boxes then ns.Boxes.Add(frame, "butler.buymany") end
     return frame
 end
 
@@ -151,6 +152,8 @@ end
 --- else in the middle.
 function BuyManyUI:Place()
     local frame = self.frame
+    -- Dragged somewhere before: it opens there (UI/Boxes.lua).
+    if ns.Boxes and ns.Boxes.Kept("butler.buymany") then return self:WatchWindow() end
     frame:ClearAllPoints()
     local merchant = rawget(_G, "MerchantFrame")
     local docked = DockedHere()
@@ -161,6 +164,7 @@ function BuyManyUI:Place()
     else
         frame:SetPoint("CENTER", UIParent, "CENTER", 0, 80)
     end
+    if ns.Boxes and Ask(frame, "IsShown") then ns.Boxes.Settle(frame, "butler.buymany") end
     self:WatchWindow()
 end
 
@@ -189,6 +193,7 @@ function BuyManyUI:Open(index, amount, force)
     self.box:SetText(amount and tostring(amount) or "")
     self:Place()
     self.frame:Show()
+    if ns.Boxes then ns.Boxes.Settle(self.frame, "butler.buymany") end
     self.box:SetFocus()
     self:Replan()
     return true
