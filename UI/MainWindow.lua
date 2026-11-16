@@ -1569,12 +1569,13 @@ function UI:BuildMenu()
 
     -- Gone once the mouse has been off it for a moment, as the game's menus
     -- go. Only runs while the menu is up.
+    -- Made once, not every frame the menu is up.
+    local function Typing(box)
+        return box and box:IsShown() and box.editBox.HasFocus and box.editBox:HasFocus()
+    end
     menu:SetScript("OnUpdate", function(frame, elapsed)
         local ok, over = pcall(frame.IsMouseOver, frame)
         -- Never while the player types a number in it.
-        local function Typing(box)
-            return box and box:IsShown() and box.editBox.HasFocus and box.editBox:HasFocus()
-        end
         local typing = Typing(frame.keepBox) or Typing(frame.mailBox)
         frame.away = ((ok and over) or typing) and 0 or (frame.away or 0) + (elapsed or 0)
         if frame.away > 1.5 then UI:HideMenu() end
