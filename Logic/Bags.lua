@@ -88,6 +88,7 @@ function Bags:Wanted()
     if ns.UI and ns.UI:IsShown() then return true end
     if ns.BagWindow and ns.BagWindow:IsShown() then return true end
     if ns.Selling and ns.Selling:MerchantOpen() then return true end
+    if ns.PlaceBar and ns.PlaceBar.place then return true end
     return false
 end
 

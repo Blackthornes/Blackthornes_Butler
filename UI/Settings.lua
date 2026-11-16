@@ -1116,6 +1116,15 @@ function SettingsUI:BuildPages()
     SettingsUI.Hover(controls.openAtBank, openWords[3])
     SettingsUI.Flow(openRow, { controls.openAtVendor, controls.openAtMailbox, controls.openAtBank })
 
+    -- The slim bar under the game's window, in the big window's stead
+    -- (UI/PlaceBar.lua). Off unless ticked.
+    local barRow = pages:Row("selling", 1, L["Butler Bar:"],
+        L["Shows a small bar under the vendor, mailbox or bank window, in place of the Butler window. Click Open on the bar when you want the window."])
+    controls.placeBar = Widgets.CreateCheckbox(barRow, L["On"], function(checked)
+        if ns.PlaceBar then ns.PlaceBar:SetOn(checked) else ns.db.placeBar = checked end
+    end, true)
+    controls.placeBar:SetPoint("TOPLEFT", CONTROL_X, -2)
+
     pages:Section("selling", 1, L["AT A VENDOR"])
 
     local buyRow = pages:Row("selling", 1, L["Buy More:"],
@@ -1883,6 +1892,7 @@ function SettingsUI:Refresh()
     controls.questBuy:SetChecked(ns.db.questBuy == true)
     controls.mailRunsOut:SetChecked(ns.db.mailRunsOut == true)
     controls.openAtBank:SetChecked(ns.db.openAtBank ~= false)
+    controls.placeBar:SetChecked(ns.db.placeBar == true)
     if controls.mailContents then controls.mailContents:SetChecked(ns.MailContents:Enabled()) end
     controls.freeSpace:SetChecked(ns.db.freeSpace ~= false)
     controls.trashCan:SetChecked(ns.db.trashCan ~= false)

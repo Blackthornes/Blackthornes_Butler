@@ -804,6 +804,7 @@ end
 
 function Errands:Update()
     if ns.UI then ns.UI:UpdateErrands() end
+    if ns.PlaceBar then ns.PlaceBar:Changed() end
 end
 
 --------------------------------------------------------------------------------

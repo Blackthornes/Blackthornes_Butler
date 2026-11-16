@@ -1986,6 +1986,7 @@ function Verdicts:Redraw()
     if ns.Selling then ns.Selling:Update() end
     if ns.Trash then ns.Trash:Changed() end
     if ns.BagWindow then ns.BagWindow:Changed() end
+    if ns.PlaceBar then ns.PlaceBar:Changed() end
 end
 
 --------------------------------------------------------------------------------

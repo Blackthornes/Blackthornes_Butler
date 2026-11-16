@@ -2394,3 +2394,34 @@ which clears both keys and calls each addon's own reset
 Chat says "Every window is back in its first spot." Tested in
 `tools/test_sharedwindow.lua` and each addon's settings test
 (Tradeskills: `tools/test_resetwindows.lua`).
+
+## The Butler bar
+
+The owner said build it (2026-11-16, from a mockup, "build them all").
+`UI/PlaceBar.lua` (`ns.PlaceBar`): with "Butler Bar:" ticked (Errands page,
+OPEN BUTLER; `/bbutler bar [on|off]`; saved as `placeBar`, never rename it;
+off unless ticked) a slim bar hangs under the game's vendor, mailbox or
+bank window where and when "Open Butler At:" would have opened the big
+window, so nothing is covered. `UI:AtVendor` and `UI:AtPlace` ask
+`PlaceBar:Arrived(place)` just before `Show("bags")`; it answers false (the
+window opens as before) when the bar is off or the client has no such
+window (`PlaceBar.GAMES`). `UI:LeftVendor` and `UI:LeftPlace` call
+`PlaceBar:Left`.
+
+- Vendor: "N to sell" with the worth, and Logic/Selling.lua's own secure
+  Sell button, sat on the bar by `PlaceBar:PlaceSell` out of combat
+  (`Selling:Update` asks `PlaceBar:Shows("vendor")`) and handed back to
+  UIParent at PLAYER_REGEN_DISABLED (`LetGo`). Mailbox: Fill Mail for the
+  next character. Bank: Move to bank and Take from bank. The buttons call
+  the same Errands functions the window's do.
+- Open on the bar brings the window up for that visit (`openedByVendor` or
+  `openedFor`, so it goes with the place). The bar hides while the window
+  is up and comes back when the player closes it there (the window's
+  OnHide and `UI:Show` call `PlaceBar:Changed`).
+- The game's frames are never hidden, moved or changed: our own frame on
+  UIParent, anchored `PlaceBar.BELOW` (32 px, room for the game's tabs)
+  under theirs, as wide as theirs or as its words need.
+- Redrawn only from `Verdicts:Redraw`, `Errands:Update` and the events
+  above, never on a timer. `Bags:Wanted` counts the bar as a looker.
+- Tested in `tools/test_placebar.lua`. Not yet seen in game: the 32 px drop
+  and the frame names are from the client's usual ones.

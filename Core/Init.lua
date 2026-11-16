@@ -312,6 +312,7 @@ local DEFAULTS = {
     -- The Butler window comes up by itself at a vendor, and goes when the
     -- vendor closes.
     openAtVendor = true,
+    placeBar = false,
 
     -- And at every mailbox (where it takes over from Tradeskills' mail
     -- panel), and at the bank when there is something to move there
