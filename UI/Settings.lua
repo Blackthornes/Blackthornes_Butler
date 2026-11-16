@@ -255,26 +255,119 @@ local function CommandRow(pages, page, column, label, description, buttonText, c
     return row, button
 end
 
---- Off, Shift or Always for a tooltip line (UI/TooltipShift.lua), on `row`
---- at CONTROL_X. `isOn()` reads the line's own on/off setting and `setOn`
---- is its setter, the one the old tick box called; Shift is kept apart.
-function SettingsUI.TooltipShiftControl(row, key, isOn, setOn)
+--- A control's words on the hover, the game's way.
+function SettingsUI.Hover(control, text)
+    if not (control and control.HookScript and text and text ~= "") then return end
+    control:HookScript("OnEnter", function(self)
+        local tip = rawget(_G, "GameTooltip")
+        if not tip then return end
+        tip:SetOwner(self, "ANCHOR_RIGHT")
+        tip:SetText(text, 1, 1, 1, 1, true)
+        tip:Show()
+    end)
+    control:HookScript("OnLeave", function()
+        local tip = rawget(_G, "GameTooltip")
+        if tip then tip:Hide() end
+    end)
+end
+
+SettingsUI.FLOW_LINE = 22
+SettingsUI.FLOW_GAP = 12
+
+--- Lay `list` (tick boxes) left to right under a row's label, across the
+--- whole column, onto a new line when the next one does not fit. The row
+--- grows by the lines used. Returns how many lines.
+function SettingsUI.Flow(row, list)
+    local x, line = 0, 1
+    local top = row.compactHeight or 24
+    for _, control in ipairs(list) do
+        local width = tonumber(control:GetWidth()) or 80
+        if x > 0 and x + width > COLUMN_WIDTH then
+            x, line = 0, line + 1
+        end
+        control:ClearAllPoints()
+        control:SetPoint("TOPLEFT", x, -(top + (line - 1) * SettingsUI.FLOW_LINE))
+        x = x + width + SettingsUI.FLOW_GAP
+    end
+    if row.Grow then row:Grow(line * SettingsUI.FLOW_LINE) end
+    -- The search finds the row by its ticks' words too.
+    for _, entry in ipairs(row.pages and row.pages.searchables or {}) do
+        if entry.frame == row then
+            for _, control in ipairs(list) do
+                local text = control.label and control.label:GetText()
+                if type(text) == "string" then entry.words = entry.words .. " " .. text:lower() end
+            end
+        end
+    end
+    return line
+end
+
+--- One Off, Shift or Always box for all of `lines` ({ key, text, isOn,
+--- setOn } each: its own on or off reader and setter), at CONTROL_X on `row`,
+--- and a tick box per line (line.box, placed by the caller). The box shows
+--- Off with no line ticked, else Always if any ticked line is on Always,
+--- else Shift. Picking Off unticks every line and remembers which were
+--- ticked, for this session, so Shift or Always brings the same ones back.
+function SettingsUI.TooltipLinesControl(row, lines)
     local TooltipShift = ns.TooltipShift
-    local stepper = Widgets.CreateChoice(row, {
+    local stepper
+    local remembered
+
+    local function Mode()
+        local mode = TooltipShift.OFF
+        for _, line in ipairs(lines) do
+            mode = math.max(mode, TooltipShift:Mode(line.isOn(), line.key))
+        end
+        return mode
+    end
+
+    local function Sync()
+        stepper:SetValue(Mode(), true)
+        for _, line in ipairs(lines) do line.box:SetChecked(line.isOn()) end
+    end
+
+    stepper = Widgets.CreateChoice(row, {
         min = 0, max = 2, step = 1,
         format = function(value) return TooltipShift.NAMES[value] end,
         onChange = function(value)
-            TooltipShift:Apply(value, key, isOn(), setOn)
+            if value == TooltipShift.OFF then
+                remembered = {}
+                for _, line in ipairs(lines) do
+                    remembered[line.key] = line.isOn()
+                    TooltipShift:Apply(value, line.key, line.isOn(), line.setOn)
+                end
+            else
+                local any = false
+                for _, line in ipairs(lines) do any = any or line.isOn() end
+                for _, line in ipairs(lines) do
+                    -- Coming back from Off: the lines ticked before, or all.
+                    local want = line.isOn()
+                    if not any then want = not remembered or remembered[line.key] ~= false end
+                    if want then TooltipShift:Apply(value, line.key, line.isOn(), line.setOn) end
+                end
+                remembered = nil
+            end
+            Sync()
         end,
     })
     ns.SettingsPages.FitStepper(stepper, TooltipShift.NAMES)
     stepper:SetPoint("TOPLEFT", CONTROL_X, -2)
 
-    --- Show what is saved, without writing anything.
-    function stepper:Sync()
-        self:SetValue(TooltipShift:Mode(isOn(), key), true)
+    for _, line in ipairs(lines) do
+        line.box = Widgets.CreateCheckbox(row, line.text, function(checked)
+            local mode = Mode()
+            if checked then
+                TooltipShift:Apply(mode == TooltipShift.SHIFT and TooltipShift.SHIFT or TooltipShift.ALWAYS,
+                    line.key, line.isOn(), line.setOn)
+            else
+                TooltipShift:Apply(TooltipShift.OFF, line.key, line.isOn(), line.setOn)
+            end
+            Sync()
+        end, line.isOn())
     end
-    stepper:Sync()
+
+    stepper.Sync = Sync
+    Sync()
     return stepper
 end
 
@@ -1667,26 +1760,28 @@ function SettingsUI:BuildPages()
     end, true)
     controls.voice:SetPoint("TOPLEFT", CONTROL_X, -2)
 
-    local spaceRow = pages:Row("general", 1, L["Free Bag Space:"],
-        L["Shows free slots on your backpack button."])
-    controls.freeSpace = Widgets.CreateCheckbox(spaceRow, L["Show"], function(checked)
+    -- Three bag helpers on one row (2026-11-16, from a mockup): a tick
+    -- each, their words on the hover and in the row's description. The
+    -- saved keys are as they were.
+    local helpWords = {
+        L["Shows free slots on your backpack button."],
+        L["When your bags are full, a gold can marks the cheapest item Butler would sell. Click it to pick it up."],
+        L["When your bags are full and you loot a quest item or something worth more, Butler offers to throw out your cheapest junk to make room. Nothing goes until you click Swap."],
+    }
+    local helpRow = pages:Row("general", 1, L["Bag Helpers:"], table.concat(helpWords, " "))
+    controls.freeSpace = Widgets.CreateCheckbox(helpRow, L["Free Space"], function(checked)
         if ns.FreeSpace then ns.FreeSpace:SetEnabled(checked) end
     end, true)
-    controls.freeSpace:SetPoint("TOPLEFT", CONTROL_X, -2)
-
-    local trashRow = pages:Row("general", 1, L["Trash Can:"],
-        L["When your bags are full, a gold can marks the cheapest item Butler would sell. Click it to pick it up."])
-    controls.trashCan = Widgets.CreateCheckbox(trashRow, L["Show"], function(checked)
+    controls.trashCan = Widgets.CreateCheckbox(helpRow, L["Trash Can"], function(checked)
         if ns.Trash then ns.Trash:SetEnabled(checked) end
     end, true)
-    controls.trashCan:SetPoint("TOPLEFT", CONTROL_X, -2)
-
-    local swapRow = pages:Row("general", 1, L["Swap When Full:"],
-        L["When your bags are full and you loot a quest item or something worth more, Butler offers to throw out your cheapest junk to make room. Nothing goes until you click Swap."])
-    controls.swapWhenFull = Widgets.CreateCheckbox(swapRow, L["On"], function(checked)
+    controls.swapWhenFull = Widgets.CreateCheckbox(helpRow, L["Swap When Full"], function(checked)
         if ns.SwapWhenFull then ns.SwapWhenFull:SetEnabled(checked) end
     end, false)
-    controls.swapWhenFull:SetPoint("TOPLEFT", CONTROL_X, -2)
+    SettingsUI.Hover(controls.freeSpace, helpWords[1])
+    SettingsUI.Hover(controls.trashCan, helpWords[2])
+    SettingsUI.Hover(controls.swapWhenFull, helpWords[3])
+    SettingsUI.Flow(helpRow, { controls.freeSpace, controls.trashCan, controls.swapWhenFull })
 
     pages:Section("general", 2, L["ADDONS"])
 
@@ -1704,48 +1799,54 @@ function SettingsUI:BuildPages()
 
     -- UI/WhatsNew.lua: one window after an update for every Blackthornes
     -- addon. Off here is off in all of them, as the sister note is.
-    local _, whatsNewButton = CommandRow(pages, "general", 2, L["What's New:"], nil,
+    -- One row: Open, and a tick each for the pop-up after an update and
+    -- its motion (2026-11-16, from a mockup).
+    local afterWords = L["Opens What's New the first time you play after an update."]
+    local whatsNewRow, whatsNewButton = CommandRow(pages, "general", 2, L["What's New:"], afterWords,
         L["Open"], "whatsnew")
     controls.whatsnew = whatsNewButton
-
-    local whatsNewRow = pages:Row("general", 2, L["What's New After Updates:"],
-        L["Opens What's New the first time you play after an update."])
-    controls.whatsNewPopup = Widgets.CreateCheckbox(whatsNewRow, L["On"], function(checked)
+    controls.whatsNewPopup = Widgets.CreateCheckbox(whatsNewRow, L["After Updates"], function(checked)
         ns.WhatsNew:SetOn(checked)
     end, true)
-    controls.whatsNewPopup:SetPoint("TOPLEFT", CONTROL_X, -2)
-
-    local whatsNewMotionRow = pages:Row("general", 2, L["What's New Motion:"], nil)
-    controls.whatsNewMotion = Widgets.CreateCheckbox(whatsNewMotionRow, L["On"], function(checked)
+    controls.whatsNewMotion = Widgets.CreateCheckbox(whatsNewRow, L["Motion"], function(checked)
         ns.WhatsNew:SetMotionOn(checked)
     end, true)
-    controls.whatsNewMotion:SetPoint("TOPLEFT", CONTROL_X, -2)
+    SettingsUI.Hover(controls.whatsNewPopup, afterWords)
+    SettingsUI.Flow(whatsNewRow, { controls.whatsNewPopup, controls.whatsNewMotion })
 
     pages:Section("general", 2, L["TOOLTIPS"])
 
-    local whoRow = pages:Row("general", 2, L["Who Has It:"],
-        L["Tooltips list which characters have the item. Needs Blackthornes Tradeskills."])
-    controls.whoHas = SettingsUI.TooltipShiftControl(whoRow, "whoHas",
-        function() return ns.db.whoHas ~= false end,
-        function(on) if ns.WhoHas then ns.WhoHas:SetEnabled(on) end end)
-
-    local tipRow = pages:Row("general", 2, L["Butler on Tooltips:"],
-        L["The last tooltip line says what Butler would do with it."])
-    controls.verdictTip = SettingsUI.TooltipShiftControl(tipRow, "verdictTip",
-        function() return ns.db.verdictTip ~= false end,
-        function(on) if ns.VerdictTip then ns.VerdictTip:SetEnabled(on) end end)
-
+    -- One Off, Shift or Always box for every tooltip line, and a tick for
+    -- each line (2026-11-16, from a mockup). Each line keeps its own saved
+    -- setting and Shift choice, so nothing changes until the player uses
+    -- the box: lines that differ show as the most shown of them.
+    local tipWords = {
+        whoHas = L["Tooltips list which characters have the item. Needs Blackthornes Tradeskills."],
+        verdictTip = L["The last tooltip line says what Butler would do with it."],
+    }
+    local linesRow = pages:Row("general", 2, L["Show Tooltip Lines:"],
+        tipWords.whoHas .. " " .. tipWords.verdictTip)
+    local lines = {
+        { key = "whoHas", text = L["Who Has It"],
+            isOn = function() return ns.db.whoHas ~= false end,
+            setOn = function(on) if ns.WhoHas then ns.WhoHas:SetEnabled(on) end end },
+        { key = "verdictTip", text = L["Butler"],
+            isOn = function() return ns.db.verdictTip ~= false end,
+            setOn = function(on) if ns.VerdictTip then ns.VerdictTip:SetEnabled(on) end end },
+        { key = "vendorPrice", text = L["Vendor Price"],
+            isOn = function() return ns.db.vendorPrice ~= false end,
+            setOn = function(on) if ns.VendorPrices then ns.VendorPrices:SetEnabled(on) end end },
+    }
+    controls.tooltipLines = SettingsUI.TooltipLinesControl(linesRow, lines)
+    for _, line in ipairs(lines) do
+        controls[line.key] = line.box
+        if tipWords[line.key] then SettingsUI.Hover(line.box, tipWords[line.key]) end
+    end
     -- Craft Details (2026-11-14): off unless ticked; the tooltip names the craft.
-    local detailsRow = pages:Row("general", 2, L["Craft Details:"], nil)
-    controls.craftDetails = Widgets.CreateCheckbox(detailsRow, L["On"], function(checked)
+    controls.craftDetails = Widgets.CreateCheckbox(linesRow, L["Craft Details"], function(checked)
         if ns.VerdictTip then ns.VerdictTip:SetDetails(checked) end
     end, false)
-    controls.craftDetails:SetPoint("TOPLEFT", CONTROL_X, -2)
-
-    local vendorRow = pages:Row("general", 2, L["Vendor Price:"], nil)
-    controls.vendorPrice = SettingsUI.TooltipShiftControl(vendorRow, "vendorPrice",
-        function() return ns.db.vendorPrice ~= false end,
-        function(on) if ns.VendorPrices then ns.VendorPrices:SetEnabled(on) end end)
+    SettingsUI.Flow(linesRow, { lines[1].box, lines[2].box, lines[3].box, controls.craftDetails })
 
     -- Butler's own bag window (UI/BagWindow.lua), off unless ticked.
     if ns.BagWindow then ns.BagWindow:AddSettings(pages, controls, CONTROL_X) end
@@ -1785,10 +1886,8 @@ function SettingsUI:Refresh()
     controls.trashCan:SetChecked(ns.db.trashCan ~= false)
     controls.swapWhenFull:SetChecked(ns.db.swapWhenFull == true)
     controls.buyMany:SetChecked(ns.BuyMany:IsOn())
-    controls.whoHas:Sync()
-    controls.verdictTip:Sync()
+    controls.tooltipLines:Sync()
     controls.craftDetails:SetChecked(ns.VerdictTip ~= nil and ns.VerdictTip:DetailsOn())
-    controls.vendorPrice:Sync()
     controls.voice:SetChecked(ns.db.voice ~= false)
     controls.learn:SetChecked(ns.db.learn ~= false)
     controls.classTraining:SetChecked(ns.ClassTraining:IsOn())

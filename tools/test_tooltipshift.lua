@@ -79,14 +79,18 @@ suite.check("as before, both lines show and no hint", Find(lines, "Your characte
 
 ns.HandleSlash("settings")
 local controls = ns.SettingsUI.controls
-suite.check("the steppers show Always", controls.whoHas:GetValue() == Shift.ALWAYS
-    and controls.verdictTip:GetValue() == Shift.ALWAYS and controls.whoHas.text:GetText() == "Always")
+local function Tick(box) box:GetScript("OnClick")(box) end
+suite.check("the one box shows Always and each line is ticked", controls.tooltipLines:GetValue() == Shift.ALWAYS
+    and controls.whoHas:GetChecked() and controls.verdictTip:GetChecked() and controls.vendorPrice:GetChecked()
+    and controls.tooltipLines.text:GetText() == "Always")
 suite.check("nothing is written for a player who never picks", ns.db.tooltipShift == nil)
 
 -- 2 and 3. Who has it on Shift.
-controls.whoHas:Pick(controls.whoHas:GetValue() - 1)
-suite.check("one step down is Shift, and it is kept", ns.db.tooltipShift and ns.db.tooltipShift.whoHas == true
-    and ns.db.whoHas == true and controls.whoHas.text:GetText() == "Shift")
+Shift:Apply(Shift.SHIFT, "whoHas", true, nil)
+ns.SettingsUI:Refresh()
+suite.check("a line on Shift is kept, and lines that differ show as the most shown",
+    ns.db.tooltipShift and ns.db.tooltipShift.whoHas == true
+    and ns.db.whoHas == true and controls.tooltipLines:GetValue() == Shift.ALWAYS)
 lines = Hover()
 suite.check("with Shift up Who has it waits", Find(lines, "Your characters have") == nil, table.concat(lines, " / "))
 suite.check("the verdict still shows", Find(lines, "Butler: Sell") ~= nil)
@@ -94,7 +98,10 @@ suite.check("and the hint comes after it, once", lines[#lines] == HINT and Count
     and Find(lines, "Butler: Sell") == #lines - 1, table.concat(lines, " / "))
 
 -- Both on Shift: the hint still goes on once.
-controls.verdictTip:Pick(controls.verdictTip:GetValue() - 1)
+controls.tooltipLines:Pick(Shift.SHIFT)
+suite.check("the box on Shift puts every ticked line on Shift", ns.db.tooltipShift.whoHas == true
+    and ns.db.tooltipShift.verdictTip == true and ns.db.tooltipShift.vendorPrice == true
+    and controls.tooltipLines.text:GetText() == "Shift")
 lines = Hover()
 suite.check("both on Shift: only the hint", #lines == 1 and lines[1] == HINT, table.concat(lines, " / "))
 
@@ -123,7 +130,8 @@ _G.C_TooltipInfo = savedInfo
 -- In the second after login, before the verdict's hook is in, Who has it
 -- on Shift adds the hint itself.
 ns.VerdictTip.installed = nil
-controls.verdictTip:Pick(controls.verdictTip:GetValue() + 1)
+Shift:Apply(Shift.ALWAYS, "verdictTip", true, nil)
+Shift:Apply(Shift.ALWAYS, "vendorPrice", true, nil)
 Clear(GameTooltip)
 postCalls[1].fn(GameTooltip, { id = 701 })
 suite.check("without the verdict's hook, Who has it adds the hint", GameTooltip._lines[1] == HINT
@@ -131,13 +139,13 @@ suite.check("without the verdict's hook, Who has it adds the hint", GameTooltip.
 ns.VerdictTip.installed = "post call"
 
 -- 5. Off and back to Always.
-controls.whoHas:Pick(controls.whoHas:GetValue() - 1)
-suite.check("Off turns Who has it off", ns.db.whoHas == false and controls.whoHas.text:GetText() == "Off")
+Tick(controls.whoHas)
+suite.check("unticking Who Has It turns it off", ns.db.whoHas == false and not controls.whoHas:GetChecked()
+    and controls.tooltipLines:GetValue() == Shift.ALWAYS)
 lines = Hover()
 suite.check("and it shows nothing, no hint", Find(lines, "Your characters have") == nil and Count(lines, HINT) == 0)
-controls.whoHas:Pick(controls.whoHas:GetValue() + 1)
-controls.whoHas:Pick(controls.whoHas:GetValue() + 1)
-suite.check("Always turns it on and forgets Shift", ns.db.whoHas == true and ns.db.tooltipShift.whoHas == nil)
+Tick(controls.whoHas)
+suite.check("ticking it under Always turns it on and forgets Shift", ns.db.whoHas == true and ns.db.tooltipShift.whoHas == nil)
 refreshed = 0
 Shift.shared.OnModifier("LSHIFT")
 suite.check("with nothing on Shift, Shift redraws nothing", refreshed == 0)
@@ -146,10 +154,20 @@ suite.check("with nothing on Shift, Shift redraws nothing", refreshed == 0)
 ns.HandleSlash("whohas")
 ns.SettingsUI:Refresh()
 suite.check("/bbutler whohas still turns it off, and Settings shows Off", ns.db.whoHas == false
-    and controls.whoHas:GetValue() == Shift.OFF)
+    and not controls.whoHas:GetChecked())
 ns.db.tooltipShift.verdictTip = true
+ns.db.tooltipShift.vendorPrice = true
 ns.SettingsUI:Refresh()
-suite.check("Refresh shows Shift from the save", controls.verdictTip:GetValue() == Shift.SHIFT)
+suite.check("Refresh shows Shift from the save", controls.tooltipLines:GetValue() == Shift.SHIFT)
+
+-- Off unticks every line and remembers them; Always brings the same back.
+controls.tooltipLines:Pick(Shift.OFF)
+suite.check("Off turns every line off", ns.db.verdictTip == false and ns.db.vendorPrice == false
+    and ns.db.whoHas == false and not controls.verdictTip:GetChecked())
+controls.tooltipLines:Pick(Shift.ALWAYS)
+suite.check("Always brings back the lines that were ticked, and only those", ns.db.verdictTip == true
+    and ns.db.vendorPrice == true and ns.db.whoHas == false and ns.db.tooltipShift.verdictTip == nil)
+Tick(controls.whoHas)
 
 --------------------------------------------------------------------------------
 -- Shift redraws the tooltip only when its lines can be read

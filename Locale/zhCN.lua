@@ -927,17 +927,11 @@ L["Open"] = "打开"
 L["All Characters:"] = "所有角色："
 L["Every character's items in one list. Needs Blackthornes Tradeskills."] =
     "所有角色的物品放在一个列表里。需要 Blackthornes Tradeskills。"
-L["Free Bag Space:"] = "背包空位："
 L["Shows free slots on your backpack button."] = "在你的背包按钮上显示空格子数。"
-L["Show"] = "显示"
-L["Trash Can:"] = "垃圾桶："
 L["When your bags are full, a gold can marks the cheapest item Butler would sell. Click it to pick it up."] =
     "背包满了时，一个金色的桶会标出 Butler 会卖掉的最便宜物品。点它可以把物品拿起来。"
-L["Who Has It:"] = "谁有它："
 L["Tooltips list which characters have the item. Needs Blackthornes Tradeskills."] =
     "物品提示会列出哪些角色有这件物品。需要 Blackthornes Tradeskills。"
-L["Butler on Tooltips:"] = "提示里的 Butler："
-L["Vendor Price:"] = "商人价格："
 L["Vendors sell it for %s"] = "商人售价：%s"
 L["The last tooltip line says what Butler would do with it."] =
     "提示的最后一行写着 Butler 会怎么处理它。"
@@ -949,10 +943,8 @@ L["Sister Addons:"] = "姊妹插件："
 L["Says once in chat which Blackthornes addons you don't have."] =
     "在聊天框说一次你还没有哪些 Blackthornes 插件。"
 L["What's New:"] = "更新内容："
-L["What's New After Updates:"] = "更新后显示更新内容："
 L["Opens What's New the first time you play after an update."] =
     "更新后第一次玩时打开更新内容。"
-L["What's New Motion:"] = "更新内容动画："
 
 -- The Order page (rule order)
 L["ORDER"] = "顺序"
@@ -1196,7 +1188,6 @@ L["Click to show the way to your trainer."] = "点击显示前往训练师的路
 L["Collapse this window"] = "收起这个窗口"
 L["Expand this window"] = "展开这个窗口"
 -- Swap When Full: the popup beside the loot window (2026-10-28)
-L["Swap When Full:"] = "背包满时交换："
 L["When your bags are full and you loot a quest item or something worth more, Butler offers to throw out your cheapest junk to make room. Nothing goes until you click Swap."] = "背包满了时，如果你拾取到任务物品或更值钱的东西，Butler 会提议丢掉你最便宜的杂物来腾出空间。在你点击“交换”之前，什么都不会丢。"
 L["Bags Full"] = "背包已满"
 L["Your bags are full. This is worth more than what you have."] = "你的背包满了。这件比你包里的东西更值钱。"
@@ -1323,7 +1314,6 @@ L["put every Blackthornes window back where it started (reset)"] = "把每个 Bl
 L["Type /bbutler windows reset to put every window back in its first spot."] = "输入 /bbutler windows reset，把每个窗口放回最初的位置。"
 
 -- Craft Details (2026-11-14)
-L["Craft Details:"] = "制作详情："
 L["Butler: Craft %s"] = "Butler：制作%s"
 L["With %s."] = "已有%s。"
 L["Needs %s."] = "还需要%s。"
@@ -1336,3 +1326,18 @@ L["Costs to Make:"] = "制作成本："
 L["Sells for Now:"] = "现在售价："
 L["Usual Price:"] = "平时价格："
 L["Sell Anyway moves it to Auction for this visit."] = "仍然出售会让它在这次拍卖时上架。"
+
+-- ======================================================================
+-- Settings rows that share one row
+-- ======================================================================
+L["Bag Helpers:"] = "背包助手："
+L["Free Space"] = "空位"
+L["After Updates"] = "更新后"
+L["Show Tooltip Lines:"] = "鼠标提示行："
+L["Butler"] = "Butler"
+L["Trash Can"] = "垃圾桶"
+L["Swap When Full"] = "背包满时交换"
+L["Who Has It"] = "谁有它"
+L["Vendor Price"] = "商人价格"
+L["Craft Details"] = "制作详情"
+L["Craft Details:"] = "制作详情："

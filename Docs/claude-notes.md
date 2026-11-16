@@ -2184,6 +2184,26 @@ placed by itself on top of another that is up moves beside it
 never moved (`Boxes.Kept`). No new words. Tested in `tools/test_boxes.lua`.
 Not yet seen in game.
 
+## Settings rows that share one row
+
+The owner said build it (2026-11-16, from a mockup; the new words were on
+it). On the General page: "Bag Helpers:" holds the Free Space, Trash Can
+and Swap When Full ticks; "What's New:" holds Open and the After Updates
+and Motion ticks; "Show Tooltip Lines:" is one Off, Shift or Always box
+(`SettingsUI.TooltipLinesControl`, `controls.tooltipLines`) with a tick for
+Who Has It, Butler and Vendor Price, and Craft Details beside them. Ticks
+flow under the label across the column and wrap (`SettingsUI.Flow`, which
+grows the row and adds the ticks' words to the search); each tick's old
+description is its hover (`SettingsUI.Hover`) and the row's description.
+Every saved key is as it was (`freeSpace`, `trashCan`, `swapWhenFull`,
+`whoHas`, `verdictTip`, `vendorPrice`, `tooltipShift[key]`), and nothing
+is written until the player uses a control: lines whose choices differ
+show as the most shown of them. The page no longer sets one line to Shift
+and another to Always; the one box sets every ticked line. Off unticks all
+and remembers them for the session. `SettingsUI.TooltipShiftControl` (a
+box per line) is gone from Butler. Tested in `tools/test_settingsrows.lua`
+and `tools/test_tooltipshift.lua`. Not yet seen in game.
+
 # Standing rules in full
 
 Moved word for word from CLAUDE.md (2026-11-16), which keeps a short form of each.

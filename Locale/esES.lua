@@ -928,17 +928,11 @@ L["Open"] = "Abrir"
 L["All Characters:"] = "Todos los personajes:"
 L["Every character's items in one list. Needs Blackthornes Tradeskills."] =
     "Los objetos de todos tus personajes en una lista. Necesita Blackthornes Tradeskills."
-L["Free Bag Space:"] = "Espacio libre en bolsas:"
 L["Shows free slots on your backpack button."] = "Muestra los huecos libres en el botón de tu mochila."
-L["Show"] = "Mostrar"
-L["Trash Can:"] = "Papelera:"
 L["When your bags are full, a gold can marks the cheapest item Butler would sell. Click it to pick it up."] =
     "Cuando tus bolsas están llenas, una papelera dorada marca el objeto más barato que Butler vendería. Haz clic en ella para cogerlo."
-L["Who Has It:"] = "Quién lo tiene:"
 L["Tooltips list which characters have the item. Needs Blackthornes Tradeskills."] =
     "Las descripciones muestran qué personajes tienen el objeto. Necesita Blackthornes Tradeskills."
-L["Butler on Tooltips:"] = "Butler en descripciones:"
-L["Vendor Price:"] = "Precio de vendedor:"
 L["Vendors sell it for %s"] = "Los vendedores lo venden por %s"
 L["The last tooltip line says what Butler would do with it."] =
     "La última línea de la descripción dice qué haría Butler con él."
@@ -950,10 +944,8 @@ L["Sister Addons:"] = "Addons hermanos:"
 L["Says once in chat which Blackthornes addons you don't have."] =
     "Dice una vez en el chat qué addons de Blackthornes no tienes."
 L["What's New:"] = "Novedades:"
-L["What's New After Updates:"] = "Novedades tras actualizar:"
 L["Opens What's New the first time you play after an update."] =
     "Abre Novedades la primera vez que juegas tras una actualización."
-L["What's New Motion:"] = "Animación de Novedades:"
 
 -- The Order page (rule order)
 L["ORDER"] = "ORDEN"
@@ -1197,7 +1189,6 @@ L["Click to show the way to your trainer."] = "Haz clic para ver el camino hasta
 L["Collapse this window"] = "Plegar esta ventana"
 L["Expand this window"] = "Desplegar esta ventana"
 -- Swap When Full: the popup beside the loot window (2026-10-28)
-L["Swap When Full:"] = "Cambiar si está lleno:"
 L["When your bags are full and you loot a quest item or something worth more, Butler offers to throw out your cheapest junk to make room. Nothing goes until you click Swap."] = "Cuando tus bolsas están llenas y despojas un objeto de misión o algo que vale más, Butler te ofrece tirar tu basura más barata para hacer sitio. No se tira nada hasta que pulses Cambiar."
 L["Bags Full"] = "Bolsas llenas"
 L["Your bags are full. This is worth more than what you have."] = "Tus bolsas están llenas. Esto vale más que lo que tienes."
@@ -1324,7 +1315,6 @@ L["put every Blackthornes window back where it started (reset)"] = "devolver cad
 L["Type /bbutler windows reset to put every window back in its first spot."] = "Escribe /bbutler windows reset para devolver cada ventana a su primer sitio."
 
 -- Craft Details (2026-11-14)
-L["Craft Details:"] = "Detalles de fabricación:"
 L["Butler: Craft %s"] = "Butler: Fabricar %s"
 L["With %s."] = "Con %s."
 L["Needs %s."] = "Necesita %s."
@@ -1337,3 +1327,18 @@ L["Costs to Make:"] = "Cuesta fabricarlo:"
 L["Sells for Now:"] = "Se vende ahora por:"
 L["Usual Price:"] = "Precio habitual:"
 L["Sell Anyway moves it to Auction for this visit."] = "Vender igual lo manda a la subasta en esta visita."
+
+-- ======================================================================
+-- Settings rows that share one row
+-- ======================================================================
+L["Bag Helpers:"] = "Ayudas de bolsas:"
+L["Free Space"] = "Espacio libre"
+L["After Updates"] = "Tras actualizar"
+L["Show Tooltip Lines:"] = "Líneas de descripción:"
+L["Butler"] = "Butler"
+L["Trash Can"] = "Papelera"
+L["Swap When Full"] = "Cambiar si está lleno"
+L["Who Has It"] = "Quién lo tiene"
+L["Vendor Price"] = "Precio de vendedor"
+L["Craft Details"] = "Detalles de fabricación"
+L["Craft Details:"] = "Detalles de fabricación:"

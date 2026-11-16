@@ -97,7 +97,7 @@ suite.check("/bbutler vendor turns it back on, and the box follows",
 -- What a setting does is a tooltip until Show descriptions is ticked.
 local minimapRow, styleRow
 for _, row in ipairs(pages.pages.general.rows) do
-    if row.labelText == "Free Bag Space:" then minimapRow = row end
+    if row.labelText == "Bag Helpers:" then minimapRow = row end
     if row.labelText == "Window Style:" then styleRow = row end
 end
 suite.check("descriptions start hidden", ns.db.settingsDescriptions == false
