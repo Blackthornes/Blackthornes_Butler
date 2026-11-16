@@ -359,6 +359,8 @@ local DEFAULTS = {
     -- A small can on the item worth the least while the bags are full
     -- (UI/Trash.lua, the owner asked 2026-10-13). Never rename it.
     trashCan = true,
+    -- Butler's marks on the game's own bag squares; off unless ticked.
+    bagMarks = false,
     -- A popup beside the loot window that swaps the cheapest item for loot
     -- worth more while the bags are full (UI/SwapWhenFull.lua, the owner
     -- said build it 2026-10-28). Off unless ticked. Never rename it.

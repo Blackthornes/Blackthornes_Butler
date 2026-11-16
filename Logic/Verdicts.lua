@@ -1987,6 +1987,7 @@ function Verdicts:Redraw()
     if ns.Trash then ns.Trash:Changed() end
     if ns.BagWindow then ns.BagWindow:Changed() end
     if ns.PlaceBar then ns.PlaceBar:Changed() end
+    if ns.BagMarks then ns.BagMarks:Changed() end
 end
 
 --------------------------------------------------------------------------------

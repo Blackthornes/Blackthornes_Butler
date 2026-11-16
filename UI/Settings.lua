@@ -1778,6 +1778,7 @@ function SettingsUI:BuildPages()
         L["Shows free slots on your backpack button."],
         L["When your bags are full, a gold can marks the cheapest item Butler would sell. Click it to pick it up."],
         L["When your bags are full and you loot a quest item or something worth more, Butler offers to throw out your cheapest junk to make room. Nothing goes until you click Swap."],
+        L["Shows Butler's marks on your bags: sell, mail, upgrade, quest and needed items."],
     }
     local helpRow = pages:Row("general", 1, L["Bag Helpers:"], table.concat(helpWords, " "))
     controls.freeSpace = Widgets.CreateCheckbox(helpRow, L["Free Space"], function(checked)
@@ -1791,8 +1792,12 @@ function SettingsUI:BuildPages()
     end, false)
     SettingsUI.Hover(controls.freeSpace, helpWords[1])
     SettingsUI.Hover(controls.trashCan, helpWords[2])
+    controls.bagMarks = Widgets.CreateCheckbox(helpRow, L["Marks on Bags"], function(checked)
+        if ns.BagMarks then ns.BagMarks:SetOn(checked) end
+    end, false)
     SettingsUI.Hover(controls.swapWhenFull, helpWords[3])
-    SettingsUI.Flow(helpRow, { controls.freeSpace, controls.trashCan, controls.swapWhenFull })
+    SettingsUI.Hover(controls.bagMarks, helpWords[4])
+    SettingsUI.Flow(helpRow, { controls.freeSpace, controls.trashCan, controls.swapWhenFull, controls.bagMarks })
 
     pages:Section("general", 2, L["ADDONS"])
 
@@ -1897,6 +1902,7 @@ function SettingsUI:Refresh()
     controls.freeSpace:SetChecked(ns.db.freeSpace ~= false)
     controls.trashCan:SetChecked(ns.db.trashCan ~= false)
     controls.swapWhenFull:SetChecked(ns.db.swapWhenFull == true)
+    controls.bagMarks:SetChecked(ns.db.bagMarks == true)
     controls.buyMany:SetChecked(ns.BuyMany:IsOn())
     controls.tooltipLines:Sync()
     controls.craftDetails:SetChecked(ns.VerdictTip ~= nil and ns.VerdictTip:DetailsOn())

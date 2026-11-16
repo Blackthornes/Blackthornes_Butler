@@ -1350,3 +1350,5 @@ L["Shows a small bar under the vendor, mailbox or bank window, in place of the B
 L["Butler bar on."] = "Barra de Butler activada."
 L["Butler bar off."] = "Barra de Butler desactivada."
 L["show or hide the Butler bar under vendors, mailboxes and the bank"] = "mostrar u ocultar la barra de Butler bajo vendedores, buzones y el banco"
+L["Marks on Bags"] = "Marcas en las bolsas"
+L["Shows Butler's marks on your bags: sell, mail, upgrade, quest and needed items."] = "Muestra las marcas de Butler en tus bolsas: vender, enviar, mejora, misión y objetos que necesitas."

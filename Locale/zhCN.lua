@@ -1349,3 +1349,5 @@ L["Shows a small bar under the vendor, mailbox or bank window, in place of the B
 L["Butler bar on."] = "Butler 条已开启。"
 L["Butler bar off."] = "Butler 条已关闭。"
 L["show or hide the Butler bar under vendors, mailboxes and the bank"] = "显示或隐藏商人、邮箱和银行下方的 Butler 条"
+L["Marks on Bags"] = "背包标记"
+L["Shows Butler's marks on your bags: sell, mail, upgrade, quest and needed items."] = "在你的背包上显示 Butler 的标记：出售、邮寄、升级、任务和需要的物品。"

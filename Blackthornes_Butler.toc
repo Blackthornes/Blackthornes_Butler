@@ -76,6 +76,7 @@ UI\MailContents.lua
 UI\Trash.lua
 UI\Boxes.lua
 UI\PlaceBar.lua
+UI\BagMarks.lua
 UI\SwapWhenFull.lua
 
 Logic\Selling.lua

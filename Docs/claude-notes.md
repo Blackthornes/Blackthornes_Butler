@@ -2425,3 +2425,25 @@ window (`PlaceBar.GAMES`). `UI:LeftVendor` and `UI:LeftPlace` call
   above, never on a timer. `Bags:Wanted` counts the bar as a looker.
 - Tested in `tools/test_placebar.lua`. Not yet seen in game: the 32 px drop
   and the frame names are from the client's usual ones.
+
+## Marks on the game's bags
+
+The owner said build it (2026-11-16, from a mockup, "build them all").
+`UI/BagMarks.lua` (`ns.BagMarks`): with "Marks on Bags" ticked (beside
+"Bag Helpers:" on the General page; saved as `bagMarks`, never rename it;
+off unless ticked) the game's own bag squares wear the marks Butler Bags
+draws (`BagWindow.ShowMark`, `BagWindow.MARK_ORDER`, from
+`BagView:Marks`). The squares are found as the trash can finds them
+(`Trash:ShownFrames`, `Trash:Buttons`).
+
+- Nothing of the game's is hidden, moved or changed: each mark is our own
+  texture on our own small frame laid over the square
+  (`BagMarks:Overlay`), made out of combat only (PLAYER_REGEN_ENABLED
+  catches up).
+- A square is repainted only when its mark changed (`BagMarks.kinds`).
+  `Verdicts:Redraw` and hooks on the bag windows (`UpdateItems`, OnShow,
+  OnHide) call `BagMarks:Changed`, coalesced over `SETTLE`. Nothing runs
+  while no bag window is open, or while Butler Bags stands in for the
+  game's (`BagWindow:Covering`). `Bags:Wanted` counts open, marked bags
+  as a looker (`BagMarks.looking`).
+- Tested in `tools/test_bagmarks.lua`. Not yet seen in game.
