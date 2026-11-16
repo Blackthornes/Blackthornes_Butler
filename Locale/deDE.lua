@@ -43,7 +43,6 @@ L["No characters yet"] = "Noch keine Charaktere"
 L["AT A VENDOR"] = "BEIM HÄNDLER"
 L["On"] = "An"
 L["MAIL AND BANK"] = "POST UND BANK"
-L["JUNK"] = "PLUNDER"
 L["YOUR LISTS"] = "DEINE LISTEN"
 L["GOLD FUND"] = "GOLDKASSE"
 L["ONE CHARACTER"] = "EIN CHARAKTER"
@@ -819,13 +818,11 @@ L["This vendor doesn't sell anything called %s."] = "Dieser Händler verkauft ni
 
 -- Settings (2026-10-15)
 L["Windows, tooltips and text size"] = "Fenster, Tooltips und Textgröße"
-L["Open at Vendors:"] = "Bei Händlern öffnen:"
 L["Opens Butler at every vendor. Nothing sells until you click Sell."] =
     "Öffnet Butler bei jedem Händler. Verkauft wird erst, wenn du auf Verkaufen klickst."
 L["Buy More:"] = "Mehr kaufen:"
 L["Shift-click an item at a vendor to buy as many as you want, like 200."] =
     "Klicke beim Händler mit Umschalt auf einen Gegenstand, um so viele zu kaufen, wie du willst, etwa 200."
-L["Open at Mailboxes:"] = "Bei Briefkästen öffnen:"
 L["Opens Butler at every mailbox. Fill Mail fills in the mail and you press Send. Needs Blackthornes Tradeskills."] =
     "Öffnet Butler bei jedem Briefkasten. Post füllen füllt die Post aus und du drückst auf Senden. Braucht Blackthornes Tradeskills."
 L["Fill the Next Mail:"] = "Nächste Post füllen:"
@@ -841,7 +838,6 @@ L["Opens Butler at login when this character has crafting or mail to do."] =
 L["Quest Items:"] = "Questgegenstände:"
 L["Keeps what your quests need and lists what's still missing."] =
     "Behält, was deine Quests brauchen, und zeigt, was noch fehlt."
-L["Open at the Bank:"] = "Bei der Bank öffnen:"
 -- Mail contents on the inbox tooltip
 L["Mail Contents:"] = "Postinhalt:"
 L["IN THIS MAIL"] = "IN DIESER POST"
@@ -928,17 +924,11 @@ L["Open"] = "Öffnen"
 L["All Characters:"] = "Alle Charaktere:"
 L["Every character's items in one list. Needs Blackthornes Tradeskills."] =
     "Die Gegenstände aller Charaktere in einer Liste. Braucht Blackthornes Tradeskills."
-L["Free Bag Space:"] = "Freier Taschenplatz:"
 L["Shows free slots on your backpack button."] = "Zeigt freie Plätze auf deinem Rucksackknopf."
-L["Show"] = "Anzeigen"
-L["Trash Can:"] = "Mülleimer:"
 L["When your bags are full, a gold can marks the cheapest item Butler would sell. Click it to pick it up."] =
     "Sind deine Taschen voll, markiert ein goldener Eimer den billigsten Gegenstand, den Butler verkaufen würde. Klick darauf, um ihn aufzunehmen."
-L["Who Has It:"] = "Wer hat es:"
 L["Tooltips list which characters have the item. Needs Blackthornes Tradeskills."] =
     "Tooltips zeigen, welche Charaktere den Gegenstand haben. Braucht Blackthornes Tradeskills."
-L["Butler on Tooltips:"] = "Butler im Tooltip:"
-L["Vendor Price:"] = "Händlerpreis:"
 L["Vendors sell it for %s"] = "Händler verkaufen es für %s"
 L["The last tooltip line says what Butler would do with it."] =
     "Die letzte Tooltipzeile sagt, was Butler damit tun würde."
@@ -950,10 +940,8 @@ L["Sister Addons:"] = "Schwester-Addons:"
 L["Says once in chat which Blackthornes addons you don't have."] =
     "Sagt einmal im Chat, welche Blackthornes-Addons dir noch fehlen."
 L["What's New:"] = "Neuigkeiten:"
-L["What's New After Updates:"] = "Neuigkeiten nach Updates:"
 L["Opens What's New the first time you play after an update."] =
     "Öffnet die Neuigkeiten, wenn du nach einem Update zum ersten Mal spielst."
-L["What's New Motion:"] = "Neuigkeiten-Bewegung:"
 
 -- The Order page (rule order)
 L["ORDER"] = "REIHENFOLGE"
@@ -1150,7 +1138,6 @@ L["Needs Blackthornes Tradeskills to see your other characters."] = "Braucht Bla
 L["Queue"] = "Einreihen"
 L["Added 1 craft to your Tradeskills queue."] = "1 Herstellung zu deiner Tradeskills-Liste hinzugefügt."
 L["Added %d crafts to your Tradeskills queue."] = "%d Herstellungen zu deiner Tradeskills-Liste hinzugefügt."
-L["CRAFTING"] = "HERSTELLEN"
 L["Craft When It Pays More:"] = "Herstellen, wenn es mehr bringt:"
 L["Butler checks the recipes you know and says when crafting earns more than selling. Needs Blackthornes Tradeskills."] = "Butler prüft die Rezepte, die du kennst, und sagt dir, wenn Herstellen mehr bringt als Verkaufen. Braucht Blackthornes Tradeskills."
 L["Make %s, about %s more than selling it"] = "Stelle %s her, etwa %s mehr als beim Verkaufen"
@@ -1197,7 +1184,6 @@ L["Click to show the way to your trainer."] = "Klick, um den Weg zu deinem Lehre
 L["Collapse this window"] = "Dieses Fenster einklappen"
 L["Expand this window"] = "Dieses Fenster aufklappen"
 -- Swap When Full: the popup beside the loot window (2026-10-28)
-L["Swap When Full:"] = "Tauschen, wenn voll:"
 L["When your bags are full and you loot a quest item or something worth more, Butler offers to throw out your cheapest junk to make room. Nothing goes until you click Swap."] = "Wenn deine Taschen voll sind und du ein Questitem oder etwas Wertvolleres plünderst, bietet Butler an, deinen billigsten Plunder wegzuwerfen, um Platz zu machen. Nichts verschwindet, bevor du auf Tauschen klickst."
 L["Bags Full"] = "Taschen voll"
 L["Your bags are full. This is worth more than what you have."] = "Deine Taschen sind voll. Das hier ist mehr wert als etwas, das du hast."
@@ -1324,7 +1310,6 @@ L["put every Blackthornes window back where it started (reset)"] = "jedes Blackt
 L["Type /bbutler windows reset to put every window back in its first spot."] = "Gib /bbutler windows reset ein, um jedes Fenster an seinen ersten Platz zu setzen."
 
 -- Craft Details (2026-11-14)
-L["Craft Details:"] = "Herstellungs-Details:"
 L["Butler: Craft %s"] = "Butler: %s herstellen"
 L["With %s."] = "Mit %s."
 L["Needs %s."] = "Braucht %s."
@@ -1337,3 +1322,33 @@ L["Costs to Make:"] = "Herstellung kostet:"
 L["Sells for Now:"] = "Verkauft sich jetzt für:"
 L["Usual Price:"] = "Üblicher Preis:"
 L["Sell Anyway moves it to Auction for this visit."] = "Trotzdem verkaufen schickt es bei diesem Besuch ins Auktionshaus."
+
+-- ======================================================================
+-- Settings rows that share one row
+-- ======================================================================
+L["Bag Helpers:"] = "Taschenhelfer:"
+L["Free Space"] = "Freier Platz"
+L["After Updates"] = "Nach Updates"
+L["Show Tooltip Lines:"] = "Tooltip-Zeilen zeigen:"
+L["Butler"] = "Butler"
+L["Trash Can"] = "Mülleimer"
+L["Swap When Full"] = "Tauschen, wenn voll"
+L["Who Has It"] = "Wer hat es"
+L["Vendor Price"] = "Händlerpreis"
+L["Craft Details"] = "Herstellungs-Details"
+L["Craft Details:"] = "Herstellungs-Details:"
+L["OPEN BUTLER"] = "BUTLER ÖFFNEN"
+L["Open Butler At:"] = "Butler öffnen bei:"
+L["Vendors"] = "Händlern"
+L["Mailboxes"] = "Briefkästen"
+L["The Bank"] = "Der Bank"
+L["JUNK AND CRAFTING"] = "PLUNDER UND HERSTELLEN"
+L["What each character keeps, and upgrades for your other characters"] = "Was jeder Charakter behält, und Verbesserungen für deine anderen Charaktere"
+L["%d to sell"] = "%d zu verkaufen"
+L["Butler Bar:"] = "Butler-Leiste:"
+L["Shows a small bar under the vendor, mailbox or bank window, in place of the Butler window. Click Open on the bar when you want the window."] = "Zeigt eine kleine Leiste unter dem Händler-, Briefkasten- oder Bankfenster statt des Butler-Fensters. Klick auf der Leiste auf Öffnen, wenn du das Fenster willst."
+L["Butler bar on."] = "Butler-Leiste an."
+L["Butler bar off."] = "Butler-Leiste aus."
+L["show or hide the Butler bar under vendors, mailboxes and the bank"] = "die Butler-Leiste unter Händlern, Briefkästen und der Bank zeigen oder verstecken"
+L["Marks on Bags"] = "Zeichen auf Taschen"
+L["Shows Butler's marks on your bags: sell, mail, upgrade, quest and needed items."] = "Zeigt Butlers Zeichen auf deinen Taschen: verkaufen, verschicken, Verbesserung, Quest und gebrauchte Gegenstände."

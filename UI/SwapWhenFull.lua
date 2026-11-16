@@ -388,12 +388,15 @@ function Swap:Build()
 
     frame:SetHeight(30 + 32 + 8 + 14 + 4 + ROW_HEIGHT + 10 + 14 + 4 + ROW_HEIGHT + 10 + 30 + 8 + 24 + PAD)
     self.frame = frame
+    if ns.Boxes then ns.Boxes.Add(frame, "butler.swapwhenfull") end
     return frame
 end
 
 --- Beside the loot window, else a little above the middle.
 function Swap:Place()
     local frame = self.frame
+    -- Dragged somewhere before: it opens there (UI/Boxes.lua).
+    if ns.Boxes and ns.Boxes.Kept("butler.swapwhenfull") then return end
     frame:ClearAllPoints()
     local lootFrame = rawget(_G, "LootFrame")
     if type(lootFrame) == "table" and Ask(lootFrame, "IsShown") then
@@ -428,6 +431,7 @@ function Swap:Show(loot, pick)
         pick.row.name or "?", loot.name or "?"))
     self:Place()
     self.frame:Show()
+    if ns.Boxes then ns.Boxes.Settle(self.frame, "butler.swapwhenfull") end
 end
 
 function Swap:Hide()

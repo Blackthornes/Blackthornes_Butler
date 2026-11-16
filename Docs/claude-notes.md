@@ -2172,6 +2172,53 @@ page joined the Bank Alt page. The Bags window hangs Bags, Bank and
 Everyone below it like every window's tabs, its chips are house chips, and
 an empty list offers Clear Search.
 
+## Small boxes line up
+
+The owner said build it (2026-11-16, from a mockup). Buy More, Bags Full
+(Swap When Full) and Keep Across Characters sign up in `UI/Boxes.lua`
+(`Boxes.Add(frame, key)`): each can be dragged and keeps its spot
+(`SharedWindow.KeepSpot`, `windowSpots["butler.buymany"]`,
+`["butler.swapwhenfull"]`, `["butler.keepacross"]`; never rename), and one
+placed by itself on top of another that is up moves beside it
+(`Boxes.Settle`, right when there is room, else left). A dragged box is
+never moved (`Boxes.Kept`). No new words. Tested in `tools/test_boxes.lua`.
+Not yet seen in game.
+
+## Settings rows that share one row
+
+The owner said build it (2026-11-16, from a mockup; the new words were on
+it). On the General page: "Bag Helpers:" holds the Free Space, Trash Can
+and Swap When Full ticks; "What's New:" holds Open and the After Updates
+and Motion ticks; "Show Tooltip Lines:" is one Off, Shift or Always box
+(`SettingsUI.TooltipLinesControl`, `controls.tooltipLines`) with a tick for
+Who Has It, Butler and Vendor Price, and Craft Details beside them. Ticks
+flow under the label across the column and wrap (`SettingsUI.Flow`, which
+grows the row and adds the ticks' words to the search); each tick's old
+description is its hover (`SettingsUI.Hover`) and the row's description.
+Every saved key is as it was (`freeSpace`, `trashCan`, `swapWhenFull`,
+`whoHas`, `verdictTip`, `vendorPrice`, `tooltipShift[key]`), and nothing
+is written until the player uses a control: lines whose choices differ
+show as the most shown of them. The page no longer sets one line to Shift
+and another to Always; the one box sets every ticked line. Off unticks all
+and remembers them for the session. `SettingsUI.TooltipShiftControl` (a
+box per line) is gone from Butler. Tested in `tools/test_settingsrows.lua`
+and `tools/test_tooltipshift.lua`. Not yet seen in game.
+
+## The Keep page and Open Butler At
+
+The owner said build it (2026-11-16, from a mockup). Settings has a KEEP
+page (key `keep`) after ERRANDS: YOUR LISTS and UPGRADES FOR YOUR
+CHARACTERS on the left, KEEP ON EACH CHARACTER and KEEP ACROSS CHARACTERS
+on the right, moved as they were from ERRANDS (key `selling`, unchanged).
+ERRANDS starts with OPEN BUTLER: "Open Butler At:" with a tick for Vendors,
+Mailboxes and The Bank (`openAtVendor`, `openAtMailbox`, `openAtBank`, as
+saved before; `/bbutler vendor` and the like are as they were). MAILBOX and
+DISENCHANTING moved to the right column, and JUNK and CRAFTING share the
+heading JUNK AND CRAFTING. MAIL AND BANK kept its heading (the mockup left
+it out; it still has five rows). The KEEP page's hover line ("What each
+character keeps, and upgrades for your other characters") was not on the
+mockup. Tested in `tools/test_settingsrows.lua`. Not yet seen in game.
+
 # Standing rules in full
 
 Moved word for word from CLAUDE.md (2026-11-16), which keeps a short form of each.
@@ -2347,3 +2394,56 @@ which clears both keys and calls each addon's own reset
 Chat says "Every window is back in its first spot." Tested in
 `tools/test_sharedwindow.lua` and each addon's settings test
 (Tradeskills: `tools/test_resetwindows.lua`).
+
+## The Butler bar
+
+The owner said build it (2026-11-16, from a mockup, "build them all").
+`UI/PlaceBar.lua` (`ns.PlaceBar`): with "Butler Bar:" ticked (Errands page,
+OPEN BUTLER; `/bbutler bar [on|off]`; saved as `placeBar`, never rename it;
+off unless ticked) a slim bar hangs under the game's vendor, mailbox or
+bank window where and when "Open Butler At:" would have opened the big
+window, so nothing is covered. `UI:AtVendor` and `UI:AtPlace` ask
+`PlaceBar:Arrived(place)` just before `Show("bags")`; it answers false (the
+window opens as before) when the bar is off or the client has no such
+window (`PlaceBar.GAMES`). `UI:LeftVendor` and `UI:LeftPlace` call
+`PlaceBar:Left`.
+
+- Vendor: "N to sell" with the worth, and Logic/Selling.lua's own secure
+  Sell button, sat on the bar by `PlaceBar:PlaceSell` out of combat
+  (`Selling:Update` asks `PlaceBar:Shows("vendor")`) and handed back to
+  UIParent at PLAYER_REGEN_DISABLED (`LetGo`). Mailbox: Fill Mail for the
+  next character. Bank: Move to bank and Take from bank. The buttons call
+  the same Errands functions the window's do.
+- Open on the bar brings the window up for that visit (`openedByVendor` or
+  `openedFor`, so it goes with the place). The bar hides while the window
+  is up and comes back when the player closes it there (the window's
+  OnHide and `UI:Show` call `PlaceBar:Changed`).
+- The game's frames are never hidden, moved or changed: our own frame on
+  UIParent, anchored `PlaceBar.BELOW` (32 px, room for the game's tabs)
+  under theirs, as wide as theirs or as its words need.
+- Redrawn only from `Verdicts:Redraw`, `Errands:Update` and the events
+  above, never on a timer. `Bags:Wanted` counts the bar as a looker.
+- Tested in `tools/test_placebar.lua`. Not yet seen in game: the 32 px drop
+  and the frame names are from the client's usual ones.
+
+## Marks on the game's bags
+
+The owner said build it (2026-11-16, from a mockup, "build them all").
+`UI/BagMarks.lua` (`ns.BagMarks`): with "Marks on Bags" ticked (beside
+"Bag Helpers:" on the General page; saved as `bagMarks`, never rename it;
+off unless ticked) the game's own bag squares wear the marks Butler Bags
+draws (`BagWindow.ShowMark`, `BagWindow.MARK_ORDER`, from
+`BagView:Marks`). The squares are found as the trash can finds them
+(`Trash:ShownFrames`, `Trash:Buttons`).
+
+- Nothing of the game's is hidden, moved or changed: each mark is our own
+  texture on our own small frame laid over the square
+  (`BagMarks:Overlay`), made out of combat only (PLAYER_REGEN_ENABLED
+  catches up).
+- A square is repainted only when its mark changed (`BagMarks.kinds`).
+  `Verdicts:Redraw` and hooks on the bag windows (`UpdateItems`, OnShow,
+  OnHide) call `BagMarks:Changed`, coalesced over `SETTLE`. Nothing runs
+  while no bag window is open, or while Butler Bags stands in for the
+  game's (`BagWindow:Covering`). `Bags:Wanted` counts open, marked bags
+  as a looker (`BagMarks.looking`).
+- Tested in `tools/test_bagmarks.lua`. Not yet seen in game.

@@ -1068,7 +1068,12 @@ end
 -- mark (the To Sell chip still finds both).
 local MARK_ORDER = { "quest", "upgrade", "goal", "craft", "mail", "vendor" }
 
-local function ShowMark(texture, kind)
+local ShowMark
+-- The game's own bag squares wear the same marks (UI/BagMarks.lua).
+BagWindow.MARK_ORDER = MARK_ORDER
+function BagWindow.ShowMark(texture, kind) return ShowMark(texture, kind) end
+
+function ShowMark(texture, kind)
     if kind == "upgrade" then
         local ok = texture.SetAtlas and pcall(texture.SetAtlas, texture, "bags-greenarrow")
         if not ok then

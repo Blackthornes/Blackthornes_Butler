@@ -97,7 +97,7 @@ suite.check("/bbutler vendor turns it back on, and the box follows",
 -- What a setting does is a tooltip until Show descriptions is ticked.
 local minimapRow, styleRow
 for _, row in ipairs(pages.pages.general.rows) do
-    if row.labelText == "Free Bag Space:" then minimapRow = row end
+    if row.labelText == "Bag Helpers:" then minimapRow = row end
     if row.labelText == "Window Style:" then styleRow = row end
 end
 suite.check("descriptions start hidden", ns.db.settingsDescriptions == false
@@ -220,7 +220,7 @@ suite.check("the command buttons run their commands",
 local covered = { tooltip = true, sisters = true, whatsnew = true, window = true, all = true,
     vendor = true, mailbox = true, bank = true, settings = true, reset = true,
     sellbelow = true, freespace = true, whohas = true, goldmin = true, fillnext = true, altupgrades = true,
-    joblogin = true, trash = true, quests = true, bankalt = true, greens = true, buy = true, order = true, skillup = true, bags = true, mute = true, windows = true }
+    joblogin = true, trash = true, quests = true, bankalt = true, greens = true, buy = true, order = true, skillup = true, bags = true, mute = true, windows = true, bar = true }
 -- Chat-only commands are typed only (the owner, 2026-10-15): they print a
 -- list in chat, so they have no button here. Their settings parts (training
 -- on|off, goals on|off, upgrademail undo) still have controls.

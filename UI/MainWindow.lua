@@ -146,6 +146,8 @@ function UI:Build()
         UI.openedFor = nil
         UI:HideMenu()
         if ns.Selling then ns.Selling:Update() end
+        -- Still at the vendor, mailbox or bank: the Butler bar comes back.
+        if ns.PlaceBar then ns.PlaceBar:Changed() end
         if ns.Errands then ns.Errands:TellTradeskills(false) end
         -- Inside the one window, it closes with this one.
         if ns.ButlerTabs then ns.ButlerTabs:Closed(frame, byItself) end
@@ -2531,6 +2533,8 @@ function UI:AtVendor()
         local sell = ns.Verdicts:Group("sell")
         if not (sell and sell.count > 0) then return end
     end
+    -- With "Butler Bar:" ticked the slim bar comes up in the window's stead.
+    if ns.PlaceBar and ns.PlaceBar:Arrived("vendor") then return end
     self:Show("bags")
     self.openedByVendor = true
 end
@@ -2552,6 +2556,7 @@ function UI:AtPlace(place)
     -- At a mailbox Butler takes over from Tradeskills' mail panel, so it
     -- comes up every time; at the bank only with something to move.
     if place ~= "mail" and not ns.Errands:HasWork(place) then return end
+    if ns.PlaceBar and ns.PlaceBar:Arrived(place) then return end
     self:Show("bags")
     self.openedFor = place
     ns.Errands:TellTradeskills()
@@ -2559,6 +2564,7 @@ end
 
 --- The mailbox or bank closed: a window that came up for it goes with it.
 function UI:LeftPlace(place)
+    if ns.PlaceBar then ns.PlaceBar:Left(place) end
     if self.openedFor == place then
         self.openedFor = nil
         self.closingByItself = true
@@ -2570,6 +2576,7 @@ end
 
 --- The vendor closed: a window that came up for it goes with it.
 function UI:LeftVendor()
+    if ns.PlaceBar then ns.PlaceBar:Left("vendor") end
     if self.openedByVendor then
         self.openedByVendor = false
         if not self:IsShown() and ns.ButlerTabs and ns.ButlerTabs:AnyShown() then
@@ -2836,6 +2843,7 @@ function UI:Show(view)
         end)
     end
     self:Refresh()
+    if ns.PlaceBar then ns.PlaceBar:Changed() end
     -- Read the bags if they changed while the window was closed; the list
     -- follows when the read is done.
     ns.Bags:Fresh(function()

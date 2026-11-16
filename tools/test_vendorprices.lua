@@ -92,8 +92,9 @@ _G.BlackthornesTS = nil
 
 -- 5.
 ns.HandleSlash("settings")
-local stepper = ns.SettingsUI.controls.vendorPrice
-suite.check("Settings shows it Always", stepper:GetValue() == ns.TooltipShift.ALWAYS)
+local stepper = ns.SettingsUI.controls.tooltipLines
+local vendorBox = ns.SettingsUI.controls.vendorPrice
+suite.check("Settings shows it Always", stepper:GetValue() == ns.TooltipShift.ALWAYS and vendorBox:GetChecked())
 stepper:Pick(stepper:GetValue() - 1)
 lines = Hover(2320)
 suite.check("Shift holds it back", #lines == 1 and (lines[1] or ""):find("Shift") ~= nil, tostring(lines[1]))

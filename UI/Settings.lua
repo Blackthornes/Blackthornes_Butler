@@ -37,6 +37,8 @@ local TITLE = "Blackthornes Butler"
 local PAGES = {
     { key = "selling", text = L["ERRANDS"],
       tip = L["Selling at a vendor, mail and the bank, and your Always keep, sell and bank lists"] },
+    { key = "keep", text = L["KEEP"],
+      tip = L["What each character keeps, and upgrades for your other characters"] },
     { key = "order", text = L["ORDER"],
       tip = L["The order Butler asks its rules in, and which ones are on"] },
     { key = "bankalt", text = L["BANK ALT"],
@@ -255,26 +257,119 @@ local function CommandRow(pages, page, column, label, description, buttonText, c
     return row, button
 end
 
---- Off, Shift or Always for a tooltip line (UI/TooltipShift.lua), on `row`
---- at CONTROL_X. `isOn()` reads the line's own on/off setting and `setOn`
---- is its setter, the one the old tick box called; Shift is kept apart.
-function SettingsUI.TooltipShiftControl(row, key, isOn, setOn)
+--- A control's words on the hover, the game's way.
+function SettingsUI.Hover(control, text)
+    if not (control and control.HookScript and text and text ~= "") then return end
+    control:HookScript("OnEnter", function(self)
+        local tip = rawget(_G, "GameTooltip")
+        if not tip then return end
+        tip:SetOwner(self, "ANCHOR_RIGHT")
+        tip:SetText(text, 1, 1, 1, 1, true)
+        tip:Show()
+    end)
+    control:HookScript("OnLeave", function()
+        local tip = rawget(_G, "GameTooltip")
+        if tip then tip:Hide() end
+    end)
+end
+
+SettingsUI.FLOW_LINE = 22
+SettingsUI.FLOW_GAP = 12
+
+--- Lay `list` (tick boxes) left to right under a row's label, across the
+--- whole column, onto a new line when the next one does not fit. The row
+--- grows by the lines used. Returns how many lines.
+function SettingsUI.Flow(row, list)
+    local x, line = 0, 1
+    local top = row.compactHeight or 24
+    for _, control in ipairs(list) do
+        local width = tonumber(control:GetWidth()) or 80
+        if x > 0 and x + width > COLUMN_WIDTH then
+            x, line = 0, line + 1
+        end
+        control:ClearAllPoints()
+        control:SetPoint("TOPLEFT", x, -(top + (line - 1) * SettingsUI.FLOW_LINE))
+        x = x + width + SettingsUI.FLOW_GAP
+    end
+    if row.Grow then row:Grow(line * SettingsUI.FLOW_LINE) end
+    -- The search finds the row by its ticks' words too.
+    for _, entry in ipairs(row.pages and row.pages.searchables or {}) do
+        if entry.frame == row then
+            for _, control in ipairs(list) do
+                local text = control.label and control.label:GetText()
+                if type(text) == "string" then entry.words = entry.words .. " " .. text:lower() end
+            end
+        end
+    end
+    return line
+end
+
+--- One Off, Shift or Always box for all of `lines` ({ key, text, isOn,
+--- setOn } each: its own on or off reader and setter), at CONTROL_X on `row`,
+--- and a tick box per line (line.box, placed by the caller). The box shows
+--- Off with no line ticked, else Always if any ticked line is on Always,
+--- else Shift. Picking Off unticks every line and remembers which were
+--- ticked, for this session, so Shift or Always brings the same ones back.
+function SettingsUI.TooltipLinesControl(row, lines)
     local TooltipShift = ns.TooltipShift
-    local stepper = Widgets.CreateChoice(row, {
+    local stepper
+    local remembered
+
+    local function Mode()
+        local mode = TooltipShift.OFF
+        for _, line in ipairs(lines) do
+            mode = math.max(mode, TooltipShift:Mode(line.isOn(), line.key))
+        end
+        return mode
+    end
+
+    local function Sync()
+        stepper:SetValue(Mode(), true)
+        for _, line in ipairs(lines) do line.box:SetChecked(line.isOn()) end
+    end
+
+    stepper = Widgets.CreateChoice(row, {
         min = 0, max = 2, step = 1,
         format = function(value) return TooltipShift.NAMES[value] end,
         onChange = function(value)
-            TooltipShift:Apply(value, key, isOn(), setOn)
+            if value == TooltipShift.OFF then
+                remembered = {}
+                for _, line in ipairs(lines) do
+                    remembered[line.key] = line.isOn()
+                    TooltipShift:Apply(value, line.key, line.isOn(), line.setOn)
+                end
+            else
+                local any = false
+                for _, line in ipairs(lines) do any = any or line.isOn() end
+                for _, line in ipairs(lines) do
+                    -- Coming back from Off: the lines ticked before, or all.
+                    local want = line.isOn()
+                    if not any then want = not remembered or remembered[line.key] ~= false end
+                    if want then TooltipShift:Apply(value, line.key, line.isOn(), line.setOn) end
+                end
+                remembered = nil
+            end
+            Sync()
         end,
     })
     ns.SettingsPages.FitStepper(stepper, TooltipShift.NAMES)
     stepper:SetPoint("TOPLEFT", CONTROL_X, -2)
 
-    --- Show what is saved, without writing anything.
-    function stepper:Sync()
-        self:SetValue(TooltipShift:Mode(isOn(), key), true)
+    for _, line in ipairs(lines) do
+        line.box = Widgets.CreateCheckbox(row, line.text, function(checked)
+            local mode = Mode()
+            if checked then
+                TooltipShift:Apply(mode == TooltipShift.SHIFT and TooltipShift.SHIFT or TooltipShift.ALWAYS,
+                    line.key, line.isOn(), line.setOn)
+            else
+                TooltipShift:Apply(TooltipShift.OFF, line.key, line.isOn(), line.setOn)
+            end
+            Sync()
+        end, line.isOn())
     end
-    stepper:Sync()
+
+    stepper.Sync = Sync
+    Sync()
     return stepper
 end
 
@@ -998,14 +1093,39 @@ function SettingsUI:BuildPages()
     local pages = self.pages
 
     -- Selling: the vendor on the left, the player's lists on the right.
-    pages:Section("selling", 1, L["AT A VENDOR"])
-
-    local vendorRow = pages:Row("selling", 1, L["Open at Vendors:"],
-        L["Opens Butler at every vendor. Nothing sells until you click Sell."])
-    controls.openAtVendor = Widgets.CreateCheckbox(vendorRow, L["On"], function(checked)
+    -- Where Butler opens by itself: one row, a tick a place (2026-11-16,
+    -- from a mockup). The saved keys are as they were.
+    pages:Section("selling", 1, L["OPEN BUTLER"])
+    local openWords = {
+        L["Opens Butler at every vendor. Nothing sells until you click Sell."],
+        L["Opens Butler at every mailbox. Fill Mail fills in the mail and you press Send. Needs Blackthornes Tradeskills."],
+        L["Opens Butler at the bank when there's something to move."],
+    }
+    local openRow = pages:Row("selling", 1, L["Open Butler At:"], table.concat(openWords, " "))
+    controls.openAtVendor = Widgets.CreateCheckbox(openRow, L["Vendors"], function(checked)
         ns.db.openAtVendor = checked
     end, true)
-    controls.openAtVendor:SetPoint("TOPLEFT", CONTROL_X, -2)
+    controls.openAtMailbox = Widgets.CreateCheckbox(openRow, L["Mailboxes"], function(checked)
+        ns.db.openAtMailbox = checked
+    end, true)
+    controls.openAtBank = Widgets.CreateCheckbox(openRow, L["The Bank"], function(checked)
+        ns.db.openAtBank = checked
+    end, true)
+    SettingsUI.Hover(controls.openAtVendor, openWords[1])
+    SettingsUI.Hover(controls.openAtMailbox, openWords[2])
+    SettingsUI.Hover(controls.openAtBank, openWords[3])
+    SettingsUI.Flow(openRow, { controls.openAtVendor, controls.openAtMailbox, controls.openAtBank })
+
+    -- The slim bar under the game's window, in the big window's stead
+    -- (UI/PlaceBar.lua). Off unless ticked.
+    local barRow = pages:Row("selling", 1, L["Butler Bar:"],
+        L["Shows a small bar under the vendor, mailbox or bank window, in place of the Butler window. Click Open on the bar when you want the window."])
+    controls.placeBar = Widgets.CreateCheckbox(barRow, L["On"], function(checked)
+        if ns.PlaceBar then ns.PlaceBar:SetOn(checked) else ns.db.placeBar = checked end
+    end, true)
+    controls.placeBar:SetPoint("TOPLEFT", CONTROL_X, -2)
+
+    pages:Section("selling", 1, L["AT A VENDOR"])
 
     local buyRow = pages:Row("selling", 1, L["Buy More:"],
         L["Shift-click an item at a vendor to buy as many as you want, like 200."])
@@ -1015,13 +1135,6 @@ function SettingsUI:BuildPages()
     controls.buyMany:SetPoint("TOPLEFT", CONTROL_X, -2)
 
     pages:Section("selling", 1, L["MAIL AND BANK"])
-
-    local mailRow = pages:Row("selling", 1, L["Open at Mailboxes:"],
-        L["Opens Butler at every mailbox. Fill Mail fills in the mail and you press Send. Needs Blackthornes Tradeskills."])
-    controls.openAtMailbox = Widgets.CreateCheckbox(mailRow, L["On"], function(checked)
-        ns.db.openAtMailbox = checked
-    end, true)
-    controls.openAtMailbox:SetPoint("TOPLEFT", CONTROL_X, -2)
 
     local nextRow = pages:Row("selling", 1, L["Fill the Next Mail:"],
         L["After you send one, Butler fills the next character's mail."])
@@ -1062,33 +1175,26 @@ function SettingsUI:BuildPages()
     end, false)
     controls.questBuy:SetPoint("TOPLEFT", CONTROL_X, -2)
 
-    local bankRow = pages:Row("selling", 1, L["Open at the Bank:"],
-        L["Opens Butler at the bank when there's something to move."])
-    controls.openAtBank = Widgets.CreateCheckbox(bankRow, L["On"], function(checked)
-        ns.db.openAtBank = checked
-    end, true)
-    controls.openAtBank:SetPoint("TOPLEFT", CONTROL_X, -2)
-
     -- Mail running out on any of your characters (Logic/MailRunsOut.lua,
     -- the owner said build it 2026-11-09). Off unless ticked.
-    pages:Section("selling", 1, L["MAILBOX"])
-    local runsOutRow = pages:Row("selling", 1, L["Mail Running Out:"], nil)
+    pages:Section("selling", 2, L["MAILBOX"])
+    local runsOutRow = pages:Row("selling", 2, L["Mail Running Out:"], nil)
     controls.mailRunsOut = Widgets.CreateCheckbox(runsOutRow, L["On"], function(checked)
         ns.MailRunsOut:SetOn(checked)
     end, false)
     controls.mailRunsOut:SetPoint("TOPLEFT", CONTROL_X, -2)
 
     -- What a mail holds, on its row's tooltip in the inbox (2026-11-09).
-    local mailContentsRow = pages:Row("selling", 1, L["Mail Contents:"], nil)
+    local mailContentsRow = pages:Row("selling", 2, L["Mail Contents:"], nil)
     controls.mailContents = Widgets.CreateCheckbox(mailContentsRow, L["On"], function(checked)
         ns.MailContents:SetEnabled(checked)
     end, false)
     controls.mailContents:SetPoint("TOPLEFT", CONTROL_X, -2)
 
     -- The owner asked 2026-10-14: on the disenchanter, break every green.
-    pages:Section("selling", 1, L["DISENCHANTING"])
+    pages:Section("selling", 2, L["DISENCHANTING"])
 
-    local greensRow = pages:Row("selling", 1, L["Disenchant Greens Here:"],
+    local greensRow = pages:Row("selling", 2, L["Disenchant Greens Here:"],
         L["On your disenchanter, greens go under Disenchant unless selling pays more. Crafted greens, upgrades and things you need are still kept."])
     controls.disenchantGreens = Widgets.CreateCheckbox(greensRow, L["On"], function(checked)
         ns.Verdicts:SetDisenchantGreens(checked)
@@ -1099,7 +1205,7 @@ function SettingsUI:BuildPages()
     -- takes a green only when breaking it pays as much as selling it,
     -- unless this is ticked. Levelling Enchanting takes it either way
     -- (the owner, 2026-10-17).
-    local alwaysRow = pages:Row("selling", 1, L["Always Disenchant:"],
+    local alwaysRow = pages:Row("selling", 2, L["Always Disenchant:"],
         L["Greens go to your disenchanter even when selling them pays more."])
     controls.alwaysDisenchant = Widgets.CreateCheckbox(alwaysRow, L["On"], function(checked)
         ns.Verdicts:SetAlwaysDisenchant(checked)
@@ -1108,7 +1214,7 @@ function SettingsUI:BuildPages()
 
     -- Asked 2026-10-11: anything worth less than this joins Sell. It only
     -- ever adds to Sell; nothing sells until the player clicks.
-    pages:Section("selling", 2, L["JUNK"])
+    pages:Section("selling", 2, L["JUNK AND CRAFTING"])
 
     local belowRow = pages:Row("selling", 2, L["Sell Below:"],
         L["Anything worth less than this goes under Sell. 0 turns it off."])
@@ -1119,8 +1225,6 @@ function SettingsUI:BuildPages()
 
     -- A player asked, the owner said build it (2026-10-19): say when a
     -- known craft earns more than selling. Off unless ticked.
-    pages:Section("selling", 2, L["CRAFTING"])
-
     local craftRow = pages:Row("selling", 2, L["Craft When It Pays More:"],
         L["Butler checks the recipes you know and says when crafting earns more than selling. Needs Blackthornes Tradeskills."])
     controls.craftPays = Widgets.CreateCheckbox(craftRow, L["On"], function(checked)
@@ -1128,9 +1232,9 @@ function SettingsUI:BuildPages()
     end)
     controls.craftPays:SetPoint("TOPLEFT", CONTROL_X, -2)
 
-    pages:Section("selling", 2, L["YOUR LISTS"])
+    pages:Section("keep", 1, L["YOUR LISTS"])
 
-    local learnRow = pages:Row("selling", 2, L["Learn From You:"],
+    local learnRow = pages:Row("keep", 1, L["Learn From You:"],
         L["Butler learns what you keep, sell and mail. Your right-click picks always win."])
     controls.learn = Widgets.CreateCheckbox(learnRow, L["On"], function(checked)
         ns.db.learn = checked
@@ -1140,29 +1244,29 @@ function SettingsUI:BuildPages()
 
     -- Upgrades held back from a character (the owner asked 2026-10-12):
     -- right-click an upgrade under Mail to hold it back; undone here.
-    pages:Section("selling", 2, L["UPGRADES FOR YOUR CHARACTERS"])
+    pages:Section("keep", 1, L["UPGRADES FOR YOUR CHARACTERS"])
 
-    local altRow = pages:Row("selling", 2, L["Mail Upgrades to Alts:"],
+    local altRow = pages:Row("keep", 1, L["Mail Upgrades to Alts:"],
         L["Gear that's an upgrade for another of your characters goes under Mail. Needs Blackthornes Equipment."])
     controls.altUpgrades = Widgets.CreateCheckbox(altRow, L["On"], function(checked)
         ns.Verdicts:SetAltUpgrades(checked)
     end)
     controls.altUpgrades:SetPoint("TOPLEFT", CONTROL_X, -2)
 
-    local heldRow = pages:Row("selling", 2, L["Character:"],
+    local heldRow = pages:Row("keep", 1, L["Character:"],
         L["Pick a character to see what you hold back from them."])
     controls.heldPick = SettingsUI.CharacterPicker(heldRow, CONTROL_X, function()
         SettingsUI:SyncHeld()
     end)
 
-    local allRow = pages:Row("selling", 2, L["Mail Them Upgrades:"], nil)
+    local allRow = pages:Row("keep", 1, L["Mail Them Upgrades:"], nil)
     controls.heldAll = Widgets.CreateCheckbox(allRow, L["On"], function(checked)
         local name = controls.heldPick:GetName()
         if name then ns.Verdicts:HoldAllUpgrades(name, not checked) end
     end)
     controls.heldAll:SetPoint("TOPLEFT", CONTROL_X, -2)
 
-    local itemsRow = pages:Row("selling", 2, L["Items Held Back:"],
+    local itemsRow = pages:Row("keep", 1, L["Items Held Back:"],
         L["Lets these items go to this character again."])
     controls.heldItems = Widgets.CreateButton(itemsRow, L["Undo"], function()
         local name = controls.heldPick:GetName()
@@ -1177,16 +1281,16 @@ function SettingsUI:BuildPages()
     -- How many of an item each character keeps (Logic/KeepHere.lua, a
     -- player asked, the owner said build it 2026-10-17). Set with a
     -- right-click in the Butler window; seen and changed here.
-    pages:Section("selling", 2, L["KEEP ON EACH CHARACTER"])
+    pages:Section("keep", 2, L["KEEP ON EACH CHARACTER"])
 
-    local keepWhoRow = pages:Row("selling", 2, L["Character:"],
+    local keepWhoRow = pages:Row("keep", 2, L["Character:"],
         L["Right-click an item in the Butler window to keep some on the character you're on."])
     controls.keepWho = SettingsUI.CharacterPicker(keepWhoRow, CONTROL_X, function()
         controls.keepWhat.index = 1
         SettingsUI:SyncKeepHere()
     end)
 
-    local keepWhatRow = pages:Row("selling", 2, L["Item:"], nil)
+    local keepWhatRow = pages:Row("keep", 2, L["Item:"], nil)
     controls.keepWhat = SettingsUI.CharacterPicker(keepWhatRow, CONTROL_X, function()
         SettingsUI:SyncKeepHere()
     end)
@@ -1196,7 +1300,7 @@ function SettingsUI:BuildPages()
         return state.guids[controls.keepWho.index], state.items[controls.keepWhat.index]
     end
 
-    local keepCountRow = pages:Row("selling", 2, L["Keep:"], L["0 takes it off the list. Keep All keeps every one."])
+    local keepCountRow = pages:Row("keep", 2, L["Keep:"], L["0 takes it off the list. Keep All keeps every one."])
     local function SaveCount()
         local who, what = KeepPicked()
         if not (who and what) then return end
@@ -1222,7 +1326,7 @@ function SettingsUI:BuildPages()
     end, { width = 100, height = 20 })
     controls.keepAll:SetPoint("LEFT", controls.keepCount, "RIGHT", 6, 0)
 
-    local keepRemoveRow = pages:Row("selling", 2, L["Remove:"], nil)
+    local keepRemoveRow = pages:Row("keep", 2, L["Remove:"], nil)
     controls.keepRemove = Widgets.CreateButton(keepRemoveRow, L["Remove"], function()
         local who, what = KeepPicked()
         if not (who and what) then return end
@@ -1235,7 +1339,7 @@ function SettingsUI:BuildPages()
     -- owner said build it from a mockup 2026-11-07): one number an item for
     -- the account, a row each with what is kept, what all the characters
     -- have and whether that's enough. A click opens who has them.
-    local acrossHead = pages:Section("selling", 2, L["KEEP ACROSS CHARACTERS"])
+    local acrossHead = pages:Section("keep", 2, L["KEEP ACROSS CHARACTERS"])
     controls.acrossAdd = Widgets.CreateButton(acrossHead, L["Add Item"], function()
         if ns.KeepAcrossUI then ns.KeepAcrossUI:Open() end
     end, { height = 18 })
@@ -1245,17 +1349,17 @@ function SettingsUI:BuildPages()
     acrossList:SetWidth(COLUMN_WIDTH)
     acrossList.fixedHeight = 40
     acrossList:SetHeight(40)
-    pages:Place("selling", 2, acrossList, 4)
+    pages:Place("keep", 2, acrossList, 4)
     controls.acrossList = acrossList
     SettingsUI.BuildAcrossHeader(acrossList)
 
-    local acrossBankRow = pages:Row("selling", 2, L["Count Bank:"], nil)
+    local acrossBankRow = pages:Row("keep", 2, L["Count Bank:"], nil)
     controls.acrossBank = Widgets.CreateCheckbox(acrossBankRow, L["On"], function(checked)
         if ns.KeepAcross then ns.KeepAcross:SetCountsBank(checked) end
     end)
     controls.acrossBank:SetPoint("TOPLEFT", CONTROL_X, 0)
 
-    local acrossMailRow = pages:Row("selling", 2, L["Count Mail:"], nil)
+    local acrossMailRow = pages:Row("keep", 2, L["Count Mail:"], nil)
     controls.acrossMail = Widgets.CreateCheckbox(acrossMailRow, L["On"], function(checked)
         if ns.KeepAcross then ns.KeepAcross:SetCountsMail(checked) end
     end)
@@ -1264,7 +1368,7 @@ function SettingsUI:BuildPages()
     local acrossFoot = CreateFrame("Frame", nil, pages.pages.selling.content)
     acrossFoot:SetSize(COLUMN_WIDTH, 16)
     acrossFoot.fixedHeight = 16
-    pages:Place("selling", 2, acrossFoot, 6)
+    pages:Place("keep", 2, acrossFoot, 6)
     controls.acrossCount = Theme.CreateLabel(acrossFoot, "small", "muted")
     controls.acrossCount:SetPoint("LEFT", 0, 0)
     local acrossSaves = Theme.CreateLabel(acrossFoot, "small", "dim", "RIGHT")
@@ -1667,26 +1771,33 @@ function SettingsUI:BuildPages()
     end, true)
     controls.voice:SetPoint("TOPLEFT", CONTROL_X, -2)
 
-    local spaceRow = pages:Row("general", 1, L["Free Bag Space:"],
-        L["Shows free slots on your backpack button."])
-    controls.freeSpace = Widgets.CreateCheckbox(spaceRow, L["Show"], function(checked)
+    -- Three bag helpers on one row (2026-11-16, from a mockup): a tick
+    -- each, their words on the hover and in the row's description. The
+    -- saved keys are as they were.
+    local helpWords = {
+        L["Shows free slots on your backpack button."],
+        L["When your bags are full, a gold can marks the cheapest item Butler would sell. Click it to pick it up."],
+        L["When your bags are full and you loot a quest item or something worth more, Butler offers to throw out your cheapest junk to make room. Nothing goes until you click Swap."],
+        L["Shows Butler's marks on your bags: sell, mail, upgrade, quest and needed items."],
+    }
+    local helpRow = pages:Row("general", 1, L["Bag Helpers:"], table.concat(helpWords, " "))
+    controls.freeSpace = Widgets.CreateCheckbox(helpRow, L["Free Space"], function(checked)
         if ns.FreeSpace then ns.FreeSpace:SetEnabled(checked) end
     end, true)
-    controls.freeSpace:SetPoint("TOPLEFT", CONTROL_X, -2)
-
-    local trashRow = pages:Row("general", 1, L["Trash Can:"],
-        L["When your bags are full, a gold can marks the cheapest item Butler would sell. Click it to pick it up."])
-    controls.trashCan = Widgets.CreateCheckbox(trashRow, L["Show"], function(checked)
+    controls.trashCan = Widgets.CreateCheckbox(helpRow, L["Trash Can"], function(checked)
         if ns.Trash then ns.Trash:SetEnabled(checked) end
     end, true)
-    controls.trashCan:SetPoint("TOPLEFT", CONTROL_X, -2)
-
-    local swapRow = pages:Row("general", 1, L["Swap When Full:"],
-        L["When your bags are full and you loot a quest item or something worth more, Butler offers to throw out your cheapest junk to make room. Nothing goes until you click Swap."])
-    controls.swapWhenFull = Widgets.CreateCheckbox(swapRow, L["On"], function(checked)
+    controls.swapWhenFull = Widgets.CreateCheckbox(helpRow, L["Swap When Full"], function(checked)
         if ns.SwapWhenFull then ns.SwapWhenFull:SetEnabled(checked) end
     end, false)
-    controls.swapWhenFull:SetPoint("TOPLEFT", CONTROL_X, -2)
+    SettingsUI.Hover(controls.freeSpace, helpWords[1])
+    SettingsUI.Hover(controls.trashCan, helpWords[2])
+    controls.bagMarks = Widgets.CreateCheckbox(helpRow, L["Marks on Bags"], function(checked)
+        if ns.BagMarks then ns.BagMarks:SetOn(checked) end
+    end, false)
+    SettingsUI.Hover(controls.swapWhenFull, helpWords[3])
+    SettingsUI.Hover(controls.bagMarks, helpWords[4])
+    SettingsUI.Flow(helpRow, { controls.freeSpace, controls.trashCan, controls.swapWhenFull, controls.bagMarks })
 
     pages:Section("general", 2, L["ADDONS"])
 
@@ -1704,48 +1815,54 @@ function SettingsUI:BuildPages()
 
     -- UI/WhatsNew.lua: one window after an update for every Blackthornes
     -- addon. Off here is off in all of them, as the sister note is.
-    local _, whatsNewButton = CommandRow(pages, "general", 2, L["What's New:"], nil,
+    -- One row: Open, and a tick each for the pop-up after an update and
+    -- its motion (2026-11-16, from a mockup).
+    local afterWords = L["Opens What's New the first time you play after an update."]
+    local whatsNewRow, whatsNewButton = CommandRow(pages, "general", 2, L["What's New:"], afterWords,
         L["Open"], "whatsnew")
     controls.whatsnew = whatsNewButton
-
-    local whatsNewRow = pages:Row("general", 2, L["What's New After Updates:"],
-        L["Opens What's New the first time you play after an update."])
-    controls.whatsNewPopup = Widgets.CreateCheckbox(whatsNewRow, L["On"], function(checked)
+    controls.whatsNewPopup = Widgets.CreateCheckbox(whatsNewRow, L["After Updates"], function(checked)
         ns.WhatsNew:SetOn(checked)
     end, true)
-    controls.whatsNewPopup:SetPoint("TOPLEFT", CONTROL_X, -2)
-
-    local whatsNewMotionRow = pages:Row("general", 2, L["What's New Motion:"], nil)
-    controls.whatsNewMotion = Widgets.CreateCheckbox(whatsNewMotionRow, L["On"], function(checked)
+    controls.whatsNewMotion = Widgets.CreateCheckbox(whatsNewRow, L["Motion"], function(checked)
         ns.WhatsNew:SetMotionOn(checked)
     end, true)
-    controls.whatsNewMotion:SetPoint("TOPLEFT", CONTROL_X, -2)
+    SettingsUI.Hover(controls.whatsNewPopup, afterWords)
+    SettingsUI.Flow(whatsNewRow, { controls.whatsNewPopup, controls.whatsNewMotion })
 
     pages:Section("general", 2, L["TOOLTIPS"])
 
-    local whoRow = pages:Row("general", 2, L["Who Has It:"],
-        L["Tooltips list which characters have the item. Needs Blackthornes Tradeskills."])
-    controls.whoHas = SettingsUI.TooltipShiftControl(whoRow, "whoHas",
-        function() return ns.db.whoHas ~= false end,
-        function(on) if ns.WhoHas then ns.WhoHas:SetEnabled(on) end end)
-
-    local tipRow = pages:Row("general", 2, L["Butler on Tooltips:"],
-        L["The last tooltip line says what Butler would do with it."])
-    controls.verdictTip = SettingsUI.TooltipShiftControl(tipRow, "verdictTip",
-        function() return ns.db.verdictTip ~= false end,
-        function(on) if ns.VerdictTip then ns.VerdictTip:SetEnabled(on) end end)
-
+    -- One Off, Shift or Always box for every tooltip line, and a tick for
+    -- each line (2026-11-16, from a mockup). Each line keeps its own saved
+    -- setting and Shift choice, so nothing changes until the player uses
+    -- the box: lines that differ show as the most shown of them.
+    local tipWords = {
+        whoHas = L["Tooltips list which characters have the item. Needs Blackthornes Tradeskills."],
+        verdictTip = L["The last tooltip line says what Butler would do with it."],
+    }
+    local linesRow = pages:Row("general", 2, L["Show Tooltip Lines:"],
+        tipWords.whoHas .. " " .. tipWords.verdictTip)
+    local lines = {
+        { key = "whoHas", text = L["Who Has It"],
+            isOn = function() return ns.db.whoHas ~= false end,
+            setOn = function(on) if ns.WhoHas then ns.WhoHas:SetEnabled(on) end end },
+        { key = "verdictTip", text = L["Butler"],
+            isOn = function() return ns.db.verdictTip ~= false end,
+            setOn = function(on) if ns.VerdictTip then ns.VerdictTip:SetEnabled(on) end end },
+        { key = "vendorPrice", text = L["Vendor Price"],
+            isOn = function() return ns.db.vendorPrice ~= false end,
+            setOn = function(on) if ns.VendorPrices then ns.VendorPrices:SetEnabled(on) end end },
+    }
+    controls.tooltipLines = SettingsUI.TooltipLinesControl(linesRow, lines)
+    for _, line in ipairs(lines) do
+        controls[line.key] = line.box
+        if tipWords[line.key] then SettingsUI.Hover(line.box, tipWords[line.key]) end
+    end
     -- Craft Details (2026-11-14): off unless ticked; the tooltip names the craft.
-    local detailsRow = pages:Row("general", 2, L["Craft Details:"], nil)
-    controls.craftDetails = Widgets.CreateCheckbox(detailsRow, L["On"], function(checked)
+    controls.craftDetails = Widgets.CreateCheckbox(linesRow, L["Craft Details"], function(checked)
         if ns.VerdictTip then ns.VerdictTip:SetDetails(checked) end
     end, false)
-    controls.craftDetails:SetPoint("TOPLEFT", CONTROL_X, -2)
-
-    local vendorRow = pages:Row("general", 2, L["Vendor Price:"], nil)
-    controls.vendorPrice = SettingsUI.TooltipShiftControl(vendorRow, "vendorPrice",
-        function() return ns.db.vendorPrice ~= false end,
-        function(on) if ns.VendorPrices then ns.VendorPrices:SetEnabled(on) end end)
+    SettingsUI.Flow(linesRow, { lines[1].box, lines[2].box, lines[3].box, controls.craftDetails })
 
     -- Butler's own bag window (UI/BagWindow.lua), off unless ticked.
     if ns.BagWindow then ns.BagWindow:AddSettings(pages, controls, CONTROL_X) end
@@ -1780,15 +1897,15 @@ function SettingsUI:Refresh()
     controls.questBuy:SetChecked(ns.db.questBuy == true)
     controls.mailRunsOut:SetChecked(ns.db.mailRunsOut == true)
     controls.openAtBank:SetChecked(ns.db.openAtBank ~= false)
+    controls.placeBar:SetChecked(ns.db.placeBar == true)
     if controls.mailContents then controls.mailContents:SetChecked(ns.MailContents:Enabled()) end
     controls.freeSpace:SetChecked(ns.db.freeSpace ~= false)
     controls.trashCan:SetChecked(ns.db.trashCan ~= false)
     controls.swapWhenFull:SetChecked(ns.db.swapWhenFull == true)
+    controls.bagMarks:SetChecked(ns.db.bagMarks == true)
     controls.buyMany:SetChecked(ns.BuyMany:IsOn())
-    controls.whoHas:Sync()
-    controls.verdictTip:Sync()
+    controls.tooltipLines:Sync()
     controls.craftDetails:SetChecked(ns.VerdictTip ~= nil and ns.VerdictTip:DetailsOn())
-    controls.vendorPrice:Sync()
     controls.voice:SetChecked(ns.db.voice ~= false)
     controls.learn:SetChecked(ns.db.learn ~= false)
     controls.classTraining:SetChecked(ns.ClassTraining:IsOn())

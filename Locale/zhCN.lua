@@ -42,7 +42,6 @@ L["No characters yet"] = "还没有角色"
 L["AT A VENDOR"] = "在商人处"
 L["On"] = "开启"
 L["MAIL AND BANK"] = "邮件和银行"
-L["JUNK"] = "垃圾"
 L["YOUR LISTS"] = "你的清单"
 L["GOLD FUND"] = "金币储备"
 L["ONE CHARACTER"] = "单个角色"
@@ -818,13 +817,11 @@ L["This vendor doesn't sell anything called %s."] = "这个商人不卖叫 %s �
 
 -- Settings (2026-10-15)
 L["Windows, tooltips and text size"] = "窗口、鼠标提示和文字大小"
-L["Open at Vendors:"] = "在商人处打开："
 L["Opens Butler at every vendor. Nothing sells until you click Sell."] =
     "每次找商人时都打开 Butler。你点出售之前什么都不会卖。"
 L["Buy More:"] = "买更多："
 L["Shift-click an item at a vendor to buy as many as you want, like 200."] =
     "在商人处按住 Shift 点击一件物品，想买多少就买多少，比如 200 个。"
-L["Open at Mailboxes:"] = "在邮箱处打开："
 L["Opens Butler at every mailbox. Fill Mail fills in the mail and you press Send. Needs Blackthornes Tradeskills."] =
     "每次打开邮箱时都打开 Butler。填写邮件会帮你填好邮件，发送由你来点。需要 Blackthornes Tradeskills。"
 L["Fill the Next Mail:"] = "填写下一封邮件："
@@ -840,7 +837,6 @@ L["Opens Butler at login when this character has crafting or mail to do."] =
 L["Quest Items:"] = "任务物品："
 L["Keeps what your quests need and lists what's still missing."] =
     "保留你的任务需要的东西，并列出还缺什么。"
-L["Open at the Bank:"] = "在银行处打开："
 -- Mail contents on the inbox tooltip
 L["Mail Contents:"] = "邮件内容："
 L["IN THIS MAIL"] = "此邮件内含"
@@ -927,17 +923,11 @@ L["Open"] = "打开"
 L["All Characters:"] = "所有角色："
 L["Every character's items in one list. Needs Blackthornes Tradeskills."] =
     "所有角色的物品放在一个列表里。需要 Blackthornes Tradeskills。"
-L["Free Bag Space:"] = "背包空位："
 L["Shows free slots on your backpack button."] = "在你的背包按钮上显示空格子数。"
-L["Show"] = "显示"
-L["Trash Can:"] = "垃圾桶："
 L["When your bags are full, a gold can marks the cheapest item Butler would sell. Click it to pick it up."] =
     "背包满了时，一个金色的桶会标出 Butler 会卖掉的最便宜物品。点它可以把物品拿起来。"
-L["Who Has It:"] = "谁有它："
 L["Tooltips list which characters have the item. Needs Blackthornes Tradeskills."] =
     "物品提示会列出哪些角色有这件物品。需要 Blackthornes Tradeskills。"
-L["Butler on Tooltips:"] = "提示里的 Butler："
-L["Vendor Price:"] = "商人价格："
 L["Vendors sell it for %s"] = "商人售价：%s"
 L["The last tooltip line says what Butler would do with it."] =
     "提示的最后一行写着 Butler 会怎么处理它。"
@@ -949,10 +939,8 @@ L["Sister Addons:"] = "姊妹插件："
 L["Says once in chat which Blackthornes addons you don't have."] =
     "在聊天框说一次你还没有哪些 Blackthornes 插件。"
 L["What's New:"] = "更新内容："
-L["What's New After Updates:"] = "更新后显示更新内容："
 L["Opens What's New the first time you play after an update."] =
     "更新后第一次玩时打开更新内容。"
-L["What's New Motion:"] = "更新内容动画："
 
 -- The Order page (rule order)
 L["ORDER"] = "顺序"
@@ -1149,7 +1137,6 @@ L["Needs Blackthornes Tradeskills to see your other characters."] = "需要 Blac
 L["Queue"] = "加入队列"
 L["Added 1 craft to your Tradeskills queue."] = "已将 1 次制作加入你的 Tradeskills 队列。"
 L["Added %d crafts to your Tradeskills queue."] = "已将 %d 次制作加入你的 Tradeskills 队列。"
-L["CRAFTING"] = "制作"
 L["Craft When It Pays More:"] = "收益更高时制作："
 L["Butler checks the recipes you know and says when crafting earns more than selling. Needs Blackthornes Tradeskills."] = "管家会查看你会的配方，在制作比出售赚得更多时告诉你。需要 Blackthornes Tradeskills。"
 L["Make %s, about %s more than selling it"] = "制作%s，比出售多赚约%s"
@@ -1196,7 +1183,6 @@ L["Click to show the way to your trainer."] = "点击显示前往训练师的路
 L["Collapse this window"] = "收起这个窗口"
 L["Expand this window"] = "展开这个窗口"
 -- Swap When Full: the popup beside the loot window (2026-10-28)
-L["Swap When Full:"] = "背包满时交换："
 L["When your bags are full and you loot a quest item or something worth more, Butler offers to throw out your cheapest junk to make room. Nothing goes until you click Swap."] = "背包满了时，如果你拾取到任务物品或更值钱的东西，Butler 会提议丢掉你最便宜的杂物来腾出空间。在你点击“交换”之前，什么都不会丢。"
 L["Bags Full"] = "背包已满"
 L["Your bags are full. This is worth more than what you have."] = "你的背包满了。这件比你包里的东西更值钱。"
@@ -1323,7 +1309,6 @@ L["put every Blackthornes window back where it started (reset)"] = "把每个 Bl
 L["Type /bbutler windows reset to put every window back in its first spot."] = "输入 /bbutler windows reset，把每个窗口放回最初的位置。"
 
 -- Craft Details (2026-11-14)
-L["Craft Details:"] = "制作详情："
 L["Butler: Craft %s"] = "Butler：制作%s"
 L["With %s."] = "已有%s。"
 L["Needs %s."] = "还需要%s。"
@@ -1336,3 +1321,33 @@ L["Costs to Make:"] = "制作成本："
 L["Sells for Now:"] = "现在售价："
 L["Usual Price:"] = "平时价格："
 L["Sell Anyway moves it to Auction for this visit."] = "仍然出售会让它在这次拍卖时上架。"
+
+-- ======================================================================
+-- Settings rows that share one row
+-- ======================================================================
+L["Bag Helpers:"] = "背包助手："
+L["Free Space"] = "空位"
+L["After Updates"] = "更新后"
+L["Show Tooltip Lines:"] = "鼠标提示行："
+L["Butler"] = "Butler"
+L["Trash Can"] = "垃圾桶"
+L["Swap When Full"] = "背包满时交换"
+L["Who Has It"] = "谁有它"
+L["Vendor Price"] = "商人价格"
+L["Craft Details"] = "制作详情"
+L["Craft Details:"] = "制作详情："
+L["OPEN BUTLER"] = "打开 BUTLER"
+L["Open Butler At:"] = "在这些地方打开 Butler："
+L["Vendors"] = "商人"
+L["Mailboxes"] = "邮箱"
+L["The Bank"] = "银行"
+L["JUNK AND CRAFTING"] = "垃圾与制作"
+L["What each character keeps, and upgrades for your other characters"] = "每个角色保留什么，以及给你其他角色的升级装备"
+L["%d to sell"] = "%d 件可出售"
+L["Butler Bar:"] = "Butler 条:"
+L["Shows a small bar under the vendor, mailbox or bank window, in place of the Butler window. Click Open on the bar when you want the window."] = "在商人、邮箱或银行窗口下方显示一个小条，代替 Butler 窗口。想要窗口时点小条上的打开。"
+L["Butler bar on."] = "Butler 条已开启。"
+L["Butler bar off."] = "Butler 条已关闭。"
+L["show or hide the Butler bar under vendors, mailboxes and the bank"] = "显示或隐藏商人、邮箱和银行下方的 Butler 条"
+L["Marks on Bags"] = "背包标记"
+L["Shows Butler's marks on your bags: sell, mail, upgrade, quest and needed items."] = "在你的背包上显示 Butler 的标记：出售、邮寄、升级、任务和需要的物品。"
