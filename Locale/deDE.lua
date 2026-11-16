@@ -46,7 +46,6 @@ L["MAIL AND BANK"] = "POST UND BANK"
 L["YOUR LISTS"] = "DEINE LISTEN"
 L["GOLD FUND"] = "GOLDKASSE"
 L["ONE CHARACTER"] = "EIN CHARAKTER"
-L["WINDOWS"] = "FENSTER"
 L["All Characters"] = "Alle Charaktere"
 L["Butler's settings have a window of their own."] = "Die Einstellungen von Butler haben ein eigenes Fenster."
 L["Open Butler settings"] = "Einstellungen von Butler öffnen"
@@ -1200,7 +1199,6 @@ L["Click to pick an addon"] = "Klicken, um ein Addon zu wählen"
 L["Combine Addon Buttons:"] = "Addon-Knöpfe zusammenfassen:"
 L["One Window:"] = "Ein Fenster:"
 L["What to do with your bags"] = "Was mit deinen Taschen zu tun ist"
-L["ADDONS"] = "ADDONS"
 L["ARROW"] = "PFEIL"
 L["Effects:"] = "Effekte:"
 L["Full"] = "Voll"
@@ -1323,12 +1321,18 @@ L["Sells for Now:"] = "Verkauft sich jetzt für:"
 L["Usual Price:"] = "Üblicher Preis:"
 L["Sell Anyway moves it to Auction for this visit."] = "Trotzdem verkaufen schickt es bei diesem Besuch ins Auktionshaus."
 
+-- The settings every Blackthornes addon shares (2026-11-16).
+L["All Addons"] = "Alle Addons"
+L["ALL BLACKTHORNES ADDONS"] = "ALLE BLACKTHORNES-ADDONS"
+L["WHAT'S NEW"] = "NEUIGKEITEN"
+L["After Updates:"] = "Nach Updates:"
+L["Show With Motion"] = "Mit Bewegung anzeigen"
+
 -- ======================================================================
 -- Settings rows that share one row
 -- ======================================================================
 L["Bag Helpers:"] = "Taschenhelfer:"
 L["Free Space"] = "Freier Platz"
-L["After Updates"] = "Nach Updates"
 L["Show Tooltip Lines:"] = "Tooltip-Zeilen zeigen:"
 L["Butler"] = "Butler"
 L["Trash Can"] = "Mülleimer"
@@ -1352,3 +1356,6 @@ L["Butler bar off."] = "Butler-Leiste aus."
 L["show or hide the Butler bar under vendors, mailboxes and the bank"] = "die Butler-Leiste unter Händlern, Briefkästen und der Bank zeigen oder verstecken"
 L["Marks on Bags"] = "Zeichen auf Taschen"
 L["Shows Butler's marks on your bags: sell, mail, upgrade, quest and needed items."] = "Zeigt Butlers Zeichen auf deinen Taschen: verkaufen, verschicken, Verbesserung, Quest und gebrauchte Gegenstände."
+
+-- The settings every Blackthornes addon shares (2026-11-16).
+L["Show"] = "Anzeigen"

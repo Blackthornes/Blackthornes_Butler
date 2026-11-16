@@ -1,5 +1,5 @@
--- Settings rows that share one row (2026-11-16): the bag helpers, What's
--- New and the tooltip lines. Their ticks flow under the label and wrap at
+-- Settings rows that share one row (2026-11-16): the bag helpers and the
+-- tooltip lines. Their ticks flow under the label and wrap at
 -- the column's width, and each keeps the saved key it always had.
 
 local env = dofile(lfs_cwd .. "/tools/testenv.lua")
@@ -33,10 +33,16 @@ Tick(controls.trashCan)
 suite.check("Trash Can unticked saves trashCan off", ns.db.trashCan == false and ns.db.freeSpace ~= false)
 Tick(controls.swapWhenFull)
 suite.check("Swap When Full ticked saves swapWhenFull on", ns.db.swapWhenFull == true)
-Tick(controls.whatsNewMotion)
-suite.check("Motion unticked turns What's New's motion off", ns.WhatsNew:IsMotionOn() == false)
-Tick(controls.whatsNewPopup)
-suite.check("After Updates unticked turns the pop-up off", ns.WhatsNew:IsOn() == false)
+-- What's New's two choices are one After Updates drop-down on All Addons
+-- (2026-11-16), each still its own saved key.
+local after = controls.whatsNewAfter
+after:SetValue("show")
+if after.onChange then after.onChange("show") end
+ns.WhatsNew:SetMotionOn(false)
+suite.check("Show leaves motion off", ns.WhatsNew:IsOn() and ns.WhatsNew:IsMotionOn() == false)
+ns.WhatsNew:SetOn(false)
+after:Sync()
+suite.check("the pop-up off reads Off", after:GetValue() == "off")
 
 -- The search finds a shared row by a tick's words.
 local pages = SettingsUI.pages

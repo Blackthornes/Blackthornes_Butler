@@ -45,7 +45,6 @@ L["MAIL AND BANK"] = "邮件和银行"
 L["YOUR LISTS"] = "你的清单"
 L["GOLD FUND"] = "金币储备"
 L["ONE CHARACTER"] = "单个角色"
-L["WINDOWS"] = "窗口"
 L["All Characters"] = "所有角色"
 L["Butler's settings have a window of their own."] = "Butler 的设置有自己的窗口。"
 L["Open Butler settings"] = "打开 Butler 设置"
@@ -1199,7 +1198,6 @@ L["Click to pick an addon"] = "点击选择插件"
 L["Combine Addon Buttons:"] = "合并插件按钮："
 L["One Window:"] = "单一窗口："
 L["What to do with your bags"] = "背包里的东西怎么处理"
-L["ADDONS"] = "插件"
 L["ARROW"] = "箭头"
 L["Effects:"] = "效果："
 L["Full"] = "完整"
@@ -1322,12 +1320,18 @@ L["Sells for Now:"] = "现在售价："
 L["Usual Price:"] = "平时价格："
 L["Sell Anyway moves it to Auction for this visit."] = "仍然出售会让它在这次拍卖时上架。"
 
+-- The settings every Blackthornes addon shares (2026-11-16).
+L["All Addons"] = "全部插件"
+L["ALL BLACKTHORNES ADDONS"] = "所有 BLACKTHORNES 插件"
+L["WHAT'S NEW"] = "更新内容"
+L["After Updates:"] = "更新后："
+L["Show With Motion"] = "带动画显示"
+
 -- ======================================================================
 -- Settings rows that share one row
 -- ======================================================================
 L["Bag Helpers:"] = "背包助手："
 L["Free Space"] = "空位"
-L["After Updates"] = "更新后"
 L["Show Tooltip Lines:"] = "鼠标提示行："
 L["Butler"] = "Butler"
 L["Trash Can"] = "垃圾桶"
@@ -1351,3 +1355,6 @@ L["Butler bar off."] = "Butler 条已关闭。"
 L["show or hide the Butler bar under vendors, mailboxes and the bank"] = "显示或隐藏商人、邮箱和银行下方的 Butler 条"
 L["Marks on Bags"] = "背包标记"
 L["Shows Butler's marks on your bags: sell, mail, upgrade, quest and needed items."] = "在你的背包上显示 Butler 的标记：出售、邮寄、升级、任务和需要的物品。"
+
+-- The settings every Blackthornes addon shares (2026-11-16).
+L["Show"] = "显示"

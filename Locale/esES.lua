@@ -46,7 +46,6 @@ L["MAIL AND BANK"] = "CORREO Y BANCO"
 L["YOUR LISTS"] = "TUS LISTAS"
 L["GOLD FUND"] = "FONDO DE ORO"
 L["ONE CHARACTER"] = "UN PERSONAJE"
-L["WINDOWS"] = "VENTANAS"
 L["All Characters"] = "Todos los personajes"
 L["Butler's settings have a window of their own."] = "La configuración de Butler tiene su propia ventana."
 L["Open Butler settings"] = "Abrir la configuración de Butler"
@@ -1200,7 +1199,6 @@ L["Click to pick an addon"] = "Haz clic para elegir un addon"
 L["Combine Addon Buttons:"] = "Unir botones de addons:"
 L["One Window:"] = "Una ventana:"
 L["What to do with your bags"] = "Qué hacer con tus bolsas"
-L["ADDONS"] = "ADDONS"
 L["ARROW"] = "FLECHA"
 L["Effects:"] = "Efectos:"
 L["Full"] = "Completo"
@@ -1323,12 +1321,18 @@ L["Sells for Now:"] = "Se vende ahora por:"
 L["Usual Price:"] = "Precio habitual:"
 L["Sell Anyway moves it to Auction for this visit."] = "Vender igual lo manda a la subasta en esta visita."
 
+-- The settings every Blackthornes addon shares (2026-11-16).
+L["All Addons"] = "Todos los addons"
+L["ALL BLACKTHORNES ADDONS"] = "TODOS LOS ADDONS BLACKTHORNES"
+L["WHAT'S NEW"] = "NOVEDADES"
+L["After Updates:"] = "Tras actualizar:"
+L["Show With Motion"] = "Mostrar con movimiento"
+
 -- ======================================================================
 -- Settings rows that share one row
 -- ======================================================================
 L["Bag Helpers:"] = "Ayudas de bolsas:"
 L["Free Space"] = "Espacio libre"
-L["After Updates"] = "Tras actualizar"
 L["Show Tooltip Lines:"] = "Líneas de descripción:"
 L["Butler"] = "Butler"
 L["Trash Can"] = "Papelera"
@@ -1352,3 +1356,6 @@ L["Butler bar off."] = "Barra de Butler desactivada."
 L["show or hide the Butler bar under vendors, mailboxes and the bank"] = "mostrar u ocultar la barra de Butler bajo vendedores, buzones y el banco"
 L["Marks on Bags"] = "Marcas en las bolsas"
 L["Shows Butler's marks on your bags: sell, mail, upgrade, quest and needed items."] = "Muestra las marcas de Butler en tus bolsas: vender, enviar, mejora, misión y objetos que necesitas."
+
+-- The settings every Blackthornes addon shares (2026-11-16).
+L["Show"] = "Mostrar"

@@ -47,7 +47,6 @@ L["MAIL AND BANK"] = "COURRIER ET BANQUE"
 L["YOUR LISTS"] = "TES LISTES"
 L["GOLD FUND"] = "CAISSE D'OR"
 L["ONE CHARACTER"] = "UN PERSONNAGE"
-L["WINDOWS"] = "FENÊTRES"
 L["All Characters"] = "Tous les personnages"
 L["Butler's settings have a window of their own."] = "Les réglages de Butler ont leur propre fenêtre."
 L["Open Butler settings"] = "Ouvrir les réglages de Butler"
@@ -1201,7 +1200,6 @@ L["Click to pick an addon"] = "Clique pour choisir un addon"
 L["Combine Addon Buttons:"] = "Regrouper les boutons d'addons :"
 L["One Window:"] = "Fenêtre unique :"
 L["What to do with your bags"] = "Que faire de tes sacs"
-L["ADDONS"] = "ADDONS"
 L["ARROW"] = "FLÈCHE"
 L["Effects:"] = "Effets :"
 L["Full"] = "Complet"
@@ -1324,12 +1322,18 @@ L["Sells for Now:"] = "Se vend maintenant :"
 L["Usual Price:"] = "Prix habituel :"
 L["Sell Anyway moves it to Auction for this visit."] = "Vendre quand même l'envoie aux enchères pour cette visite."
 
+-- The settings every Blackthornes addon shares (2026-11-16).
+L["All Addons"] = "Tous les addons"
+L["ALL BLACKTHORNES ADDONS"] = "TOUS LES ADDONS BLACKTHORNES"
+L["WHAT'S NEW"] = "NOUVEAUTÉS"
+L["After Updates:"] = "Après une mise à jour :"
+L["Show With Motion"] = "Afficher avec animation"
+
 -- ======================================================================
 -- Settings rows that share one row
 -- ======================================================================
 L["Bag Helpers:"] = "Aides de sacs :"
 L["Free Space"] = "Place libre"
-L["After Updates"] = "Après mise à jour"
 L["Show Tooltip Lines:"] = "Lignes d'infobulle :"
 L["Butler"] = "Butler"
 L["Trash Can"] = "Poubelle"
@@ -1353,3 +1357,6 @@ L["Butler bar off."] = "Barre de Butler désactivée."
 L["show or hide the Butler bar under vendors, mailboxes and the bank"] = "afficher ou masquer la barre de Butler sous les marchands, les boîtes aux lettres et la banque"
 L["Marks on Bags"] = "Marques sur les sacs"
 L["Shows Butler's marks on your bags: sell, mail, upgrade, quest and needed items."] = "Affiche les marques de Butler sur tes sacs : à vendre, à envoyer, amélioration, quête et objets utiles."
+
+-- The settings every Blackthornes addon shares (2026-11-16).
+L["Show"] = "Afficher"

@@ -43,7 +43,6 @@ L["MAIL AND BANK"] = "ПОЧТА И БАНК"
 L["YOUR LISTS"] = "ТВОИ СПИСКИ"
 L["GOLD FUND"] = "ЗОЛОТОЙ ЗАПАС"
 L["ONE CHARACTER"] = "ОДИН ПЕРСОНАЖ"
-L["WINDOWS"] = "ОКНА"
 L["All Characters"] = "Все персонажи"
 L["Butler's settings have a window of their own."] = "У настроек Butler есть своё окно."
 L["Open Butler settings"] = "Открыть настройки Butler"
@@ -1154,7 +1153,6 @@ L["Click to pick an addon"] = "Нажми, чтобы выбрать аддон"
 L["Combine Addon Buttons:"] = "Объединить кнопки аддонов:"
 L["One Window:"] = "Одно окно:"
 L["What to do with your bags"] = "Что делать с вещами в сумках"
-L["ADDONS"] = "АДДОНЫ"
 L["ARROW"] = "СТРЕЛКА"
 L["Effects:"] = "Эффекты:"
 L["Full"] = "Полностью"
@@ -1277,12 +1275,18 @@ L["Sells for Now:"] = "Продаётся сейчас:"
 L["Usual Price:"] = "Обычная цена:"
 L["Sell Anyway moves it to Auction for this visit."] = "«Всё равно продать» отправит это на аукцион в этот раз."
 
+-- The settings every Blackthornes addon shares (2026-11-16).
+L["All Addons"] = "Все аддоны"
+L["ALL BLACKTHORNES ADDONS"] = "ВСЕ АДДОНЫ BLACKTHORNES"
+L["WHAT'S NEW"] = "ЧТО НОВОГО"
+L["After Updates:"] = "После обновления:"
+L["Show With Motion"] = "Показывать с анимацией"
+
 -- ======================================================================
 -- Settings rows that share one row
 -- ======================================================================
 L["Bag Helpers:"] = "Помощники для сумок:"
 L["Free Space"] = "Свободное место"
-L["After Updates"] = "После обновлений"
 L["Show Tooltip Lines:"] = "Строки в подсказках:"
 L["Butler"] = "Butler"
 L["Trash Can"] = "Мусорка"
@@ -1306,3 +1310,6 @@ L["Butler bar off."] = "Панель Butler выключена."
 L["show or hide the Butler bar under vendors, mailboxes and the bank"] = "показать или скрыть панель Butler под торговцами, почтой и банком"
 L["Marks on Bags"] = "Метки на сумках"
 L["Shows Butler's marks on your bags: sell, mail, upgrade, quest and needed items."] = "Показывает метки Butler на твоих сумках: продать, отправить, улучшение, задание и нужные предметы."
+
+-- The settings every Blackthornes addon shares (2026-11-16).
+L["Show"] = "Показывать"
