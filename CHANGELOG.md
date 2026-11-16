@@ -4,6 +4,20 @@ Versions follow [semantic versioning](https://semver.org): the middle number
 moves for new behaviour, the last for fixes alone. The newest version goes at
 the top; a release is refused if its version has no section here.
 
+## 1.18.0
+
+For WoW: Forever (interface 16001). `/reload` is not enough: files were added, so close the game fully and start it again after updating.
+
+- **Butler Bar.** A new Butler Bar: box on the Errands page of Settings (also `/bbutler bar`) puts a slim bar under the vendor, mailbox and bank windows with the Sell, Fill Mail and bank buttons. Open brings up the Butler window. It starts off.
+- **Marks on Bags.** A new Marks on Bags box beside Bag Helpers on the General page of Settings paints Butler's marks on the game's own bag squares. It starts off.
+- **Keep page.** Settings has a Keep page, and one Open Butler At row.
+- **Small boxes.** Buy More, Bags Full and Keep Across Characters line up. Each can be dragged and keeps its spot, and one that would open on top of another opens beside it.
+- **All Addons page.** The settings every Blackthornes addon shares (Window Style, Text Size, Effects, Mute All Sounds, Combine Addon Buttons, One Window, Window Spots, Sister Addons and What's New) now sit on one All Addons page, behind the gear on the one window's rail. The two What's New boxes became one After Updates: drop-down. Nothing was renamed and your choices carry over.
+- **One window docks in more places.** It sits on the free side of the game's window, shrinks only a little when there is no room, and lets you resize it by hand with the grip. Each addon keeps its own height when you switch between them.
+- **Shared shelves.** Small pieces you never dragged, such as arrows, bars and cards, line up on a top or right shelf instead of starting on one spot.
+- **More docking places.** The one window also docks at the bank, stable, character sheet and profession window.
+- **Fixes.** Fixed the item menu checking its typing on every frame. Butler gives window height back when the gold goals shrink.
+
 ## 1.17.1
 
 For WoW: Forever (interface 16001). `/reload` is enough after updating.
