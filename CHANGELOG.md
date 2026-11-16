@@ -4,6 +4,12 @@ Versions follow [semantic versioning](https://semver.org): the middle number
 moves for new behaviour, the last for fixes alone. The newest version goes at
 the top; a release is refused if its version has no section here.
 
+## 1.17.1
+
+For WoW: Forever (interface 16001). `/reload` is enough after updating.
+
+- **Fixes.** The Butler window stays on the screen, and the gold goals scroll when the window is tall.
+
 ## 1.17.0
 
 For WoW: Forever (interface 16001). `/reload` is enough after updating.
