@@ -74,6 +74,7 @@ UI\WhoHas.lua
 UI\VerdictTip.lua
 UI\MailContents.lua
 UI\Trash.lua
+UI\Boxes.lua
 UI\SwapWhenFull.lua
 
 Logic\Selling.lua

@@ -2172,6 +2172,18 @@ page joined the Bank Alt page. The Bags window hangs Bags, Bank and
 Everyone below it like every window's tabs, its chips are house chips, and
 an empty list offers Clear Search.
 
+## Small boxes line up
+
+The owner said build it (2026-11-16, from a mockup). Buy More, Bags Full
+(Swap When Full) and Keep Across Characters sign up in `UI/Boxes.lua`
+(`Boxes.Add(frame, key)`): each can be dragged and keeps its spot
+(`SharedWindow.KeepSpot`, `windowSpots["butler.buymany"]`,
+`["butler.swapwhenfull"]`, `["butler.keepacross"]`; never rename), and one
+placed by itself on top of another that is up moves beside it
+(`Boxes.Settle`, right when there is room, else left). A dragged box is
+never moved (`Boxes.Kept`). No new words. Tested in `tools/test_boxes.lua`.
+Not yet seen in game.
+
 # Standing rules in full
 
 Moved word for word from CLAUDE.md (2026-11-16), which keeps a short form of each.
