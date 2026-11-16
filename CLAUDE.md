@@ -54,8 +54,9 @@ that touches one.
   `muteSoundsAt` (never rename).
 - **Window spots.** Windows remember where they were dragged
   (`SharedWindow.KeepSpot(frame, key)`, `windowSpots`,
-  `oneWindowDockSpots`; never rename). `UI/SharedWindow.lua` and
-  `UI/WhatsNew.lua` are FILE_VERSION 7.
+  `oneWindowDockSpots`; never rename). `UI/SharedWindow.lua` is
+  FILE_VERSION 8 (shelves, dock places, All Addons gear) and
+  `UI/WhatsNew.lua` FILE_VERSION 7.
 - **Writing for players.** Plain, warm, sixth grade. Short sentences. No
   hype, no filler, no em-dashes, no questions to the reader. deDE changes
   with the English, in the "du" voice. `About.NOTE` is the owner's own.
