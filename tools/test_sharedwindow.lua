@@ -30,9 +30,15 @@
 --      lets it go back to the addon open before.
 --  12. Dragged while docked it keeps that spot by the game's window; a small
 --      window keeps where it was dragged; Set Default puts every one back.
+--  13. The free side: it docks on the right when that fits, on the left
+--      when only that fits, and shrinks to the bigger gap when neither
+--      does (never under the smallest size); undocked it has its own size.
+--  14. Two game windows at once (the character sheet at a vendor, heard by
+--      HookScript): it docks beside the newest and goes back beside the
+--      other when that one closes.
 
 local NAMES = { "CreateFrame", "UIParent", "C_Timer", "time", "BlackthornesWindow",
-    "UISpecialFrames", "GetCursorPosition", "GetTime", "MailFrame", "OpenMailFrame", "MerchantFrame", "AuctionHouseFrame", "Enum" }
+    "UISpecialFrames", "GetCursorPosition", "GetTime", "MailFrame", "OpenMailFrame", "MerchantFrame", "AuctionHouseFrame", "Enum", "CharacterFrame", "ContainerFrame1" }
 local saved = {}
 for _, name in ipairs(NAMES) do saved[name] = _G[name] end
 
@@ -334,7 +340,8 @@ Enum = nil
 assert(SW.InteractionPlace(17) == "mail" and SW.InteractionPlace(5) == "vendor"
     and SW.InteractionPlace(7) == "trainer" and SW.InteractionPlace(21) == "auction",
     "the numbers stand in without an Enum")
-assert(SW.InteractionPlace(8) == nil and SW.InteractionPlace("mail") == nil, "a bank or junk is no place")
+assert(SW.InteractionPlace(8) == "bank" and SW.InteractionPlace(22) == "stable", "the bank and stable too")
+assert(SW.InteractionPlace(3) == nil and SW.InteractionPlace("mail") == nil, "a gossip or junk is no place")
 Enum = { PlayerInteractionType = { MailInfo = 40, Merchant = 41, Trainer = 42, Auctioneer = 43 } }
 assert(SW.InteractionPlace(40) == "mail" and SW.InteractionPlace(17) == nil, "the client's Enum wins")
 now = now + 5
@@ -440,6 +447,65 @@ do
     SW.ResetAllSpots()
     assert(dbA.windowSpots == nil, "Set Default forgets it")
     assert(small.point[1] == "CENTER" and small.point[5] == 40, "and puts it back where it started")
+end
+
+-- 13. The free side.
+do
+    local savedW, savedS = UIParent.width, UIParent.GetEffectiveScale
+    MerchantFrame.left, MerchantFrame.right, MerchantFrame.top = 100, 400, 650
+    UIParent.width = 5000
+    now = now + 5
+    SW.Arrived("vendor")
+    SW.Open("alpha")
+    assert(SW.Docked() and frame.point[4] == 400 + SW.DOCK_GAP, "room on the right: the right")
+    local w = frame:GetWidth()
+    local own = SW.Clamp(dbA.oneWindowScale) / 100
+    MerchantFrame.left, MerchantFrame.right = 2000, 2300
+    UIParent.width = 2350
+    assert(SW.Keep() and frame.point[4] == 2000 - w - SW.DOCK_GAP, "room on the left only: the left")
+    MerchantFrame.left, MerchantFrame.right = 300, 600
+    UIParent.width = 900
+    assert(SW.Keep() and math.abs(frame.point[4] - (600 * own / frame.scale + SW.DOCK_GAP)) < 1e-6,
+        "neither fits: the right, the bigger gap on a tie")
+    assert(frame.scale < own and frame.scale >= SW.SCALE_MIN / 100, "shrunk to fit, not under the smallest size")
+    MerchantFrame.left, MerchantFrame.right = 20, 40
+    UIParent.width = 60
+    SW.Keep()
+    assert(math.abs(frame.scale - SW.SCALE_MIN / 100) < 1e-9, "never under the smallest size")
+    UIParent.width = 5000
+    assert(SW.Keep() and frame.scale == own, "room again: its own size")
+    MerchantFrame.left, MerchantFrame.right = 1000, 1300
+    ContainerFrame1 = Object()
+    ContainerFrame1.left = 1500
+    assert(SW.Keep() and frame.point[4] == 1000 - w - SW.DOCK_GAP, "bags open on the right: the left")
+    ContainerFrame1:Hide()
+    assert(SW.Keep() and frame.point[4] == 1300 + SW.DOCK_GAP, "bags shut: the right again")
+    ContainerFrame1 = nil
+    MerchantFrame.left, MerchantFrame.right = 2000, 2300
+    UIParent.width = 2350
+    SW.Keep()
+    -- 14. The character sheet opens at the vendor.
+    CharacterFrame = Object()
+    CharacterFrame.left, CharacterFrame.right, CharacterFrame.top = 50, 380, 700
+    SW.HookPlaces()
+    SW.HookPlaces()
+    assert(#CharacterFrame.hooks.OnShow == 1, "the sheet is watched once")
+    UIParent.width = 5000
+    CharacterFrame:Fire("OnShow")
+    assert(SW.Place() == "character" and SW.Docked() and frame.point[4] == 380 + SW.DOCK_GAP,
+        "beside the character sheet")
+    CharacterFrame:Fire("OnHide")
+    assert(SW.Place() == "vendor" and SW.Docked() and frame.point[4] == 2300 + SW.DOCK_GAP,
+        "back beside the vendor")
+    SW.Close()
+    SW.Left("vendor")
+    assert(not SW.Docked() and SW.Place() == nil, "the vendor closes: no place")
+    CharacterFrame:Fire("OnShow")
+    assert(SW.Place() == "character" and not SW.Docked(), "closed, the sheet docks nothing")
+    CharacterFrame:Fire("OnHide")
+    assert(SW.Place() == nil, "and lets go")
+    UIParent.width = savedW
+    SW.Open("gamma")
 end
 
 SW.SetOn(false)

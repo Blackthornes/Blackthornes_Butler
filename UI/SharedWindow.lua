@@ -48,7 +48,7 @@ local ADDON, ns = ...
 local SharedWindow = {}
 ns.SharedWindow = SharedWindow
 
-local FILE_VERSION = 7
+local FILE_VERSION = 8
 SharedWindow.FILE_VERSION = FILE_VERSION
 
 local PLATE = "Blackthornes"
@@ -91,6 +91,18 @@ SharedWindow.PLACES = {
         interaction = { "Merchant", 5 } },
     trainer = { show = "TRAINER_SHOW", hide = "TRAINER_CLOSED", frames = { "ClassTrainerFrame" },
         interaction = { "Trainer", 7 } },
+    -- Added 2026-11-16 (the owner said build it, from the UI cleanup
+    -- mockups): the bank, the stable, and the character sheet, which has
+    -- no event of its own and is heard by HookScript on its frame (`hook`,
+    -- read only, never shown, hidden or moved).
+    bank = { show = "BANKFRAME_OPENED", hide = "BANKFRAME_CLOSED", frames = { "BankFrame" },
+        interaction = { "Banker", 8 } },
+    stable = { show = "PET_STABLE_SHOW", hide = "PET_STABLE_CLOSED", frames = { "PetStableFrame", "StableFrame" },
+        interaction = { "StableMaster", 22 } },
+    character = { hook = "CharacterFrame", frames = { "CharacterFrame" } },
+    -- The profession window (Tradeskills' craft pane moves in as a tab).
+    profession = { show = "TRADE_SKILL_SHOW", hide = "TRADE_SKILL_CLOSE",
+        frames = { "ProfessionsFrame", "TradeSkillFrame" } },
 }
 
 --- The place a PLAYER_INTERACTION_MANAGER_FRAME_HIDE kind closes, or nil.
@@ -99,9 +111,11 @@ function SharedWindow.InteractionPlace(kind)
     local enum = rawget(_G, "Enum")
     local types = type(enum) == "table" and rawget(enum, "PlayerInteractionType") or nil
     for key, place in pairs(SharedWindow.PLACES) do
-        local name, fallback = place.interaction[1], place.interaction[2]
-        local value = type(types) == "table" and rawget(types, name) or fallback
-        if value == kind then return key end
+        if place.interaction then
+            local name, fallback = place.interaction[1], place.interaction[2]
+            local value = type(types) == "table" and rawget(types, name) or fallback
+            if value == kind then return key end
+        end
     end
     return nil
 end
@@ -709,7 +723,8 @@ local function Tell()
     for _, fn in ipairs(hub.watchers or {}) do pcall(fn) end
 end
 
---- The place open now ("auction", "mail", "vendor" or "trainer"), or nil.
+--- The place open now ("auction", "mail", "vendor", "trainer", "bank",
+--- "stable", "character" or "profession"), or nil.
 function SharedWindow.Place()
     return hub.place
 end
@@ -745,21 +760,81 @@ function SharedWindow.Refit()
     SharedWindow.Lay(frame, true, not row)
 end
 
+--- How wide the screen is in screen pixels, or nil when the client won't say.
+local function ScreenWidth()
+    local ok, width = pcall(function() return UIParent:GetWidth() * UIParent:GetEffectiveScale() end)
+    if ok and type(width) == "number" and width > 0 then return width end
+    return nil
+end
+
+-- The game's bags, read only: open on the right of the game's window they
+-- take that room, so the window goes left of it (the mockup's vendor).
+SharedWindow.BAG_FRAMES = { "ContainerFrameCombinedBags" }
+for i = 1, 13 do SharedWindow.BAG_FRAMES[#SharedWindow.BAG_FRAMES + 1] = "ContainerFrame" .. i end
+
+--- Where the room right of the game's window ends, in screen pixels: the
+--- screen's edge, or the left edge of the nearest open bag past it.
+local function RightEdge(gameRight, screen)
+    if not screen then return nil end
+    local edge = screen
+    for _, name in ipairs(SharedWindow.BAG_FRAMES) do
+        local bag = rawget(_G, name)
+        if type(bag) == "table" then
+            local ok, shown, left, scale = pcall(function()
+                return bag:IsShown(), bag:GetLeft(), bag:GetEffectiveScale()
+            end)
+            if ok and shown and type(left) == "number" and type(scale) == "number" then
+                local x = left * scale
+                if x >= gameRight - 1 and x < edge then edge = x end
+            end
+        end
+    end
+    return edge
+end
+
+--- Which side of the game's window the one window goes, and the scale it
+--- takes there (2026-11-16, the owner said build it): the right when it
+--- fits, as before; else the left when that fits (bags open on the
+--- right); else the side with more room, scaled down to fit the gap, never
+--- under SCALE_MIN. All in screen pixels. Gives side ("right" or "left")
+--- and the effective scale to use.
+function SharedWindow.PickSide(gameLeft, gameRight, width, ours, reach, screen)
+    reach = reach or 0
+    local need = (width + reach) * ours + SharedWindow.DOCK_GAP
+    if not screen or type(gameLeft) ~= "number" then return "right", ours end
+    local rightRoom = screen - gameRight
+    local leftRoom = gameLeft
+    if rightRoom >= need then return "right", ours end
+    if leftRoom >= need then return "left", ours end
+    local side = leftRoom > rightRoom and "left" or "right"
+    local room = math.max(leftRoom, rightRoom) - SharedWindow.DOCK_GAP
+    local fit = room / (width + reach)
+    -- Never smaller than the size grip's smallest size.
+    local least = ours * SharedWindow.SCALE_MIN / Clamp(Read("oneWindowScale"))
+    if fit < least then fit = least end
+    if fit > ours then fit = ours end
+    return side, fit
+end
+
 --- Put the window beside the game's window, by screen position: its left
---- edge (portrait and all) just past the game's right edge, the tops level.
+--- edge (portrait and all) just past the game's right edge, the tops level,
+--- or on the left when only that side has room (see PickSide).
 local function Beside(frame, game)
-    local ok, right, top, scale = pcall(function()
-        return game:GetRight(), game:GetTop(), game:GetEffectiveScale()
+    local ok, left, right, top, scale = pcall(function()
+        return game:GetLeft(), game:GetRight(), game:GetTop(), game:GetEffectiveScale()
     end)
     if not ok or type(right) ~= "number" or type(top) ~= "number" then return false end
     if type(scale) ~= "number" or scale <= 0 then scale = 1 end
+    -- Measured at the window's own size each time, so it grows back when
+    -- the room comes back; Place puts the saved size back on undocking.
+    pcall(frame.SetScale, frame, Clamp(Read("oneWindowScale")) / 100)
     local okOurs, ours = pcall(frame.GetEffectiveScale, frame)
     if not okOurs or type(ours) ~= "number" or ours <= 0 then ours = 1 end
     local reach = 0
     local trim = rawget(frame, "trim")
     if trim and ns.Titanforged and ns.Titanforged.Reach then
-        local okReach, left = pcall(ns.Titanforged.Reach, trim)
-        if okReach and type(left) == "number" then reach = left end
+        local okReach, edge = pcall(ns.Titanforged.Reach, trim)
+        if okReach and type(edge) == "number" then reach = edge end
     end
     frame:ClearAllPoints()
     local spots = Read("oneWindowDockSpots")
@@ -768,6 +843,24 @@ local function Beside(frame, game)
         -- Dragged here by hand before: the same spot from the game's window.
         frame:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT",
             (right * scale + spot.x) / ours, (top * scale + spot.y) / ours)
+        return true
+    end
+    local width = SharedWindow.FullSize(frame)
+    local side, fit = "right", ours
+    if type(width) == "number" and width > 0 then
+        side, fit = SharedWindow.PickSide(type(left) == "number" and left * scale or nil,
+            right * scale, width, ours, reach, RightEdge(right * scale, ScreenWidth()))
+    end
+    if fit < ours then
+        local okScale, own = pcall(frame.GetScale, frame)
+        if okScale and type(own) == "number" and own > 0 then
+            pcall(frame.SetScale, frame, own * fit / ours)
+            ours = fit
+        end
+    end
+    if side == "left" then
+        frame:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT",
+            math.max(0, left * scale / ours - width - reach - SharedWindow.DOCK_GAP / ours), top * scale / ours)
     else
         frame:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT",
             right * scale / ours + reach + SharedWindow.DOCK_GAP, top * scale / ours)
@@ -805,7 +898,8 @@ local function Spot(frame, game)
     local ok, key = pcall(function()
         return table.concat({ tostring(game), tostring(game:GetRight()), tostring(game:GetTop()),
             tostring(game:GetEffectiveScale()), tostring(frame:GetWidth()),
-            tostring(frame:GetEffectiveScale()) }, ":")
+            tostring(frame:GetScale()), tostring(RightEdge(game:GetRight() * game:GetEffectiveScale(),
+            ScreenWidth())) }, ":")
     end)
     return ok and key or nil
 end
@@ -1010,9 +1104,23 @@ end
 --- One of the game's windows opened.
 function SharedWindow.Arrived(key)
     if not SharedWindow.PLACES[key] then return end
+    -- Two can be open at once (the character sheet at a vendor): each is
+    -- kept with when it opened, and the newest is the one docked beside.
+    hub.opened = hub.opened or {}
+    hub.openCount = (hub.openCount or 0) + 1
+    hub.opened[key] = hub.openCount
+    local was = hub.place
     hub.place = key
     Follow(SharedWindow.PLACES[key])
     local frame = hub.frame
+    if hub.docked and was ~= key and frame and frame:IsShown() then
+        if C_Timer and C_Timer.After then
+            C_Timer.After(0, function() SharedWindow.Dock(true) end)
+        else
+            SharedWindow.Dock(true)
+        end
+        return
+    end
     if not (frame and frame:IsShown()) or hub.docked then return end
     -- Up already: what it showed before is what it goes back to. An addon
     -- that opened it a moment ago (Butler at the vendor) left a note of
@@ -1034,8 +1142,21 @@ end
 --- The game's window closed: back to its own place, and, a moment later,
 --- back to the addon that was open before.
 function SharedWindow.Left(key)
+    if hub.opened then hub.opened[key] = nil end
     if hub.place ~= key then return end
     hub.place = nil
+    -- Another game window still open: dock beside that one instead.
+    local newest, best = nil, -1
+    for other, order in pairs(hub.opened or {}) do
+        if order > best then newest, best = other, order end
+    end
+    if newest then
+        hub.place = newest
+        if hub.docked then
+            if not SharedWindow.Dock(true) then SharedWindow.Undock() end
+        end
+        return
+    end
     local back = hub.back
     hub.back = nil
     if hub.docked then SharedWindow.Undock() end
@@ -1056,18 +1177,45 @@ function SharedWindow.Left(key)
     end
 end
 
+--- Places with no event of their own (the character sheet) are heard by
+--- HookScript on the game's frame, read only, once for every copy. A hook
+--- set by an older copy is never doubled: the shared table remembers it.
+function SharedWindow.HookPlaces()
+    hub.hookedPlaces = hub.hookedPlaces or {}
+    for key, place in pairs(SharedWindow.PLACES) do
+        local name = place.hook
+        local game = name and rawget(_G, name)
+        if name and not hub.hookedPlaces[name] and type(game) == "table"
+            and type(game.HookScript) == "function" then
+            local function Act(open)
+                local drawer = SharedWindow.Drawer()
+                local api = drawer and drawer.api or SharedWindow
+                if open then pcall(api.Arrived, key) else pcall(api.Left, key) end
+            end
+            local okShow = pcall(game.HookScript, game, "OnShow", function() Act(true) end)
+            local okHide = pcall(game.HookScript, game, "OnHide", function() Act(false) end)
+            if okShow and okHide then hub.hookedPlaces[name] = true end
+        end
+    end
+end
+pcall(SharedWindow.HookPlaces)
+
 -- Every copy listens; only the one that draws acts.
 if CreateFrame then
     local events = CreateFrame("Frame")
     local which = {}
     for key, place in pairs(SharedWindow.PLACES) do
-        which[place.show] = { key = key, open = true }
-        which[place.hide] = { key = key, open = false }
-        pcall(events.RegisterEvent, events, place.show)
-        pcall(events.RegisterEvent, events, place.hide)
+        if place.show then
+            which[place.show] = { key = key, open = true }
+            which[place.hide] = { key = key, open = false }
+            pcall(events.RegisterEvent, events, place.show)
+            pcall(events.RegisterEvent, events, place.hide)
+        end
     end
     pcall(events.RegisterEvent, events, "PLAYER_INTERACTION_MANAGER_FRAME_HIDE")
+    pcall(events.RegisterEvent, events, "PLAYER_LOGIN")
     events:SetScript("OnEvent", function(_, event, kind)
+        if event == "PLAYER_LOGIN" then SharedWindow.HookPlaces() return end
         if not IsDrawer() then return end
         if event == "PLAYER_INTERACTION_MANAGER_FRAME_HIDE" then
             local ok, key = pcall(SharedWindow.InteractionPlace, kind)
