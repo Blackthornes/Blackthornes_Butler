@@ -23,6 +23,14 @@ tell a friend: no hype, no questions to the reader, no exclamation marks
 outside the thanks line, no dashes as punctuation, no "now you can". The
 tool prints a note for a shipped line that reads like an advert.
 
+## 1.19.0
+
+- A new key opens and closes Butler's bag window.
+- Butler can keep the materials your leveling still needs.
+- Butler can put things away on your bank alt for you.
+- Starred recipes show up at vendors and trainers with Buy or Learn.
+- Various bug fixes for Butler.
+
 ## 1.18.1
 
 Fixes and changes:

@@ -5,6 +5,13 @@
 local _, ns = ...
 
 ns.WHATS_NEW = {
+    { version = "1.19.0", lines = {
+        "A new key opens and closes Butler's bag window.",
+        "Butler can keep the materials your leveling still needs.",
+        "Butler can put things away on your bank alt for you.",
+        "Starred recipes show up at vendors and trainers with Buy or Learn.",
+        "Various bug fixes for Butler.",
+    } },
     { version = "1.18.0", lines = {
         "A slim Butler Bar can sit under the vendor, mailbox and bank windows.",
         "Butler can mark the game's bag squares.",
@@ -14,9 +21,5 @@ ns.WHATS_NEW = {
     { version = "1.17.0", lines = {
         "A new Reset This Item line is in the right-click menu of every item. It clears every choice you made for that item.",
         "Butler Bags now opens in a fight.",
-    } },
-    { version = "1.16.0", lines = {
-        "Butler tells you why an item should wait, and Sell Anyway sells it when you disagree.",
-        "A new Craft Details box on the General page adds what a craft makes and needs to the tooltip. It starts off.",
     } },
 }
