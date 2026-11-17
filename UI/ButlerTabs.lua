@@ -483,6 +483,15 @@ end
 ButlerTabs.host = {
     enter = function(area) ButlerTabs:Enter(area) end,
     leave = function() ButlerTabs:Leave() end,
+    -- Asked by the one window as a vendor opens while it shows another
+    -- addon: turn to Butler only when Butler would come up there itself
+    -- ("Vendors" ticked, the Butler Bar not taking its place).
+    wants = function(place)
+        if place ~= "vendor" then return false end
+        if not (ns.db and ns.db.openAtVendor) then return false end
+        if ns.PlaceBar and ns.PlaceBar.IsOn and ns.PlaceBar:IsOn() then return false end
+        return true
+    end,
 }
 
 --- A Butler tab is asked to open. With "One Window:" ticked and Butler not
