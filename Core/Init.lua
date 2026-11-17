@@ -329,6 +329,12 @@ local DEFAULTS = {
     -- the owner asked 2026-10-13 for it off by default). Never rename it.
     altUpgrades = false,
 
+    -- Materials an orange or yellow craft on Tradeskills' Level Up list
+    -- still uses stay under Keep only when this is ticked
+    -- (Verdicts:KeepLevelUpOn; the owner, 2026-11-17, off by default).
+    -- Never rename it.
+    keepLevelUp = false,
+
     -- On the character Tradeskills names as the disenchanter, every green
     -- it can break goes under Disenchant, whatever it is worth
     -- (Verdicts:GreensHere; the owner asked 2026-10-14 for it off by

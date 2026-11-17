@@ -123,6 +123,29 @@ function Sisters:CraftFor(itemID, carried)
         perItem = perItem, needs = Lines(answer.needs), others = Lines(answer.others) }
 end
 
+--------------------------------------------------------------------------------
+-- Keep Level Up Materials (a player asked, the owner said build it, 2026-11-17)
+--------------------------------------------------------------------------------
+
+local levelUpMap, levelUpVersion
+
+--- The profession an orange or yellow craft on Tradeskills' Level Up list
+--- uses `itemID` for (the client's name), or nil. Tradeskills is asked
+--- once per look (Verdicts.version), not once per item.
+function Sisters:LevelUpFor(itemID)
+    local butler = Sisters.Butler("ts")
+    if not (butler and type(butler.LevelUpMaterials) == "function") then return nil end
+    local version = ns.Verdicts and ns.Verdicts.version
+    if not levelUpMap or levelUpVersion ~= version then
+        local ok, answer = pcall(butler.LevelUpMaterials, butler)
+        levelUpMap = ok and type(answer) == "table" and answer or {}
+        levelUpVersion = version
+    end
+    local name = levelUpMap[itemID]
+    if type(name) ~= "string" or name == "" then return nil end
+    return name
+end
+
 --- Queue at least `crafts` of a recipe in Tradeskills.
 -- @return true, or false
 function Sisters:QueueCraft(recipeID, crafts)

@@ -1367,3 +1367,12 @@ L["Buy a recipe on your wishlist"] = "Kauf ein Rezept von deiner Wunschliste"
 L["Learn a recipe on your wishlist"] = "Lern ein Rezept von deiner Wunschliste"
 L["Learn"] = "Lernen"
 L["Learn at %d"] = "Lernen ab %d"
+
+-- Keep Level Up Materials (2026-11-17)
+L["LEVELING PROFESSIONS"] = "LEVELN VON BERUFEN"
+L["Keep Level Up Materials:"] = "Level-Up-Materialien behalten:"
+L["Keeps the materials for crafts that still give you skill points, in every profession. Cooking and First Aid too. Needs Blackthornes Tradeskills."] = "Behält die Materialien für Rezepte, die dir noch Fertigkeitspunkte geben, in jedem Beruf. Auch Kochkunst und Erste Hilfe. Braucht Blackthornes Tradeskills."
+L["Used to level your %s"] = "Brauchst du zum Leveln von %s"
+L["keep materials for leveling your professions (levelup on|off)"] = "Materialien zum Leveln deiner Berufe behalten (levelup on|off)"
+L["Butler keeps your Level Up materials now."] = "Butler behält jetzt deine Level-Up-Materialien."
+L["Butler stopped keeping your Level Up materials."] = "Butler behält deine Level-Up-Materialien nicht mehr."

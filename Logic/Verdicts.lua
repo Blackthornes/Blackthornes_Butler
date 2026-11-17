@@ -33,6 +33,9 @@
 --   6. Farmer: a goal of this character needs it   Keep
 --   7. Tradeskills: the craft queue needs it here  Keep
 --      ... or an alt needs it for theirs           Mail
+--   7b. Tradeskills: an orange or yellow craft on its
+--      Level Up list uses it, with "Keep Level Up
+--      Materials:" ticked (keepLevelUp)            Keep
 --   8. Pets: the pet eats it                       Keep
 --   8b. Tradeskills: bought on the auction house
 --      to disenchant                              Disenchant, or Mail to
@@ -289,7 +292,7 @@ end
 Verdicts.FIRST = { "sets", "quests" }
 Verdicts.DEFAULT_ORDER = {
     "keepHere", "keepList", "bankList", "mailList", "lists", "buyback", "noValue", "sellList", "auctionList", "disenchantList", "ammo",
-    "upgrades", "altCrafts", "goals", "queue", "altUpgrades", "petFood",
+    "upgrades", "altCrafts", "goals", "queue", "levelUp", "altUpgrades", "petFood",
     "bought", "levelEnch", "greensHere", "disenchanter", "mailHabit",
     "sellHabit", "greys", "bankAlt", "sellBelow",
 }
@@ -300,6 +303,8 @@ Verdicts.LAST = { "best", "look" }
 local OWN_SWITCH = {
     altUpgrades = { on = function() return Verdicts:AltUpgradesOn() end,
         set = function(on) Verdicts:SetAltUpgrades(on) end },
+    levelUp = { on = function() return Verdicts:KeepLevelUpOn() end,
+        set = function(on) Verdicts:SetKeepLevelUp(on) end },
     greensHere = { on = function() return Verdicts:DisenchantGreensOn() end,
         set = function(on) Verdicts:SetDisenchantGreens(on) end },
     -- These need an amount or a character, so their own page turns them on.
@@ -788,6 +793,20 @@ end
 
 function STEPS.queue(self, c)
     return FromSister(c, self:KeptQueue(Said(c), c.entry))
+end
+
+-- Keep Level Up Materials (a player asked, the owner said build it,
+-- 2026-11-17): a material an orange or yellow craft on Tradeskills' Level
+-- Up list still uses stays, in every profession this character has. It
+-- comes after the craft queue, so an alt's queued craft still gets its
+-- share in the mail, and the player's Always sell and Always mail lists
+-- come before it. Once the craft turns green it goes on down the rules.
+function STEPS.levelUp(self, c)
+    if not self:KeepLevelUpOn() then return nil end
+    local profession = Sisters:LevelUpFor(c.itemID)
+    if not profession then return nil end
+    local unit = Unit(c)
+    return "keep", L.Format("Used to level your %s", profession), unit, unit ~= nil
 end
 
 function STEPS.altUpgrades(self, c)
@@ -1291,6 +1310,19 @@ end
 function Verdicts:SetAltUpgrades(on)
     if not ns.db then return end
     ns.db.altUpgrades = on and true or false
+    self:Changed(true)
+end
+
+--- Whether Butler keeps what Tradeskills' Level Up list still needs: off
+--- unless ticked (`keepLevelUp`, account wide; the owner, 2026-11-17).
+--- Never rename it.
+function Verdicts:KeepLevelUpOn()
+    return ns.db ~= nil and ns.db.keepLevelUp == true
+end
+
+function Verdicts:SetKeepLevelUp(on)
+    if not ns.db then return end
+    ns.db.keepLevelUp = on and true or false
     self:Changed(true)
 end
 
@@ -2050,6 +2082,16 @@ ns.commands.craft = { fn = function(arg)
     Verdicts:SetCraftPays(on)
     ns.Print(L["Craft When It Pays More:"] .. " " .. (on and L["On"] or L["Off"]))
 end }
+
+ns.RegisterCommand("levelup", L["keep materials for leveling your professions (levelup on|off)"], function(arg)
+    arg = (arg or ""):lower():match("^%s*(.-)%s*$")
+    local on
+    if arg == "on" then on = true elseif arg == "off" then on = false
+    else on = not Verdicts:KeepLevelUpOn() end
+    Verdicts:SetKeepLevelUp(on)
+    ns.Print(on and L["Butler keeps your Level Up materials now."]
+        or L["Butler stopped keeping your Level Up materials."])
+end)
 
 -- Upgrades held back from a character (right-click a Mail upgrade row).
 -- Undo lets them go again; nothing else is deleted.

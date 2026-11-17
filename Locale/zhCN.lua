@@ -1366,3 +1366,12 @@ L["Buy a recipe on your wishlist"] = "购买心愿单上的配方"
 L["Learn a recipe on your wishlist"] = "学习心愿单上的配方"
 L["Learn"] = "学习"
 L["Learn at %d"] = "%d 级可学"
+
+-- Keep Level Up Materials (2026-11-17)
+L["LEVELING PROFESSIONS"] = "提升专业"
+L["Keep Level Up Materials:"] = "保留升级材料："
+L["Keeps the materials for crafts that still give you skill points, in every profession. Cooking and First Aid too. Needs Blackthornes Tradeskills."] = "保留仍能给你技能点的配方所用材料，所有专业都算。烹饪和急救也算。需要 Blackthornes Tradeskills。"
+L["Used to level your %s"] = "用来提升你的%s"
+L["keep materials for leveling your professions (levelup on|off)"] = "保留提升专业用的材料（levelup on|off）"
+L["Butler keeps your Level Up materials now."] = "Butler 现在会保留你的升级材料。"
+L["Butler stopped keeping your Level Up materials."] = "Butler 不再保留你的升级材料。"

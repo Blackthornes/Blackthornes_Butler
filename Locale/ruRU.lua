@@ -1321,3 +1321,12 @@ L["Buy a recipe on your wishlist"] = "Купи рецепт из списка ж
 L["Learn a recipe on your wishlist"] = "Выучи рецепт из списка желаний"
 L["Learn"] = "Выучить"
 L["Learn at %d"] = "Выучить на %d"
+
+-- Keep Level Up Materials (2026-11-17)
+L["LEVELING PROFESSIONS"] = "ПРОКАЧКА ПРОФЕССИЙ"
+L["Keep Level Up Materials:"] = "Хранить материалы прокачки:"
+L["Keeps the materials for crafts that still give you skill points, in every profession. Cooking and First Aid too. Needs Blackthornes Tradeskills."] = "Хранит материалы для рецептов, которые ещё дают очки навыка, во всех профессиях. Кулинария и Первая помощь тоже. Нужен Blackthornes Tradeskills."
+L["Used to level your %s"] = "Нужно для прокачки: %s"
+L["keep materials for leveling your professions (levelup on|off)"] = "хранить материалы для прокачки профессий (levelup on|off)"
+L["Butler keeps your Level Up materials now."] = "Butler теперь хранит твои материалы для прокачки."
+L["Butler stopped keeping your Level Up materials."] = "Butler больше не хранит твои материалы для прокачки."
