@@ -47,7 +47,7 @@ and retail read the quantity differently. `/bbutler probe` lists which of
 these the client has and what weapon and ammo bag Butler sees; whether
 Forever keeps ammo and quivers at all is still to be seen.
 
-## The one window's docking (not yet seen in game)
+## The one window's docking
 
 `UI/SharedWindow.lua` (2026-10-30) docks the one window beside the game's
 own windows by screen position only; it never moves, hides or writes a
