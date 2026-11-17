@@ -1,4 +1,4 @@
--- Mail to a character on the player's other account (Trent, 2026-11-07,
+-- Mail to a character on the player's other account (the owner, 2026-11-07,
 -- a player with three accounts). With Tradeskills' Share Craft Queue
 -- ticked on both accounts, Tradeskills can name a linked character in
 -- Advise's mailTo and in a mail step of Jobs(). Butler takes the name as
