@@ -1049,6 +1049,7 @@ function SettingsUI:SyncBankAlt()
     end
     if controls.bankAltAuctions then controls.bankAltAuctions:SetChecked(BankAlt:AuctionsOn()) end
     if controls.bankAltFullStacks then controls.bankAltFullStacks:SetChecked(BankAlt:FullStacksOn()) end
+    if controls.bankAltStore then controls.bankAltStore:SetChecked(BankAlt:StoreOn()) end
 end
 
 --- The Tradeskills list picked on the Lists page: { name, id, items }, or
@@ -1583,6 +1584,15 @@ function SettingsUI:BuildPages()
         ns.BankAlt:SetFullStacks(checked)
     end, false)
     controls.bankAltFullStacks:SetPoint("TOPLEFT", CONTROL_X, -2)
+
+    -- Store in Bank (the owner said build it, 2026-11-17): on the bank alt
+    -- itself, the ticked kinds go under Bank for Move to bank.
+    local storeRow = pages:Row("bankalt", 2, L["Store in Bank:"],
+        L["On the bank alt, everything ticked above goes in the bank when you click Move to bank."])
+    controls.bankAltStore = Widgets.CreateCheckbox(storeRow, L["On"], function(checked)
+        ns.BankAlt:SetStore(checked)
+    end, false)
+    controls.bankAltStore:SetPoint("TOPLEFT", CONTROL_X, -2)
 
     -- Gold: the gold fund (the owner asked 2026-10-11). The usual amount on
     -- the left, one character's own on the right. Logic/Funds.lua.
