@@ -1,0 +1,7 @@
+<!-- The game loads this file by itself; it is not listed in the TOC.
+     The Butler Bags key (UI/BagWindow.lua) clicks a hidden secure button
+     that opens and closes Butler's bag window, whether Use Butler Bags is
+     on or off. -->
+<Bindings>
+    <Binding name="CLICK BlackthornesButlerBagsKey:LeftButton" header="BLACKTHORNESBUTLER" category="ADDONS"/>
+</Bindings>

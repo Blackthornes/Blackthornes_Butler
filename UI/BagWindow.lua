@@ -297,6 +297,7 @@ function BagWindow:Secure()
     local frame = self:Build()
     self:RestorePosition()
     self:MakeButtons(function() BagWindow:SecureClose() end)
+    if self.key then pcall(self.key.SetFrameRef, self.key, "bags", frame) end
 
     local wrap = rawget(_G, "SecureHandlerWrapScript")
     if type(wrap) ~= "function" then return end
@@ -339,6 +340,88 @@ function BagWindow:SecureClose()
     cover:Hide()
     self.closeCover = cover
 end
+
+--------------------------------------------------------------------------------
+-- The Butler Bags key
+--------------------------------------------------------------------------------
+
+-- A key on the game's Key Bindings page (Bindings.xml, under Blackthornes
+-- Butler) opens and closes this window on its own, whether Use Butler Bags
+-- is on or off, so a player can keep another bag addon on the game's bag
+-- key. With the box off nothing is hooked or veiled: the game's bags stay
+-- as they are. The key clicks a hidden secure button. Out of a fight its
+-- click opens or closes the window as /bbutler bags does; in a fight, once
+-- the game guards the window, the button's own guarded line does it.
+BagWindow.KEY_BUTTON = "BlackthornesButlerBagsKey"
+BagWindow.BINDING = "CLICK " .. BagWindow.KEY_BUTTON .. ":LeftButton"
+BagWindow.KEY_NAME = L["Butler Bags"]
+_G.BINDING_HEADER_BLACKTHORNESBUTLER = L["Blackthornes Butler"]
+_G["BINDING_NAME_" .. BagWindow.BINDING] = BagWindow.KEY_NAME
+
+local KEY_BODY = [[
+    if not PlayerInCombat() then return end
+    local button = self
+    local bags = button:GetFrameRef("bags")
+    if not (bags and bags:IsProtected()) then return end
+    if bags:IsShown() then bags:Hide() else bags:Show() end
+]]
+
+--- True when a key is bound to Butler Bags.
+function BagWindow.KeyBound()
+    local fn = rawget(_G, "GetBindingKey")
+    if type(fn) ~= "function" then return false end
+    local ok, key = pcall(fn, BagWindow.BINDING)
+    return ok and type(key) == "string" and key ~= ""
+end
+
+--- What a press of the key does from addon code. In a fight a guarded
+--- window was already shown or hidden by the button's guarded line.
+function BagWindow:KeyPressed()
+    if self:Locked() then return end
+    self:Toggle()
+    self:ReadyKey()
+end
+
+--- The key's hidden button, made as the addon loads.
+function BagWindow:MakeKey()
+    if self.key then return self.key end
+    local ok, key = pcall(CreateFrame, "Button", BagWindow.KEY_BUTTON, UIParent, "SecureHandlerClickTemplate")
+    if not (ok and type(key) == "table") then return nil end
+    key:Hide()
+    -- A binding clicks on the key going down and coming up; registered for
+    -- the release only, with useOnKeyDown off, it acts once a press.
+    pcall(key.RegisterForClicks, key, "AnyUp")
+    pcall(key.SetAttribute, key, "useOnKeyDown", false)
+    pcall(key.SetAttribute, key, "_onclick", KEY_BODY)
+    if type(key.HookScript) == "function" then
+        pcall(key.HookScript, key, "OnClick", function() BagWindow:KeyPressed() end)
+    end
+    self.key = key
+    if self.frame then pcall(key.SetFrameRef, key, "bags", self.frame) end
+    return key
+end
+
+--- Ready the window for the key before any fight: built, placed, its
+--- squares made, and handed to the key's guarded line. Only once a key is
+--- bound, so nothing is built for a player who never sets one. Never in a
+--- fight; it waits for one to end.
+function BagWindow:ReadyKey()
+    if self.keyReady or not (self.key and BagWindow.KeyBound()) then return end
+    if InCombat() then
+        self.keyWaiting = true
+        return
+    end
+    self.keyWaiting = nil
+    self.keyReady = true
+    local frame = self:Build()
+    if not self.secured then
+        self:RestorePosition()
+        self:MakeButtons(function() BagWindow:SecureClose() end)
+    end
+    pcall(self.key.SetFrameRef, self.key, "bags", frame)
+end
+
+BagWindow:MakeKey()
 
 --------------------------------------------------------------------------------
 -- Size and place
@@ -1628,9 +1711,13 @@ function BagWindow:OnEnable()
         self:Hook()
         self:Secure()
     end
+    -- A key set for Butler Bags readies the window for it.
+    self:ReadyKey()
+    ns.RegisterEvent(self, "UPDATE_BINDINGS", function() BagWindow:ReadyKey() end)
     ns.RegisterEvent(self, "PLAYER_REGEN_ENABLED", function()
         if BagWindow.closeCover then BagWindow.closeCover:Hide() end
         if BagWindow.secureWaiting then BagWindow:Secure() end
+        if BagWindow.keyWaiting then BagWindow:ReadyKey() end
         if BagWindow.coverWaiting then BagWindow:CoverGame() end
         if BagWindow.uncoverWaiting then BagWindow:UncoverGame() end
         if BagWindow.layoutWaiting then BagWindow:Changed() end

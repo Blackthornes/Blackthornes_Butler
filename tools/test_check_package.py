@@ -57,7 +57,9 @@ expect("the Claude notes are refused", with_({"CLAUDE.md": "# Notes\n"}), False)
 expect("the Claude notes are refused anywhere",
        with_({"Core/CLAUDE.md": "# Notes\n"}), False)
 expect("a file the addon does not ship is refused",
-       with_({"Bindings.xml": "<Bindings>\n</Bindings>\n"}), False)
+       with_({"Notes.xml": "<Ui>\n</Ui>\n"}), False)
+expect("the key bindings file is allowed",
+       with_({"Bindings.xml": "<Bindings>\n</Bindings>\n"}), True)
 expect("a probe is allowed", with_({"Probe/Probe.lua": "local _, ns = ...\n"}), True)
 expect("the translations are allowed",
        with_({"Locale/Locale.lua": "local _, ns = ...\n", "Locale/deDE.lua": "local _, ns = ...\n"}), True)
