@@ -819,6 +819,11 @@ function Jobs:Lines()
     -- At a vendor with something for the queue, a Buy row even when no
     -- step here names a vendor material, since Tradeskills' own button
     -- over the vendor window stands down while Butler is loaded.
+    -- Recipes on Tradeskills' wishlist that this vendor or trainer teaches
+    -- (Logic/Wishlist.lua, 2026-11-17), one row each.
+    if ns.Wishlist then
+        for _, row in ipairs(ns.Wishlist:Rows()) do rows[#rows + 1] = row end
+    end
     local buy = self:VendorStep(plan.here)
     if buy then rows[#rows + 1] = { type = "job", step = buy } end
     -- Nothing here can be done yet: the one who can goes first.

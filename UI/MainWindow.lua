@@ -421,6 +421,8 @@ function UI.RowAction(data)
         ns.Jobs:BuyAtVendor()
     elseif data.type == "questbuy" then
         ns.QuestBuy:Click(data.item)
+    elseif data.type == "wishlist" then
+        ns.Wishlist:Click(data.entry)
     elseif data.type == "skillup" then
         ns.SkillUp:Queue(data.entry)
     elseif data.type == "job" and data.step and data.step.kind == "quest" then
@@ -554,6 +556,7 @@ function UI.DrawRow(row, data)
     if data.type == "jobnext" then return UI.UpdateNextRow(row, data) end
     if data.type == "questbuy" then return UI.UpdateQuestBuyRow(row, data) end
     if data.type == "skillup" then return UI.UpdateSkillUpRow(row, data) end
+    if data.type == "wishlist" then return UI.UpdateWishlistRow(row, data) end
     if data.type == "train" or data.type == "trainnext" or data.type == "trainalt" then
         return UI.UpdateTrainRow(row, data)
     end
@@ -674,6 +677,27 @@ function UI.UpdateQuestBuyRow(row, data)
     if label then
         row.action:SetText(label)
         row.action.tooltipText = tip
+        row.action:Show()
+    end
+end
+
+--- A recipe on Tradeskills' wishlist that the open vendor or trainer
+--- teaches (Logic/Wishlist.lua), with Buy or Learn.
+function UI.UpdateWishlistRow(row, data)
+    local entry = data.entry
+    local title, detail = ns.Wishlist.Text(entry)
+    row.fold:Hide()
+    row.icon:Show()
+    local icon = entry.itemID and Items.Call({ "C_Item.GetItemIconByID", "GetItemIcon" }, entry.itemID)
+    row.icon:SetTexture(icon or [[Interface\Icons\INV_Scroll_03]])
+    row.name:SetTextColor(Theme.Unpack("text"))
+    row.name:SetText(title)
+    row.reason:SetText(detail)
+    if entry.short then row.reason:SetTextColor(Theme.Unpack("accent")) end
+    row.worth:SetText("")
+    if ns.Wishlist.Clickable(entry) then
+        row.action:SetText(ns.Wishlist.ButtonText(entry))
+        row.action.tooltipText = nil
         row.action:Show()
     end
 end
@@ -1054,7 +1078,7 @@ function UI:Clicked(data, button)
         return self:ShowJobMenu(data)
     end
     if data.type == "ammo" or data.type == "job" or data.type == "jobnext" or data.type == "questbuy"
-        or data.type == "skillup"
+        or data.type == "skillup" or data.type == "wishlist"
         or data.type == "train" or data.type == "trainnext" or data.type == "trainalt" then return end
     if button == "RightButton" and data.type ~= "gold" then
         self:ShowMenu(data)
@@ -1130,6 +1154,18 @@ function UI:Enter(row, data)
             1, 1, 1, true)
         GameTooltip:AddLine(L["Queue adds one to your craft queue. Butler then lists what you still need to buy."],
             Theme.Unpack("muted"))
+        GameTooltip:Show()
+        return
+    end
+    if data.type == "wishlist" then
+        local entry = data.entry
+        local shown = entry.kind == "vendor" and entry.index
+            and pcall(GameTooltip.SetMerchantItem, GameTooltip, entry.index)
+        if not shown then
+            local title, detail = ns.Wishlist.Text(entry)
+            GameTooltip:AddLine(title, Theme.Unpack("accent"))
+            GameTooltip:AddLine(detail, 1, 1, 1, true)
+        end
         GameTooltip:Show()
         return
     end
@@ -2060,14 +2096,15 @@ function UI:Refresh(force)
 
     if ns.Ammo then ns.Ammo:Offer() end
     if ns.Jobs and ns.Jobs.VendorOffer then ns.Jobs:VendorOffer() end
+    if ns.Wishlist then ns.Wishlist:Read() end
     local search = self:BagSearch()
-    local key = ("%d:%d:%s:%d:%d:%d:%d:%d:%s:%s:%s:%s:%s"):format(ns.QuestBuy and ns.QuestBuy.version or 0,
+    local key = ("%d:%d:%s:%d:%d:%d:%d:%d:%s:%s:%s:%s:%s:%s"):format(ns.QuestBuy and ns.QuestBuy.version or 0,
         ns.Quests and ns.Quests.version or 0,
         tostring(ns.Quests and ns.Quests.auctionOpen), ns.ClassTraining and ns.ClassTraining.version or 0,
         ns.Bags.version, ns.Verdicts.version,
         ns.Funds and ns.Funds.version or 0, ns.Jobs and ns.Jobs.version or 0, tostring(ns.Errands.mailOpen),
         tostring(ns.Selling and ns.Selling.merchantOpen), tostring(ns.Ammo and ns.Ammo.offerKey),
-        ns.Jobs and ns.Jobs.vendorKey or "", search)
+        ns.Jobs and ns.Jobs.vendorKey or "", ns.Wishlist and ns.Wishlist.key or "", search)
     if force or key ~= self.drawnKey then
         -- The same search keeps its place; a new one starts at the top.
         local keep = self.drawnKey ~= nil and search == self.drawnBagSearch

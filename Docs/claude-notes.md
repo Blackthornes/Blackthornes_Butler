@@ -122,6 +122,10 @@ _G.BlackthornesTS.Butler:Lists()
   -- { { name, id, items = { [itemID] = want } } } and its version: the
   --   player's shopping lists, for the bank alt and "Your Tradeskills
   --   lists"; id stays the same through a rename
+_G.BlackthornesTS.Butler:WishlistHere()
+  -- { { recipeID, name, itemID, price, needs, short, kind = "vendor" or
+  --   "trainer", index } }, or nil: the starred recipes the open vendor or
+  --   trainer teaches (see "Recipes on the wishlist")
 _G.BlackthornesEquipment.Butler:Advise(link, bag, slot)
   -- { upgrade = "now" | "later" | nil, gain, sell (its bag coin), tool,
   --   alt = { key (a GUID), gain, level } when it is an upgrade for
@@ -2585,3 +2589,24 @@ TSM Sold a Day). The same in every addon; keep them the same.
   (`UI/SharedWindow.lua` FILE_VERSION 12, in all five).
 - **Three tries, then ask.** A check still failing after three rounds stops
   the thread. Never skip, loosen or rerun a test to get green.
+
+## Recipes on the wishlist (2026-11-17)
+
+The owner said build it, from a mockup with the words he approved, in
+Tradeskills and here. Tradeskills keeps each character's recipe wishlist
+("Recipe Wishlist:", off unless ticked there) and reads the open vendor or
+trainer. `Logic/Wishlist.lua` asks
+`_G.BlackthornesTS.Butler:WishlistHere()` on each `UI:Refresh` while a
+vendor (`Selling.merchantOpen`) or trainer (`ClassTraining.trainerOpen`) is
+open, checks each field, and `Jobs:Lines` puts one row a recipe before the
+Buy from a vendor row: "Buy a recipe on your wishlist" with Buy, or "Learn
+a recipe on your wishlist" with Learn, naming the recipe and its price, or
+"Learn at 145" when the skill is short (a trainer's then has no button).
+Buy and Learn call `BuyMerchantItem(index, 1)` and `BuyTrainerService(index)`
+themselves, one a click, after checking that place still holds the recipe;
+never in combat. Butler never changes the wishlist. `Wishlist.key` is in the
+window's redraw key; the window looks again `Wishlist.LOOK_AGAIN` after a
+vendor or trainer event, since Tradeskills reads the vendor a moment after
+it opens. While this module is loaded (`_G.BlackthornesButler.Wishlist`),
+Tradeskills hides its own card under the window. Without Tradeskills,
+nothing shows. Tested in `tools/test_wishlist.lua`. Not yet seen in game.
