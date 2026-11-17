@@ -1661,6 +1661,28 @@ Saved, account wide, never rename them: `bagWindow` (off unless ticked),
 `bagPoint`, `bagRelPoint`, `bagX`, `bagY`. Tested in
 `tools/test_bagwindow.lua`. Not yet seen in game.
 
+### The Butler Bags key
+
+The owner pressed Start Fix (2026-11-17): a key on the
+game's Key Bindings page, "Butler Bags" under a "Blackthornes Butler"
+header (`Bindings.xml`, new; the game loads it by itself, it is not in the
+TOC, and `tools/check_package.py` allows it), opens and closes the Bags
+window on its own, whether "Use Butler Bags:" (`bagWindow`) is on or off,
+so a player can keep another bag addon on the game's bag key. With the box
+off nothing is hooked or veiled; the game's bags are left as they are
+(`CoverGame` and the `OnShow` hook already ask `On()`). The key clicks a
+hidden `SecureHandlerClickTemplate` button, `BlackthornesButlerBagsKey`
+(`BagWindow.KEY_BUTTON`, `BagWindow.BINDING`; never rename either, players'
+bindings are saved by that name), registered for `AnyUp` with
+`useOnKeyDown` off. Out of a fight its Lua click runs `BagWindow:KeyPressed`
+(`Toggle`); in a fight, once the window is guarded, its `_onclick` line
+shows or hides it, and `KeyPressed` stays out (`Locked()`). The window is
+readied for the key (`BagWindow:ReadyKey`: built, placed, squares made,
+handed to the button as frame ref `bags`) only once a key is bound
+(`GetBindingKey`, checked at enable and on `UPDATE_BINDINGS`), and waits
+for a fight to end. `Secure()` hands the frame to the button too. Tested in
+`tools/test_bagkey.lua`. Not yet seen in game.
+
 ## Butler's voice
 
 The owner asked (2026-10-11) for Moroes, Karazhan's butler, to answer when
