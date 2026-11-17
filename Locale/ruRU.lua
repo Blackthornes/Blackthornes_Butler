@@ -797,7 +797,10 @@ L["Talk to a vendor first."] = "Сначала поговори с торгов�
 L["This vendor doesn't sell anything called %s."] = "Этот торговец не продаёт ничего с названием %s."
 
 -- Settings (2026-10-15)
-L["Windows, tooltips and text size"] = "Окна, подсказки и размер текста"
+L["WINDOWS"] = "ОКНА"
+L["ALL ADDONS"] = "ВСЕ АДДОНЫ"
+L["The Butler window, its size and voice, and your bags"] = "Окно Butler, его размер и голос, и твои сумки"
+L["Lines Butler adds to item tooltips"] = "Строки, которые Butler добавляет в подсказки предметов"
 L["Opens Butler at every vendor. Nothing sells until you click Sell."] = "Открывает Butler у каждого торговца. Ничего не продаётся, пока ты не нажмёшь «Продать»."
 L["Buy More:"] = "Купить больше:"
 L["Shift-click an item at a vendor to buy as many as you want, like 200."] = "Щёлкни по предмету у торговца с Shift, чтобы купить сколько хочешь, например 200."

@@ -1963,6 +1963,13 @@ button's lines, no new words. Never name the bar addon that asked. Tested in
 
 ## The settings pages (from Tradeskills)
 
+**The shared layout (the owner said build it, 2026-11-17, all five
+addons):** own pages first (ERRANDS, KEEP, ORDER, BANK ALT, GOLD), then
+TOOLTIPS, WINDOWS, ALL ADDONS, ABOUT, the same names and order in every
+addon. The tooltip lines left General for a `tooltips` page; General is
+labelled WINDOWS but keeps its key `general`, so a saved page still
+opens. The BAGS rows stay on WINDOWS, column 2.
+
 The owner asked (2026-10-09) for Tradeskills' Settings upgrade in Pets,
 Equipment and Farmer, and Butler copied it. `UI/SettingsPages.lua` is the
 same file in all four (a fix to it belongs in all four): category pages

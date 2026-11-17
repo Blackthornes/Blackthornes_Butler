@@ -816,7 +816,10 @@ L["Talk to a vendor first."] = "Sprich zuerst mit einem Händler."
 L["This vendor doesn't sell anything called %s."] = "Dieser Händler verkauft nichts namens %s."
 
 -- Settings (2026-10-15)
-L["Windows, tooltips and text size"] = "Fenster, Tooltips und Textgröße"
+L["WINDOWS"] = "FENSTER"
+L["ALL ADDONS"] = "ALLE ADDONS"
+L["The Butler window, its size and voice, and your bags"] = "Das Butler-Fenster, seine Größe und Stimme und deine Taschen"
+L["Lines Butler adds to item tooltips"] = "Zeilen, die Butler in Gegenstands-Tooltips zeigt"
 L["Opens Butler at every vendor. Nothing sells until you click Sell."] =
     "Öffnet Butler bei jedem Händler. Verkauft wird erst, wenn du auf Verkaufen klickst."
 L["Buy More:"] = "Mehr kaufen:"

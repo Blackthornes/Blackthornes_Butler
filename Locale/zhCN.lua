@@ -815,7 +815,10 @@ L["Talk to a vendor first."] = "先和一个商人说话。"
 L["This vendor doesn't sell anything called %s."] = "这个商人不卖叫 %s 的东西。"
 
 -- Settings (2026-10-15)
-L["Windows, tooltips and text size"] = "窗口、鼠标提示和文字大小"
+L["WINDOWS"] = "窗口"
+L["ALL ADDONS"] = "全部插件"
+L["The Butler window, its size and voice, and your bags"] = "Butler 窗口、它的大小和声音，以及你的背包"
+L["Lines Butler adds to item tooltips"] = "Butler 在物品鼠标提示中添加的行"
 L["Opens Butler at every vendor. Nothing sells until you click Sell."] =
     "每次找商人时都打开 Butler。你点出售之前什么都不会卖。"
 L["Buy More:"] = "买更多："

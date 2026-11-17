@@ -97,6 +97,16 @@ do
         suite.check("on All Addons: " .. label, onAll[label] and not onGeneral[label])
     end
     suite.check("Window Size stays Butler's own", onGeneral["Window Size:"] and not onAll["Window Size:"])
+    -- One layout for all five (the owner said build it, 2026-11-17).
+    local words = {}
+    for _, def in ipairs(pages.defs) do words[#words + 1] = def.text end
+    suite.check("the pages run own first, then the shared ones", table.concat(words, ", ")
+        == "ERRANDS, KEEP, ORDER, BANK ALT, GOLD, TOOLTIPS, WINDOWS, ALL ADDONS, ABOUT", table.concat(words, ", "))
+    local onTips = {}
+    for _, row in ipairs(pages.pages.tooltips.rows) do onTips[row.labelText] = true end
+    suite.check("tooltip lines have their own page", onTips["Show Tooltip Lines:"]
+        and not onGeneral["Show Tooltip Lines:"])
+    suite.check("the bags stay on Windows", onGeneral["Use Butler Bags:"] == true)
     local after = controls.whatsNewAfter
     after:Sync()
     suite.check("After Updates reads what is saved", after:GetValue() == "motion", after:GetValue())
