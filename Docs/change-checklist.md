@@ -73,7 +73,7 @@ Why: "invalid key to next" when a worker started another worker (2026-11).
 ## Player words
 Lines: L\[\s*"|L\.Format\(
 Check: Plain, warm, sixth grade, no em-dashes, hype or questions
-  (`python tools/check_house_rules.py`). New words need Trent's yes. deDE and
+  (`python tools/check_house_rules.py`). New words need the owner's yes. deDE and
   the other locales change with the English.
 Why: The writing rule holds for every word a player reads.
 
@@ -105,7 +105,7 @@ Why: Hand edits were lost at the next fold-in.
 Lines: [Dd]efaults?\s*=|DEFAULTS
 Check: Big new features start off. Never change a setting the player
   already chose.
-Why: Standing rule from Trent.
+Why: Standing rule from the owner.
 
 ## Errands to a character (Butler)
 Lines: IsMe|SendMail|SetSendMailMoney|Logout|errand
@@ -116,7 +116,7 @@ Why: Butler filled a mail to itself (2026-10-11).
 ## Names on screen (Butler)
 Lines: Ambiguate|ShortName|:sub\(1,
 Check: Never shorten a character's last name. Grow or wrap to fit.
-Why: Standing rule from Trent.
+Why: Standing rule from the owner.
 
 ## This realm and side (Butler)
 Lines: GetRealmName|UnitFactionGroup|faction
@@ -125,6 +125,6 @@ Why: Standing rule.
 
 ## Private files (Butler)
 Lines: WTF|SavedVariables|token|apikey|api_key
-Check: Never commit saved variables, tokens or anything from Trent's machine
+Check: Never commit saved variables, tokens or anything from the owner's machine
   (tools/check_private_files.py).
 Why: Keep his data safe.

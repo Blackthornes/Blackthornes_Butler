@@ -1,13 +1,12 @@
 # Butler UI cleanup (2026-11-16)
 
 The owner asked for a UI cleanup in every addon: fix bugs, fix what makes
-threads run out of room, and recommend (with mockups) how to stop windows
+sessions run out of room, and recommend (with mockups) how to stop windows
 overlapping and how to tidy Settings. This is Butler's part. Recommendations
 are not built until he says yes, one at a time. Every new player word below
 needs his approval and goes into all six languages.
 
-Mockups: `/mnt/project-files/reviews/ui-cleanup/butler/` (the project's
-shared folder), one PNG per idea, named by number.
+Mockups: one PNG per idea, named by number, kept outside the repo.
 
 ## What was checked and fixed
 
@@ -34,18 +33,18 @@ Not fixed here, found while checking (they are recommendations 3 and 4):
 - Buy More, Swap When Full and Keep Across Characters share one fallback
   spot (the middle, 80 up), so two at once sit on top of each other.
 
-## What ate thread room, and the fix
+## What made sessions run out of room, and the fix
 
-- All the repos' CLAUDE.md files load into every thread of the project,
+- All the repos' CLAUDE.md files load into every session,
   about 100 KB, and more than half is the same standing rules six times
   over. Butler's is now about 6 KB: each rule in short, the full words moved
   word for word to "Standing rules in full" in `Docs/claude-notes.md`.
-  **For the coordinator:** the same trim in Farmer, Tradeskills, Equipment,
-  Pets and Farmer Retail would save about 50 KB in every thread.
+  The same trim in Farmer, Tradeskills, Equipment, Pets and Farmer Retail
+  would save about 50 KB in every session.
 - `tools/runtests.py` printed about 13 KB a run and `syntaxcheck.py` 5 KB.
   Both take `-q` now (failures and the total only), and `runtests.py -q
   word` runs only the suites with that word in their name. CI is unchanged.
-  **For the coordinator:** `runtests.py` is the same file in every repo;
+  `runtests.py` is the same file in every repo;
   the change belongs in all of them.
 - The big files list in CLAUDE.md had old sizes (Settings had grown from
   1387 to 2050 lines). Updated.
@@ -78,7 +77,7 @@ Size: medium. Butler only.
 ### 3. Dock on the free side, and at the bank (`3-free-side-and-bank.png`)
 
 In `UI/SharedWindow.lua` (the same file in all five addons, so this goes
-through the coordinator): add the bank to `PLACES`; before placing, measure
+into all five together): add the bank to `PLACES`; before placing, measure
 the room right and left of the game's window and pick the side that fits;
 if neither does, scale down to the gap (never below the smallest window
 size). A spot dragged by hand still wins (`oneWindowDockSpots`). No new
@@ -118,9 +117,9 @@ Window Style, Text Size, Window Size, Effects, Mute All Sounds, Combine
 Addon Buttons, One Window, Window Spots, Sister Addons and the What's New
 rows are the same in all five General pages. In the one window they could
 live on one shared page on the rail. New words: "ALL BLACKTHORNES ADDONS".
-Size: large. All five addons, so it goes through the coordinator.
+Size: large. All five addons together.
 
 ## Suggested order
 
 4 (small, clear win), then 3, then 1 and 2, then Settings 5 and 6. 7 last,
-once the other addons' threads have reported.
+once the other addons have reported.

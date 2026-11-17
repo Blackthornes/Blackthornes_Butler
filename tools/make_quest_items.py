@@ -1,10 +1,10 @@
 """Write Data/QuestItems.lua: the items quests ask you to collect.
 
-    python tools/make_quest_items.py <pfQuest folder> <folder with ItemSparse.csv>
+    python tools/make_quest_items.py <spawn database folder> <folder with ItemSparse.csv>
 
 The quest log names what a quest wants ("Murloc Eye: 3/8") but not its item
 ID, and the auction house is searched by ID. So Butler ships, for each
-Classic quest, the IDs of the items it collects (pfQuest's db/quests.lua,
+Classic quest, the IDs of the items it collects (the spawn database's db/quests.lua,
 each quest's "obj" items), kept only when the Forever client's game tables
 say the item can be traded: its bonding is none, on equip or on use, never
 bind on pickup or quest. Quest-only items can't be bought, so they are left

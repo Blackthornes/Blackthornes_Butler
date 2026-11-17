@@ -66,7 +66,7 @@ drawn at the window's scale. Saved and never
 renamed: `alwaysKeep`, `alwaysSell`, `alwaysBank` (`[itemID] = true`),
 `alwaysMail` (`[itemID]` = a character's short name), `sellTest`,
 `sellBelow` (copper, nil when off),
-`openAtVendor`, `openAtMailbox`, `openAtBank` (account), `folded` (per character). Not yet seen in game.
+`openAtVendor`, `openAtMailbox`, `openAtBank` (account), `folded` (per character).
 
 Rules from the plan that hold from the first feature on:
 
@@ -179,7 +179,7 @@ say no for one that can, 2026-10-15), casts the spell by its client name
 why it shows or not, and casts once a click: its PreClick aims the spell at the next
 slot (bought first) through `target-bag`/`target-slot`, re-reading the slot
 and its verdict first, never a "/use" macro (that equips when the cast does
-not start). Hidden, its aim emptied, in combat. Not yet seen in game.
+not start). Hidden, its aim emptied, in combat.
 
 ## Upgrades kept: one copy
 
@@ -248,7 +248,7 @@ It waits too when Tradeskills' Sell list would refuse it as a loss
 (`belowCost`, what one costs to make, set only while "Recommend selling at
 a loss" is off there; a player saw Butler say Auction for a craft
 Tradeskills called a loss, 2026-10-13). A better way (disenchant) still
-wins. Tested in `tools/test_waitprice.lua`. Not yet seen in game.
+wins. Tested in `tools/test_waitprice.lua`.
 
 Why it waits and Sell Anyway (the owner said build it from a mockup,
 2026-11-14): the wait verdict's extra carries `wait = { short, cost, now,
@@ -315,7 +315,7 @@ Tested in `tools/test_alwaysauction.lua`.
 
 ## Reset This Item
 
-Trent asked (2026-11-15): one right-click line clears every choice the
+The owner asked (2026-11-15): one right-click line clears every choice the
 player made for an item. The item menu's old "Let Butler Decide" row is
 now **Reset This Item** (`menu.decide`), shown on every item (the
 owner, 2026-11-15); with nothing to reset
@@ -357,9 +357,9 @@ best price still wins. The Craft heading's **Queue** button
 makes, and says "Added N crafts to your Tradeskills queue." Nothing is
 made, sold or moved by it. Tested in `tools/test_craftpays.lua`. If
 Tradeskills changes either call, change `Sisters:CraftFor` and
-`Sisters:QueueCraft` too. Not yet seen in game.
+`Sisters:QueueCraft` too.
 
-Craft Details (Trent said build it from a mockup, 2026-11-14): with
+Craft Details (the owner said build it from a mockup, 2026-11-14): with
 "Craft Details:" ticked under TOOLTIPS on the General page
 (`craftDetails`, account wide, off unless ticked, never rename it;
 `/bbutler craftdetails [on|off]`, typed only), Butler's tooltip line for a
@@ -368,8 +368,8 @@ Craft row reads "Butler: Craft PRODUCT" and a grey line under it says
 `others`), "Needs N NAME." (its `needs`) and "About X more than selling
 it." (`VerdictTip.CraftWhy`). Direct crafts only. `CraftFor` gives
 `others = { { itemID, count } }` since that day; without it the "With"
-part is left out. Tested in `tools/test_craftdetails.lua`. Not yet seen
-in game.
+part is left out. Tested in `tools/test_craftdetails.lua`.
+
 
 ## Disenchant greens here
 
@@ -520,7 +520,7 @@ folded, the ammo, jobs and gold lines left out while it has words, and
 each view keeps its own words. Tested in `tools/test_bagsearch.lua`. The Sell button stays off in this
 view, and a vendor opens the window on Your bags. Tradeskills'
 `CLAUDE.md` lists `Holdings` under "What Butler calls here"; if it
-changes, change `Logic/Everyone.lua` too. Not yet seen in game.
+changes, change `Logic/Everyone.lua` too.
 
 ## At the mailbox and the bank
 
@@ -577,7 +577,7 @@ Tradeskills' `UI/QueueMailPanel.lua` reads it.
   asks it once more last.
   Tradeskills' `FillMail` refuses it too, and its third return, the full
   name filled in, is what the chat line says.
-  A character on the player's other account can be named too (Trent,
+  A character on the player's other account can be named too (the owner,
   2026-11-07, a player with three accounts): with Tradeskills' Share
   Craft Queue ticked on both accounts, its `mailTo` and a mail step in
   `Jobs()` can name a linked character (same realm and side) whose own
@@ -656,7 +656,7 @@ Both bank moves use `C_Container.UseContainerItem` (the selling test found
 it works from addon code), one stack every `Errands.STEP`, each slot read
 again first; a stack that does not move means the other side is full, and
 the run stops and says so. Nothing in combat. The bank is read only for a
-click. Not yet seen in game.
+click.
 
 ## The name picker
 
@@ -675,8 +675,8 @@ there is nothing to list (without Tradeskills only LAST MAILED). The last
 name is kept on `MAIL_SEND_SUCCESS` from a SendMail post-hook, not on
 `MAIL_FAILED`. "Name Picker:" under MAIL AND BANK on the Errands page.
 Saved, account wide, never rename them: `namePicker` (nil reads as off, so only a tick turns it on) and
-`namePickerLast`. Tested in `tools/test_mailpicker.lua`. Not yet seen in
-game.
+`namePickerLast`. Tested in `tools/test_mailpicker.lua`.
+
 
 ## The gold fund
 
@@ -704,7 +704,7 @@ read after the send holding less gold than it (`mailMoney`, `mailAt` from
 `Funds.Taken`). `/bbutler gold` lists everyone. Smooth play: the plan is
 worked out only while the window draws it, again only when the purse
 (debounced 0.2 s) or a setting moves. Tested in `tools/test_funds.lua`.
-Not yet seen in game.
+
 
 ## Filling the quiver
 
@@ -747,8 +747,7 @@ info, and only for an item the client has not loaded yet answers
 `GET_ITEM_INFO_RECEIVED`); `Ammo:Bag` and `FreeSpace.Read` read a bag's
 family from the client and fall back to `Items.TableBagFamily(bag)` only
 when it gives none. `/bbutler probe` has a "forever tables" line comparing
-the two for each bag. Never name where the tables were downloaded from;
-say "the Forever client's game tables". Tested in
+the two for each bag. Tested in
 `tools/test_foreveritems.lua`.
 
 ## Learning from the player
@@ -778,7 +777,7 @@ upgrade, a goal or craft material or pet food. Any right-click pick clears
 what was learned (`Verdicts:SetChoice` calls `Learning:Forget`), the menu
 shows "Forget what Butler learned" for a learned item, `/bbutler lists`
 shows them and `reset confirm` forgets them. Tested in
-`tools/test_learning.lua`. Not yet seen in game.
+`tools/test_learning.lua`.
 
 ## Jobs on other characters
 
@@ -809,7 +808,7 @@ from the list's `onRefresh` so it follows a scroll, and from
 combat, while the window moves and in All characters. There is no other
 Log out button (the header and gold foot ones are gone); once nothing is
 left here the footer says "Everything here is done" (`Jobs:DoneHere`).
-Not yet seen in game; `/bbutler probe` has a jobs line (`Logout`,
+`/bbutler probe` has a jobs line (`Logout`,
 `SLASH_LOGOUT1`).
 Craft opens the profession when its window is closed (the owner,
 2026-10-15, as Tradeskills' own craft button does): Tradeskills'
@@ -959,8 +958,8 @@ seen (`MailRunsOut.TipLines`). At login the shared note slot says "You
 have mail that runs out in N days." once (`Greet`). An alt set aside with
 Ignore Until Next Login is left alone. Nothing is taken out of a mailbox
 and nothing is saved. Tested in `tools/test_mailrunsout.lua`. If
-Tradeskills changes those fields, change `MailRunsOut.Read` too. Not yet
-seen in game.
+Tradeskills changes those fields, change `MailRunsOut.Read` too.
+
 
 ## Items for your quests
 
@@ -971,7 +970,7 @@ pcall) for "collect N" objectives. The log gives a name and counts, never
 an ID, so the ID comes from `Data/QuestItems.lua` (`ns.QUEST_ITEMS[questID]
 = { itemID, ... }`, Classic's quest objectives kept only when the Forever
 client's game tables say the item trades; written by
-`tools/make_quest_items.py <pfQuest> <tables folder>`, never by hand), else
+`tools/make_quest_items.py <spawn database> <tables folder>`, never by hand), else
 an item in the bags with that name, else `GetItemInfoInstant(name)`.
 Forever's own quests work by name; one nothing names is looked at again
 when the bags or the item come in.
@@ -1024,7 +1023,7 @@ before. With `--prices <Classic world database dump> --learn <a Classic
 client's SpellEffect table>` it also writes `CLASS_SPELL_PRICES`,
 Classic's trainer prices (the full price where Classic had a discount),
 which stand in until a trainer shows its own (`ClassTraining.PriceOf`,
-`spell.guess`); never name where either came from. Real prices, which spells no trainer teaches (a quest does) and where
+`spell.guess`). Real prices, which spells no trainer teaches (a quest does) and where
 the trainer stands are not in the tables: the first look at a class
 trainer's window keeps them, account wide, in `classTrainingData = {
 prices, notTaught, trainers, characters }` (never rename it), reading the
@@ -1053,7 +1052,7 @@ realms' characters, 2026-10-18). The window comes up at a
 class trainer with something to train (`Jobs:AtTrainer`). The gold fund
 keeps back the playing character's `ReadyCost()` and tops another
 character up by its `Other(guid).cost` (`Funds:Plan`). Tested in
-`tools/test_classtraining.lua`. Not yet seen in game.
+`tools/test_classtraining.lua`.
 A spell is known when the client says so, when a class trainer showed it
 as learned (kept by GUID in `classTrainingData.learned`, never rename it),
 or when a higher rank of the same name is known (the data skips a rank now
@@ -1093,7 +1092,7 @@ own arrow takes it, so it leads the way step by step instead.
 the two `tools/make_travel*.py` are Farmer's, the same in every addon (a
 fix to one belongs in all; Farmer's `CLAUDE.md` has the details); Butler's
 side is `ns.TravelHost` at the end of `Logic/WayArrow.lua`. Tested in
-`tools/test_classtraining.lua`. Not yet seen in game.
+`tools/test_classtraining.lua`.
 
 Our own map marker (a German player found nothing at the Crossroads; the
 owner said do all six fixes, 2026-10-29, in every addon): Forever turns
@@ -1104,7 +1103,7 @@ the same file in Pets, Tradeskills, Butler and Farmer; Equipment's
 ring with the name under it, two waves for `WAVE_FOR` seconds then a
 breathing glow (Effects Subtle a still glow, Off still). It goes when you
 stand within `WayArrow.ARRIVED` of it, or at the next Show the way.
-Tested in `tools/test_classtraining.lua`. Not yet seen in game.
+Tested in `tools/test_classtraining.lua`.
 
 ## The arrow
 
@@ -1123,7 +1122,7 @@ on screen at a time (`_G.BlackthornesArrows`, as `"Butler"`). With TomTom
 installed and "Use TomTom:" ticked (`useTomTom`, on unless unticked, Gold
 page; `Logic/TomTom.lua`, the same file as Farmer's, Equipment's and
 Pets'), TomTom's arrow shows the way instead of the dial. Tested in
-`tools/test_wayarrow.lua`. Not yet seen in game.
+`tools/test_wayarrow.lua`.
 
 Arrow Size (the owner, 2026-10-26, in every addon with an arrow): "Arrow
 Size:" under "Guide Me:" picks 50%, 75% or 100% for the whole dial,
@@ -1171,13 +1170,13 @@ from each one's note in `goldGoalsData.characters[guid]`, gold from
 Tradeskills' `Holdings` when it has it), with how many goals are met.
 "Gold goals" on the Gold page (`goldGoals`, on unless unticked) and
 `/bbutler goals [on|off]`. Never rename `goldGoals` or `goldGoalsData`.
-The window never runs off the screen (Trent's report, 2026-11-15): it
+The window never runs off the screen (the owner's report, 2026-11-15): it
 stops at the room under its top (`UI:ScreenRoom`, `SCREEN_MARGIN` from
 the foot), the item list gives up height down to `LIST_MIN`, and past
 that the goals scroll inside their panel (`GoalsUI:Draw(view,
 maxHeight)`, `ScrollBy`, the wheel and a bar); an unhosted window moves
 up to fit. Nothing is saved for it.
-Tested in `tools/test_goldgoals.lua`. Not yet seen in game.
+Tested in `tools/test_goldgoals.lua`.
 
 ## The cheapest skill-up
 
@@ -1241,8 +1240,8 @@ _G.BlackthornesTS.Butler:LevelUpMaterials()   -- { [itemID] = profession name },
 
 Without Tradeskills, or an older one, the box shows but keeps nothing.
 If the call changes, change `Logic/Sisters.lua` too. Tested in
-`tools/test_keeplevelup.lua` and `tools/test_settings.lua`. Not yet seen
-in game.
+`tools/test_keeplevelup.lua` and `tools/test_settings.lua`.
+
 
 ## What Farmer calls here
 
@@ -1315,7 +1314,7 @@ lines are added to GameTooltip, everything is read in a pcall, nothing
 is saved. "Mail Contents:" under MAILBOX on the Errands page
 (`mailContents`, account wide, off unless ticked since 2026-11-10, never
 rename it; nil reads as off).
-Tested in `tools/test_mailcontents.lua`. Not yet seen in game.
+Tested in `tools/test_mailcontents.lua`.
 
 ## Who has it
 
@@ -1334,7 +1333,7 @@ lookup by item ID; bag, bank and mail events only mark it stale, and the
 next hover builds it again at most once every `WhoHas.REBUILD_GAP` (1 s).
 "Who has it" on the General page (`whoHas`, account wide, on unless
 unticked, never rename it) and `/bbutler whohas`. Tested in
-`tools/test_whohas.lua`. Not yet seen in game.
+`tools/test_whohas.lua`.
 
 ## Keep on each character
 
@@ -1390,8 +1389,8 @@ on the cursor, else asks for a name, ID or link). Settings, Errands page,
 KEEP ACROSS CHARACTERS: a dark glass list (ITEM, KEEP, HAVE, STATUS "Kept"
 or "Short N"), a click shows each character's whole name with "60 bags,
 30 bank", right-click changes it; Count Bank and Count Mail; the open rows
-last the session. Tested in `tools/test_keepacross.lua`. Not yet seen in
-game.
+last the session. Tested in `tools/test_keepacross.lua`.
+
 
 ## Mail to anyone and Mail Rules
 
@@ -1481,7 +1480,7 @@ the bags only while its window or a vendor is up, so a hover that finds
 nothing on stale bags asks for one `Bags:Scan()`. "Butler on tooltips" on
 the General page (`verdictTip`, account wide, on unless unticked, never
 rename it) and `/bbutler tooltip`. Tested in `tools/test_verdicttip.lua`.
-Not yet seen in game.
+
 
 ## Vendor price on tooltips
 
@@ -1553,7 +1552,7 @@ is Butler's own button on UIParent, anchored to the game's item button
 (`UpdateItems`, `OnShow`, `OnHide`). Hidden in combat, at a vendor and while
 the cursor holds something. "Trash can when full" on the General page
 (`trashCan`, account wide, on unless unticked, never rename it) and
-`/bbutler trash`. Tested in `tools/test_trash.lua`. Not yet seen in game.
+`/bbutler trash`. Tested in `tools/test_trash.lua`.
 Farmer has the same can by its own prices (its `UI/Trash.lua`, same art
 and tool) and stands down while `_G.BlackthornesButler.Trash` exists, so
 only one shows; keep `ns.Trash` on the global, or change Farmer's
@@ -1577,8 +1576,8 @@ fight. "Swap When Full:" on the General page (`swapWhenFull`, account
 wide, off unless ticked, never rename it), its hover saying what it
 offers and that nothing goes until Swap is clicked (2026-11-14). `/bbutler probe` has a "swap
 when full" line. The same file as Classic Era Butler's; a fix to one
-belongs in both. Tested in `tools/test_swapwhenfull.lua`. Not yet seen
-in game. Quest loot always gets the offer (the owner, 2026-11-06): loot
+belongs in both. Tested in `tools/test_swapwhenfull.lua`.
+Quest loot always gets the offer (the owner, 2026-11-06): loot
 the game flags as a quest item, item class 12 or an item an open quest
 collects (`Swap.IsQuestLoot`) comes before other loot whatever its worth,
 against `Trash:Pick`, else the cheapest Wait item (`Swap.QUEST_FROM`,
@@ -1701,7 +1700,7 @@ Bags:" under BAGS on the General page, and `/bbutler bags [on|off]`
 Saved, account wide, never rename them: `bagWindow` (off unless ticked),
 `bagGroupBy`, `bagItemSize`, `bagItemLevel`, `bagNewGlow`, `bagEmptySlots` (unread), `bagScale`,
 `bagPoint`, `bagRelPoint`, `bagX`, `bagY`. Tested in
-`tools/test_bagwindow.lua`. Not yet seen in game.
+`tools/test_bagwindow.lua`.
 
 ### The Butler Bags key
 
@@ -1723,7 +1722,7 @@ readied for the key (`BagWindow:ReadyKey`: built, placed, squares made,
 handed to the button as frame ref `bags`) only once a key is bound
 (`GetBindingKey`, checked at enable and on `UPDATE_BINDINGS`), and waits
 for a fight to end. `Secure()` hands the frame to the button too. Tested in
-`tools/test_bagkey.lua`. Not yet seen in game.
+`tools/test_bagkey.lua`.
 
 ## Butler's voice
 
@@ -1740,7 +1739,7 @@ it (its OnHide, unless `LeftVendor`/`LeftPlace` closed it:
 itself (`UI:Show`: vendor, mailbox, bank, Jobs at login) says nothing.
 Each line waits `UI.VOICE_GAP` (180 s). "Butler's voice" on the General
 page (`voice`, account wide, on unless unticked; never rename it). Tested
-in `tools/test_voice.lua`. Not yet seen in game.
+in `tools/test_voice.lua`.
 
 ## German translation
 
@@ -1835,7 +1834,7 @@ The place is `windowLeft`/`windowTop`, account wide, never rename them.
 `ButlerTabs.switching` keeps a tab change from saying the closing line or
 letting go of the vendor or mailbox, and Tradeskills' mail panel stays
 covered while Settings is up. The minimap's right-click still opens
-Settings. Tested in `tools/test_butlertabs.lua`. Not yet seen in game.
+Settings. Tested in `tools/test_butlertabs.lua`.
 
 ## The one window
 
@@ -1873,7 +1872,7 @@ too (`SharedWindow.InteractionPlace`: `Enum.PlayerInteractionType`'s
 MailInfo, Merchant, Trainer and Auctioneer, else 17, 5, 7 and 21); a later
 close event for the same place changes nothing. At the auction house only
 Tradeskills is needed (`PLACES.auction.only`). Tested in
-`tools/test_sharedwindow.lua`. Not yet seen in game.
+`tools/test_sharedwindow.lua`.
 
 Kept beside (2026-10-31, FILE_VERSION 3): while a game window is open, a
 watcher on the one window (`SharedWindow.Keep`, every `KEEP_EVERY`
@@ -1929,7 +1928,7 @@ last, and the next vendor after `Left` reopened it came up on that addon.
 Butler's own open (`UI:AtVendor`) then finds itself shown and does nothing,
 in either order. Without Butler nothing changes. Tested in
 `tools/test_sharedwindow.lua` (all five) and Butler's `tools/test_onewindow.lua`.
-Not yet seen in game.
+
 ## The shared minimap button
 
 A player asked, the owner said build it from a mockup (2026-10-28), in all
@@ -1954,7 +1953,7 @@ Every addon's own button also takes left-click to open and right-click for
 settings. Its face is the Blackthornes sign, a gold B in a ring of thorns on
 a dark round face (the owner picked it over the anvil, 2026-10-28):
 `Media/Frame/MinimapBadge.tga`, drawn by `tools/make_minimap_art.py` (the
-same tool in all five; rerun it, never edit the TGA). Not yet seen in game.
+same tool in all five; rerun it, never edit the TGA).
 
 The launcher for addon bars (asked 2026-11-17, the owner said build it;
 `UI/SharedMinimap.lua` FILE_VERSION 4, the same in all five): when another
@@ -1970,7 +1969,7 @@ opens the shared menu beside the bar's frame (`ToggleMenu(anchor)`,
 (`SharedWindow.OpenAllAddons`, else the first addon's settings), middle runs
 Farmer's `middle` (brings back its panels). The tooltip reuses the shared
 button's lines, no new words. Never name the bar addon that asked. Tested in
-`tools/test_sharedminimap.lua` (part 7). Not yet seen in game.
+`tools/test_sharedminimap.lua` (part 7).
 
 ## The settings pages (from Tradeskills)
 
@@ -2092,9 +2091,7 @@ a report goes through `ns.KeepCheck` too, and a fix to it belongs in all
 five.
 
 When the owner says "read the probe": he has run the check and typed
-`/reload` (or logged out). In the thread, connect to his device, ask for
-his game's WTF folder (already approved; the path is in the project's
-memory) and stage the addon's account save from
+`/reload` (or logged out). Read the addon's account save, read only, from
 `WTF\Account\<account>\SavedVariables\` (`Blackthornes_TS.lua`,
 `Blackthornes_Farmer.lua`, `Blackthornes_Equipment.lua`,
 `Blackthornes_Pets.lua` or `Blackthornes_Butler.lua`), read only. Read its
@@ -2137,18 +2134,16 @@ CHANGELOG, #announcements post, commit or PR text names a player, and
 (`names_a_player` in `post_general.py`). The #general post is the one
 exception: its last line thanks, by their Discord name, everyone who asked
 for or reported the changes, each name once ("Thanks Ana and Bob for the
-ideas and reports!"); leave it out when nobody asked. Find who asked from
-the project's threads.
+ideas and reports!"); leave it out when nobody asked.
 The thanks line no longer goes out with the webhook post (the owner,
 2026-10-13: thank each player with a real @mention, so they get a
 notification): `post_general.py` leaves out the paragraph that starts
-"Thanks" (`without_thanks`), and the owner's bot, on his PC, posts it under
-the release post with the mentions once he approves the wording, looking
-the Discord names up there. Discord IDs never go in a repo. NEWS.md keeps
+"Thanks" (`without_thanks`), and it is posted under the release post
+with the mentions once the owner approves the wording. Discord IDs never go in a repo. NEWS.md keeps
 the thanks line, by Discord name, as before; ask the owner for any name
 that isn't known.
 This tool is also the same in all the repos.
-Changes to the Discord bots, the digest or the release posting tools
+Changes to the release posting tools
 (like this one) never go in a CHANGELOG, #announcements or #general
 section (the owner, 2026-10-10): they are not changes to the addon.
 
@@ -2188,7 +2183,7 @@ them. The `whatsnew` command and a Settings button open it any time, with
 each addon's newest. It rises in, its divider draws out, each addon's card
 slides up with its icon popping and a light crossing it, and the Got it
 button glows (one looping animation the game plays, only while it shows);
-Motion off lands it all at once. Not yet seen in game.
+Motion off lands it all at once.
 
 ## The About page and the note
 
@@ -2295,7 +2290,7 @@ The owner said build it (2026-11-16, from a mockup). Buy More, Bags Full
 placed by itself on top of another that is up moves beside it
 (`Boxes.Settle`, right when there is room, else left). A dragged box is
 never moved (`Boxes.Kept`). No new words. Tested in `tools/test_boxes.lua`.
-Not yet seen in game.
+
 
 ## Settings rows that share one row
 
@@ -2315,7 +2310,7 @@ show as the most shown of them. The page no longer sets one line to Shift
 and another to Always; the one box sets every ticked line. Off unticks all
 and remembers them for the session. `SettingsUI.TooltipShiftControl` (a
 box per line) is gone from Butler. Tested in `tools/test_settingsrows.lua`
-and `tools/test_tooltipshift.lua`. Not yet seen in game.
+and `tools/test_tooltipshift.lua`.
 
 ## The Keep page and Open Butler At
 
@@ -2330,7 +2325,7 @@ DISENCHANTING moved to the right column, and JUNK and CRAFTING share the
 heading JUNK AND CRAFTING. MAIL AND BANK kept its heading (the mockup left
 it out; it still has five rows). The KEEP page's hover line ("What each
 character keeps, and upgrades for your other characters") was not on the
-mockup. Tested in `tools/test_settingsrows.lua`. Not yet seen in game.
+mockup. Tested in `tools/test_settingsrows.lua`.
 
 # Standing rules in full
 
@@ -2546,7 +2541,7 @@ landed in `UI/SharedWindow.lua` (FILE_VERSION 8, the same file in all five;
   two boxes. Same saved keys, nothing renamed, no saved choice changed.
   Window Size stays on General: it is per addon. The page hides from the
   switch while One Window is on (the gear reaches it). Farmer's page is
-  left to the Farmer settings thread.
+  left to the Farmer settings work.
 - **SettingsPages** (Farmer, Equipment, Pets, Butler): the page switch
   wraps to a second line, and `opts.barCap` caps `BarWidth` (Farmer
   passes 724). `Page:SetHidden(key, hidden)` hides a page from the switch.
@@ -2591,7 +2586,7 @@ window (`PlaceBar.GAMES`). `UI:LeftVendor` and `UI:LeftPlace` call
   under theirs, as wide as theirs or as its words need.
 - Redrawn only from `Verdicts:Redraw`, `Errands:Update` and the events
   above, never on a timer. `Bags:Wanted` counts the bar as a looker.
-- Tested in `tools/test_placebar.lua`. Not yet seen in game: the 32 px drop
+- Tested in `tools/test_placebar.lua`. The 32 px drop
   and the frame names are from the client's usual ones.
 
 ## Marks on the game's bags
@@ -2614,7 +2609,7 @@ draws (`BagWindow.ShowMark`, `BagWindow.MARK_ORDER`, from
   while no bag window is open, or while Butler Bags stands in for the
   game's (`BagWindow:Covering`). `Bags:Wanted` counts open, marked bags
   as a looker (`BagMarks.looking`).
-- Tested in `tools/test_bagmarks.lua`. Not yet seen in game.
+- Tested in `tools/test_bagmarks.lua`.
 
 ## Checking a change
 
@@ -2655,7 +2650,7 @@ TSM Sold a Day). The same in every addon; keep them the same.
   owner said fix it, and a bad size in a save now reads as 100
   (`UI/SharedWindow.lua` FILE_VERSION 12, in all five).
 - **Three tries, then ask.** A check still failing after three rounds stops
-  the thread. Never skip, loosen or rerun a test to get green.
+  the work. Never skip, loosen or rerun a test to get green.
 
 ## Recipes on the wishlist (2026-11-17)
 
@@ -2676,4 +2671,4 @@ window's redraw key; the window looks again `Wishlist.LOOK_AGAIN` after a
 vendor or trainer event, since Tradeskills reads the vendor a moment after
 it opens. While this module is loaded (`_G.BlackthornesButler.Wishlist`),
 Tradeskills hides its own card under the window. Without Tradeskills,
-nothing shows. Tested in `tools/test_wishlist.lua`. Not yet seen in game.
+nothing shows. Tested in `tools/test_wishlist.lua`.

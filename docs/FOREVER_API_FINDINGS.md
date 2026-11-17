@@ -17,7 +17,7 @@ on these, each read inside a pcall, so the probe should answer:
   many items the Buyback tab holds (`GetNumBuybackItems`);
 - which Send Mail calls are there for filling the form.
 
-## Selling at a vendor (built 2026-10-10, not yet seen in game)
+## Selling at a vendor (built 2026-10-10)
 
 Tradeskills found (2026-10-07) that the Warcraft Wiki marks
 `C_Container.UseContainerItem` as protected on current retail, so Butler's
@@ -34,7 +34,7 @@ Butler's own code and keeps whether the item left and gold came in
 called from Butler's own code, gold came in, and the Sell button then sold
 the Sell group up to 12 a click.
 
-## Buying ammo (built 2026-10-11, not yet seen in game)
+## Buying ammo (built 2026-10-11)
 
 The Ammo row (Logic/Ammo.lua) reads the vendor with `GetMerchantNumItems`,
 `GetMerchantItemLink` and `C_MerchantFrame.GetItemInfo` (classic's
@@ -52,7 +52,7 @@ Forever keeps ammo and quivers at all is still to be seen.
 `UI/SharedWindow.lua` (2026-10-30) docks the one window beside the game's
 own windows by screen position only; it never moves, hides or writes a
 Blizzard frame. What it expects of Forever's retail engine, from the
-retail client, not yet seen in game: `AUCTION_HOUSE_SHOW`/`AUCTION_HOUSE_CLOSED`
+retail client: `AUCTION_HOUSE_SHOW`/`AUCTION_HOUSE_CLOSED`
 with `AuctionHouseFrame`, `MAIL_SHOW`/`MAIL_CLOSED` with `MailFrame`,
 `MERCHANT_SHOW`/`MERCHANT_CLOSED` with `MerchantFrame`, and
 `TRAINER_SHOW`/`TRAINER_CLOSED` with `ClassTrainerFrame`. The retail

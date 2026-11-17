@@ -1,10 +1,7 @@
 # Notes for Claude
 
-Read this before working in this repo. The owner runs one Claude project per
-addon, and this one (**Blackthornes_Butler**) was set up from the Farmer
-project. Its sisters are **Blackthornes_Farmer**, **Blackthornes_Tradeskills**,
-**Blackthornes_Equipment** and **Blackthornes_Pets** (all under
-`Blackthornes/`). The projects cannot read each other's memory, so what one
+Read this before working in this repo. It is one of five Blackthornes addons
+(Farmer, Tradeskills, Equipment, Pets, Butler), each in its own repo. What one
 needs to know about another lives in the repos, in this file and in theirs.
 Keep them current: when a change here leans on something new in another
 addon, or a standing rule from the owner applies to all of them, add it to
@@ -14,9 +11,9 @@ Nothing private goes in this file (no local paths, emails or account names).
 It never ships: `.pkgmeta` leaves it out of the zip and
 `tools/check_package.py` refuses it.
 
-## Keep the thread small
+## Keep the session small
 
-A thread that fills up dies and its work is lost. In this repo:
+A session that fills up stops and its work is lost. In this repo:
 
 - Checks, quiet: `python tools/runtests.py -q` (failures and the total
   only; `-q trash menu` runs just the suites with those words in their
@@ -24,7 +21,7 @@ A thread that fills up dies and its work is lost. In this repo:
   for every suite and file (about 18 KB a run); leave those to CI.
 - `grep -n` first, then read 80 to 150 lines. Pipe long output through
   `tail` or `cut -c1-160`. Never `cat` a file from the big files list.
-- Commit and push each step, so a new thread can pick up from the branch.
+- Commit and push each step, so a new session can pick up from the branch.
 
 ## Long notes live in Docs/claude-notes.md
 
@@ -99,7 +96,7 @@ that touches one.
 
 ## Big files (read these in pieces)
 
-Reading a huge file whole fills the context and the thread dies. Sizes are
+Reading a huge file whole runs the session out of room. Sizes are
 from 2026-11-16 and only grow. Find more with `find . -name '*.lua' | xargs wc -lc | sort -n`.
 
 - Never read a file below whole. Use `grep -n` to find the spot, then read

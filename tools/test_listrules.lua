@@ -150,7 +150,7 @@ suite.check("Mail To never offers the one playing", (function()
 end)())
 
 -- A list made in Tradeskills after Butler last read them shows when the
--- page draws again, though nothing moved the verdicts (Trent saw "None").
+-- page draws again, though nothing moved the verdicts (the owner saw "None").
 ns.SettingsUI:Hide()
 local keptVersion = Verdicts.version
 lists[#lists + 1] = { name = "Ore", id = 9, items = { [2770] = 20 } }

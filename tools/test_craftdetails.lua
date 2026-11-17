@@ -1,4 +1,4 @@
--- Craft Details (Trent said build it from a mockup, 2026-11-14): with the
+-- Craft Details (the owner said build it from a mockup, 2026-11-14): with the
 -- box ticked, Butler's tooltip line for a Craft verdict names what to make,
 -- and a grey line under it says what else you carry, what you still need
 -- and about how much more it earns than selling.
