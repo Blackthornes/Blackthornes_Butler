@@ -1206,6 +1206,33 @@ Tradeskills' Level Up "Can afford" box; Butler has no setting of its own.
 `Funds`' `PLAYER_MONEY` redraw keeps it current. Tested in
 `tools/test_skillupgold.lua`.
 
+## Keep Level Up Materials
+
+A player asked, the owner said build it (2026-11-17, from a mockup with
+the words he approved): with "Keep Level Up Materials:" ticked (Keep
+page, column 1, its own section LEVELING PROFESSIONS under YOUR LISTS;
+`keepLevelUp`, account wide, off unless ticked, never rename it;
+`/bbutler levelup on|off`, `/butler` too), every material an orange or
+yellow craft on Tradeskills' Level Up list still uses stays under Keep,
+"Used to level your %s" with the client's profession name, in every
+profession the character has, Cooking and First Aid too. Rule `levelUp`
+(step 7b) comes right after `queue`, so the player's Always sell, Always
+mail, Always auction and Always disenchant lists, an alt's queued-craft
+share and this character's own queue all still win. It has its own switch
+on the Order page (`OWN_SWITCH.levelUp`), with the setting's words. Once a
+craft turns green Tradeskills stops naming its materials and they go on
+down the rules. `Sisters:LevelUpFor(itemID)` reads Tradeskills once per
+look (`Verdicts.version`), inside a pcall, read only:
+
+```lua
+_G.BlackthornesTS.Butler:LevelUpMaterials()   -- { [itemID] = profession name }, or nil
+```
+
+Without Tradeskills, or an older one, the box shows but keeps nothing.
+If the call changes, change `Logic/Sisters.lua` too. Tested in
+`tools/test_keeplevelup.lua` and `tools/test_settings.lua`. Not yet seen
+in game.
+
 ## What Farmer calls here
 
 Farmer's XP bar (2026-10-13) reads class training for its level-up cheer,

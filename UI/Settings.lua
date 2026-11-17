@@ -1246,6 +1246,16 @@ function SettingsUI:BuildPages()
     end)
     controls.learn:SetPoint("TOPLEFT", CONTROL_X, -2)
 
+    -- Keep Level Up Materials (the owner said build it, 2026-11-17).
+    pages:Section("keep", 1, L["LEVELING PROFESSIONS"])
+
+    local levelUpRow = pages:Row("keep", 1, L["Keep Level Up Materials:"],
+        L["Keeps the materials for crafts that still give you skill points, in every profession. Cooking and First Aid too. Needs Blackthornes Tradeskills."])
+    controls.keepLevelUp = Widgets.CreateCheckbox(levelUpRow, L["On"], function(checked)
+        ns.Verdicts:SetKeepLevelUp(checked)
+    end)
+    controls.keepLevelUp:SetPoint("TOPLEFT", CONTROL_X, -2)
+
     -- Upgrades held back from a character (the owner asked 2026-10-12):
     -- right-click an upgrade under Mail to hold it back; undone here.
     pages:Section("keep", 1, L["UPGRADES FOR YOUR CHARACTERS"])
@@ -1890,6 +1900,7 @@ function SettingsUI:Refresh()
     controls.fillNext:SetChecked(ns.db.fillNext ~= false)
     controls.namePicker:SetChecked(ns.MailPicker:Enabled())
     controls.altUpgrades:SetChecked(ns.Verdicts:AltUpgradesOn())
+    controls.keepLevelUp:SetChecked(ns.Verdicts:KeepLevelUpOn())
     controls.disenchantGreens:SetChecked(ns.Verdicts:DisenchantGreensOn())
     controls.craftPays:SetChecked(ns.Verdicts:CraftPaysOn())
     controls.alwaysDisenchant:SetChecked(ns.Verdicts:AlwaysDisenchantOn())

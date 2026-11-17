@@ -237,6 +237,17 @@ suite.check("/bbutler goldmin fills the box", goldBox.boxes.gold:GetText() == "2
 ns.HandleSlash("goldmin off")
 suite.check("and off turns it off", ns.db.goldMinimum == nil and goldBox:GetValue() == 0)
 
+-- Keep Level Up Materials: off at first, the box and /bbutler levelup agree.
+suite.check("Keep Level Up Materials starts off", ns.db.keepLevelUp == false and not ns.Verdicts:KeepLevelUpOn())
+controls.keepLevelUp:SetChecked(false)
+controls.keepLevelUp:GetScript("OnClick")(controls.keepLevelUp)
+suite.check("ticking it saves it", ns.db.keepLevelUp == true)
+ns.HandleSlash("levelup off")
+suite.check("/bbutler levelup off turns it off", ns.db.keepLevelUp == false)
+ns.HandleSlash("levelup on")
+suite.check("/bbutler levelup on turns it on", ns.db.keepLevelUp == true)
+ns.HandleSlash("levelup off")
+
 -- Every /bbutler command has a button here.
 local ran = {}
 local realSlash = ns.HandleSlash
@@ -252,7 +263,7 @@ suite.check("the command buttons run their commands",
 -- deletes the player's lists, which stays typed (a house rule).
 local covered = { tooltip = true, sisters = true, whatsnew = true, window = true, all = true,
     vendor = true, mailbox = true, bank = true, settings = true, reset = true,
-    sellbelow = true, freespace = true, whohas = true, goldmin = true, fillnext = true, altupgrades = true,
+    sellbelow = true, freespace = true, whohas = true, goldmin = true, fillnext = true, altupgrades = true, levelup = true,
     joblogin = true, trash = true, quests = true, bankalt = true, greens = true, buy = true, order = true, skillup = true, bags = true, mute = true, windows = true, bar = true }
 -- Chat-only commands are typed only (the owner, 2026-10-15): they print a
 -- list in chat, so they have no button here. Their settings parts (training

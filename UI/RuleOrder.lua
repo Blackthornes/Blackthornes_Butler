@@ -52,6 +52,7 @@ RuleOrderUI.RULES = {
     altCrafts = { L["Crafts on Your Characters:"], "mail", L["Materials another character's queued crafts need go to them."] },
     goals = { L["Farmer Goals:"], "keep", L["Kept until your goal has enough."] },
     queue = { L["Your Craft Queue:"], "keep", L["Kept for crafts this character has queued."] },
+    levelUp = { L["Keep Level Up Materials:"], "keep", L["Keeps the materials for crafts that still give you skill points, in every profession. Cooking and First Aid too. Needs Blackthornes Tradeskills."] },
     altUpgrades = { L["Upgrades for Your Characters:"], "mail", L["Gear another character could wear goes to them."] },
     petFood = { L["Pet Food:"], "keep", L["Food your pet eats."] },
     bought = { L["Bought to Disenchant:"], "disenchant", L["Things you bought on the auction house to break."] },
