@@ -352,5 +352,37 @@ BankAlt:SetKindTo("cloth", nil)
 BankAlt:SetKindTo("herb", nil)
 suite.check("clearing every kind leaves the save as it was", next(ns.db.bankAltKindTo or {}) == nil)
 
+-- 11. Store in Bank: on the bank alt, ticked kinds go under Bank.
+BankAlt:SetName("Me Here")
+suite.check("Store in Bank is off unless ticked", not BankAlt:StoreOn() and Row("Wool Cloth").verdict ~= "bank")
+local storeBox = controls.bankAltStore
+storeBox:GetScript("OnClick")(storeBox)
+suite.check("the Store in Bank box ticks it", ns.db.bankAltStore == true and BankAlt:StoreOn())
+wool = Row("Wool Cloth")
+suite.check("on the bank alt a ticked kind goes in the bank", wool.verdict == "bank", wool.verdict)
+suite.check("its reason names the kind", wool.reason == "Cloth, for the bank", tostring(wool.reason))
+local moves
+for _, slot in ipairs(ns.Errands:ToBank()) do moves = moves or slot.itemID == 3005 end
+suite.check("Move to bank puts it away", moves)
+suite.check("soulbound stays out of the bank", Row("Soulbound Cloth").verdict ~= "bank")
+suite.check("greys still sell", Row("Grey Scrap").verdict == "sell", Row("Grey Scrap").verdict)
+suite.check("the queue still keeps its ore", Row("Copper Ore").verdict ~= "bank", Row("Copper Ore").verdict)
+BankAlt:SetKind("cloth", false)
+suite.check("an unticked kind stays out", Row("Wool Cloth").verdict ~= "bank")
+BankAlt:SetKind("cloth", true)
+Verdicts:SetChoice(3005, "sell")
+suite.check("the player's own lists win", Row("Wool Cloth").verdict == "sell", Row("Wool Cloth").verdict)
+Verdicts:SetChoice(3005, nil)
+BankAlt:SetName("Banky Vault")
+suite.check("on another character it still mails", ToBank("Wool Cloth"))
+BankAlt:SetKindTo("cloth", "Me Here")
+suite.check("on a kind's own character that kind goes in the bank", Row("Wool Cloth").verdict == "bank")
+suite.check("other kinds still mail to the bank alt", ToBank("Tigerseye"))
+BankAlt:SetKindTo("cloth", nil)
+BankAlt:SetName(nil)
+suite.check("with no bank alt nothing is stored", Row("Wool Cloth").verdict ~= "bank")
+storeBox:GetScript("OnClick")(storeBox)
+suite.check("unticked, the save is cleared", ns.db.bankAltStore == nil)
+
 _G.BlackthornesTS = nil
 suite.done()

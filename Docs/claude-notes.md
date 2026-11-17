@@ -469,6 +469,17 @@ so the usual rules decide it there. The shopping list and Auction Items
 still go to the bank alt. `/bbutler bankalt` lists the kinds with their
 own character. Tested in `tools/test_bankalt.lua`.
 
+Store in Bank (a player asked, the owner said build it 2026-11-17, from a
+mockup; he picked the label "Store in Bank:" over "Put Away in the
+Bank:"): the last row under WHAT GOES THERE, off unless ticked, saved
+account wide as `bankAltStore` (never rename). Ticked, on the bank alt
+itself, and on a kind's own character for that kind, each ticked kind
+gets Bank (`BankAlt:StoreHere`, first in `BankAlt:Verdict`), so Move to
+bank puts it away; the row reads "Herbs, for the bank". Same When as
+mailing; greys, soulbound and the player's own lists still win; the
+shopping list and Auction Items are not stored. Other characters mail as
+before. Tested in `tools/test_bankalt.lua` (11).
+
 ## All characters
 
 A player asked for an account-wide inventory and the owner said build it

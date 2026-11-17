@@ -28,7 +28,18 @@
 -- bankAltList (a shopping list's name, nil for none), bankAltAuctions
 -- (true while Auction Items is ticked, off unless ticked) and
 -- bankAltFullStacks (true while Full Stacks Only is ticked, off unless
+-- ticked) and bankAltStore (true while Store in Bank is ticked, off unless
 -- ticked).
+--
+-- Store in Bank (a player asked, the owner said build it, 2026-11-17, from
+-- a mockup): a bank alt that gets herbs by mail had to right-click each
+-- into Always bank. Ticked, on the bank alt itself each ticked kind gets
+-- Bank instead of staying put, so Move to bank puts it away; on a kind's
+-- own character, that kind does the same. The same When applies (what the
+-- pick would leave to the auction house still goes there), and greys,
+-- soulbound items and the player's own lists still win. Every other
+-- character mails as before. The shopping list and Auction Items are not
+-- stored: the bank alt is the one who sells.
 --
 -- Full Stacks Only (a player asked, the owner said build it, 2026-11-02):
 -- each mail slot costs postage however few it holds, and small stacks cost
@@ -270,6 +281,17 @@ function BankAlt:SetFullStacks(on)
     self:Changed()
 end
 
+--- On the bank alt, does each ticked kind go in the bank?
+function BankAlt:StoreOn()
+    return ns.db and ns.db.bankAltStore == true or false
+end
+
+function BankAlt:SetStore(on)
+    if not ns.db then return end
+    ns.db.bankAltStore = on and true or nil
+    self:Changed()
+end
+
 --- Is this carried stack full? True when its count reaches the item's
 --- stack size, or the stack size isn't known yet.
 function BankAlt:FullStack(entry)
@@ -426,11 +448,28 @@ function BankAlt.StackPostage()
     return math.ceil(postage / stacks)
 end
 
+--- On the character a ticked kind would be sent to (the bank alt, or the
+--- kind's own character), with Store in Bank ticked: true and why, so it
+--- goes in the bank. Else nil.
+function BankAlt:StoreHere(entry, verdict)
+    if not (self:StoreOn() and entry and entry.itemID) then return nil end
+    if entry.bound or entry.quality == 0 then return nil end
+    if not TAKES[self:When()][verdict] then return nil end
+    local kind = self.KindOf(entry)
+    if not (kind and self:KindOn(kind)) then return nil end
+    local to = self:KindTo(kind) or self:Name()
+    if not (to and ns.Verdicts and ns.Verdicts:IsMe(to)) then return nil end
+    return true, L.Format("%s, for the bank", LABELS[kind])
+end
+
 --- What Butler would do with the item (`verdict` from Verdicts:Best),
 --- turned into Mail to the bank alt when the player's pick takes it over.
 --- `worth` is one's worth, for Auction Items' postage check.
---- Returns "mail", why and { to, bankAlt = true }, or nil to leave it.
+--- Returns "mail", why and { to, bankAlt = true }, "bank" and why when
+--- Store in Bank keeps it here, or nil to leave it.
 function BankAlt:Verdict(entry, verdict, worth)
+    local store, why = self:StoreHere(entry, verdict)
+    if store then return "bank", why end
     if self:Stays(entry) then return nil end
     if TAKES[self:When()][verdict] then
         local name, what, own = self:Takes(entry)
