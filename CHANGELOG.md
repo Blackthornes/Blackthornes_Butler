@@ -4,6 +4,19 @@ Versions follow [semantic versioning](https://semver.org): the middle number
 moves for new behaviour, the last for fixes alone. The newest version goes at
 the top; a release is refused if its version has no section here.
 
+## 1.19.0
+
+For WoW: Forever (interface 16001). `/reload` is not enough: files were added and the key list changed, so close the game fully and start it again after updating.
+
+- **Butler Bags key.** A new Butler Bags key on the game's Key Bindings page opens and closes Butler's bag window. It works whether Use Butler Bags is on or off.
+- **Keep Level Up Materials.** A new Keep Level Up Materials: box on the Keep page of Settings keeps the materials your Level Up list still uses under Keep, in every profession. It starts off.
+- **Store in Bank.** A new Store in Bank: row on the Bank Alt page of Settings puts the kinds you tick away on your bank alt. It starts off.
+- **Recipe wishlist.** At a vendor or trainer that teaches a recipe you starred on your wishlist, Butler shows a row for it with Buy or Learn.
+- **Blackthornes button for addon bars.** If you already use an addon bar, Blackthornes now puts one button on it. Left-click opens the menu and right-click opens the All Addons page of Settings.
+- **Settings pages in one order.** Every Blackthornes addon now lists its Settings pages the same way. Tooltips is on its own page.
+- **Butler at a vendor.** At a vendor the one window opens on Butler, then goes back to the addon you had open when you leave.
+- Various bug fixes for Butler.
+
 ## 1.18.1
 
 For WoW: Forever (interface 16001). `/reload` is enough after updating.
