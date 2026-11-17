@@ -45,12 +45,18 @@ local PAGES = {
       tip = L["Mail whole kinds of items to one of your characters"] },
     { key = "gold", text = L["GOLD"],
       tip = L["How much gold each of your characters keeps, topped up by mail"] },
+    -- From here on, the pages every Blackthornes addon shares, in the same
+    -- order in all five (the owner said build it, 2026-11-17). Tooltips
+    -- left General for its own page, and General became Windows; its key
+    -- stays "general", so a saved page still opens.
+    { key = "tooltips", text = L["TOOLTIPS"],
+      tip = L["Lines Butler adds to item tooltips"] },
+    { key = "general", text = L["WINDOWS"],
+      tip = L["The Butler window, its size and voice, and your bags"] },
     -- The settings every Blackthornes addon shares (2026-11-16): reached
     -- by the one window's gear while One Window is on, so it is left off
     -- the switch then; on the switch while each addon has its own window.
-    { key = "all", text = L["All Addons"] },
-    { key = "general", text = L["GENERAL"],
-      tip = L["Windows, tooltips and text size"] },
+    { key = "all", text = L["ALL ADDONS"] },
     { key = "about", text = L["ABOUT"],
       tip = L["How these addons are made, the version, the Discord and the other Blackthornes addons"] },
 }
@@ -1831,7 +1837,7 @@ function SettingsUI:BuildPages()
     -- Debug and the client check are typed only (/bbutler debug, probe;
     -- the owner, 2026-10-23): players don't need them.
 
-    pages:Section("general", 2, L["TOOLTIPS"])
+    pages:Section("tooltips", 1, L["TOOLTIPS"])
 
     -- One Off, Shift or Always box for every tooltip line, and a tick for
     -- each line (2026-11-16, from a mockup). Each line keeps its own saved
@@ -1841,7 +1847,7 @@ function SettingsUI:BuildPages()
         whoHas = L["Tooltips list which characters have the item. Needs Blackthornes Tradeskills."],
         verdictTip = L["The last tooltip line says what Butler would do with it."],
     }
-    local linesRow = pages:Row("general", 2, L["Show Tooltip Lines:"],
+    local linesRow = pages:Row("tooltips", 1, L["Show Tooltip Lines:"],
         tipWords.whoHas .. " " .. tipWords.verdictTip)
     local lines = {
         { key = "whoHas", text = L["Who Has It"],
