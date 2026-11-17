@@ -36,6 +36,18 @@ its section first** (`What Butler calls`, `How Butler talks to the other
 four`, `The one window`, `The shared minimap button` and the like): those
 calls must stay stable and are changed in both repos together.
 
+## Checking a change
+
+Before every PR, follow `.claude/skills/verify/SKILL.md`: a bug fix starts
+with a test that fails the way the game failed; act the steps out in the
+fake game; run `python tools/check_house_rules.py` (player words and dark
+glass, lines this change adds) and `python tools/checklist_for_change.py`
+(the items in `Docs/change-checklist.md` this change touches). Every PR
+body ends with `Checked:` and `Not checked:` lines. After three failed
+rounds, stop and ask the owner. A miss a diff could have shown gets a
+checklist item in the fix's PR. Details under "Checking a change" in
+`Docs/claude-notes.md`.
+
 ## Standing rules (short; full words under "Standing rules in full" in Docs/claude-notes.md)
 
 Each is the same in every addon's notes. Read the full text before work
