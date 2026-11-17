@@ -360,7 +360,8 @@ _G["BINDING_NAME_" .. BagWindow.BINDING] = BagWindow.KEY_NAME
 
 local KEY_BODY = [[
     if not PlayerInCombat() then return end
-    local bags = self:GetFrameRef("bags")
+    local button = self
+    local bags = button:GetFrameRef("bags")
     if not (bags and bags:IsProtected()) then return end
     if bags:IsShown() then bags:Hide() else bags:Show() end
 ]]
