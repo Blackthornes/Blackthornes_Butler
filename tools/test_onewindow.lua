@@ -11,6 +11,9 @@
 --   Swapping addons on the rail keeps the one window up.
 --   5. Closing the one window gives the pages back their own place.
 --   6. "One Window:" on the General page writes every save.
+--   9. Up on another addon at a vendor, the one window turns to Butler
+--      when "Vendors" is ticked and the Butler Bar is off, every visit, and
+--      goes back to that addon as the vendor closes.
 
 local env = dofile(lfs_cwd .. "/tools/testenv.lua")
 local suite = env.NewSuite("onewindow")
@@ -183,6 +186,46 @@ UI:LeftVendor()
 suite.check("leaving the vendor on Settings closes the one window too",
     not hub.frame:IsShown() and not UI.openedByVendor)
 if onHideVendor then onHideVendor(hub.frame) end
+
+-- 9. Up on another addon at a vendor (a player saw Farmer there instead of
+-- Butler on the second visit, 2026-11-17).
+SW:Join({ key = "farmer", order = 1, name = "Farmer", db = function() return {} end,
+    host = { enter = function() end, leave = function() end } })
+suite.check("Butler wants the vendor while Vendors is ticked",
+    Tabs.host.wants("vendor") == true and not Tabs.host.wants("mail"))
+-- Walking to the vendor takes a while (the game's clock).
+local clock, getTime = 100, rawget(_G, "GetTime")
+_G.GetTime = function() return clock end
+SW.Open("farmer")
+for visit = 1, 2 do
+    clock = clock + 30
+    ns.Selling.merchantOpen = true
+    SW.Arrived("vendor")
+    suite.check("visit " .. visit .. ": the one window turns to Butler",
+        hub.current == hub.entries.butler and Tabs:Hosted())
+    UI:AtVendor()
+    suite.check("visit " .. visit .. ": Butler's own open changes nothing", hub.current == hub.entries.butler)
+    ns.Selling.merchantOpen = false
+    UI:LeftVendor()
+    SW.Left("vendor")
+    suite.check("visit " .. visit .. ": back on Farmer as the vendor closes",
+        hub.frame:IsShown() and hub.current == hub.entries.farmer and not Tabs:Hosted())
+end
+ns.db.openAtVendor = false
+clock = clock + 30
+SW.Arrived("vendor")
+suite.check("Vendors unticked: it stays on Farmer", hub.current == hub.entries.farmer)
+SW.Left("vendor")
+ns.db.openAtVendor = true
+if ns.PlaceBar then
+    local isOn = ns.PlaceBar.IsOn
+    ns.PlaceBar.IsOn = function() return true end
+    suite.check("the Butler Bar comes up instead: no turn", not Tabs.host.wants("vendor"))
+    ns.PlaceBar.IsOn = isOn
+end
+hub.frame:Hide()
+hub.entries.farmer = nil
+_G.GetTime = getTime
 
 _G.BlackthornesWindow = nil
 suite.done()
