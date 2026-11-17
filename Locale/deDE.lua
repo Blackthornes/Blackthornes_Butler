@@ -1361,3 +1361,9 @@ L["Shows Butler's marks on your bags: sell, mail, upgrade, quest and needed item
 
 -- The settings every Blackthornes addon shares (2026-11-16).
 L["Show"] = "Anzeigen"
+
+-- Recipes on the wishlist (2026-11-17).
+L["Buy a recipe on your wishlist"] = "Kauf ein Rezept von deiner Wunschliste"
+L["Learn a recipe on your wishlist"] = "Lern ein Rezept von deiner Wunschliste"
+L["Learn"] = "Lernen"
+L["Learn at %d"] = "Lernen ab %d"

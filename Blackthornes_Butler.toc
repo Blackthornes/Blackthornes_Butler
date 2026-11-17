@@ -92,6 +92,7 @@ Logic\Learning.lua
 Logic\Jobs.lua
 Logic\MailRunsOut.lua
 Logic\SkillUp.lua
+Logic\Wishlist.lua
 Logic\Travel.lua
 Logic\ClassTraining.lua
 Logic\TomTom.lua
