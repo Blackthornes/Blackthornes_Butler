@@ -208,8 +208,12 @@ function SettingsUI:Build()
         local info = pages:Place("about", 2, ns.About:Info(pages.pages.about.content, COLUMN_WIDTH))
         pages:Searchable("about", info, info.words)
     end
-    -- Every tab is one size (UI/ButlerTabs.lua): Settings says what its
-    -- fullest page needs, and the Butler window grows to match.
+    -- Every tab is one size (UI/ButlerTabs.lua): Settings says how wide its
+    -- pages need to be, and the Butler window widens to match. Its height
+    -- stays the Butler window's and the pages scroll: asking for the
+    -- fullest page's height let a long list (Keep Across, the mail rules)
+    -- stretch every tab nearly to the screen's height, off its bottom in
+    -- the one window (2026-11-18).
     local pages = self.pages
     local fit = pages.Fit
     pages.Fit = function(page)
@@ -217,7 +221,7 @@ function SettingsUI:Build()
         -- What the pages asked for: laid into the one window the frame
         -- fills the area, so its own size would only say how big that is.
         local need = page.need or { frame:GetWidth(), frame:GetHeight() }
-        if ns.ButlerTabs then ns.ButlerTabs:Need("settings", need[1], need[2]) end
+        if ns.ButlerTabs then ns.ButlerTabs:Need("settings", need[1], nil) end
     end
     self.pages:Fit()
 

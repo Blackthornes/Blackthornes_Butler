@@ -120,13 +120,23 @@ end
 -- What each window needs at least, { width, height }, as it last said.
 ButlerTabs.needs = {}
 
---- The size every tab shares: the usual one, or the most any tab needs.
+--- The tallest any tab may make the window: the usual height and the
+--- most the gold goals add (UI/MainWindow.lua). Past it a page scrolls,
+--- so no list, however long, stretches Butler down the screen.
+function ButlerTabs.MostHeight()
+    local extra = ns.UI and tonumber(rawget(ns.UI, "GOALS_MAX_EXTRA")) or 200
+    return ButlerTabs.HEIGHT + extra
+end
+
+--- The size every tab shares: the usual one, or the most any tab needs,
+--- never taller than MostHeight.
 function ButlerTabs:Size()
     local width, height = ButlerTabs.WIDTH, ButlerTabs.HEIGHT
     for _, need in pairs(self.needs) do
         if need[1] and need[1] > width then width = need[1] end
         if need[2] and need[2] > height then height = need[2] end
     end
+    height = math.min(height, ButlerTabs.MostHeight())
     return math.ceil(width), math.ceil(height)
 end
 
@@ -456,10 +466,33 @@ function ButlerTabs:Grow()
     if ns.SharedWindow and ns.SharedWindow.Fit then ns.SharedWindow.Fit(one) end
 end
 
+--- Butler's tabs hang under the one window's bottom edge, outside the
+--- rim it keeps on screen. While Butler is in it, its clamp reaches down
+--- over them too, so a window near the bottom of the screen moves up
+--- instead of hiding them; its own clamp goes back as Butler leaves.
+function ButlerTabs:HoldTabsOnScreen(one)
+    if not (one and one.GetClampRectInsets and one.SetClampRectInsets) then return end
+    local ok, left, right, top, bottom = pcall(one.GetClampRectInsets, one)
+    if not ok then return end
+    left, right, top, bottom = tonumber(left) or 0, tonumber(right) or 0, tonumber(top) or 0, tonumber(bottom) or 0
+    self.oneClamp = { one = one, left, right, top, bottom }
+    if bottom > -ButlerTabs.REACH then
+        pcall(one.SetClampRectInsets, one, left, right, top, -ButlerTabs.REACH)
+    end
+end
+
+function ButlerTabs:LetTabsGo()
+    local kept = self.oneClamp
+    self.oneClamp = nil
+    if not (kept and kept.one and kept.one.SetClampRectInsets) then return end
+    pcall(kept.one.SetClampRectInsets, kept.one, kept[1], kept[2], kept[3], kept[4])
+end
+
 --- Butler's pages go into the one window: called by it (host.enter).
 function ButlerTabs:Enter(area)
     if not area then return end
     self.area = area
+    if not self.oneClamp then self:HoldTabsOnScreen(area:GetParent()) end
     for _, window in ipairs(Windows()) do
         if FrameOf(window) then self:LayIn(window) end
     end
@@ -481,6 +514,7 @@ function ButlerTabs:Leave()
         end
     end
     self.area = nil
+    self:LetTabsGo()
     for _, window in ipairs(Windows()) do
         if FrameOf(window) then self:LayOut(window) end
     end
