@@ -79,6 +79,7 @@ L["bags"] = "Taschen"
 L["bank"] = "Bank"
 L["mail"] = "Post"
 L["Your characters have %d"] = "Deine Charaktere haben %d"
+L["You have %d"] = "Du hast %d"
 L["and 1 more character"] = "und 1 weiterer Charakter"
 L["and %d more characters"] = "und %d weitere Charaktere"
 L["%s (you)"] = "%s (du)"
@@ -935,6 +936,8 @@ L["When your bags are full, a gold can marks the cheapest item Butler would sell
 L["Tooltips list which characters have the item. Needs Blackthornes Tradeskills."] =
     "Tooltips zeigen, welche Charaktere den Gegenstand haben. Braucht Blackthornes Tradeskills."
 L["Vendors sell it for %s"] = "Händler verkaufen es für %s"
+L["Vendors pay %s each"] = "Händler zahlen %s pro Stück"
+L["This stack of %d: %s"] = "Dieser Stapel mit %d: %s"
 L["The last tooltip line says what Butler would do with it."] =
     "Die letzte Tooltipzeile sagt, was Butler damit tun würde."
 L["Butler's Voice:"] = "Butlers Stimme:"

@@ -57,6 +57,7 @@ local function OwnerSlot(tooltip)
     if ok and type(bag) == "number" and type(slot) == "number" and slot > 0 then return bag, slot end
     return nil
 end
+VerdictTip.OwnerSlot = OwnerSlot
 
 --- The slot as the client has it now, if it still holds `itemID`: the kept
 --- entry when nothing in it changed (the window's verdict knows it), else
@@ -207,7 +208,7 @@ function VerdictTip:Decorate(tooltip, data)
     if self:Enabled() then
         held = self:AddLine(tooltip, data) or held
     end
-    -- Under it, what a vendor charges (Logic/VendorPrices.lua), on any item.
+    -- Under it, what a vendor pays and charges (Logic/VendorPrices.lua), on any item.
     if ns.VendorPrices then
         local itemID = ns.WhoHas and ns.WhoHas.ItemID(tooltip, data)
         held = ns.VendorPrices:AddLine(tooltip, itemID, data) or held

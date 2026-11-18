@@ -1335,6 +1335,12 @@ next hover builds it again at most once every `WhoHas.REBUILD_GAP` (1 s).
 unticked, never rename it) and `/bbutler whohas`. Tested in
 `tools/test_whohas.lua`.
 
+A player asked to see their own total, the owner said build it
+(2026-11-18, from a mockup, words approved): when only the character
+playing holds an item, bags only included, `WhoHas.Lines` gives one line,
+"You have 150" with where on the right ("150 in bags", "212 (40 bags, 172
+bank)"). Alts holding it still get the full list.
+
 ## Keep on each character
 
 A player asked, the owner said build it (2026-10-17): keep a number of an
@@ -1503,6 +1509,13 @@ _G.BlackthornesTS.Butler:VendorPrice(itemID)   -- copper for one, or nil
 on unless picked Off, never rename it; Shift key `vendorPrice`). `/bbutler
 probe` has a "vendor prices" line. Tested in `tools/test_vendorprices.lua`.
 If Tradeskills changes the call, change `VendorPrices.FromTradeskills`.
+
+The same player asked for the sell price, the owner said build it
+(2026-11-18, from a mockup, words approved): the same box adds "Vendors pay
+5c each" above the charge line, from `Items:SellPrice` (the item card's
+price wins), on any item that can be sold. With Shift held on a bag slot,
+"This stack of 20: 1s" follows it (`VendorPrices.StackCount`, the slot from
+`VerdictTip.OwnerSlot`, checked against the item). Nothing new in Settings.
 
 ## Off, Shift or Always on tooltips
 

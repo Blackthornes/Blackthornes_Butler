@@ -78,6 +78,7 @@ L["bags"] = "背包"
 L["bank"] = "银行"
 L["mail"] = "邮件"
 L["Your characters have %d"] = "你的角色共有 %d 个"
+L["You have %d"] = "你有 %d 个"
 L["and 1 more character"] = "还有 1 个角色"
 L["and %d more characters"] = "还有 %d 个角色"
 L["%s (you)"] = "%s（你）"
@@ -934,6 +935,8 @@ L["When your bags are full, a gold can marks the cheapest item Butler would sell
 L["Tooltips list which characters have the item. Needs Blackthornes Tradeskills."] =
     "物品提示会列出哪些角色有这件物品。需要 Blackthornes Tradeskills。"
 L["Vendors sell it for %s"] = "商人售价：%s"
+L["Vendors pay %s each"] = "商人收购价：每个 %s"
+L["This stack of %d: %s"] = "这一组 %d 个：%s"
 L["The last tooltip line says what Butler would do with it."] =
     "提示的最后一行写着 Butler 会怎么处理它。"
 L["Butler's Voice:"] = "Butler 的声音："

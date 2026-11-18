@@ -161,13 +161,14 @@ function WhoHas.Where(holder)
 end
 
 --- The lines for an item: { { left, right } }, the first the heading. Nil
---- when there is nothing worth saying: nobody has it, or only the character
---- playing has it and only in its bags, which the player can see.
+--- when nobody has it. When only the character playing has it, one line:
+--- "You have 150" and where (a player asked to see their own total, the
+--- owner said build it, 2026-11-18).
 function WhoHas.Lines(item)
     if not item or #item.holders == 0 then return nil end
     local holders = item.holders
-    if #holders == 1 and holders[1].isCurrent and holders[1].bank == 0 and holders[1].mail == 0 then
-        return nil
+    if #holders == 1 and holders[1].isCurrent then
+        return { { L.Format("You have %d", holders[1].total), WhoHas.Where(holders[1]) } }
     end
     local lines = { { L.Format("Your characters have %d", item.total) } }
     for i, holder in ipairs(holders) do
@@ -225,7 +226,11 @@ function WhoHas:Decorate(tooltip, data)
         local r, g, b = 1, 0.82, 0
         if ns.Theme and ns.Theme.Unpack then r, g, b = ns.Theme.Unpack("accent") end
         tooltip:AddLine(" ")
-        tooltip:AddLine(lines[1][1], r, g, b)
+        if lines[1][2] then
+            tooltip:AddDoubleLine(lines[1][1], lines[1][2], r, g, b, 0.8, 0.8, 0.8)
+        else
+            tooltip:AddLine(lines[1][1], r, g, b)
+        end
         for i = 2, #lines do
             local line = lines[i]
             if line[2] then

@@ -122,19 +122,55 @@ end
 -- The tooltip line
 --------------------------------------------------------------------------------
 
---- Add "Vendors sell it for 25c" under the other lines. True when it was
---- held back for Shift. Never raises.
+--- How many of `itemID` sit in the bag slot a tooltip belongs to, or nil
+--- when it is not a bag slot holding that item. Never raises.
+function VendorPrices.StackCount(tooltip, itemID)
+    local tip = ns.VerdictTip
+    if not (tooltip and tip and tip.OwnerSlot and ns.Bags and ns.Bags.ReadSlot) then return nil end
+    local ok, count = pcall(function()
+        local bag, slot = tip.OwnerSlot(tooltip)
+        if not bag then return nil end
+        local entry = ns.Bags.ReadSlot(bag, slot)
+        if entry and entry.itemID == itemID then return entry.count end
+    end)
+    if ok and type(count) == "number" and count > 0 then return count end
+    return nil
+end
+
+--- What a vendor pays for one, or nil when it can't be sold. Never raises.
+function VendorPrices.SellPrice(itemID)
+    if not (ns.Items and ns.Items.SellPrice) then return nil end
+    local ok, price = pcall(ns.Items.SellPrice, ns.Items, itemID)
+    if ok and type(price) == "number" and price > 0 then return price end
+    return nil
+end
+
+--- Add "Vendors pay 5c each" (and, with Shift on a bag stack, "This stack
+--- of 20: 1s"), then "Vendors sell it for 25c", under the other lines (a
+--- player asked for the sell price, the owner said build it, 2026-11-18).
+--- True when they were held back for Shift. Never raises.
 function VendorPrices:AddLine(tooltip, itemID, data)
     if not (itemID and self:Enabled()) then return false end
     local held = false
     local ok = pcall(function()
         local price = self:Price(itemID)
-        if not price then return end
+        local sell = VendorPrices.SellPrice(itemID)
+        if not (price or sell) then return end
         if not ns.TooltipShift:Shows(self.SHIFT_KEY) then
             held = true
             return
         end
-        tooltip:AddLine(L.Format("Vendors sell it for %s", ns.Items.FormatMoney(price)), 1, 1, 1)
+        local money = ns.Items.FormatMoney
+        if sell then
+            tooltip:AddLine(L.Format("Vendors pay %s each", money(sell)), 1, 1, 1)
+            local count = ns.TooltipShift.ShiftDown() and VendorPrices.StackCount(tooltip, itemID)
+            if count and count > 1 then
+                tooltip:AddLine(L.Format("This stack of %d: %s", count, money(sell * count)), 1, 1, 1)
+            end
+        end
+        if price then
+            tooltip:AddLine(L.Format("Vendors sell it for %s", money(price)), 1, 1, 1)
+        end
         if not data and tooltip.Show then tooltip:Show() end
     end)
     if not ok then ns.Debug("vendor price tooltip failed") end
