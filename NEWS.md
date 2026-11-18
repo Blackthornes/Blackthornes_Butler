@@ -23,6 +23,11 @@ tell a friend: no hype, no questions to the reader, no exclamation marks
 outside the thanks line, no dashes as punctuation, no "now you can". The
 tool prints a note for a shipped line that reads like an advert.
 
+## 1.19.2
+
+Fixes and changes:
+- Butler stays on the screen when your lists are long.
+
 ## 1.19.1
 
 - The Settings pages no longer overlap, and Butler no longer makes the window wider than it needs.

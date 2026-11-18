@@ -4,6 +4,12 @@ Versions follow [semantic versioning](https://semver.org): the middle number
 moves for new behaviour, the last for fixes alone. The newest version goes at
 the top; a release is refused if its version has no section here.
 
+## 1.19.2
+
+For WoW: Forever (interface 16001). `/reload` is enough after updating.
+
+- **Window height.** Butler no longer grows past the bottom of the screen with long lists.
+
 ## 1.19.1
 
 For WoW: Forever (interface 16001). `/reload` is enough after updating.
