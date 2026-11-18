@@ -128,3 +128,12 @@ Lines: WTF|SavedVariables|token|apikey|api_key
 Check: Never commit saved variables, tokens or anything from the owner's machine
   (tools/check_private_files.py).
 Why: Keep his data safe.
+
+## A window's height (Butler)
+Lines: :Need\(|GetScreenHeight|ScreenRoom|SetHeight\(.*[Nn]eed
+Check: A window keeps its size and scrolls when its content is tall. A list
+  that grows with the player's items never makes the window taller, and
+  nothing asks `ButlerTabs:Need` for more height than `ButlerTabs.MostHeight`.
+  Try it in the one window too, where the plate and buttons go on top.
+Why: Settings asked for its fullest page's height, so a long Keep Across
+  list stretched every Butler tab off the bottom of the screen (2026-11-18).

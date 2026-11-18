@@ -1916,6 +1916,20 @@ at most `UI.GOALS_MAX_EXTRA` (200) and scroll past it, and
 `BaseSize`. FILE_VERSION 10. Tested in `tools/test_sharedwindow.lua`
 (and Butler's `tools/test_onewindow.lua`).
 
+Butler keeps its size when a Settings list grows long (the owner,
+2026-11-18: it still stretched off the bottom of the screen). Settings
+asked `ButlerTabs:Need` for its fullest page's height, capped only at the
+screen less 160, so a long Keep Across or rule list made every Butler tab
+nearly the screen's height; in the one window its plate and buttons went
+on top and Butler's tabs hung off the bottom. Now Settings asks only for
+its width, the pages scroll, and `ButlerTabs:Size` never goes past
+`ButlerTabs.MostHeight()` (the usual 500 plus `UI.GOALS_MAX_EXTRA`). While
+Butler is in the one window, its clamp reaches `ButlerTabs.REACH` below
+the bottom edge so the hanging tabs stay on screen
+(`ButlerTabs:HoldTabsOnScreen`, given back by `LetTabsGo` on leaving).
+Show Descriptions no longer makes the window taller either. Tested in
+`tools/test_staysonscreen.lua`.
+
 Butler at the vendor (a player's report in #bug-reports, the owner pressed
 Start Fix, 2026-11-17; `UI/SharedWindow.lua` FILE_VERSION 13, in all five):
 `PLACES.vendor.prefer = "butler"`. Up on another addon as a vendor opens,
