@@ -31,6 +31,8 @@ local compare = env.Stub({ _lines = {}, AddLine = function(self, t) self._lines[
 
 env.Enable(ns)
 local VerdictTip = ns.VerdictTip
+-- The vendor's lines come after the verdict; test_vendorprices.lua covers them.
+ns.db.vendorPrice = false
 
 -- 1.
 suite.check("not hooked before the loading screen", VerdictTip.installed == nil and #postCalls == 1,
@@ -72,7 +74,8 @@ suite.check("the compare tooltip gets nothing", #compare._lines == 0)
 
 -- A slot that no longer holds the item is not believed.
 fake.bags[0][1] = nil
-suite.check("an emptied slot gets nothing", #Hover(GameTooltip, 701, button) == 0)
+lines = Hover(GameTooltip, 701, button)
+suite.check("an emptied slot gets nothing", #lines == 0, table.concat(lines, " / "))
 fake.Put({ bag = 0, slot = 1, id = 701, name = "Broken Fang", quality = 0, price = 125 })
 
 -- 6. A mail says why under it, so "Mail to NAME" is never read as "NAME

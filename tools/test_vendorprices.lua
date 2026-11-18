@@ -9,6 +9,8 @@
 --      under the Butler line; an item no vendor sells gets nothing.
 --   4. Without a price of its own, Butler asks Tradeskills; its own wins.
 --   5. Settings' Off, Shift or Always works on the line.
+--   6. What a vendor pays for one shows too ("Vendors pay 5c each"), and
+--      with Shift on a bag stack, what that stack sells for (2026-11-18).
 
 local env = dofile(lfs_cwd .. "/tools/testenv.lua")
 local suite = env.NewSuite("vendorprices")
@@ -68,16 +70,52 @@ env.Fire("MERCHANT_CLOSED")
 
 -- 3.
 local lines = Hover(2320)
-suite.check("an item not carried gets the vendor line",
-    #lines == 1 and lines[1]:find("^Vendors sell it for 10") ~= nil, tostring(lines[1]))
+suite.check("an item not carried gets the vendor lines",
+    #lines == 2 and lines[1]:find("^Vendors pay ") ~= nil and lines[2]:find("^Vendors sell it for 10") ~= nil,
+    table.concat(lines, " / "))
 lines = Hover(701)
-suite.check("a carried item has it after the Butler line",
-    (lines[1] or ""):find("^Butler:") ~= nil and #lines == 1, tostring(lines[1]))
+suite.check("a carried item has them after the Butler line",
+    (lines[1] or ""):find("^Butler:") ~= nil and #lines == 2, table.concat(lines, " / "))
+suite.check("what a vendor pays for one",
+    (lines[2] or ""):find("^Vendors pay 1.-s.- 25.-c.- each$") ~= nil, tostring(lines[2]))
 ns.db.vendorBuyPrices[701] = 40
 lines = Hover(701)
-suite.check("and the vendor line under it",
-    #lines == 2 and lines[2]:find("^Vendors sell it for 40") ~= nil, tostring(lines[2]))
-suite.check("an item no vendor sells gets nothing", #Hover(4306) == 0)
+suite.check("and what a vendor charges under it",
+    #lines == 3 and lines[3]:find("^Vendors sell it for 40") ~= nil, tostring(lines[3]))
+suite.check("an item no vendor sells or buys gets nothing", #Hover(999999) == 0)
+
+-- 6. With Shift on a stack in the bags, what that stack sells for.
+env.FakeBags({
+    { bag = 0, slot = 1, id = 701, name = "Broken Fang", quality = 0, price = 125, count = 20 },
+    { bag = 0, slot = 2, id = 702, name = "Lone Fang", quality = 0, price = 125 },
+})
+local shiftDown = false
+_G.IsShiftKeyDown = function() return shiftDown end
+local function HoverSlot(itemID, slot)
+    GameTooltip._lines = {}
+    local button = env.Stub({ GetBagID = function() return 0 end, GetID = function() return slot end })
+    GameTooltip.GetOwner = function() return button end
+    for _, call in ipairs(postCalls) do call.fn(GameTooltip, { id = itemID }) end
+    return GameTooltip._lines
+end
+local function Find(found, text)
+    for i, line in ipairs(found) do
+        if tostring(line):find(text, 1, true) then return i end
+    end
+    return nil
+end
+lines = HoverSlot(701, 1)
+suite.check("no stack line with Shift up", Find(lines, "This stack") == nil, table.concat(lines, " / "))
+shiftDown = true
+lines = HoverSlot(701, 1)
+local at = Find(lines, "This stack of 20: ")
+suite.check("Shift adds the stack's worth under each", at ~= nil and Find(lines, "Vendors pay ") == at - 1
+    and lines[at]:find("25.-s") ~= nil, table.concat(lines, " / "))
+suite.check("a single item gets no stack line", Find(HoverSlot(702, 2), "This stack") == nil)
+suite.check("a slot holding something else gets no stack line", Find(HoverSlot(701, 2), "This stack") == nil)
+GameTooltip.GetOwner = function() return nil end
+shiftDown = false
+_G.IsShiftKeyDown = nil
 
 -- 4.
 _G.BlackthornesTS = { Butler = { VendorPrice = function(_, id)
@@ -102,7 +140,7 @@ stepper:Pick(stepper:GetValue() - 1)
 suite.check("Off turns it off", ns.db.vendorPrice == false and #Hover(2320) == 0)
 stepper:Pick(stepper:GetValue() + 1)
 stepper:Pick(stepper:GetValue() + 1)
-suite.check("Always turns it back on", ns.db.vendorPrice == true and #Hover(2320) == 1)
+suite.check("Always turns it back on", ns.db.vendorPrice == true and #Hover(2320) == 2)
 
 suite.check("the probe counts what it learned", VendorPrices:ProbeText():find("^2 learned") ~= nil,
     VendorPrices:ProbeText())
