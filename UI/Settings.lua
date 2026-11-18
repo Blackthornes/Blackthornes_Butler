@@ -29,6 +29,7 @@ local COLUMN_GAP = 18
 -- Where the controls start: room for a label like "Free Bag Space:" in the
 -- game's font, which runs wider than it looks.
 local CONTROL_X = 150
+SettingsUI.PADDING, SettingsUI.COLUMN_WIDTH, SettingsUI.COLUMN_GAP = PADDING, COLUMN_WIDTH, COLUMN_GAP
 
 local TITLE = "Blackthornes Butler"
 
@@ -179,6 +180,10 @@ function SettingsUI:Build()
         columnWidth = COLUMN_WIDTH,
         columnGap = COLUMN_GAP,
         controlX = CONTROL_X,
+        -- The page names wrap to a second line rather than grow the window
+        -- past its two columns (Farmer's BAR_CAP does the same): a wider
+        -- Butler stretched the one window, off the screen in Russian.
+        barCap = 2 * COLUMN_WIDTH + COLUMN_GAP + 2 * PADDING,
         db = function() return ns.db end,
     })
     self:BuildPages()
@@ -1366,7 +1371,7 @@ function SettingsUI:BuildPages()
     end, { height = 18 })
     controls.acrossAdd:SetPoint("BOTTOMRIGHT", acrossHead, "TOPRIGHT", 0, -12)
 
-    local acrossList = CreateFrame("Frame", nil, pages.pages.selling.content)
+    local acrossList = CreateFrame("Frame", nil, pages.pages.keep.content)
     acrossList:SetWidth(COLUMN_WIDTH)
     acrossList.fixedHeight = 40
     acrossList:SetHeight(40)
@@ -1386,7 +1391,7 @@ function SettingsUI:BuildPages()
     end)
     controls.acrossMail:SetPoint("TOPLEFT", CONTROL_X, 0)
 
-    local acrossFoot = CreateFrame("Frame", nil, pages.pages.selling.content)
+    local acrossFoot = CreateFrame("Frame", nil, pages.pages.keep.content)
     acrossFoot:SetSize(COLUMN_WIDTH, 16)
     acrossFoot.fixedHeight = 16
     pages:Place("keep", 2, acrossFoot, 6)

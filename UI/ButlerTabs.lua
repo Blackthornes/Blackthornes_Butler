@@ -431,15 +431,23 @@ function ButlerTabs:Grow()
     local width, height = self:Size()
     local okW, areaW = pcall(area.GetWidth, area)
     local okH, areaH = pcall(area.GetHeight, area)
+    local SharedWindow = ns.SharedWindow
     if okW and type(areaW) == "number" and areaW > 0 and areaW < width then
         one:SetWidth(one:GetWidth() + (width - areaW))
+    elseif okW and type(areaW) == "number" and areaW > width then
+        -- Wider than any tab needs: give the width back too, never below
+        -- the one window's own. It only ever grew before, so one wide
+        -- moment left Butler stretched (2026-11-18).
+        local base = SharedWindow and SharedWindow.BaseSize and SharedWindow.BaseSize()
+        local want = one:GetWidth() - (areaW - width)
+        if base and want < base then want = base end
+        if want < one:GetWidth() then one:SetWidth(want) end
     end
     if okH and type(areaH) == "number" and areaH > 0 and areaH < height then
         one:SetHeight(one:GetHeight() + (height - areaH))
     elseif okH and type(areaH) == "number" and areaH > height then
         -- Gold goals gone or smaller: give the room back, never below the
         -- one window's own height.
-        local SharedWindow = ns.SharedWindow
         local base = SharedWindow and SharedWindow.BaseSize and select(2, SharedWindow.BaseSize())
         local want = one:GetHeight() - (areaH - height)
         if base and want < base then want = base end

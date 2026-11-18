@@ -93,6 +93,28 @@ do
     area.GetHeight = getH
     hub.frame:SetHeight(base)
 end
+-- Settings never asks for more than its two columns: the page names wrap
+-- to a second line instead. Its long name row made Butler stretch the one
+-- window wider than every other addon, past the screen in Russian
+-- (2026-11-18).
+do
+    local twoColumns = 2 * SettingsUI.COLUMN_WIDTH + SettingsUI.COLUMN_GAP + 2 * SettingsUI.PADDING
+    local needW = Tabs.needs.settings and Tabs.needs.settings[1]
+    suite.check("Settings asks no wider than its two columns", needW and needW <= twoColumns, needW, twoColumns)
+end
+-- Wider than a page needs: the width goes back too, never below the one
+-- window's own.
+do
+    local getW = area.GetWidth
+    local base = SW.BaseSize()
+    local needW = Tabs:Size()
+    hub.frame:SetWidth(base + 300)
+    area.GetWidth = function() return needW + 300 end
+    Tabs:Grow()
+    suite.check("a page that needs less width gives it back", hub.frame:GetWidth() == base, hub.frame:GetWidth(), base)
+    area.GetWidth = getW
+    hub.frame:SetWidth(base)
+end
 Tabs:Open("all")
 suite.check("All Characters back in the area", UI.frame:IsShown() and UI.view == "all"
     and UI.frame:GetParent() == area)

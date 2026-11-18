@@ -73,4 +73,22 @@ suite.check("Keep has its own page", pages.pages.keep ~= nil and Has("keep", "Le
 suite.check("Errands keeps the vendor and mail rows", Has("selling", "Open Butler At:")
     and Has("selling", "Buy More:") and Has("selling", "Sell Below:") and not Has("selling", "Count Bank:"))
 
+-- Everything placed on a page lives on that page (2026-11-18): the Keep
+-- Across list and its foot were made on Errands, so they showed over
+-- JUNK AND CRAFTING there and were missing from Keep.
+local strays = {}
+for key, page in pairs(SettingsUI.pages.pages) do
+    for _, list in ipairs(page.items) do
+        for _, entry in ipairs(list) do
+            local frame, on = entry.frame, false
+            while frame do
+                if frame == page.content then on = true break end
+                frame = frame.GetParent and frame:GetParent() or nil
+            end
+            if not on then strays[#strays + 1] = key end
+        end
+    end
+end
+suite.check("every placed piece sits on its own page", #strays == 0, table.concat(strays, ", "))
+
 suite.done()
