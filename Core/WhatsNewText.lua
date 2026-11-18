@@ -5,6 +5,9 @@
 local _, ns = ...
 
 ns.WHATS_NEW = {
+    { version = "1.19.1", lines = {
+        "The Settings pages no longer overlap, and Butler no longer makes the window wider than it needs.",
+    } },
     { version = "1.19.0", lines = {
         "A new key opens and closes Butler's bag window.",
         "Butler can keep the materials your leveling still needs.",
@@ -17,9 +20,5 @@ ns.WHATS_NEW = {
         "Butler can mark the game's bag squares.",
         "Settings has a Keep page and an All Addons page.",
         "The window docks at more places, including the bank and the profession window.",
-    } },
-    { version = "1.17.0", lines = {
-        "A new Reset This Item line is in the right-click menu of every item. It clears every choice you made for that item.",
-        "Butler Bags now opens in a fight.",
     } },
 }
