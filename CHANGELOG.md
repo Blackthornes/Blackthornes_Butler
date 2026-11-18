@@ -4,6 +4,13 @@ Versions follow [semantic versioning](https://semver.org): the middle number
 moves for new behaviour, the last for fixes alone. The newest version goes at
 the top; a release is refused if its version has no section here.
 
+## 1.19.1
+
+For WoW: Forever (interface 16001). `/reload` is enough after updating.
+
+- **Settings pages.** The Keep Across Characters list is back on the Keep page, and the page names no longer run over each other.
+- **Window width.** Butler no longer makes the one window wider than it needs.
+
 ## 1.19.0
 
 For WoW: Forever (interface 16001). `/reload` is not enough: files were added and the key list changed, so close the game fully and start it again after updating.
