@@ -23,6 +23,10 @@ tell a friend: no hype, no questions to the reader, no exclamation marks
 outside the thanks line, no dashes as punctuation, no "now you can". The
 tool prints a note for a shipped line that reads like an advert.
 
+## 1.21.0
+
+- Every window has a gold gem on its title bar. Click it to switch between the one window and separate windows.
+
 ## 1.20.0
 
 - Item tooltips say "You have" and the count when only you have the item.
