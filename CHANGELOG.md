@@ -4,6 +4,13 @@ Versions follow [semantic versioning](https://semver.org): the middle number
 moves for new behaviour, the last for fixes alone. The newest version goes at
 the top; a release is refused if its version has no section here.
 
+## 1.20.0
+
+For WoW: Forever (interface 16001). `/reload` is enough after updating.
+
+- **Who Has It.** When only you have an item, the tooltip says "You have" and the count.
+- **Vendor Price.** Tooltips show what vendors pay for one, and for the whole stack when you hold Shift. Find it in Settings > Tooltips.
+
 ## 1.19.2
 
 For WoW: Forever (interface 16001). `/reload` is enough after updating.

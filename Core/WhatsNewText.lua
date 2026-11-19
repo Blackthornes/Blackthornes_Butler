@@ -5,6 +5,10 @@
 local _, ns = ...
 
 ns.WHATS_NEW = {
+    { version = "1.20.0", lines = {
+        "Item tooltips say \"You have\" and the count when only you have the item.",
+        "Tooltips show what vendors pay for an item, and for the whole stack when you hold Shift.",
+    } },
     { version = "1.19.1", lines = {
         "The Settings pages no longer overlap, and Butler no longer makes the window wider than it needs.",
     } },
@@ -14,11 +18,5 @@ ns.WHATS_NEW = {
         "Butler can put things away on your bank alt for you.",
         "Starred recipes show up at vendors and trainers with Buy or Learn.",
         "Various bug fixes for Butler.",
-    } },
-    { version = "1.18.0", lines = {
-        "A slim Butler Bar can sit under the vendor, mailbox and bank windows.",
-        "Butler can mark the game's bag squares.",
-        "Settings has a Keep page and an All Addons page.",
-        "The window docks at more places, including the bank and the profession window.",
     } },
 }
