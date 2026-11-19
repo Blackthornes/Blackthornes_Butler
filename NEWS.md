@@ -23,6 +23,11 @@ tell a friend: no hype, no questions to the reader, no exclamation marks
 outside the thanks line, no dashes as punctuation, no "now you can". The
 tool prints a note for a shipped line that reads like an advert.
 
+## 1.20.0
+
+- Item tooltips say "You have" and the count when only you have the item.
+- Tooltips show what vendors pay for an item, and for the whole stack when you hold Shift.
+
 ## 1.19.2
 
 Fixes and changes:
