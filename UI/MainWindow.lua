@@ -161,6 +161,9 @@ function UI:Build()
             UI:PlaceButtons()
         end })
     end
+    -- And left of it, the swap gem: it joins every Blackthornes addon into
+    -- the one window (UI/SharedWindow.lua).
+    if ns.SharedWindow and ns.SharedWindow.AddSwap then ns.SharedWindow.AddSwap(frame, "butler") end
 
     -- Escape closes it, like the game's own windows.
     if type(UISpecialFrames) == "table" then

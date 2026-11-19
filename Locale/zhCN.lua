@@ -1192,6 +1192,12 @@ L["Click to show the way to your trainer."] = "点击显示前往训练师的路
 -- The fold gem beside a window's close gem (2026-10-24)
 L["Collapse this window"] = "收起这个窗口"
 L["Expand this window"] = "展开这个窗口"
+L["Split Into Own Windows"] = "拆分为独立窗口"
+L["Gives each addon its own window again."] = "让每个插件重新拥有自己的窗口。"
+L["You can join them back with this same button."] = "用同一个按钮可以把它们重新合并。"
+L["Join Into One Window"] = "合并为一个窗口"
+L["Puts every Blackthornes addon in one window, with a button for each down the side."] = "把所有 Blackthornes 插件放进一个窗口，侧边每个插件都有一个按钮。"
+L["You can split them again with this same button."] = "用同一个按钮可以再次把它们拆开。"
 -- Swap When Full: the popup beside the loot window (2026-10-28)
 L["When your bags are full and you loot a quest item or something worth more, Butler offers to throw out your cheapest junk to make room. Nothing goes until you click Swap."] = "背包满了时，如果你拾取到任务物品或更值钱的东西，Butler 会提议丢掉你最便宜的杂物来腾出空间。在你点击“交换”之前，什么都不会丢。"
 L["Bags Full"] = "背包已满"

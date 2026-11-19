@@ -1193,6 +1193,12 @@ L["Click to show the way to your trainer."] = "Klick, um den Weg zu deinem Lehre
 -- The fold gem beside a window's close gem (2026-10-24)
 L["Collapse this window"] = "Dieses Fenster einklappen"
 L["Expand this window"] = "Dieses Fenster aufklappen"
+L["Split Into Own Windows"] = "In eigene Fenster teilen"
+L["Gives each addon its own window again."] = "Gibt jedem Addon wieder sein eigenes Fenster."
+L["You can join them back with this same button."] = "Mit diesem Knopf kannst du sie wieder verbinden."
+L["Join Into One Window"] = "Zu einem Fenster verbinden"
+L["Puts every Blackthornes addon in one window, with a button for each down the side."] = "Legt alle Blackthornes-Addons in ein Fenster, mit einem Knopf für jedes an der Seite."
+L["You can split them again with this same button."] = "Mit diesem Knopf kannst du sie wieder teilen."
 -- Swap When Full: the popup beside the loot window (2026-10-28)
 L["When your bags are full and you loot a quest item or something worth more, Butler offers to throw out your cheapest junk to make room. Nothing goes until you click Swap."] = "Wenn deine Taschen voll sind und du ein Questitem oder etwas Wertvolleres plünderst, bietet Butler an, deinen billigsten Plunder wegzuwerfen, um Platz zu machen. Nichts verschwindet, bevor du auf Tauschen klickst."
 L["Bags Full"] = "Taschen voll"

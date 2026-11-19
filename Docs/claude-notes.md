@@ -2699,3 +2699,35 @@ vendor or trainer event, since Tradeskills reads the vendor a moment after
 it opens. While this module is loaded (`_G.BlackthornesButler.Wishlist`),
 Tradeskills hides its own card under the window. Without Tradeskills,
 nothing shows. Tested in `tools/test_wishlist.lua`.
+
+## The swap gem (One Window toggle, 2026-11-19)
+
+The owner asked for a toggle on each window to swap between the one window
+and each addon's own windows, and said build it from the mockup
+(2026-11-19). A gold gem sits left of the fold gem on every real
+Blackthornes window, so the gems run swap, fold, close. On the one window it
+shows two panes and splits ("Split Into Own Windows"); on an own window it
+shows one pane with a rail line and joins ("Join Into One Window"). Floating
+arrows, bars, trackers, the Zone Board and similar pieces get none.
+
+- `UI/SharedWindow.lua` (FILE_VERSION 14, the same in all five):
+  `SharedWindow.AddSwap(frame, key)` puts the gem on a dressed window's
+  trim (so it hides with the trim inside the one window); `key` nil is the
+  one window. `SharedWindow.Swap(key, join)` is its click. Split: the
+  addon showing is asked its tab, `SetOn(false)` closes the one window,
+  then the addon opens on its own on that tab. Join: every addon closes its
+  own windows, `SetOn(true)`, then the clicked addon opens in the one
+  window on the same tab. In a fight nothing moves; it runs at
+  PLAYER_REGEN_ENABLED (`hub.swapAfterFight`).
+- Same `oneWindow` / `oneWindowAt` keys, no new setting or key. The "One
+  Window:" box reads `On()` as Settings refreshes, so it follows.
+- Each host gives three optional calls beside `enter` and `leave`:
+  `tab()`, `show(tab)` (opens in the one window or its own as the choice
+  now stands, through its Route) and `hide()`. Without them a split falls
+  back to `open` and a join to `SharedWindow.Open(key)`, so an older
+  copy still works.
+- Here: the Butler window and Settings (`ButlerTabs` in `UI/ButlerTabs.lua`) carry the join gem.
+- Words: the six tooltip strings in every locale (deDE from the mockup).
+- Tested in `tools/test_swapgem.lua` (the same in all five) and
+  `tools/test_swapwindows.lua` (this addon's windows in the fake game).
+  Not yet seen in game.

@@ -525,6 +525,11 @@ end
 ButlerTabs.host = {
     enter = function(area) ButlerTabs:Enter(area) end,
     leave = function() ButlerTabs:Leave() end,
+    -- For the swap gem (SharedWindow.AddSwap): the tab up now, open on a
+    -- tab wherever Butler now belongs, and close its own windows.
+    tab = function() return (ButlerTabs:Current()) end,
+    show = function(key) ButlerTabs:SwapShow(key) end,
+    hide = function() ButlerTabs:SwapHide() end,
     -- Asked by the one window as a vendor opens while it shows another
     -- addon: turn to Butler only when Butler would come up there itself
     -- ("Vendors" ticked, the Butler Bar not taking its place).
@@ -535,6 +540,22 @@ ButlerTabs.host = {
         return true
     end,
 }
+
+--- Open on `key` (nil: the tab it would open on anyway), in the one
+--- window when it is on, else in Butler's own window.
+function ButlerTabs:SwapShow(key)
+    key = key or (ns.UI and rawget(ns.UI, "view") == "all" and "all") or "bags"
+    if self:Route(key) then return end
+    self:Open(key)
+end
+
+--- Close Butler's own windows.
+function ButlerTabs:SwapHide()
+    if self.area then return end
+    for _, window in ipairs(Windows()) do
+        if Shown(FrameOf(window)) and window.Hide then pcall(window.Hide, window) end
+    end
+end
 
 --- A Butler tab is asked to open. With "One Window:" ticked and Butler not
 --- in it yet, the one window opens on Butler instead, on that tab. True when
