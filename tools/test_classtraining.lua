@@ -194,6 +194,19 @@ suite.check("the quest spell leaves the list", #plan.ready == 3 and plan.cost ==
 suite.check("the next level is priced", plan.nextCost == 2200 and plan.nextUnknown == 0)
 suite.check("this character is written down", data.characters["Player-1-AAA"]
     and #data.characters["Player-1-AAA"].ready == 3)
+-- Forever 1.60.1 scrambles the server and spawn parts of a creature's
+-- GUID (2026-11-20): the trainer's ID is still read.
+do
+    local savedGUID = _G.UnitGUID
+    _G.UnitGUID = function(unit)
+        if unit == "npc" then return "Creature-0-x9F3A-B7-C1D2-5499-Z0Q8" end
+        return savedGUID(unit)
+    end
+    env.Fire("TRAINER_SHOW")
+    suite.check("a trainer with a scrambled GUID is kept", data.trainers.MAGE[5499] ~= nil)
+    data.trainers.MAGE[5499] = nil
+    _G.UnitGUID = savedGUID
+end
 
 -- 5. The Jobs group leads with it.
 local rows = Jobs:TrainingLines()
@@ -282,6 +295,16 @@ table.remove(holdings)
 CT:Note()
 suite.check("this character's note keeps its side", data.characters["Player-1-AAA"].faction == "Alliance"
     and data.characters["Player-1-AAA"].realm == "R")
+-- Forever 1.60.1 hands back an empty realm name (2026-11-20): the note
+-- keeps the realm it had, and other realms stay off the list.
+_G.GetRealmName = function() return "" end
+CT:Note()
+suite.check("an empty realm name keeps the note's realm", data.characters["Player-1-AAA"].realm == "R",
+    tostring(data.characters["Player-1-AAA"].realm))
+names = {}
+for _, other in ipairs(CT:Others()) do names[other.name] = true end
+suite.check("and another realm is still not listed", not names["Far Away"] and names["Fresh Note"])
+_G.GetRealmName = function() return "R" end
 for _, key in ipairs({ "Player-1-HHH", "Player-2-OOO", "Player-2-OLD", "Player-1-NEW" }) do
     data.characters[key] = nil
 end
