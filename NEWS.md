@@ -23,6 +23,13 @@ tell a friend: no hype, no questions to the reader, no exclamation marks
 outside the thanks line, no dashes as punctuation, no "now you can". The
 tool prints a note for a shipped line that reads like an advert.
 
+## 1.21.1
+
+Fixes and changes:
+- The trip line and stop dots now draw on the world map.
+- Jobs puts the craft that frees the most bag space first.
+- Reset confirm also clears Always auction and Always disenchant.
+
 ## 1.21.0
 
 - Every window has a gold gem on its title bar. Click it to switch between the one window and separate windows.
