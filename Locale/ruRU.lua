@@ -243,6 +243,7 @@ L["Buff food for your pet"] = "Корм с усилением для питом�
 L["Your pet eats it"] = "Это ест твой питомец"
 L["Buff food for your pet (about %s h of food carried)"] = "Корм с усилением для питомца (корма с собой примерно на %s ч)"
 L["Your pet eats it (about %s h of food carried)"] = "Это ест твой питомец (корма с собой примерно на %s ч)"
+L["Extra pet food. Pets keeps %d."] = "Лишняя еда для питомца. Pets хранит %d."
 L["Bought to disenchant, about %s"] = "Куплено для распыления, примерно %s"
 L["Bought to disenchant: mail to %s"] = "Куплено для распыления: отправить персонажу %s"
 L["Bought to disenchant, but none of your characters can yet"] = "Куплено для распыления, но пока никто из твоих персонажей не может"

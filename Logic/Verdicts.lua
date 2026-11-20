@@ -814,7 +814,7 @@ function STEPS.altUpgrades(self, c)
 end
 
 function STEPS.petFood(self, c)
-    return FromSister(c, self:KeptPetFood(Said(c)))
+    return FromSister(c, self:KeptPetFood(Said(c), c.entry, c.pastKeep))
 end
 
 function STEPS.bought(self, c)
@@ -1249,7 +1249,13 @@ end
 --- Pets: the pet eats it. Pets' hours are for all the food carried, and
 --- only a rough guess (classic's hunger rule), so they are shown, never
 --- used to sell food.
-function Verdicts:KeptPetFood(said)
+---
+--- Food to Keep (Pets' Pet page, 2026-11-20): when Pets says some of this
+--- food is past the number it keeps (`extra`) and a bank alt is picked,
+--- only `keep` of it stays (Groups keeps enough stacks, as Keep on This
+--- Character does) and the rest, judged `pastKeep`, is mailed to the bank
+--- alt. Never sold or deleted for it; with no bank alt it all stays.
+function Verdicts:KeptPetFood(said, entry, pastKeep)
     local pets = said.pets
     if not Sisters.True(pets, "eats") then return nil end
     local buff = Sisters.True(pets, "buff")
@@ -1259,7 +1265,25 @@ function Verdicts:KeptPetFood(said)
         what = buff and L.Format("Buff food for your pet (about %s h of food carried)", Verdicts.Hours(hours))
             or L.Format("Your pet eats it (about %s h of food carried)", Verdicts.Hours(hours))
     end
+    local extra, keep = Sisters.Number(pets, "extra"), Sisters.Number(pets, "keep")
+    local to = extra and extra > 0 and keep and self:PetFoodTo(entry)
+    if to then
+        if pastKeep then
+            local all = Sisters.Number(pets, "keepAll") or keep
+            return "mail", L.Format("Extra pet food. Pets keeps %d.", all), nil, { to = to, bankAlt = true }
+        end
+        return "keep", what, nil, { keepHere = keep }
+    end
     return "keep", what
+end
+
+--- Where Food to Keep mails extra pet food: the bank alt, when one is
+--- picked, the stack can be mailed and it is not the character playing.
+function Verdicts:PetFoodTo(entry)
+    if not (entry and entry.itemID) or entry.bound then return nil end
+    local name = ns.BankAlt and ns.BankAlt:Name()
+    if not name or self:IsMe(name) then return nil end
+    return name
 end
 
 -- Rings and trinkets: a character wears two.

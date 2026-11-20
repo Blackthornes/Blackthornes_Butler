@@ -137,6 +137,8 @@ _G.BlackthornesFarmer.Butler:Advise(itemID)
 _G.BlackthornesPets.Butler:Advise(itemID)
   -- { eats, buff, hours, count }: hours is for all the food carried and
   -- only a rough guess, so Butler shows it and never sells food on it
+  -- With Pets' Food to Keep ticked, also keepAll (the number kept), keep
+  --   (how many of this item stay) and extra (the rest): see "Food to Keep"
 ```
 
 Each sister's `CLAUDE.md` lists its call under "What Butler calls here".
@@ -1242,6 +1244,21 @@ Without Tradeskills, or an older one, the box shows but keeps nothing.
 If the call changes, change `Logic/Sisters.lua` too. Tested in
 `tools/test_keeplevelup.lua` and `tools/test_settings.lua`.
 
+
+## Food to Keep
+
+The owner asked and said build it from a mockup (2026-11-20): Pets'
+Pet page has "Food to Keep:" (on, and a number, 40 at first; off unless
+ticked). Pets shares the number out over the food the pet is fed, best
+first, and its `Butler:Advise` gives `keepAll`, `keep` and `extra`.
+`Verdicts:KeptPetFood(said, entry, pastKeep)`: with `extra` over 0 and a
+bank alt picked (`Verdicts:PetFoodTo`: not bound, not the one playing),
+the step keeps `{ keepHere = keep }`, so Groups keeps enough stacks and
+splits one the same way as Keep on This Character, and the stacks past
+it, judged `pastKeep`, are Mail to the bank alt ("Extra pet food. Pets
+keeps N."). With no bank alt it all stays, as before. Nothing is sold or
+deleted for it, and the player's own keep (first in the order) wins.
+Nothing new is saved in Butler. Tested in `tools/test_petfoodkeep.lua`.
 
 ## What Farmer calls here
 
