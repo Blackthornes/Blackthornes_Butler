@@ -157,14 +157,22 @@ function CT.Player()
     local className, class = Call("UnitClass", "player")
     local _, _, race = Call("UnitRace", "player")
     local faction = Call("UnitFactionGroup", "player")
+    local guid = Text(Call("UnitGUID", "player"))
+    -- Forever 1.60.1 hands back an empty realm name: the one this
+    -- character's note kept from before stands in, so it is never lost.
+    local realm = Text(Call("GetRealmName"))
+    if not realm and guid then
+        local note = CT:Data().characters[guid]
+        realm = type(note) == "table" and Text(note.realm) or nil
+    end
     return {
         class = Text(class),
         className = Text(className) or Text(class),
         level = Number(Call("UnitLevel", "player")) or 1,
         race = Number(race),
         faction = Text(faction),
-        realm = Text(Call("GetRealmName")),
-        guid = Text(Call("UnitGUID", "player")),
+        realm = realm,
+        guid = guid,
         name = Text(Call("UnitName", "player")),
     }
 end
@@ -848,7 +856,7 @@ function CT:ReadTrainer()
 
     -- Where it stands.
     local guid = Text(Call("UnitGUID", "npc"))
-    local npcID = guid and Number(guid:match("^%a+%-%d+%-%d+%-%d+%-%d+%-(%d+)"))
+    local npcID = guid and Number(guid:match("^%a+%-[^%-]+%-[^%-]+%-[^%-]+%-[^%-]+%-(%d+)"))
     if npcID then
         local trainers = data.trainers
         trainers[player.class] = type(trainers[player.class]) == "table" and trainers[player.class] or {}
