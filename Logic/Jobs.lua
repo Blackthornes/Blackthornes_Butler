@@ -118,6 +118,8 @@ local function CleanStep(step)
             forNames = forNames,
             ready = step.ready == true,
             missing = ItemList(step.missing),
+            -- The bag slots it frees, which Jobs.Order sorts by.
+            slots = type(step.slots) == "number" and step.slots or nil,
         }
     elseif step.kind == "mail" then
         local to = Text(step.to)

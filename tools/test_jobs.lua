@@ -631,6 +631,18 @@ suite.check("crafts freeing more slots come first", table.concat(ids, ",") == "2
 ordered = Jobs.Order({ craftStep(1), craftStep(2) }, {})
 suite.check("with no slot counts the order stays", ordered[1].recipeID == 1 and ordered[2].recipeID == 2)
 
+-- 7c. The same through what Tradeskills sends (found 2026-11-20: reading
+-- the list dropped `slots`, so in game the crafts never changed places).
+local sent = Jobs.Clean({ { name = "Ann Lee", isCurrent = true, steps = {
+    { kind = "craft", recipeID = 1, itemID = 901, name = "Small", count = 1, ready = true, slots = 1 },
+    { kind = "craft", recipeID = 2, itemID = 902, name = "Big", count = 1, ready = true, slots = 5 },
+    { kind = "craft", recipeID = 3, itemID = 903, name = "Odd", count = 1, ready = true, slots = "many" },
+} } })
+ids = {}
+for _, step in ipairs(sent[1] and sent[1].steps or {}) do ids[#ids + 1] = step.recipeID end
+suite.check("crafts Tradeskills sent are ordered by the slots they free", table.concat(ids, ",") == "2,1,3",
+    table.concat(ids, ","))
+
 -- 7b. At login an item's name can still be loading: the line waits for
 -- it rather than saying "Item 2605", and says it anyway in the end.
 do

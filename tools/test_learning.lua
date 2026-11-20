@@ -235,8 +235,15 @@ suite.check("with learning off, nothing is counted",
     not (ns.db.learnTally.mails[301] and ns.db.learnTally.mails[301]["Cy Morrow"]))
 ns.db.learn = true
 
--- reset confirm forgets it all.
+-- reset confirm forgets it all, every Always list too (found 2026-11-20:
+-- Always auction and Always disenchant were left as they were).
+ns.db.alwaysAuction = ns.db.alwaysAuction or {}
+ns.db.alwaysDisenchant = ns.db.alwaysDisenchant or {}
+ns.db.alwaysAuction[4306] = true
+ns.db.alwaysDisenchant[4307] = true
 ns.HandleSlash("reset confirm")
+suite.check("reset confirm empties Always auction and Always disenchant",
+    next(ns.db.alwaysAuction or {}) == nil and next(ns.db.alwaysDisenchant or {}) == nil)
 suite.check("reset confirm forgets what was learned", Learning:Get(201) == nil
     and next(ns.db.learnTally) == nil)
 

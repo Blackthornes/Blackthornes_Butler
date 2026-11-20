@@ -2150,6 +2150,8 @@ ns.RegisterCommand("reset", L["empty your Always keep, sell, bank and mail lists
         return
     end
     ns.db.alwaysKeep, ns.db.alwaysSell, ns.db.alwaysBank, ns.db.alwaysMail = {}, {}, {}, {}
+    -- The two lists added later too, so "decides every item again" is true.
+    ns.db.alwaysAuction, ns.db.alwaysDisenchant = {}, {}
     if ns.Learning then ns.Learning:ForgetAll() end
     Verdicts:Changed(true)
     ns.Print(L["your Always keep, Always sell, Always bank and Always mail lists are empty, and Butler has forgotten what it learned from you. Butler decides every item again."])
