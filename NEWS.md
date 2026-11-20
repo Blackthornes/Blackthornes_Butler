@@ -23,6 +23,11 @@ tell a friend: no hype, no questions to the reader, no exclamation marks
 outside the thanks line, no dashes as punctuation, no "now you can". The
 tool prints a note for a shipped line that reads like an advert.
 
+## 1.22.1
+
+Fixes and changes:
+- Each character keeps its own saved realm.
+
 ## 1.22.0
 
 - Butler mails extra pet food to your bank alt when Food to Keep is on in Pets.
