@@ -34,13 +34,12 @@ local VerdictTip = ns.VerdictTip
 -- The vendor's lines come after the verdict; test_vendorprices.lua covers them.
 ns.db.vendorPrice = false
 
--- 1.
-suite.check("not hooked before the loading screen", VerdictTip.installed == nil and #postCalls == 1,
+-- 1. The shared tooltip block (UI/TooltipBlock.lua) puts every line on in
+-- its own order, so Butler no longer waits for the loading screen.
+suite.check("one hook for the block", VerdictTip.installed == "tooltip block" and #postCalls == 1,
     #postCalls)
 env.Fire("PLAYER_ENTERING_WORLD")
-suite.check("hooked after it, after Who has it", VerdictTip.installed == "post call" and #postCalls == 2)
-env.Fire("PLAYER_ENTERING_WORLD")
-suite.check("and only once", #postCalls == 2)
+suite.check("and only once", #postCalls == 1)
 
 local function Hover(tooltip, itemID, owner)
     tooltip._lines = {}
@@ -54,7 +53,7 @@ local button = env.Stub({ GetBagID = function() return 0 end, GetID = function()
 local lines = Hover(GameTooltip, 701, button)
 local last = lines[#lines]
 suite.check("the hovered slot gets the line though Butler's read is stale",
-    last ~= nil and last:find("^Butler: Sell") ~= nil, tostring(last))
+    last ~= nil and last:find("^Butler Says: | Sell") ~= nil, tostring(last))
 
 -- 2.
 suite.check("with what one is worth", last ~= nil and last:find("each", 1, true) ~= nil, tostring(last))
@@ -63,7 +62,7 @@ suite.check("with what one is worth", last ~= nil and last:find("each", 1, true)
 -- tests' timers run at once), and the next hover has it.
 Hover(ItemRefTooltip, 701, nil)
 lines = Hover(ItemRefTooltip, 701, nil)
-suite.check("a link to a carried item gets it too", (lines[#lines] or ""):find("^Butler: Sell") ~= nil,
+suite.check("a link to a carried item gets it too", (lines[#lines] or ""):find("^Butler Says: | Sell") ~= nil,
     tostring(lines[#lines]))
 
 -- 3.
@@ -86,10 +85,10 @@ ns.Verdicts:Changed(true)
 local mailButton = env.Stub({ GetBagID = function() return 0 end, GetID = function() return 2 end })
 lines = Hover(GameTooltip, 702, mailButton)
 local mailLine, whyLine = lines[#lines - 1] or "", lines[#lines] or ""
-suite.check("a mail names who it goes to", mailLine:find("^Butler: Mail to Bob Stone") ~= nil, mailLine)
-suite.check("and says why under it", whyLine ~= "" and not whyLine:find("^Butler:"), whyLine)
+suite.check("a mail names who it goes to", mailLine:find("^Butler Says: | Mail to Bob Stone") ~= nil, mailLine)
+suite.check("and says why under it", whyLine ~= "" and not whyLine:find("^Butler"), whyLine)
 lines = Hover(GameTooltip, 701, button)
-suite.check("a sale has no reason line", #lines == 1, #lines)
+suite.check("a sale has no reason line", #lines == 2, #lines)
 
 -- 5.
 ns.HandleSlash("tooltip")
@@ -98,8 +97,8 @@ ns.HandleSlash("settings")
 local box = ns.SettingsUI.controls.verdictTip
 suite.check("Settings shows it off", not box:GetChecked())
 box:GetScript("OnClick")(box)
-suite.check("Always turns it on", ns.db.verdictTip == true and #Hover(GameTooltip, 701, button) == 1)
+suite.check("Always turns it on", ns.db.verdictTip == true and #Hover(GameTooltip, 701, button) == 2)
 
-suite.check("the probe says how it is hooked", VerdictTip:ProbeText():find("post call", 1, true) ~= nil)
+suite.check("the probe says how it is hooked", VerdictTip:ProbeText():find("tooltip block", 1, true) ~= nil)
 
 suite.done()

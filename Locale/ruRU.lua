@@ -1347,4 +1347,12 @@ L["Used to level your %s"] = "Нужно для прокачки: %s"
 L["keep materials for leveling your professions (levelup on|off)"] = "хранить материалы для прокачки профессий (levelup on|off)"
 L["Butler keeps your Level Up materials now."] = "Butler теперь хранит твои материалы для прокачки."
 L["Butler stopped keeping your Level Up materials."] = "Butler больше не хранит твои материалы для прокачки."
+
+-- Names in the shared item tooltip block (2026-11-21).
+L["Butler Says:"] = "Butler советует:"
+L["Vendor Pays:"] = "Торговец платит:"
+L["Vendor Sells For:"] = "Торговец продаёт за:"
+L["Stack of %d:"] = "Стопка из %d:"
+L["You Have:"] = "У тебя:"
+L["Your Characters:"] = "Твои персонажи:"
 L["Open or close the window"] = "Открыть или закрыть окно"

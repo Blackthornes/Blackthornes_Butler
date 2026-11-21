@@ -138,15 +138,15 @@ function VerdictTip:Line(itemID, tooltip)
     end
     local label = verdict and ns.Verdicts.LABELS[verdict]
     if not label then return nil end
-    local left
+    local left, answer
     local details = verdict == "craft" and type(craft) == "table" and type(craft.name) == "string"
         and self:DetailsOn()
     if verdict == "mail" and type(to) == "string" and to ~= "" then
-        left = L.Format("Butler: Mail to %s", to)
+        left, answer = L.Format("Butler: Mail to %s", to), L.Format("Mail to %s", to)
     elseif details then
-        left = L.Format("Butler: Craft %s", craft.name)
+        left, answer = L.Format("Butler: Craft %s", craft.name), L.Format("Craft %s", craft.name)
     else
-        left = L.Format("Butler: %s", label)
+        left, answer = L.Format("Butler: %s", label), label
     end
     local right = (type(unit) == "number" and unit > 0) and L.Format("%s each", ns.Items.FormatMoney(unit)) or nil
     -- A mail says why under it (to disenchant, an upgrade, your list), so
@@ -155,7 +155,7 @@ function VerdictTip:Line(itemID, tooltip)
     local why = nil
     if verdict == "mail" and type(reason) == "string" and reason ~= "" then why = reason end
     if details then why = VerdictTip.CraftWhy(craft) end
-    return left, right, why
+    return left, right, why, answer
 end
 
 --- Whether "Craft Details:" is ticked: off unless the player ticks it
@@ -243,10 +243,51 @@ function VerdictTip:AddLine(tooltip, data)
     return held
 end
 
+--------------------------------------------------------------------------------
+-- The shared tooltip block (UI/TooltipBlock.lua, 2026-11-21)
+--------------------------------------------------------------------------------
+
+--- "Butler Says:" and what Butler would do: "Sell, 12s each". The grey
+--- reason or craft details stay under it. Lines and whether held back.
+function VerdictTip:BlockLines(tooltip, data)
+    if not Decorates(tooltip) or not self:Enabled() then return nil end
+    local itemID = ns.WhoHas and ns.WhoHas.ItemID(tooltip, data)
+    if not itemID then return nil end
+    local left, right, why, answer = self:Line(itemID, tooltip)
+    if not left then return nil end
+    if not ns.TooltipShift:Shows(self.SHIFT_KEY) then return nil, true end
+    local lines = { { L["Butler Says:"], right and L.Format("%s, %s", answer, right) or answer } }
+    if why then lines[2] = { why, leftColor = { 0.7, 0.7, 0.7 }, wrap = true } end
+    return lines
+end
+
+--- What a vendor pays and charges, for the price part of the block.
+function VerdictTip:PriceLines(tooltip, data)
+    if not Decorates(tooltip) or not ns.VendorPrices then return nil end
+    local itemID = ns.WhoHas and ns.WhoHas.ItemID(tooltip, data)
+    return ns.VendorPrices:BlockLines(tooltip, itemID)
+end
+
+--- Hand the block Butler's advice and vendor prices. True when it took.
+function VerdictTip:Provide()
+    local block = ns.TooltipBlock
+    if not block then return false end
+    block:Provide("Butler:price", "price", 2, function(tooltip, data)
+        return VerdictTip:PriceLines(tooltip, data)
+    end)
+    block:Provide("Butler:advice", "advice", 2, function(tooltip, data)
+        return VerdictTip:BlockLines(tooltip, data)
+    end)
+    block:Install()
+    self.installed = "tooltip block"
+    return true
+end
+
 --- Hook item tooltips once, the same two ways Who has it does. Returns
 --- which, for the probe.
 function VerdictTip:Install()
     if self.installed then return self.installed end
+    if self:Provide() then return self.installed end
     local processor = rawget(_G, "TooltipDataProcessor")
     local enum = rawget(_G, "Enum")
     local itemType = type(enum) == "table" and type(enum.TooltipDataType) == "table" and enum.TooltipDataType.Item
@@ -280,6 +321,8 @@ function VerdictTip:ProbeText()
 end
 
 function VerdictTip:OnEnable()
+    -- The block sorts the lines itself, so there is no need to wait.
+    if self:Provide() then return end
     ns.RegisterEvent(self, "PLAYER_ENTERING_WORLD", function()
         if VerdictTip.installed or VerdictTip.waiting then return end
         VerdictTip.waiting = true

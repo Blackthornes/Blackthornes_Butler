@@ -66,6 +66,7 @@ UI\SharedMinimap.lua
 UI\SharedWindow.lua
 UI\Minimap.lua
 UI\TooltipShift.lua
+UI\TooltipBlock.lua
 UI\Settings.lua
 UI\GoldGoals.lua
 UI\MainWindow.lua

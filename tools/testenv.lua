@@ -102,6 +102,9 @@ env.Stub = Stub
 --------------------------------------------------------------------------------
 
 function env.InstallClient()
+    -- The tooltip block hooks the game once for every copy; each suite
+    -- starts with a game nobody hooked.
+    _G.BlackthornesTooltipBlock = nil
     env.chat = {}
 
     _G.UIParent = Stub({ _height = 2160 })
