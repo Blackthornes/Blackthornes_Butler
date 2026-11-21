@@ -177,6 +177,7 @@ L["Sold items stay in the vendor's Buyback tab."] = "Проданное оста
 L["Nothing to sell."] = "Нечего продавать."
 L["Fill mail to %s"] = "Письмо для %s"
 L["Move %d to bank"] = "В банк: %d"
+L["Buy %d"] = "Купить %d"
 L["Fills the Send Mail page. You press Send."] = "Заполняет страницу «Отправить письмо». «Отправить» нажимаешь ты."
 L["Moves whole stacks, one at a time."] = "Переносит целые стопки, по одной."
 L["Drag to make the window bigger or smaller."] = "Тяни, чтобы сделать окно больше или меньше."

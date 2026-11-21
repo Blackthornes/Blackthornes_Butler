@@ -189,6 +189,7 @@ L["Sold items stay in the vendor's Buyback tab."] = "Verkaufte Gegenstände blei
 L["Nothing to sell."] = "Nichts zu verkaufen."
 L["Fill mail to %s"] = "Post füllen für %s"
 L["Move %d to bank"] = "%d in die Bank"
+L["Buy %d"] = "%d kaufen"
 L["Fills the Send Mail page. You press Send."] = "Füllt die Seite „Brief verschicken“. Senden klickst du selbst."
 L["Moves whole stacks, one at a time."] = "Bewegt ganze Stapel, einen nach dem anderen."
 L["Drag to make the window bigger or smaller."] = "Ziehen, um das Fenster größer oder kleiner zu machen."

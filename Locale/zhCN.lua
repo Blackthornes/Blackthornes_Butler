@@ -188,6 +188,7 @@ L["Sold items stay in the vendor's Buyback tab."] = "卖掉的物品会留在商
 L["Nothing to sell."] = "没有要出售的。"
 L["Fill mail to %s"] = "填写给 %s 的邮件"
 L["Move %d to bank"] = "存入银行 %d 个"
+L["Buy %d"] = "购买 %d 种"
 L["Fills the Send Mail page. You press Send."] = "填好发送邮件页面。发送由你来点。"
 L["Moves whole stacks, one at a time."] = "一次搬一整组，一组一组来。"
 L["Drag to make the window bigger or smaller."] = "拖动可以把窗口变大或变小。"
