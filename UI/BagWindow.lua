@@ -1354,6 +1354,12 @@ local function PlainButton(index)
         GameTooltip:Show()
     end)
     button:SetScript("OnLeave", function() GameTooltip:Hide() end)
+    -- Shift-click with the chat box open links it, Ctrl-click tries it on,
+    -- as the game's own bag squares do.
+    button:SetScript("OnClick", function(self)
+        local item = self.bfrItem
+        if item then Widgets.ItemClick(item.itemID, item.link) end
+    end)
     plain[index] = button
     return button
 end

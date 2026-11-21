@@ -2793,3 +2793,19 @@ arrows, bars, trackers, the Zone Board and similar pieces get none.
 ## An empty realm name (Forever 1.60.1)
 
 Forever 1.60.1 (a hotfix, announced 2026-11-20) makes GetRealmName, GetRealmID and the C_BattleNet realm fields hand back "" or 0, and scrambles the realm, server and spawn parts of Creature, Vehicle, Pet and GameObject GUIDs (player GUIDs are not named). Every reader of a mob, vendor or trainer ID from a GUID takes any text in parts 2 to 5 (`[^%-]+`), never `%d+`; a new one must too. The class training note is rewritten at each login, so a blank realm would have wiped the saved one: `CT.Player()` falls back on this character's saved note. `Logic/ClassTraining.lua` is the same in Equipment. The other "this realm and side" lists read Tradeskills' records, which keep their realm. Tested in `tools/test_classtraining.lua`.
+
+## Item rows answer the game's clicks
+
+The owner said build it (2026-11-21, from the UI pass mockup 5): every item
+row answers the clicks the game's bags do. `Widgets.ItemClick(itemID, link)`
+in `UI/Widgets.lua` (the same helper in all five addons): Shift-click
+(`IsModifiedClick("CHATLINK")`) puts the link in the chat box only while one
+is open (`Widgets.ChatBoxOpen`); Ctrl-click (`DRESSUP`) tries gear on. The
+game's `HandleModifiedItemClick` does the work where it is there, else
+`ChatEdit_InsertLink` / `DressUpItemLink`, all in pcall. `Widgets.ItemLink`
+and `Widgets.ItemTooltip(owner, id, link)` go with it. `CreateRowList`
+takes `itemOf(data) -> itemID, link`, checked on a left click before
+`onClick`. Here: the Butler window's item rows, All characters' rows, quest
+buys, ammo and wishlist rows (`UI.ItemOfRow`), and the Bags window's Bank
+and Everyone squares. Your bags squares are the game's own item buttons and
+already answer these. Tested in `tools/test_itemclicks.lua`.
