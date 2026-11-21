@@ -177,6 +177,31 @@ function VendorPrices:AddLine(tooltip, itemID, data)
     return held
 end
 
+--- The same lines for the shared tooltip block: "Vendor Pays:" with what
+--- one brings (with Shift, the slot's stack too), then "Vendor Sells For:".
+--- Lines and whether they were held back. Never raises.
+function VendorPrices:BlockLines(tooltip, itemID)
+    if not (itemID and self:Enabled()) then return nil end
+    local ok, lines, held = pcall(function()
+        local price = self:Price(itemID)
+        local sell = VendorPrices.SellPrice(itemID)
+        if not (price or sell) then return nil end
+        if not ns.TooltipShift:Shows(self.SHIFT_KEY) then return nil, true end
+        local money, out = ns.Items.FormatMoney, {}
+        if sell then
+            out[#out + 1] = { L["Vendor Pays:"], L.Format("%s each", money(sell)) }
+            local count = ns.TooltipShift.ShiftDown() and VendorPrices.StackCount(tooltip, itemID)
+            if count and count > 1 then
+                out[#out + 1] = { L.Format("Stack of %d:", count), money(sell * count) }
+            end
+        end
+        if price then out[#out + 1] = { L["Vendor Sells For:"], money(price) } end
+        return out
+    end)
+    if not ok then return nil end
+    return lines, held
+end
+
 --- One line for /bbutler probe.
 function VendorPrices:ProbeText()
     local count = 0

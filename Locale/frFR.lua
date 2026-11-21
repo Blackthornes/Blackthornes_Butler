@@ -1394,3 +1394,11 @@ L["Used to level your %s"] = "Sert à monter ton métier %s"
 L["keep materials for leveling your professions (levelup on|off)"] = "garder les composants pour monter tes métiers (levelup on|off)"
 L["Butler keeps your Level Up materials now."] = "Butler garde maintenant tes composants de montée."
 L["Butler stopped keeping your Level Up materials."] = "Butler ne garde plus tes composants de montée."
+
+-- Names in the shared item tooltip block (2026-11-21).
+L["Butler Says:"] = "Butler dit :"
+L["Vendor Pays:"] = "Le marchand paie :"
+L["Vendor Sells For:"] = "Le marchand le vend :"
+L["Stack of %d:"] = "Pile de %d :"
+L["You Have:"] = "Tu as :"
+L["Your Characters:"] = "Tes personnages :"

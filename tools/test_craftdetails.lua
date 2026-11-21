@@ -69,14 +69,14 @@ local function Joined(lines) return env.Plain(table.concat(lines, "\n")) end
 -- 1.
 suite.check("off unless ticked", ns.db.craftDetails ~= true and not ns.VerdictTip:DetailsOn())
 local text = Joined(Hover(2592, 1))
-suite.check("off: the line stays Butler: Craft", text:find("Butler: Craft |", 1, true) ~= nil, text)
+suite.check("off: the line stays Craft", text:find("Butler Says: | Craft, ", 1, true) ~= nil, text)
 suite.check("off: no product named", text:find("Bolt of Woolen Cloth", 1, true) == nil, text)
 
 -- 4 and 2.
 ns.HandleSlash("craftdetails on")
 suite.check("/bbutler craftdetails on ticks it", ns.db.craftDetails == true)
 text = Joined(Hover(2592, 1))
-suite.check("on: names the product", text:find("Butler: Craft Bolt of Woolen Cloth", 1, true) ~= nil, text)
+suite.check("on: names the product", text:find("Butler Says: | Craft Bolt of Woolen Cloth", 1, true) ~= nil, text)
 suite.check("on: says what it earns",
     text:find("About " .. env.Plain(ns.Items.FormatMoney(960)) .. " more than selling it.", 1, true) ~= nil, text)
 

@@ -39,7 +39,8 @@ _G.IsShiftKeyDown = function() return shiftDown end
 env.Enable(ns)
 env.Fire("PLAYER_ENTERING_WORLD")
 local Shift = ns.TooltipShift
-suite.check("both lines are hooked", #postCalls == 2 and ns.VerdictTip.installed == "post call")
+-- The shared tooltip block (UI/TooltipBlock.lua) writes both, one hook.
+suite.check("both lines are hooked", #postCalls == 1 and ns.VerdictTip.installed == "tooltip block")
 suite.check("both keys are listed", Shift.KEYS[1] == "whoHas" and Shift.KEYS[2] == "verdictTip")
 
 local button = env.Stub({ GetBagID = function() return 0 end, GetID = function() return 1 end })
@@ -74,8 +75,8 @@ suite.check("an on line reads as Always", Shift:Mode(ns.db.whoHas ~= false, "who
     and Shift:Mode(ns.db.verdictTip ~= false, "verdictTip") == Shift.ALWAYS)
 suite.check("an off line reads as Off", Shift:Mode(false, "whoHas") == Shift.OFF)
 local lines = Hover()
-suite.check("as before, both lines show and no hint", Find(lines, "Your characters have") and
-    Find(lines, "Butler:") and Count(lines, HINT) == 0, table.concat(lines, " / "))
+suite.check("as before, both lines show and no hint", Find(lines, "Your Characters:") and
+    Find(lines, "Butler Says:") and Count(lines, HINT) == 0, table.concat(lines, " / "))
 
 ns.HandleSlash("settings")
 local controls = ns.SettingsUI.controls
@@ -92,10 +93,10 @@ suite.check("a line on Shift is kept, and lines that differ show as the most sho
     ns.db.tooltipShift and ns.db.tooltipShift.whoHas == true
     and ns.db.whoHas == true and controls.tooltipLines:GetValue() == Shift.ALWAYS)
 lines = Hover()
-suite.check("with Shift up Who has it waits", Find(lines, "Your characters have") == nil, table.concat(lines, " / "))
-suite.check("the verdict still shows", Find(lines, "Butler: Sell") ~= nil)
+suite.check("with Shift up Who has it waits", Find(lines, "Your Characters:") == nil, table.concat(lines, " / "))
+suite.check("the verdict still shows", Find(lines, "Butler Says: | Sell") ~= nil)
 suite.check("and the hint comes after it, once", lines[#lines] == HINT and Count(lines, HINT) == 1
-    and Find(lines, "Butler: Sell") < #lines, table.concat(lines, " / "))
+    and Find(lines, "Butler Says: | Sell") < #lines, table.concat(lines, " / "))
 
 -- Both on Shift: the hint still goes on once.
 controls.tooltipLines:Pick(Shift.SHIFT)
@@ -122,28 +123,20 @@ shiftDown = true
 Shift.shared.OnModifier("RSHIFT")
 lines = GameTooltip._lines
 suite.check("Shift down redraws the tooltip", refreshed == 1)
-suite.check("with both lines and no hint", Find(lines, "Your characters have")
-    and Find(lines, "Butler: Sell") and Count(lines, HINT) == 0, table.concat(lines, " / "))
+suite.check("with both lines and no hint", Find(lines, "Your Characters:")
+    and Find(lines, "Butler Says: | Sell") and Count(lines, HINT) == 0, table.concat(lines, " / "))
 shiftDown = false
 _G.C_TooltipInfo = savedInfo
 
--- In the second after login, before the verdict's hook is in, Who has it
--- on Shift adds the hint itself.
-ns.VerdictTip.installed = nil
 Shift:Apply(Shift.ALWAYS, "verdictTip", true, nil)
 Shift:Apply(Shift.ALWAYS, "vendorPrice", true, nil)
-Clear(GameTooltip)
-postCalls[1].fn(GameTooltip, { id = 701 })
-suite.check("without the verdict's hook, Who has it adds the hint", GameTooltip._lines[1] == HINT
-    and #GameTooltip._lines == 1, table.concat(GameTooltip._lines, " / "))
-ns.VerdictTip.installed = "post call"
 
 -- 5. Off and back to Always.
 Tick(controls.whoHas)
 suite.check("unticking Who Has It turns it off", ns.db.whoHas == false and not controls.whoHas:GetChecked()
     and controls.tooltipLines:GetValue() == Shift.ALWAYS)
 lines = Hover()
-suite.check("and it shows nothing, no hint", Find(lines, "Your characters have") == nil and Count(lines, HINT) == 0)
+suite.check("and it shows nothing, no hint", Find(lines, "Your Characters:") == nil and Count(lines, HINT) == 0)
 Tick(controls.whoHas)
 suite.check("ticking it under Always turns it on and forgets Shift", ns.db.whoHas == true and ns.db.tooltipShift.whoHas == nil)
 refreshed = 0

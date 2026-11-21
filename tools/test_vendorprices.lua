@@ -71,17 +71,18 @@ env.Fire("MERCHANT_CLOSED")
 -- 3.
 local lines = Hover(2320)
 suite.check("an item not carried gets the vendor lines",
-    #lines == 2 and lines[1]:find("^Vendors pay ") ~= nil and lines[2]:find("^Vendors sell it for 10") ~= nil,
+    #lines == 3 and lines[2]:find("^Vendor Pays: | ") ~= nil and lines[3]:find("^Vendor Sells For: | 10") ~= nil,
     table.concat(lines, " / "))
 lines = Hover(701)
-suite.check("a carried item has them after the Butler line",
-    (lines[1] or ""):find("^Butler:") ~= nil and #lines == 2, table.concat(lines, " / "))
+-- The block puts prices first, then what Butler says.
+suite.check("a carried item has them before the Butler line",
+    (lines[3] or ""):find("^Butler Says:") ~= nil and #lines == 3, table.concat(lines, " / "))
 suite.check("what a vendor pays for one",
-    (lines[2] or ""):find("^Vendors pay 1.-s.- 25.-c.- each$") ~= nil, tostring(lines[2]))
+    (lines[2] or ""):find("^Vendor Pays: | 1.-s.- 25.-c.- each$") ~= nil, tostring(lines[2]))
 ns.db.vendorBuyPrices[701] = 40
 lines = Hover(701)
 suite.check("and what a vendor charges under it",
-    #lines == 3 and lines[3]:find("^Vendors sell it for 40") ~= nil, tostring(lines[3]))
+    #lines == 4 and lines[3]:find("^Vendor Sells For: | 40") ~= nil, tostring(lines[3]))
 suite.check("an item no vendor sells or buys gets nothing", #Hover(999999) == 0)
 
 -- 6. With Shift on a stack in the bags, what that stack sells for.
@@ -105,14 +106,14 @@ local function Find(found, text)
     return nil
 end
 lines = HoverSlot(701, 1)
-suite.check("no stack line with Shift up", Find(lines, "This stack") == nil, table.concat(lines, " / "))
+suite.check("no stack line with Shift up", Find(lines, "Stack of") == nil, table.concat(lines, " / "))
 shiftDown = true
 lines = HoverSlot(701, 1)
-local at = Find(lines, "This stack of 20: ")
-suite.check("Shift adds the stack's worth under each", at ~= nil and Find(lines, "Vendors pay ") == at - 1
+local at = Find(lines, "Stack of 20: | ")
+suite.check("Shift adds the stack's worth under each", at ~= nil and Find(lines, "Vendor Pays: ") == at - 1
     and lines[at]:find("25.-s") ~= nil, table.concat(lines, " / "))
-suite.check("a single item gets no stack line", Find(HoverSlot(702, 2), "This stack") == nil)
-suite.check("a slot holding something else gets no stack line", Find(HoverSlot(701, 2), "This stack") == nil)
+suite.check("a single item gets no stack line", Find(HoverSlot(702, 2), "Stack of") == nil)
+suite.check("a slot holding something else gets no stack line", Find(HoverSlot(701, 2), "Stack of") == nil)
 GameTooltip.GetOwner = function() return nil end
 shiftDown = false
 _G.IsShiftKeyDown = nil
@@ -140,7 +141,7 @@ stepper:Pick(stepper:GetValue() - 1)
 suite.check("Off turns it off", ns.db.vendorPrice == false and #Hover(2320) == 0)
 stepper:Pick(stepper:GetValue() + 1)
 stepper:Pick(stepper:GetValue() + 1)
-suite.check("Always turns it back on", ns.db.vendorPrice == true and #Hover(2320) == 2)
+suite.check("Always turns it back on", ns.db.vendorPrice == true and #Hover(2320) == 3)
 
 suite.check("the probe counts what it learned", VendorPrices:ProbeText():find("^2 learned") ~= nil,
     VendorPrices:ProbeText())

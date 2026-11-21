@@ -250,11 +250,48 @@ end
 -- Hooks
 --------------------------------------------------------------------------------
 
+--- The same lines for the shared tooltip block (UI/TooltipBlock.lua,
+--- 2026-11-21): "You Have:" with where, or "Your Characters:" with the
+--- total and a row for each. Lines and whether they were held back.
+function WhoHas:BlockLines(tooltip, data)
+    if self.quiet or not self:Enabled() or not Decorates(tooltip) then return nil end
+    local itemID = WhoHas.ItemID(tooltip, data)
+    if not itemID then return nil end
+    local ok, lines = pcall(function() return WhoHas.Lines(self:Lookup()[itemID]) end)
+    if not ok or not lines then return nil end
+    if not ns.TooltipShift:Shows(WhoHas.SHIFT_KEY) then return nil, true end
+    local item = self:Lookup()[itemID]
+    local out = {}
+    if #lines == 1 and lines[1][2] then
+        out[1] = { L["You Have:"], lines[1][2] }
+        return out
+    end
+    out[1] = { L["Your Characters:"], tostring(item and item.total or "") }
+    for i = 2, #lines do
+        local line = lines[i]
+        if line[2] then
+            out[#out + 1] = { "   " .. line[1], line[2], leftColor = { 1, 1, 1 }, rightColor = { 0.8, 0.8, 0.8 } }
+        else
+            out[#out + 1] = { "   " .. line[1], leftColor = { 0.6, 0.6, 0.6 } }
+        end
+    end
+    return out
+end
+
 --- Hook item tooltips once: the post call on a client that has it (Forever
 --- does, as Tradeskills found), else OnTooltipSetItem on the two tooltips.
 --- Returns which, for the probe.
 function WhoHas:Install()
     if self.installed then return self.installed end
+    local block = ns.TooltipBlock
+    if block then
+        block:Provide("Butler:holders", "holders", 1, function(tooltip, data)
+            return WhoHas:BlockLines(tooltip, data)
+        end)
+        block:Install()
+        self.installed = "tooltip block"
+        return self.installed
+    end
     local processor = rawget(_G, "TooltipDataProcessor")
     local enum = rawget(_G, "Enum")
     local itemType = type(enum) == "table" and type(enum.TooltipDataType) == "table" and enum.TooltipDataType.Item
