@@ -23,6 +23,14 @@ tell a friend: no hype, no questions to the reader, no exclamation marks
 outside the thanks line, no dashes as punctuation, no "now you can". The
 tool prints a note for a shipped line that reads like an advert.
 
+## 1.23.0
+
+- The Butler Bar has a Buy button at vendors that sell what the craft queue needs.
+
+Fixes and changes:
+- The rarity glow and item level in Butler Bags grow with Item Size.
+- Butler Bags open full in a fight.
+
 ## 1.22.1
 
 Fixes and changes:
