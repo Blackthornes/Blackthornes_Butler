@@ -2793,6 +2793,17 @@ arrows, bars, trackers, the Zone Board and similar pieces get none.
 ## An empty realm name (Forever 1.60.1)
 
 Forever 1.60.1 (a hotfix, announced 2026-11-20) makes GetRealmName, GetRealmID and the C_BattleNet realm fields hand back "" or 0, and scrambles the realm, server and spawn parts of Creature, Vehicle, Pet and GameObject GUIDs (player GUIDs are not named). Every reader of a mob, vendor or trainer ID from a GUID takes any text in parts 2 to 5 (`[^%-]+`), never `%d+`; a new one must too. The class training note is rewritten at each login, so a blank realm would have wiped the saved one: `CT.Player()` falls back on this character's saved note. `Logic/ClassTraining.lua` is the same in Equipment. The other "this realm and side" lists read Tradeskills' records, which keep their realm. Tested in `tools/test_classtraining.lua`.
+
+## The window key (2026-11-21)
+
+The owner said build it (UI pass, keys and Options line): every addon has
+one entry on the game's Key Bindings page, "Open or close the window", under
+its own header. It is the first binding in `Bindings.xml`
+(`<ADDON>_TOGGLE`, the header moved onto it) and runs `UI:Toggle()`, the
+same call as the slash command on its own, so with the one window on it
+opens or closes this addon's tab. No key is set for the player. The words
+are Tradeskills' (`BLACKTHORNESTS_TOGGLE`), the same in six languages.
+Tested in `tools/test_windowkey.lua`.
 ## Warm glass (2026-11-21)
 
 The owner said build it from the UI pass mockup (ui-pass-1-warm-glass): the
