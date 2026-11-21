@@ -2794,6 +2794,53 @@ arrows, bars, trackers, the Zone Board and similar pieces get none.
 
 Forever 1.60.1 (a hotfix, announced 2026-11-20) makes GetRealmName, GetRealmID and the C_BattleNet realm fields hand back "" or 0, and scrambles the realm, server and spawn parts of Creature, Vehicle, Pet and GameObject GUIDs (player GUIDs are not named). Every reader of a mob, vendor or trainer ID from a GUID takes any text in parts 2 to 5 (`[^%-]+`), never `%d+`; a new one must too. The class training note is rewritten at each login, so a blank realm would have wiped the saved one: `CT.Player()` falls back on this character's saved note. `Logic/ClassTraining.lua` is the same in Equipment. The other "this realm and side" lists read Tradeskills' records, which keep their realm. Tested in `tools/test_classtraining.lua`.
 
+### Plain prose everywhere (the owner, 2026-11-21)
+
+The owner shared these six rules for writing and asked that they be kept
+from now on, in every addon's notes. They cover every piece of prose:
+player words, notes, commits, PR text, release notes, Discord drafts and
+replies to him.
+
+1. Say plainly what you mean, without stock metaphors, similes or other
+   figures of speech.
+2. Use a short word wherever a short one will do.
+3. Cut every word you can, but keep the context the reader needs.
+4. Use the active voice wherever you can: say who did what.
+5. Use an everyday English word, or the reader's own term, instead of a
+   foreign phrase, a scientific word, jargon, or a word or abbreviation
+   you made up during the work.
+6. These are defaults, not hard limits. Break any of them sooner than say
+   anything outright barbarous.
+
+Review every prose output against these rules before delivering. They sit
+beside "Writing for players" (sixth grade, warm, no em-dashes), which still
+holds for every word a player reads.
+
+
+## The window key (2026-11-21)
+
+The owner said build it (UI pass, keys and Options line): every addon has
+one entry on the game's Key Bindings page, "Open or close the window", under
+its own header. It is the first binding in `Bindings.xml`
+(`<ADDON>_TOGGLE`, the header moved onto it) and runs `UI:Toggle()`, the
+same call as the slash command on its own, so with the one window on it
+opens or closes this addon's tab. No key is set for the player. The words
+are Tradeskills' (`BLACKTHORNESTS_TOGGLE`), the same in six languages.
+Tested in `tools/test_windowkey.lua`.
+## Warm glass (2026-11-21)
+
+The owner said build it from the UI pass mockup (ui-pass-1-warm-glass): the
+house palette moved from blue-black to warm brown-black in every addon's
+`UI/Theme.lua`, the same values in all five. `panel` #1A1611, `glass`
+#17130E, `glassAlt` and `well` #0F0C08, `glassHover` #201A12, `border`
+#4A3C24 (row lines at 0.6), `borderLit` #6B5A3A, `window`, `header` and
+the old `row` keys warmed to match; `glassActive` #241F14 is unchanged.
+Plain text (`text`) is white, `muted` #9B927C and `dim` #7A715E, and
+`ns.COLORS.muted` and `text` follow. A new key, `heading` (#FFD100, the
+game's yellow), colours column headings; the heading that sorts the list
+is `text` (white) with its arrow. Gold rim, buttons and gems are untouched,
+and so are the Blizzard window style (`UI/BlizzardLook.lua`) and the shared
+files' fallback palettes. New lists use these keys, never numbers.
 ## Item rows answer the game's clicks
 
 The owner said build it (2026-11-21, from the UI pass mockup 5): every item

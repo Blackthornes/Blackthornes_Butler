@@ -2921,6 +2921,12 @@ function UI:Hide()
     if self.frame then self.frame:Hide() end
 end
 
+-- The window's key, under Options, Keybindings, AddOns (Bindings.xml).
+-- No key is set for the player. It does what /bbutler on its own does, so
+-- with the one window on it opens or closes this addon's tab.
+_G.BINDING_HEADER_BLACKTHORNESBUTLER = L["Blackthornes Butler"]
+_G.BINDING_NAME_BLACKTHORNESBUTLER_TOGGLE = L["Open or close the window"]
+
 function UI:Toggle()
     -- Any tab up, Settings too, closes the whole window.
     if ns.ButlerTabs and ns.ButlerTabs:AnyShown() then

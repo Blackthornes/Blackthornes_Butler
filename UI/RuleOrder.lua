@@ -76,8 +76,8 @@ local CHIPS = {
     sell = { L["Sell"], { 0.784, 0.643, 0.302 } },
     auction = { L["Auction"], { 0.957, 0.722, 0.380 } },
     disenchant = { L["Disenchant"], { 0.761, 0.580, 0.957 } },
-    best = { L["Best"], { 0.902, 0.910, 0.925 } },
-    look = { L["Look"], { 0.478, 0.502, 0.541 } },
+    best = { L["Best"], { 1.000, 1.000, 1.000 } },
+    look = { L["Look"], { 0.608, 0.573, 0.486 } },
 }
 
 -- Rules turned on on another page, where their amount or character is set.
