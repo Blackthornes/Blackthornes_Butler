@@ -1750,6 +1750,15 @@ Saved, account wide, never rename them: `bagWindow` (off unless ticked),
 `bagPoint`, `bagRelPoint`, `bagX`, `bagY`. Tested in
 `tools/test_bagwindow.lua`.
 
+Item Size grows what sits on a square (a player saw it, 2026-11-21: at
+Large or Larger the rarity glow and item level stayed Normal size). The
+game's template draws `IconBorder`, its overlays and its frame texture at a
+fixed size for 37 pixels, so `BagWindow.FitSquare(button, size)` (called
+wherever a square is sized) scales each by `size / SIZE_PIXELS.normal` from
+the size it had when first seen, and Butler's item level font and mark with
+it. Only textures and our own pieces change; the same size twice does
+nothing. Tested in `tools/test_bagiconsize.lua`. Not yet seen in game.
+
 ### The Butler Bags key
 
 The owner pressed Start Fix (2026-11-17): a key on the
