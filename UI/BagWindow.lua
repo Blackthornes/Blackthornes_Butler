@@ -998,6 +998,68 @@ local function Dress(button, size)
     button.bfrGlow = glow
 end
 
+-- The game's template draws its rarity glow, frame and overlays at a fixed
+-- size for a 37 pixel square, and Butler's item level and mark were fixed
+-- too. At Large or Larger they stayed small in the middle of a big square
+-- (a player saw it, 2026-11-21), so each grows by the square's share. A
+-- piece is measured the first time it is seen, before anything resized it.
+local TEMPLATE_PIECES = { "IconBorder", "IconOverlay", "IconOverlay2", "IconQuestTexture",
+    "ItemContextOverlay", "searchOverlay", "NewItemTexture", "BattlepayItemTexture", "flash" }
+local MARK_SIZE = 14
+
+local function FitPiece(piece, base, share)
+    if type(piece) ~= "table" then return end
+    local first = base[piece]
+    if first == nil then
+        local ok, w, h = pcall(function() return piece:GetSize() end)
+        if ok and type(w) == "number" and type(h) == "number" and w > 0 and h > 0 then
+            first = { w, h }
+        else
+            first = false
+        end
+        base[piece] = first
+    end
+    if first then pcall(piece.SetSize, piece, first[1] * share, first[2] * share) end
+end
+
+--- Grows what sits on a square with it, from the Normal size.
+function BagWindow.FitSquare(button, size)
+    if type(button) ~= "table" or type(size) ~= "number" or size <= 0 then return end
+    if rawget(button, "bfrFitSize") == size then return end
+    button.bfrFitSize = size
+    local share = size / ((ns.BagView and ns.BagView.SIZE_PIXELS.normal) or 37)
+    local base = rawget(button, "bfrFitBase")
+    if not base then
+        base = {}
+        button.bfrFitBase = base
+    end
+    for _, key in ipairs(TEMPLATE_PIECES) do
+        FitPiece(rawget(button, key), base, share)
+    end
+    if type(button.GetNormalTexture) == "function" then
+        local ok, art = pcall(button.GetNormalTexture, button)
+        if ok then FitPiece(art, base, share) end
+    end
+
+    local mark = rawget(button, "bfrMark")
+    if type(mark) == "table" then
+        pcall(mark.SetSize, mark, MARK_SIZE * share, MARK_SIZE * share)
+    end
+    local level = rawget(button, "bfrLevel")
+    if type(level) == "table" and type(level.GetFont) == "function" then
+        local font = base[level]
+        if font == nil then
+            local ok, path, points, flags = pcall(level.GetFont, level)
+            font = (ok and path and type(points) == "number" and points > 0) and { path, points, flags } or false
+            base[level] = font
+        end
+        if font then
+            local points = share == 1 and font[2] or math.floor(font[2] * share + 0.5)
+            pcall(level.SetFont, level, font[1], points, font[3] or "")
+        end
+    end
+end
+
 -- The game's template brings its own new item glow (a blue wash and a flash)
 -- that its bag frames turn on and off. On our squares it stayed lit, empty
 -- slots too (2026-10-20), so it is kept out of sight; Butler's gold glow is
@@ -1517,6 +1579,7 @@ function BagWindow:DrawBags(width, search)
             local button = buttons[key]
             if button then
                 button:SetSize(size, size)
+                BagWindow.FitSquare(button, size)
                 button:ClearAllPoints()
                 button:SetPoint("TOPLEFT", self.content, "TOPLEFT", column * (size + GAP), -y)
                 self:Paint(button, place.entry, search)
@@ -1561,6 +1624,7 @@ function BagWindow:DrawList(width, search)
             index = index + 1
             local button = PlainButton(index)
             button:SetSize(size, size)
+            BagWindow.FitSquare(button, size)
             button:ClearAllPoints()
             button:SetPoint("TOPLEFT", self.content, "TOPLEFT", column * (size + GAP), -y)
             PaintPlain(button, item)
