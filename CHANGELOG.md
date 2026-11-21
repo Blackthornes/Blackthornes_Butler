@@ -4,6 +4,13 @@ Versions follow [semantic versioning](https://semver.org): the middle number
 moves for new behaviour, the last for fixes alone. The newest version goes at
 the top; a release is refused if its version has no section here.
 
+## 1.23.0
+
+For WoW: Forever (interface 16001). `/reload` is enough after updating.
+
+- **Butler Bar.** A gold Buy button sits left of Sell when the vendor sells what the craft queue needs. It shows with the Butler Bar: box on the Errands page of Settings.
+- **Bags.** The rarity glow and item level grow with Item Size, and Butler Bags open full in a fight.
+
 ## 1.22.1
 
 For WoW: Forever (interface 16001). `/reload` is enough after updating.
