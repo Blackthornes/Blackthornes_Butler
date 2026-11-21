@@ -1726,6 +1726,24 @@ Bags:" under BAGS on the General page, and `/bbutler bags [on|off]`
   and hides it as before, in a fight too. Drawing happens in its OnShow
   (`Opened`), whoever shows it. Tested in `tools/test_bagwindow.lua`. Not
   yet seen in game.
+  Still empty in a fight (the owner's report, 2026-11-21: no potion could
+  be used from it): its squares were placed only once it had been opened.
+  Now they are laid out while it is closed, out of a fight
+  (`BagWindow:Prepare`, with `preparing` letting `Draw` run hidden): once
+  the squares are made by `Secure` or `ReadyKey`, about a second after
+  the bags change while closed (`PrepareSoon`, once a burst), at
+  `PLAYER_REGEN_DISABLED` for what still waits (lockdown is not on yet),
+  and after a fight. It opens on Your bags after a close on Bank or
+  Everyone, where the squares are. Only a guarded window keeps its squares
+  still in a fight (`Locked()`); one the game doesn't guard lays out as
+  ever. A fight that stops the squares being made picks up after
+  (`MakeAfterFight`, `MakeWaited`); before, `done` was lost and the
+  window stayed half made. The bag is written on a square
+  (`SetBagID`) only when the game's click doesn't read it from the holder
+  already (`BagWindow.ReadsBag`), since a value written by addon code and
+  read by the click marks it as ours, and the game refuses to use an item
+  from it in a fight. Tested in `tools/test_bagwindow.lua`. Not yet seen
+  in game.
 
 Saved, account wide, never rename them: `bagWindow` (off unless ticked),
 `bagGroupBy`, `bagItemSize`, `bagItemLevel`, `bagNewGlow`, `bagEmptySlots` (unread), `bagScale`,

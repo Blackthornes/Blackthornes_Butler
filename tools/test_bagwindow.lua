@@ -410,6 +410,99 @@ do
     EndFrame()
 end
 
+-- It opens full in a fight (a player's report, 2026-11-21: in combat the
+-- window opened empty, so no potion could be used from it). Its squares are
+-- laid out while it is closed, out of a fight, so they are in place.
+do
+    BagWindow:SetOn(true)
+    EndFrame()
+    BagWindow:Hide()
+    EndFrame()
+    local frame = BagWindow:Build()
+    local function Unplace()
+        for _, place in ipairs(ns.BagView.AllSlots()) do
+            local square = BagWindow.SquareAt(place.bag, place.slot)
+            if square then square._point = nil end
+        end
+    end
+    local function Placed()
+        local square = BagWindow.SquareAt(0, 2)
+        return square ~= nil and type(rawget(square, "_point")) == "table" and square:IsShown()
+    end
+
+    -- Readied at login and never opened: laid out all the same.
+    BagWindow.secured, BagWindow.header, BagWindow.prepared = nil, nil, nil
+    Unplace()
+    BagWindow:Secure()
+    EndFrame()
+    suite.check("readied before a fight, its squares are laid out while closed", Placed())
+    suite.check("laid out while closed, it stays closed", not frame:IsShown())
+
+    -- The bags change while it is closed: laid out again a little later.
+    Unplace()
+    BagWindow:Changed()
+    EndFrame()
+    suite.check("a change while closed lays it out again", Placed())
+
+    -- A fight starts before that: laid out as it starts.
+    Unplace()
+    BagWindow:Changed()
+    env.Fire("PLAYER_REGEN_DISABLED")
+    suite.check("a fight starting lays out what waited", Placed())
+    EndFrame()
+
+    -- In a fight and closed: nothing is laid out, it waits for the end.
+    Unplace()
+    _G.InCombatLockdown = function() return true end
+    BagWindow:Changed()
+    EndFrame()
+    suite.check("closed in a fight, nothing moves", not Placed() and BagWindow.layoutWaiting == true)
+    _G.InCombatLockdown = function() return false end
+    env.Fire("PLAYER_REGEN_ENABLED")
+    EndFrame()
+    suite.check("and it is laid out once the fight ends", Placed())
+
+    -- Not guarded, it lays out in a fight too, so new loot finds its place.
+    _G.InCombatLockdown = function() return true end
+    frame.IsProtected = function() return false end
+    Unplace()
+    BagWindow:Show()
+    local onShow = frame:GetScript("OnShow")
+    if onShow then onShow(frame) end
+    EndFrame()
+    suite.check("not guarded, it lays out in a fight", frame:IsShown() and Placed())
+
+    -- Guarded, its squares keep still in a fight.
+    frame.IsProtected = function() return true end
+    Unplace()
+    BagWindow:Draw()
+    suite.check("guarded, its squares keep still in a fight", not Placed())
+    frame.IsProtected = nil
+    _G.InCombatLockdown = function() return false end
+    env.Fire("PLAYER_REGEN_ENABLED")
+    EndFrame()
+
+    -- Closed on the Bank tab, it is back on Your bags, laid out.
+    BagWindow:SetTab("bank")
+    Unplace()
+    BagWindow:Hide()
+    local onHide = frame:GetScript("OnHide")
+    if onHide then onHide(frame) end
+    EndFrame()
+    suite.check("closed on another tab, it opens on Your bags next", BagWindow.tab == "bags" and Placed())
+
+    -- The game's click reads the bag from the holder; nothing is written on
+    -- the square when the holder already gives it.
+    suite.check("the bag the click reads is known",
+        BagWindow.ReadsBag({ GetBagID = function() return 3 end }) == 3
+        and BagWindow.ReadsBag({ GetBagID = function() error("no bag") end }) == nil
+        and BagWindow.ReadsBag({}) == nil)
+
+    _G.InCombatLockdown = nil
+    BagWindow:SetOn(false)
+    EndFrame()
+end
+
 -- Suites share one Lua state: take the game's bag calls away again.
 _G.hooksecurefunc, _G.ToggleAllBags, _G.OpenAllBags, _G.CloseAllBags = nil, nil, nil, nil
 _G.ContainerFrameCombinedBags = nil
