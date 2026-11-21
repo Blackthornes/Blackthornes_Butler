@@ -2841,3 +2841,18 @@ game's yellow), colours column headings; the heading that sorts the list
 is `text` (white) with its arrow. Gold rim, buttons and gems are untouched,
 and so are the Blizzard window style (`UI/BlizzardLook.lua`) and the shared
 files' fallback palettes. New lists use these keys, never numbers.
+## Item rows answer the game's clicks
+
+The owner said build it (2026-11-21, from the UI pass mockup 5): every item
+row answers the clicks the game's bags do. `Widgets.ItemClick(itemID, link)`
+in `UI/Widgets.lua` (the same helper in all five addons): Shift-click
+(`IsModifiedClick("CHATLINK")`) puts the link in the chat box only while one
+is open (`Widgets.ChatBoxOpen`); Ctrl-click (`DRESSUP`) tries gear on. The
+game's `HandleModifiedItemClick` does the work where it is there, else
+`ChatEdit_InsertLink` / `DressUpItemLink`, all in pcall. `Widgets.ItemLink`
+and `Widgets.ItemTooltip(owner, id, link)` go with it. `CreateRowList`
+takes `itemOf(data) -> itemID, link`, checked on a left click before
+`onClick`. Here: the Butler window's item rows, All characters' rows, quest
+buys, ammo and wishlist rows (`UI.ItemOfRow`), and the Bags window's Bank
+and Everyone squares. Your bags squares are the game's own item buttons and
+already answer these. Tested in `tools/test_itemclicks.lua`.
