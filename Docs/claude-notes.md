@@ -2793,3 +2793,26 @@ arrows, bars, trackers, the Zone Board and similar pieces get none.
 ## An empty realm name (Forever 1.60.1)
 
 Forever 1.60.1 (a hotfix, announced 2026-11-20) makes GetRealmName, GetRealmID and the C_BattleNet realm fields hand back "" or 0, and scrambles the realm, server and spawn parts of Creature, Vehicle, Pet and GameObject GUIDs (player GUIDs are not named). Every reader of a mob, vendor or trainer ID from a GUID takes any text in parts 2 to 5 (`[^%-]+`), never `%d+`; a new one must too. The class training note is rewritten at each login, so a blank realm would have wiped the saved one: `CT.Player()` falls back on this character's saved note. `Logic/ClassTraining.lua` is the same in Equipment. The other "this realm and side" lists read Tradeskills' records, which keep their realm. Tested in `tools/test_classtraining.lua`.
+
+### Plain prose everywhere (the owner, 2026-11-21)
+
+The owner shared these six rules for writing and asked that they be kept
+from now on, in every addon's notes. They cover every piece of prose:
+player words, notes, commits, PR text, release notes, Discord drafts and
+replies to him.
+
+1. Say plainly what you mean, without stock metaphors, similes or other
+   figures of speech.
+2. Use a short word wherever a short one will do.
+3. Cut every word you can, but keep the context the reader needs.
+4. Use the active voice wherever you can: say who did what.
+5. Use an everyday English word, or the reader's own term, instead of a
+   foreign phrase, a scientific word, jargon, or a word or abbreviation
+   you made up during the work.
+6. These are defaults, not hard limits. Break any of them sooner than say
+   anything outright barbarous.
+
+Review every prose output against these rules before delivering. They sit
+beside "Writing for players" (sixth grade, warm, no em-dashes), which still
+holds for every word a player reads.
+
