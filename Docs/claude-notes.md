@@ -2816,3 +2816,14 @@ Review every prose output against these rules before delivering. They sit
 beside "Writing for players" (sixth grade, warm, no em-dashes), which still
 holds for every word a player reads.
 
+
+## The window key (2026-11-21)
+
+The owner said build it (UI pass, keys and Options line): every addon has
+one entry on the game's Key Bindings page, "Open or close the window", under
+its own header. It is the first binding in `Bindings.xml`
+(`<ADDON>_TOGGLE`, the header moved onto it) and runs `UI:Toggle()`, the
+same call as the slash command on its own, so with the one window on it
+opens or closes this addon's tab. No key is set for the player. The words
+are Tradeskills' (`BLACKTHORNESTS_TOGGLE`), the same in six languages.
+Tested in `tools/test_windowkey.lua`.
