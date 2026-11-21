@@ -967,10 +967,11 @@ function Jobs:VendorOffer()
 end
 
 --- A Buy from a vendor step made from the open vendor's offer, for when
---- no step here has one (the owner, 2026-10-18: Tradeskills' Buy materials
---- button over the vendor window hides while Butler is loaded, so Butler
---- has to offer everything it would have bought). nil away from a vendor,
---- with nothing to buy, or when a step here already buys.
+--- no step here has one, so the window offers everything Tradeskills'
+--- Buy materials button would buy (the owner, 2026-10-18; that button
+--- stays at the vendor again since 2026-11-21, and the Butler Bar has its
+--- own Buy). nil away from a vendor, with nothing to buy, or when a step
+--- here already buys.
 function Jobs:VendorStep(here)
     local offer = self.offer
     if not (offer and (offer.buying or offer.count > 0)) then
@@ -1091,8 +1092,14 @@ function Jobs:WatchBuying()
         if Jobs.buyRun ~= run then return end
         looks = looks + 1
         local ui = ns.UI
-        if not (ui and ui.IsShown and ui:IsShown()) then return end
-        ui:Refresh()
+        if ui and ui.IsShown and ui:IsShown() then
+            ui:Refresh()
+        elseif ns.PlaceBar and ns.PlaceBar:Shows("vendor") then
+            -- The Butler Bar's Buy says Buying... and then what is left.
+            ns.PlaceBar:Changed()
+        else
+            return
+        end
         if looks < Jobs.BUY_LOOKS and Jobs.offer and Jobs.offer.buying then
             C_Timer.After(Jobs.BUY_LOOK, Look)
         end

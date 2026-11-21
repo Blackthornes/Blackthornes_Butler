@@ -914,11 +914,17 @@ step). `Jobs:VendorOffer` reads it on each `UI:Refresh` while a vendor is
 open (`Jobs.vendorKey` is in the redraw key), once more 0.5 s after
 `MERCHANT_SHOW`, and `Jobs:WatchBuying` redraws every `BUY_LOOK` seconds
 while the run goes. Without Tradeskills the row is as before.
-Tradeskills' own Buy materials button over the vendor window hides while
-Butler is loaded and opens at vendors (the owner, 2026-10-18), so at a
-vendor with something for the queue and no buy step here,
-`Jobs:VendorStep` adds a Buy from a vendor row made from the offer. Tested
-in `tools/test_vendorbuy.lua`.
+From 2026-10-18 Tradeskills' own Buy materials button over the vendor
+window hid while Butler was loaded and opened at vendors, so at a vendor
+with something for the queue and no buy step here, `Jobs:VendorStep` adds
+a Buy from a vendor row made from the offer (kept). That row is out of
+sight when the window is shut, folded, on All Characters or with Jobs
+folded, and the Butler Bar had no Buy, so players lost Buy. Since
+2026-11-21 (the owner tapped "Build A and B") Tradeskills' button stays
+at the vendor again (with Butler loaded it hides only when the vendor has
+nothing for the queue), and the Butler Bar has its own "Buy %d" (see "The
+Butler bar"). `Jobs:WatchBuying` redraws the bar too while it is up.
+Tested in `tools/test_vendorbuy.lua`.
 
 Profession cooldowns (the owner said yes, 2026-10-12): Tradeskills'
 `Jobs()` also gives each character's ready cooldown as a step, `{ kind =
@@ -2645,7 +2651,15 @@ window (`PlaceBar.GAMES`). `UI:LeftVendor` and `UI:LeftPlace` call
 - Vendor: "N to sell" with the worth, and Logic/Selling.lua's own secure
   Sell button, sat on the bar by `PlaceBar:PlaceSell` out of combat
   (`Selling:Update` asks `PlaceBar:Shows("vendor")`) and handed back to
-  UIParent at PLAYER_REGEN_DISABLED (`LetGo`). Mailbox: Fill Mail for the
+  UIParent at PLAYER_REGEN_DISABLED (`LetGo`). Left of Sell (left of
+  Open when nothing is under Sell), a gold "Buy %d" when this vendor sells
+  what the craft queue needs (2026-11-21, the owner tapped "Build A and
+  B"): `PlaceBar:WordBuy` reads `Jobs:VendorOffer` afresh on each redraw
+  (the window is shut, so nothing else reads it), says Buying... while
+  Tradeskills' run goes, carries `Jobs.BuyTooltip`, is as wide as its
+  longest words, and its click is `Jobs:BuyAtVendor`. `PlaceBar:PlaceBuy`
+  (from `Fit`) lines it up once Sell is placed. Bar buttons show their
+  `tooltipText` under the mouse (`Tip`). Mailbox: Fill Mail for the
   next character. Bank: Move to bank and Take from bank. The buttons call
   the same Errands functions the window's do.
 - Open on the bar brings the window up for that visit (`openedByVendor` or
