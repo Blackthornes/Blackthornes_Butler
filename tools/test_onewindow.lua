@@ -54,27 +54,34 @@ suite.check("Settings is in the same area", SettingsUI.frame:GetParent() == area
 suite.check("and the bags stepped aside", not UI.frame:IsShown())
 suite.check("one tab up", Tabs:Current() == "settings")
 
--- Show Descriptions makes the pages taller: the one window grows to hold
--- them. On the client Settings fills the area, so its own size only says
--- how big the area is; the stand-in frame is made to answer the same way.
+-- Show Descriptions makes the pages taller: the one window keeps its
+-- height and the page scrolls (2026-11-18: a tall Settings page stretched
+-- Butler off the bottom of the screen). Only Settings' width still counts.
+-- On the client Settings fills the area, so its own size only says how big
+-- the area is; the stand-in frame is made to answer the same way.
 do
     local frame = SettingsUI.frame
     local getW, getH = frame.GetWidth, frame.GetHeight
     frame.GetWidth = function() return area:GetWidth() end
     frame.GetHeight = function() return area:GetHeight() end
-    local before, oneBefore = area:GetHeight(), hub.frame:GetHeight()
+    -- The stand-in area follows the one window, as the client's anchors do.
+    local areaH = area.GetHeight
+    area.GetHeight = function() return hub.frame:GetHeight() - 60 end
+    hub.frame:SetHeight(SW.HEIGHT)
+    Tabs:Grow()
+    local oneBefore = hub.frame:GetHeight()
+    suite.check("Butler's own height, well short of the screen", oneBefore < SW.Room(hub.frame), oneBefore)
     SettingsUI.pages:ShowDescriptions(true)
     local need = SettingsUI.pages.need
-    suite.check("descriptions on: the pages say how tall they are", type(need) == "table" and need[2] > before)
-    suite.check("Settings says what the pages need", Tabs.needs.settings and Tabs.needs.settings[2] == need[2])
-    -- The test's frames don't follow their anchors, so the area keeps its
-    -- old height; the one window around it is what grows.
-    suite.check("and the one window grows to hold them",
-        hub.frame:GetHeight() - oneBefore >= need[2] - before
-        or hub.frame:GetHeight() >= SW.Room(hub.frame))
-    suite.check("but never taller than the screen", hub.frame:GetHeight() <= SW.Room(hub.frame))
+    suite.check("descriptions on: the pages say how tall they are", type(need) == "table" and need[2] > 0)
+    suite.check("Settings asks only for its width", Tabs.needs.settings and Tabs.needs.settings[1] == need[1]
+        and Tabs.needs.settings[2] == nil)
+    suite.check("and the one window keeps its height", hub.frame:GetHeight() == oneBefore,
+        oneBefore, hub.frame:GetHeight())
+    suite.check("never taller than the screen", hub.frame:GetHeight() <= SW.Room(hub.frame))
     SettingsUI.pages:ShowDescriptions(false)
     frame.GetWidth, frame.GetHeight = getW, getH
+    area.GetHeight = areaH
 end
 -- Gold goals gone: the room they took goes back, never below the one
 -- window's own height (2026-11-16).
@@ -92,6 +99,28 @@ do
     suite.check("only as much as it no longer needs", hub.frame:GetHeight() == base + 200)
     area.GetHeight = getH
     hub.frame:SetHeight(base)
+end
+-- Settings never asks for more than its two columns: the page names wrap
+-- to a second line instead. Its long name row made Butler stretch the one
+-- window wider than every other addon, past the screen in Russian
+-- (2026-11-18).
+do
+    local twoColumns = 2 * SettingsUI.COLUMN_WIDTH + SettingsUI.COLUMN_GAP + 2 * SettingsUI.PADDING
+    local needW = Tabs.needs.settings and Tabs.needs.settings[1]
+    suite.check("Settings asks no wider than its two columns", needW and needW <= twoColumns, needW, twoColumns)
+end
+-- Wider than a page needs: the width goes back too, never below the one
+-- window's own.
+do
+    local getW = area.GetWidth
+    local base = SW.BaseSize()
+    local needW = Tabs:Size()
+    hub.frame:SetWidth(base + 300)
+    area.GetWidth = function() return needW + 300 end
+    Tabs:Grow()
+    suite.check("a page that needs less width gives it back", hub.frame:GetWidth() == base, hub.frame:GetWidth(), base)
+    area.GetWidth = getW
+    hub.frame:SetWidth(base)
 end
 Tabs:Open("all")
 suite.check("All Characters back in the area", UI.frame:IsShown() and UI.view == "all"

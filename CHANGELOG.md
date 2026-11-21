@@ -4,6 +4,59 @@ Versions follow [semantic versioning](https://semver.org): the middle number
 moves for new behaviour, the last for fixes alone. The newest version goes at
 the top; a release is refused if its version has no section here.
 
+## 1.23.0
+
+For WoW: Forever (interface 16001). `/reload` is enough after updating.
+
+- **Butler Bar.** A gold Buy button sits left of Sell when the vendor sells what the craft queue needs. It shows with the Butler Bar: box on the Errands page of Settings.
+- **Bags.** The rarity glow and item level grow with Item Size, and Butler Bags open full in a fight.
+
+## 1.22.1
+
+For WoW: Forever (interface 16001). `/reload` is enough after updating.
+
+- **Saved realm.** Each character keeps its own saved realm.
+
+## 1.22.0
+
+For WoW: Forever (interface 16001). `/reload` is enough after updating.
+
+- **Pet food.** When Food to Keep is on in Pets, Butler mails the extra pet food to your bank alt.
+
+## 1.21.1
+
+For WoW: Forever (interface 16001). `/reload` is enough after updating.
+
+- **Trip line.** The trip line and stop dots now draw on the world map.
+- **Jobs.** Jobs puts the craft that frees the most bag space first.
+- **Reset.** Reset confirm also clears Always auction and Always disenchant.
+
+## 1.21.0
+
+For WoW: Forever (interface 16001). `/reload` is enough after updating.
+
+- **One Window switch.** Every Blackthornes window has a gold gem on its title bar. It swaps between the one window and each addon's own windows.
+
+## 1.20.0
+
+For WoW: Forever (interface 16001). `/reload` is enough after updating.
+
+- **Who Has It.** When only you have an item, the tooltip says "You have" and the count.
+- **Vendor Price.** Tooltips show what vendors pay for one, and for the whole stack when you hold Shift. Find it in Settings > Tooltips.
+
+## 1.19.2
+
+For WoW: Forever (interface 16001). `/reload` is enough after updating.
+
+- **Window height.** Butler no longer grows past the bottom of the screen with long lists.
+
+## 1.19.1
+
+For WoW: Forever (interface 16001). `/reload` is enough after updating.
+
+- **Settings pages.** The Keep Across Characters list is back on the Keep page, and the page names no longer run over each other.
+- **Window width.** Butler no longer makes the one window wider than it needs.
+
 ## 1.19.0
 
 For WoW: Forever (interface 16001). `/reload` is not enough: files were added and the key list changed, so close the game fully and start it again after updating.

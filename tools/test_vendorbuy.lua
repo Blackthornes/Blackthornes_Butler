@@ -176,6 +176,45 @@ for _, r in ipairs(Jobs:Lines()) do
 end
 suite.check("only one Buy row", count == 1, count)
 
+-- 7. Buy on the Butler Bar (the owner tapped "Build A and B", 2026-11-21).
+-- The bar comes up under the vendor in the window's stead, and had only
+-- Sell, so players with it ticked had no Buy at all.
+ns.Selling.merchantOpen = false
+_G.BlackthornesTS.Butler.VendorOffer = function() return offer end
+_G.BlackthornesTS.Butler.BuyFromVendor = function()
+    buys = buys + 1
+    return true
+end
+if UI:IsShown() then
+    UI:Hide()
+    UI.frame:GetScript("OnHide")(UI.frame)
+end
+offer = { count = 2, cost = 121, cheaperElsewhere = 0, items = {
+    { itemID = 2320, amount = 3, cost = 81 }, { itemID = 2321, amount = 4, cost = 40 } } }
+local Bar = ns.PlaceBar
+Bar:SetOn(true)
+env.Fire("MERCHANT_SHOW")
+suite.check("the bar is up at the vendor", Bar:Shows("vendor"))
+local buy = Bar.buy
+suite.check("with Buy on it", buy ~= nil and buy:IsShown())
+suite.check("saying how many", buy and buy.label:GetText() == "Buy 2", buy and buy.label:GetText())
+suite.check("its tooltip lists each material", buy and (buy.tooltipText or ""):find("3 Coarse Thread", 1, true) ~= nil,
+    buy and buy.tooltipText)
+suite.check("it sits left of Open with nothing to sell", buy and buy._point and buy._point[2] == Bar.open,
+    buy and buy._point and tostring(buy._point[2]))
+buys = 0
+if buy then buy:GetScript("OnClick")(buy) end
+suite.check("a click runs Tradeskills' buy", buys == 1, buys)
+offer = { count = 0, cost = 0, items = {}, cheaperElsewhere = 0, buying = true }
+Bar:Changed()
+suite.check("it says Buying... while it buys", buy and buy:IsShown() and buy.label:GetText() == "Buying...",
+    buy and buy.label:GetText())
+offer = { count = 0, cost = 0, items = {}, cheaperElsewhere = 0 }
+Bar:Changed()
+suite.check("with nothing left it goes", buy and not buy:IsShown())
+env.Fire("MERCHANT_CLOSED")
+Bar:SetOn(false)
+
 ns.Selling.merchantOpen = false
 _G.BlackthornesTS = nil
 suite.done()

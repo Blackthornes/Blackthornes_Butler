@@ -296,7 +296,7 @@ function BagWindow:Secure()
     self.secured = true
     local frame = self:Build()
     self:RestorePosition()
-    self:MakeButtons(function() BagWindow:SecureClose() end)
+    self:MakeButtons(function() BagWindow:SecureClose(); BagWindow:Prepare() end)
     if self.key then pcall(self.key.SetFrameRef, self.key, "bags", frame) end
 
     local wrap = rawget(_G, "SecureHandlerWrapScript")
@@ -416,7 +416,7 @@ function BagWindow:ReadyKey()
     local frame = self:Build()
     if not self.secured then
         self:RestorePosition()
-        self:MakeButtons(function() BagWindow:SecureClose() end)
+        self:MakeButtons(function() BagWindow:SecureClose(); BagWindow:Prepare() end)
     end
     pcall(self.key.SetFrameRef, self.key, "bags", frame)
 end
@@ -614,6 +614,8 @@ function BagWindow:Build()
         -- Closing the bags is looking at them, as with the game's own.
         if ns.BagView.seen then ns.BagView:ClearNew() end
         if ns.Trash then ns.Trash:Changed() end
+        -- Back to Your bags, laid out, ready for a fight.
+        if (BagWindow.tab or "bags") ~= "bags" then BagWindow:PrepareSoon() end
     end)
     -- The fold gem beside the close gem (UI/FoldWindow.lua). Folded, the
     -- squares are out of sight, so the trash can leaves them.
@@ -996,6 +998,68 @@ local function Dress(button, size)
     button.bfrGlow = glow
 end
 
+-- The game's template draws its rarity glow, frame and overlays at a fixed
+-- size for a 37 pixel square, and Butler's item level and mark were fixed
+-- too. At Large or Larger they stayed small in the middle of a big square
+-- (a player saw it, 2026-11-21), so each grows by the square's share. A
+-- piece is measured the first time it is seen, before anything resized it.
+local TEMPLATE_PIECES = { "IconBorder", "IconOverlay", "IconOverlay2", "IconQuestTexture",
+    "ItemContextOverlay", "searchOverlay", "NewItemTexture", "BattlepayItemTexture", "flash" }
+local MARK_SIZE = 14
+
+local function FitPiece(piece, base, share)
+    if type(piece) ~= "table" then return end
+    local first = base[piece]
+    if first == nil then
+        local ok, w, h = pcall(function() return piece:GetSize() end)
+        if ok and type(w) == "number" and type(h) == "number" and w > 0 and h > 0 then
+            first = { w, h }
+        else
+            first = false
+        end
+        base[piece] = first
+    end
+    if first then pcall(piece.SetSize, piece, first[1] * share, first[2] * share) end
+end
+
+--- Grows what sits on a square with it, from the Normal size.
+function BagWindow.FitSquare(button, size)
+    if type(button) ~= "table" or type(size) ~= "number" or size <= 0 then return end
+    if rawget(button, "bfrFitSize") == size then return end
+    button.bfrFitSize = size
+    local share = size / ((ns.BagView and ns.BagView.SIZE_PIXELS.normal) or 37)
+    local base = rawget(button, "bfrFitBase")
+    if not base then
+        base = {}
+        button.bfrFitBase = base
+    end
+    for _, key in ipairs(TEMPLATE_PIECES) do
+        FitPiece(rawget(button, key), base, share)
+    end
+    if type(button.GetNormalTexture) == "function" then
+        local ok, art = pcall(button.GetNormalTexture, button)
+        if ok then FitPiece(art, base, share) end
+    end
+
+    local mark = rawget(button, "bfrMark")
+    if type(mark) == "table" then
+        pcall(mark.SetSize, mark, MARK_SIZE * share, MARK_SIZE * share)
+    end
+    local level = rawget(button, "bfrLevel")
+    if type(level) == "table" and type(level.GetFont) == "function" then
+        local font = base[level]
+        if font == nil then
+            local ok, path, points, flags = pcall(level.GetFont, level)
+            font = (ok and path and type(points) == "number" and points > 0) and { path, points, flags } or false
+            base[level] = font
+        end
+        if font then
+            local points = share == 1 and font[2] or math.floor(font[2] * share + 0.5)
+            pcall(level.SetFont, level, font[1], points, font[3] or "")
+        end
+    end
+end
+
 -- The game's template brings its own new item glow (a blue wash and a flash)
 -- that its bag frames turn on and off. On our squares it stayed lit, empty
 -- slots too (2026-10-20), so it is kept out of sight; Butler's gold glow is
@@ -1030,6 +1094,14 @@ local function OwnIcon(button)
     return icon
 end
 
+--- The bag the game's own click reads from a square, or nil.
+function BagWindow.ReadsBag(button)
+    if type(button) ~= "table" or type(button.GetBagID) ~= "function" then return nil end
+    local ok, bag = pcall(button.GetBagID, button)
+    if ok and type(bag) == "number" then return bag end
+    return nil
+end
+
 local function MakeButton(bag, slot)
     local place = bag .. ":" .. slot
     if buttons[place] then return buttons[place] end
@@ -1044,7 +1116,14 @@ local function MakeButton(bag, slot)
         button = CreateFrame("Button", name, holder)
     end
     if button.SetID then pcall(button.SetID, button, slot) end
-    if type(button.SetBagID) == "function" then pcall(button.SetBagID, button, bag) end
+    -- The holder carries the bag (SetID), which the game's own click reads.
+    -- A bag written onto the square by addon code would be read by that
+    -- click too and mark it as ours, and the game then refuses to use an
+    -- item from it in a fight (a potion). So only when the holder's ID is
+    -- not read already.
+    if type(button.SetBagID) == "function" and BagWindow.ReadsBag(button) ~= bag then
+        pcall(button.SetBagID, button, bag)
+    end
     button.bfrBag, button.bfrSlot = bag, slot
     Dress(button)
     if not BagWindow.templateOK then OwnIcon(button) end
@@ -1125,14 +1204,14 @@ end
 --- runs once they are all there.
 function BagWindow:MakeButtons(done)
     if InCombat() then
-        self.layoutWaiting = true
+        self:MakeAfterFight(done)
         return
     end
     local places = ns.BagView.AllSlots()
     local index = 0
     local function Step()
         if InCombat() then
-            BagWindow.layoutWaiting = true
+            BagWindow:MakeAfterFight(done)
             return
         end
         local stop = math.min(#places, index + MAKE_BUDGET)
@@ -1145,6 +1224,25 @@ function BagWindow:MakeButtons(done)
         end
     end
     Step()
+end
+
+--- A fight stopped the squares being made: carry on once it ends, so
+--- `done` still runs (it was lost before, and a half made window stayed so).
+function BagWindow:MakeAfterFight(done)
+    self.layoutWaiting = true
+    self.makeWaiting = self.makeWaiting or {}
+    self.makeWaiting[#self.makeWaiting + 1] = done or false
+end
+
+function BagWindow:MakeWaited()
+    local waiting = self.makeWaiting
+    if not waiting then return end
+    self.makeWaiting = nil
+    self:MakeButtons(function()
+        for _, done in ipairs(waiting) do
+            if done then done() end
+        end
+    end)
 end
 
 -- The coin is for vendor items only; an item for the auction house gets no
@@ -1365,7 +1463,7 @@ BagWindow.newShown = {}
 
 --- Something moved: draw again, once, in a moment. `now` draws at once.
 function BagWindow:Changed(now)
-    if not self:IsShown() then return end
+    if not self:IsShown() then return self:PrepareSoon() end
     if now then return self:Draw() end
     if self.drawSoon then return end
     self.drawSoon = true
@@ -1380,7 +1478,7 @@ local function Columns(width, size)
 end
 
 function BagWindow:Draw()
-    if not self:IsShown() then return end
+    if not (self:IsShown() or self.preparing) then return end
     local content = self.content
     local width = (tonumber(self.scroll:GetWidth()) or (WIDTH - 2 * PADDING - 22))
     if width < 100 then width = WIDTH - 2 * PADDING - 22 end
@@ -1405,11 +1503,11 @@ end
 function BagWindow:DrawBags(width, search)
     local size = ns.BagView:Pixels()
     local columns = Columns(width, size)
-    local fighting = InCombat()
     self.newShown = {}
 
-    -- In a fight nothing moves: only what each square shows is refreshed.
-    if fighting then
+    -- In a fight a guarded window can't move its squares: only what each
+    -- square shows is refreshed. Not guarded, it lays out as ever.
+    if self:Locked() then
         for place, button in pairs(buttons) do
             if button:IsShown() then self:Paint(button, ns.Bags.slots[place], search) end
         end
@@ -1424,7 +1522,9 @@ function BagWindow:DrawBags(width, search)
             if not buttons[place.bag .. ":" .. place.slot] then missing = true end
         end
     end
-    if missing and not self.making then
+    if missing and InCombat() then
+        self.layoutWaiting = true
+    elseif missing and not self.making then
         self.making = true
         self:MakeButtons(function()
             BagWindow.making = false
@@ -1479,6 +1579,7 @@ function BagWindow:DrawBags(width, search)
             local button = buttons[key]
             if button then
                 button:SetSize(size, size)
+                BagWindow.FitSquare(button, size)
                 button:ClearAllPoints()
                 button:SetPoint("TOPLEFT", self.content, "TOPLEFT", column * (size + GAP), -y)
                 self:Paint(button, place.entry, search)
@@ -1497,7 +1598,7 @@ function BagWindow:DrawBags(width, search)
     for key, button in pairs(buttons) do
         if not used[key] then button:Hide() end
     end
-    self.layoutWaiting = false
+    self.layoutWaiting = missing and InCombat() or false
     self.contentHeight = y
     self.content:SetHeight(math.max(10, y))
     -- The trash can and its glow sit on these squares (UI/Trash.lua): a
@@ -1523,6 +1624,7 @@ function BagWindow:DrawList(width, search)
             index = index + 1
             local button = PlainButton(index)
             button:SetSize(size, size)
+            BagWindow.FitSquare(button, size)
             button:ClearAllPoints()
             button:SetPoint("TOPLEFT", self.content, "TOPLEFT", column * (size + GAP), -y)
             PaintPlain(button, item)
@@ -1565,6 +1667,11 @@ function BagWindow:ShowsBags()
     return self:IsShown() and (self.tab or "bags") == "bags"
 end
 
+--- The square made for a bag slot, shown or not, or nil.
+function BagWindow.SquareAt(bag, slot)
+    return buttons[bag .. ":" .. slot]
+end
+
 --- The square shown for a bag slot, for the trash can, or nil.
 function BagWindow:ButtonFor(bag, slot)
     if not self:ShowsBags() then return nil end
@@ -1600,6 +1707,46 @@ end
 
 function BagWindow:Hide()
     if self.frame and not self:Locked() then self.frame:Hide() end
+end
+
+--- Lay the squares out while the window is closed, out of a fight, so it
+--- opens full in one (a player's report, 2026-11-21: in a fight it opened
+--- empty, since its squares were only placed once it had been opened).
+--- Only once the window is readied (`Secure` or `ReadyKey`). It opens on
+--- Your bags next, where the squares are. Never in a fight: it waits.
+function BagWindow:Prepare()
+    self.prepareSoon = nil
+    if not (self.frame and (self.secured or self.keyReady)) or self:IsShown() then return end
+    if InCombat() then
+        self.layoutWaiting = true
+        return
+    end
+    if (self.tab or "bags") ~= "bags" then
+        self.tab = "bags"
+        self:PaintTabs()
+    end
+    self.preparing = true
+    local ok, err = pcall(self.Draw, self)
+    self.preparing = false
+    self.prepared = ok
+    if not ok and ns.Debug then ns.Debug("bag window prepare: " .. tostring(err)) end
+end
+
+--- Something changed while the window was closed: lay it out a little
+--- later, once for a burst. A fight starting first does it then.
+BagWindow.PREPARE_DELAY = 1
+function BagWindow:PrepareSoon()
+    if not (self.frame and (self.secured or self.keyReady)) then return end
+    self.prepared = false
+    if InCombat() then
+        self.layoutWaiting = true
+        return
+    end
+    if self.prepareSoon then return end
+    self.prepareSoon = true
+    C_Timer.After(BagWindow.PREPARE_DELAY, function()
+        if BagWindow.prepareSoon then BagWindow:Prepare() end
+    end)
 end
 
 function BagWindow:Toggle()
@@ -1716,6 +1863,7 @@ function BagWindow:OnEnable()
     ns.RegisterEvent(self, "UPDATE_BINDINGS", function() BagWindow:ReadyKey() end)
     ns.RegisterEvent(self, "PLAYER_REGEN_ENABLED", function()
         if BagWindow.closeCover then BagWindow.closeCover:Hide() end
+        if BagWindow.makeWaiting then BagWindow:MakeWaited() end
         if BagWindow.secureWaiting then BagWindow:Secure() end
         if BagWindow.keyWaiting then BagWindow:ReadyKey() end
         if BagWindow.coverWaiting then BagWindow:CoverGame() end
@@ -1723,8 +1871,10 @@ function BagWindow:OnEnable()
         if BagWindow.layoutWaiting then BagWindow:Changed() end
     end)
     ns.RegisterEvent(self, "PLAYER_REGEN_DISABLED", function()
-        -- Still allowed as the fight starts: the close gem's secure cover.
+        -- Still allowed as the fight starts: the close gem's secure cover,
+        -- and squares not yet laid out since the bags last changed.
         if BagWindow.closeCover then BagWindow.closeCover:Show() end
+        if BagWindow.prepareSoon or BagWindow.prepared == false then BagWindow:Prepare() end
         if BagWindow.sortButton then BagWindow:UpdateFoot() end
     end)
     for _, event in ipairs({ "MAIL_SHOW", "MAIL_CLOSED", "BANKFRAME_OPENED", "BANKFRAME_CLOSED", "PLAYER_MONEY" }) do

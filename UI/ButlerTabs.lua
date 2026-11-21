@@ -120,13 +120,23 @@ end
 -- What each window needs at least, { width, height }, as it last said.
 ButlerTabs.needs = {}
 
---- The size every tab shares: the usual one, or the most any tab needs.
+--- The tallest any tab may make the window: the usual height and the
+--- most the gold goals add (UI/MainWindow.lua). Past it a page scrolls,
+--- so no list, however long, stretches Butler down the screen.
+function ButlerTabs.MostHeight()
+    local extra = ns.UI and tonumber(rawget(ns.UI, "GOALS_MAX_EXTRA")) or 200
+    return ButlerTabs.HEIGHT + extra
+end
+
+--- The size every tab shares: the usual one, or the most any tab needs,
+--- never taller than MostHeight.
 function ButlerTabs:Size()
     local width, height = ButlerTabs.WIDTH, ButlerTabs.HEIGHT
     for _, need in pairs(self.needs) do
         if need[1] and need[1] > width then width = need[1] end
         if need[2] and need[2] > height then height = need[2] end
     end
+    height = math.min(height, ButlerTabs.MostHeight())
     return math.ceil(width), math.ceil(height)
 end
 
@@ -431,15 +441,23 @@ function ButlerTabs:Grow()
     local width, height = self:Size()
     local okW, areaW = pcall(area.GetWidth, area)
     local okH, areaH = pcall(area.GetHeight, area)
+    local SharedWindow = ns.SharedWindow
     if okW and type(areaW) == "number" and areaW > 0 and areaW < width then
         one:SetWidth(one:GetWidth() + (width - areaW))
+    elseif okW and type(areaW) == "number" and areaW > width then
+        -- Wider than any tab needs: give the width back too, never below
+        -- the one window's own. It only ever grew before, so one wide
+        -- moment left Butler stretched (2026-11-18).
+        local base = SharedWindow and SharedWindow.BaseSize and SharedWindow.BaseSize()
+        local want = one:GetWidth() - (areaW - width)
+        if base and want < base then want = base end
+        if want < one:GetWidth() then one:SetWidth(want) end
     end
     if okH and type(areaH) == "number" and areaH > 0 and areaH < height then
         one:SetHeight(one:GetHeight() + (height - areaH))
     elseif okH and type(areaH) == "number" and areaH > height then
         -- Gold goals gone or smaller: give the room back, never below the
         -- one window's own height.
-        local SharedWindow = ns.SharedWindow
         local base = SharedWindow and SharedWindow.BaseSize and select(2, SharedWindow.BaseSize())
         local want = one:GetHeight() - (areaH - height)
         if base and want < base then want = base end
@@ -448,10 +466,33 @@ function ButlerTabs:Grow()
     if ns.SharedWindow and ns.SharedWindow.Fit then ns.SharedWindow.Fit(one) end
 end
 
+--- Butler's tabs hang under the one window's bottom edge, outside the
+--- rim it keeps on screen. While Butler is in it, its clamp reaches down
+--- over them too, so a window near the bottom of the screen moves up
+--- instead of hiding them; its own clamp goes back as Butler leaves.
+function ButlerTabs:HoldTabsOnScreen(one)
+    if not (one and one.GetClampRectInsets and one.SetClampRectInsets) then return end
+    local ok, left, right, top, bottom = pcall(one.GetClampRectInsets, one)
+    if not ok then return end
+    left, right, top, bottom = tonumber(left) or 0, tonumber(right) or 0, tonumber(top) or 0, tonumber(bottom) or 0
+    self.oneClamp = { one = one, left, right, top, bottom }
+    if bottom > -ButlerTabs.REACH then
+        pcall(one.SetClampRectInsets, one, left, right, top, -ButlerTabs.REACH)
+    end
+end
+
+function ButlerTabs:LetTabsGo()
+    local kept = self.oneClamp
+    self.oneClamp = nil
+    if not (kept and kept.one and kept.one.SetClampRectInsets) then return end
+    pcall(kept.one.SetClampRectInsets, kept.one, kept[1], kept[2], kept[3], kept[4])
+end
+
 --- Butler's pages go into the one window: called by it (host.enter).
 function ButlerTabs:Enter(area)
     if not area then return end
     self.area = area
+    if not self.oneClamp then self:HoldTabsOnScreen(area:GetParent()) end
     for _, window in ipairs(Windows()) do
         if FrameOf(window) then self:LayIn(window) end
     end
@@ -473,6 +514,7 @@ function ButlerTabs:Leave()
         end
     end
     self.area = nil
+    self:LetTabsGo()
     for _, window in ipairs(Windows()) do
         if FrameOf(window) then self:LayOut(window) end
     end
@@ -483,6 +525,11 @@ end
 ButlerTabs.host = {
     enter = function(area) ButlerTabs:Enter(area) end,
     leave = function() ButlerTabs:Leave() end,
+    -- For the swap gem (SharedWindow.AddSwap): the tab up now, open on a
+    -- tab wherever Butler now belongs, and close its own windows.
+    tab = function() return (ButlerTabs:Current()) end,
+    show = function(key) ButlerTabs:SwapShow(key) end,
+    hide = function() ButlerTabs:SwapHide() end,
     -- Asked by the one window as a vendor opens while it shows another
     -- addon: turn to Butler only when Butler would come up there itself
     -- ("Vendors" ticked, the Butler Bar not taking its place).
@@ -493,6 +540,22 @@ ButlerTabs.host = {
         return true
     end,
 }
+
+--- Open on `key` (nil: the tab it would open on anyway), in the one
+--- window when it is on, else in Butler's own window.
+function ButlerTabs:SwapShow(key)
+    key = key or (ns.UI and rawget(ns.UI, "view") == "all" and "all") or "bags"
+    if self:Route(key) then return end
+    self:Open(key)
+end
+
+--- Close Butler's own windows.
+function ButlerTabs:SwapHide()
+    if self.area then return end
+    for _, window in ipairs(Windows()) do
+        if Shown(FrameOf(window)) and window.Hide then pcall(window.Hide, window) end
+    end
+end
 
 --- A Butler tab is asked to open. With "One Window:" ticked and Butler not
 --- in it yet, the one window opens on Butler instead, on that tab. True when

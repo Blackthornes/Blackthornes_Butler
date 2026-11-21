@@ -9,7 +9,10 @@
 --     the bar brings the window up for that visit.
 --   * Vendor: how many stacks are under Sell, what they are worth, and the
 --     Sell button (Logic/Selling.lua's secure one, sat on the bar out of
---     combat and handed back to UIParent as a fight starts).
+--     combat and handed back to UIParent as a fight starts). Left of Sell,
+--     "Buy 3" when this vendor sells what the craft queue needs (the owner
+--     tapped "Build A and B", 2026-11-21): Jobs:BuyAtVendor, the window's
+--     own Buy, through Tradeskills.
 --     Mailbox: Fill mail for the next character. Bank: Move to bank and
 --     Take from bank. The buttons do what the window's do.
 --   * The game's windows are never hidden, moved or changed: the bar is
@@ -37,6 +40,23 @@ Bar.BELOW = 32
 Bar.HEIGHT = 32
 local PAD = 10
 local GAP = 6
+
+--- The words under the mouse that a bar button carries in `tooltipText`.
+local function Tip(button)
+    local enter, leave = button:GetScript("OnEnter"), button:GetScript("OnLeave")
+    button:SetScript("OnEnter", function(self, ...)
+        if enter then enter(self, ...) end
+        if self.tooltipText and GameTooltip then
+            GameTooltip:SetOwner(self, "ANCHOR_TOP")
+            GameTooltip:SetText(self.tooltipText, 1, 1, 1, 1, true)
+            GameTooltip:Show()
+        end
+    end)
+    button:SetScript("OnLeave", function(self, ...)
+        if leave then leave(self, ...) end
+        if GameTooltip then GameTooltip:Hide() end
+    end)
+end
 
 local function InFight()
     return type(InCombatLockdown) == "function" and InCombatLockdown() == true
@@ -101,6 +121,13 @@ function Bar:Build()
     self.fromBank = Widgets.CreateButton(frame, L["Take from bank"], Run(ns.Errands.TakeFromBank),
         { height = 22 })
     self.fromBank.tooltipText = L["Takes out upgrades to wear and what your crafts still need."]
+    self.buy = Widgets.CreateButton(frame, L["Buying..."], function()
+        if not ns.Jobs then return end
+        ns.Jobs:BuyAtVendor()
+        Bar:Changed()
+    end, { height = 22, primary = true })
+    self.buy:Hide()
+    for _, button in ipairs({ self.mail, self.toBank, self.fromBank, self.buy }) do Tip(button) end
 
     self.frame = frame
     return frame
@@ -185,6 +212,34 @@ function Bar:LetGo()
     end)
 end
 
+--- Buy, left of Sell when Sell is on the bar, else left of Open.
+function Bar:PlaceBuy()
+    local buy = self.buy
+    if not (buy and buy:IsShown()) then return end
+    local sell = self.sell
+    local right = (sell and sell:IsShown() and sell:GetParent() == self.frame) and sell or self.open
+    buy:ClearAllPoints()
+    buy:SetPoint("RIGHT", right, "LEFT", -GAP, 0)
+end
+
+--- Words and width for Buy from what this vendor has for the queue
+--- (Jobs:VendorOffer, read afresh: the window is shut, so nothing else
+--- reads it). As wide as its longest words, so it never jumps.
+function Bar:WordBuy()
+    local buy, jobs = self.buy, ns.Jobs
+    local offer = jobs and jobs:VendorOffer()
+    if not (offer and (offer.buying or offer.count > 0)) then
+        buy:Hide()
+        return
+    end
+    local words = offer.buying and L["Buying..."] or L.Format("Buy %d", offer.count)
+    buy:SetText(words)
+    buy:SetWidth(math.max(Theme.TextWidth("small", L.Format("Buy %d", math.max(offer.count, 99))),
+        Theme.TextWidth("small", L["Buying..."])) + 12)
+    buy.tooltipText = jobs.BuyTooltip()
+    buy:Show()
+end
+
 local function Width(control)
     return control and control:IsShown() and (tonumber(control:GetWidth()) or 0) + GAP or 0
 end
@@ -193,9 +248,10 @@ end
 function Bar:Fit()
     local frame, game = self.frame, self.place and Bar.Game(self.place)
     if not (frame and game) then return end
+    self:PlaceBuy()
     local need = PAD + Theme.TextWidth("small", self.title:GetText() or "") + 10
         + Theme.TextWidth("small", self.text:GetText() or "") + 12
-        + Width(self.sell) + Width(self.mail) + Width(self.toBank) + Width(self.fromBank)
+        + Width(self.sell) + Width(self.buy) + Width(self.mail) + Width(self.toBank) + Width(self.fromBank)
         + (tonumber(self.open:GetWidth()) or 0) + PAD
     local okWidth, width = pcall(game.GetWidth, game)
     frame:SetWidth(math.max(need, okWidth and tonumber(width) or 0))
@@ -226,9 +282,11 @@ function Bar:Refresh()
     self.mail:Hide()
     self.toBank:Hide()
     self.fromBank:Hide()
+    self.buy:Hide()
     local text = ""
 
     if place == "vendor" then
+        self:WordBuy()
         local _, _, count = ns.Selling:Words()
         if count > 0 then
             local worth = 0

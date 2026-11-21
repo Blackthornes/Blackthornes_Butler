@@ -29,6 +29,7 @@ local COLUMN_GAP = 18
 -- Where the controls start: room for a label like "Free Bag Space:" in the
 -- game's font, which runs wider than it looks.
 local CONTROL_X = 150
+SettingsUI.PADDING, SettingsUI.COLUMN_WIDTH, SettingsUI.COLUMN_GAP = PADDING, COLUMN_WIDTH, COLUMN_GAP
 
 local TITLE = "Blackthornes Butler"
 
@@ -146,6 +147,9 @@ function SettingsUI:Build()
             if not folded then SettingsUI:Refresh() end
         end })
     end
+    -- And left of it, the swap gem: it joins every Blackthornes addon into
+    -- the one window (UI/SharedWindow.lua).
+    if ns.SharedWindow and ns.SharedWindow.AddSwap then ns.SharedWindow.AddSwap(frame, "butler") end
 
     frame:SetScript("OnDragStart", function(self) self:StartMoving() end)
     frame:SetScript("OnDragStop", function(self)
@@ -179,6 +183,10 @@ function SettingsUI:Build()
         columnWidth = COLUMN_WIDTH,
         columnGap = COLUMN_GAP,
         controlX = CONTROL_X,
+        -- The page names wrap to a second line rather than grow the window
+        -- past its two columns (Farmer's BAR_CAP does the same): a wider
+        -- Butler stretched the one window, off the screen in Russian.
+        barCap = 2 * COLUMN_WIDTH + COLUMN_GAP + 2 * PADDING,
         db = function() return ns.db end,
     })
     self:BuildPages()
@@ -203,8 +211,12 @@ function SettingsUI:Build()
         local info = pages:Place("about", 2, ns.About:Info(pages.pages.about.content, COLUMN_WIDTH))
         pages:Searchable("about", info, info.words)
     end
-    -- Every tab is one size (UI/ButlerTabs.lua): Settings says what its
-    -- fullest page needs, and the Butler window grows to match.
+    -- Every tab is one size (UI/ButlerTabs.lua): Settings says how wide its
+    -- pages need to be, and the Butler window widens to match. Its height
+    -- stays the Butler window's and the pages scroll: asking for the
+    -- fullest page's height let a long list (Keep Across, the mail rules)
+    -- stretch every tab nearly to the screen's height, off its bottom in
+    -- the one window (2026-11-18).
     local pages = self.pages
     local fit = pages.Fit
     pages.Fit = function(page)
@@ -212,7 +224,7 @@ function SettingsUI:Build()
         -- What the pages asked for: laid into the one window the frame
         -- fills the area, so its own size would only say how big that is.
         local need = page.need or { frame:GetWidth(), frame:GetHeight() }
-        if ns.ButlerTabs then ns.ButlerTabs:Need("settings", need[1], need[2]) end
+        if ns.ButlerTabs then ns.ButlerTabs:Need("settings", need[1], nil) end
     end
     self.pages:Fit()
 
@@ -1366,7 +1378,7 @@ function SettingsUI:BuildPages()
     end, { height = 18 })
     controls.acrossAdd:SetPoint("BOTTOMRIGHT", acrossHead, "TOPRIGHT", 0, -12)
 
-    local acrossList = CreateFrame("Frame", nil, pages.pages.selling.content)
+    local acrossList = CreateFrame("Frame", nil, pages.pages.keep.content)
     acrossList:SetWidth(COLUMN_WIDTH)
     acrossList.fixedHeight = 40
     acrossList:SetHeight(40)
@@ -1386,7 +1398,7 @@ function SettingsUI:BuildPages()
     end)
     controls.acrossMail:SetPoint("TOPLEFT", CONTROL_X, 0)
 
-    local acrossFoot = CreateFrame("Frame", nil, pages.pages.selling.content)
+    local acrossFoot = CreateFrame("Frame", nil, pages.pages.keep.content)
     acrossFoot:SetSize(COLUMN_WIDTH, 16)
     acrossFoot.fixedHeight = 16
     pages:Place("keep", 2, acrossFoot, 6)

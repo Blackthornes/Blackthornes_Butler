@@ -23,6 +23,48 @@ tell a friend: no hype, no questions to the reader, no exclamation marks
 outside the thanks line, no dashes as punctuation, no "now you can". The
 tool prints a note for a shipped line that reads like an advert.
 
+## 1.23.0
+
+- The Butler Bar has a Buy button at vendors that sell what the craft queue needs.
+
+Fixes and changes:
+- The rarity glow and item level in Butler Bags grow with Item Size.
+- Butler Bags open full in a fight.
+
+## 1.22.1
+
+Fixes and changes:
+- Each character keeps its own saved realm.
+
+## 1.22.0
+
+- Butler mails extra pet food to your bank alt when Food to Keep is on in Pets.
+
+## 1.21.1
+
+Fixes and changes:
+- The trip line and stop dots now draw on the world map.
+- Jobs puts the craft that frees the most bag space first.
+- Reset confirm also clears Always auction and Always disenchant.
+
+## 1.21.0
+
+- Every window has a gold gem on its title bar. Click it to switch between the one window and separate windows.
+
+## 1.20.0
+
+- Item tooltips say "You have" and the count when only you have the item.
+- Tooltips show what vendors pay for an item, and for the whole stack when you hold Shift.
+
+## 1.19.2
+
+Fixes and changes:
+- Butler stays on the screen when your lists are long.
+
+## 1.19.1
+
+- The Settings pages no longer overlap, and Butler no longer makes the window wider than it needs.
+
 ## 1.19.0
 
 - A new key opens and closes Butler's bag window.

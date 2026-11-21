@@ -137,6 +137,8 @@ _G.BlackthornesFarmer.Butler:Advise(itemID)
 _G.BlackthornesPets.Butler:Advise(itemID)
   -- { eats, buff, hours, count }: hours is for all the food carried and
   -- only a rough guess, so Butler shows it and never sells food on it
+  -- With Pets' Food to Keep ticked, also keepAll (the number kept), keep
+  --   (how many of this item stay) and extra (the rest): see "Food to Keep"
 ```
 
 Each sister's `CLAUDE.md` lists its call under "What Butler calls here".
@@ -912,11 +914,17 @@ step). `Jobs:VendorOffer` reads it on each `UI:Refresh` while a vendor is
 open (`Jobs.vendorKey` is in the redraw key), once more 0.5 s after
 `MERCHANT_SHOW`, and `Jobs:WatchBuying` redraws every `BUY_LOOK` seconds
 while the run goes. Without Tradeskills the row is as before.
-Tradeskills' own Buy materials button over the vendor window hides while
-Butler is loaded and opens at vendors (the owner, 2026-10-18), so at a
-vendor with something for the queue and no buy step here,
-`Jobs:VendorStep` adds a Buy from a vendor row made from the offer. Tested
-in `tools/test_vendorbuy.lua`.
+From 2026-10-18 Tradeskills' own Buy materials button over the vendor
+window hid while Butler was loaded and opened at vendors, so at a vendor
+with something for the queue and no buy step here, `Jobs:VendorStep` adds
+a Buy from a vendor row made from the offer (kept). That row is out of
+sight when the window is shut, folded, on All Characters or with Jobs
+folded, and the Butler Bar had no Buy, so players lost Buy. Since
+2026-11-21 (the owner tapped "Build A and B") Tradeskills' button stays
+at the vendor again (with Butler loaded it hides only when the vendor has
+nothing for the queue), and the Butler Bar has its own "Buy %d" (see "The
+Butler bar"). `Jobs:WatchBuying` redraws the bar too while it is up.
+Tested in `tools/test_vendorbuy.lua`.
 
 Profession cooldowns (the owner said yes, 2026-10-12): Tradeskills'
 `Jobs()` also gives each character's ready cooldown as a step, `{ kind =
@@ -1243,6 +1251,21 @@ If the call changes, change `Logic/Sisters.lua` too. Tested in
 `tools/test_keeplevelup.lua` and `tools/test_settings.lua`.
 
 
+## Food to Keep
+
+The owner asked and said build it from a mockup (2026-11-20): Pets'
+Pet page has "Food to Keep:" (on, and a number, 40 at first; off unless
+ticked). Pets shares the number out over the food the pet is fed, best
+first, and its `Butler:Advise` gives `keepAll`, `keep` and `extra`.
+`Verdicts:KeptPetFood(said, entry, pastKeep)`: with `extra` over 0 and a
+bank alt picked (`Verdicts:PetFoodTo`: not bound, not the one playing),
+the step keeps `{ keepHere = keep }`, so Groups keeps enough stacks and
+splits one the same way as Keep on This Character, and the stacks past
+it, judged `pastKeep`, are Mail to the bank alt ("Extra pet food. Pets
+keeps N."). With no bank alt it all stays, as before. Nothing is sold or
+deleted for it, and the player's own keep (first in the order) wins.
+Nothing new is saved in Butler. Tested in `tools/test_petfoodkeep.lua`.
+
 ## What Farmer calls here
 
 Farmer's XP bar (2026-10-13) reads class training for its level-up cheer,
@@ -1334,6 +1357,12 @@ next hover builds it again at most once every `WhoHas.REBUILD_GAP` (1 s).
 "Who has it" on the General page (`whoHas`, account wide, on unless
 unticked, never rename it) and `/bbutler whohas`. Tested in
 `tools/test_whohas.lua`.
+
+A player asked to see their own total, the owner said build it
+(2026-11-18, from a mockup, words approved): when only the character
+playing holds an item, bags only included, `WhoHas.Lines` gives one line,
+"You have 150" with where on the right ("150 in bags", "212 (40 bags, 172
+bank)"). Alts holding it still get the full list.
 
 ## Keep on each character
 
@@ -1503,6 +1532,13 @@ _G.BlackthornesTS.Butler:VendorPrice(itemID)   -- copper for one, or nil
 on unless picked Off, never rename it; Shift key `vendorPrice`). `/bbutler
 probe` has a "vendor prices" line. Tested in `tools/test_vendorprices.lua`.
 If Tradeskills changes the call, change `VendorPrices.FromTradeskills`.
+
+The same player asked for the sell price, the owner said build it
+(2026-11-18, from a mockup, words approved): the same box adds "Vendors pay
+5c each" above the charge line, from `Items:SellPrice` (the item card's
+price wins), on any item that can be sold. With Shift held on a bag slot,
+"This stack of 20: 1s" follows it (`VendorPrices.StackCount`, the slot from
+`VerdictTip.OwnerSlot`, checked against the item). Nothing new in Settings.
 
 ## Off, Shift or Always on tooltips
 
@@ -1696,11 +1732,38 @@ Bags:" under BAGS on the General page, and `/bbutler bags [on|off]`
   and hides it as before, in a fight too. Drawing happens in its OnShow
   (`Opened`), whoever shows it. Tested in `tools/test_bagwindow.lua`. Not
   yet seen in game.
+  Still empty in a fight (the owner's report, 2026-11-21: no potion could
+  be used from it): its squares were placed only once it had been opened.
+  Now they are laid out while it is closed, out of a fight
+  (`BagWindow:Prepare`, with `preparing` letting `Draw` run hidden): once
+  the squares are made by `Secure` or `ReadyKey`, about a second after
+  the bags change while closed (`PrepareSoon`, once a burst), at
+  `PLAYER_REGEN_DISABLED` for what still waits (lockdown is not on yet),
+  and after a fight. It opens on Your bags after a close on Bank or
+  Everyone, where the squares are. Only a guarded window keeps its squares
+  still in a fight (`Locked()`); one the game doesn't guard lays out as
+  ever. A fight that stops the squares being made picks up after
+  (`MakeAfterFight`, `MakeWaited`); before, `done` was lost and the
+  window stayed half made. The bag is written on a square
+  (`SetBagID`) only when the game's click doesn't read it from the holder
+  already (`BagWindow.ReadsBag`), since a value written by addon code and
+  read by the click marks it as ours, and the game refuses to use an item
+  from it in a fight. Tested in `tools/test_bagwindow.lua`. Not yet seen
+  in game.
 
 Saved, account wide, never rename them: `bagWindow` (off unless ticked),
 `bagGroupBy`, `bagItemSize`, `bagItemLevel`, `bagNewGlow`, `bagEmptySlots` (unread), `bagScale`,
 `bagPoint`, `bagRelPoint`, `bagX`, `bagY`. Tested in
 `tools/test_bagwindow.lua`.
+
+Item Size grows what sits on a square (a player saw it, 2026-11-21: at
+Large or Larger the rarity glow and item level stayed Normal size). The
+game's template draws `IconBorder`, its overlays and its frame texture at a
+fixed size for 37 pixels, so `BagWindow.FitSquare(button, size)` (called
+wherever a square is sized) scales each by `size / SIZE_PIXELS.normal` from
+the size it had when first seen, and Butler's item level font and mark with
+it. Only textures and our own pieces change; the same size twice does
+nothing. Tested in `tools/test_bagiconsize.lua`. Not yet seen in game.
 
 ### The Butler Bags key
 
@@ -1915,6 +1978,20 @@ at most `UI.GOALS_MAX_EXTRA` (200) and scroll past it, and
 `ButlerTabs:Grow` gives room back when they shrink, never below
 `BaseSize`. FILE_VERSION 10. Tested in `tools/test_sharedwindow.lua`
 (and Butler's `tools/test_onewindow.lua`).
+
+Butler keeps its size when a Settings list grows long (the owner,
+2026-11-18: it still stretched off the bottom of the screen). Settings
+asked `ButlerTabs:Need` for its fullest page's height, capped only at the
+screen less 160, so a long Keep Across or rule list made every Butler tab
+nearly the screen's height; in the one window its plate and buttons went
+on top and Butler's tabs hung off the bottom. Now Settings asks only for
+its width, the pages scroll, and `ButlerTabs:Size` never goes past
+`ButlerTabs.MostHeight()` (the usual 500 plus `UI.GOALS_MAX_EXTRA`). While
+Butler is in the one window, its clamp reaches `ButlerTabs.REACH` below
+the bottom edge so the hanging tabs stay on screen
+(`ButlerTabs:HoldTabsOnScreen`, given back by `LetTabsGo` on leaving).
+Show Descriptions no longer makes the window taller either. Tested in
+`tools/test_staysonscreen.lua`.
 
 Butler at the vendor (a player's report in #bug-reports, the owner pressed
 Start Fix, 2026-11-17; `UI/SharedWindow.lua` FILE_VERSION 13, in all five):
@@ -2574,7 +2651,15 @@ window (`PlaceBar.GAMES`). `UI:LeftVendor` and `UI:LeftPlace` call
 - Vendor: "N to sell" with the worth, and Logic/Selling.lua's own secure
   Sell button, sat on the bar by `PlaceBar:PlaceSell` out of combat
   (`Selling:Update` asks `PlaceBar:Shows("vendor")`) and handed back to
-  UIParent at PLAYER_REGEN_DISABLED (`LetGo`). Mailbox: Fill Mail for the
+  UIParent at PLAYER_REGEN_DISABLED (`LetGo`). Left of Sell (left of
+  Open when nothing is under Sell), a gold "Buy %d" when this vendor sells
+  what the craft queue needs (2026-11-21, the owner tapped "Build A and
+  B"): `PlaceBar:WordBuy` reads `Jobs:VendorOffer` afresh on each redraw
+  (the window is shut, so nothing else reads it), says Buying... while
+  Tradeskills' run goes, carries `Jobs.BuyTooltip`, is as wide as its
+  longest words, and its click is `Jobs:BuyAtVendor`. `PlaceBar:PlaceBuy`
+  (from `Fit`) lines it up once Sell is placed. Bar buttons show their
+  `tooltipText` under the mouse (`Tip`). Mailbox: Fill Mail for the
   next character. Bank: Move to bank and Take from bank. The buttons call
   the same Errands functions the window's do.
 - Open on the bar brings the window up for that visit (`openedByVendor` or
@@ -2673,6 +2758,41 @@ it opens. While this module is loaded (`_G.BlackthornesButler.Wishlist`),
 Tradeskills hides its own card under the window. Without Tradeskills,
 nothing shows. Tested in `tools/test_wishlist.lua`.
 
+## The swap gem (One Window toggle, 2026-11-19)
+
+The owner asked for a toggle on each window to swap between the one window
+and each addon's own windows, and said build it from the mockup
+(2026-11-19). A gold gem sits left of the fold gem on every real
+Blackthornes window, so the gems run swap, fold, close. On the one window it
+shows two panes and splits ("Split Into Own Windows"); on an own window it
+shows one pane with a rail line and joins ("Join Into One Window"). Floating
+arrows, bars, trackers, the Zone Board and similar pieces get none.
+
+- `UI/SharedWindow.lua` (FILE_VERSION 14, the same in all five):
+  `SharedWindow.AddSwap(frame, key)` puts the gem on a dressed window's
+  trim (so it hides with the trim inside the one window); `key` nil is the
+  one window. `SharedWindow.Swap(key, join)` is its click. Split: the
+  addon showing is asked its tab, `SetOn(false)` closes the one window,
+  then the addon opens on its own on that tab. Join: every addon closes its
+  own windows, `SetOn(true)`, then the clicked addon opens in the one
+  window on the same tab. In a fight nothing moves; it runs at
+  PLAYER_REGEN_ENABLED (`hub.swapAfterFight`).
+- Same `oneWindow` / `oneWindowAt` keys, no new setting or key. The "One
+  Window:" box reads `On()` as Settings refreshes, so it follows.
+- Each host gives three optional calls beside `enter` and `leave`:
+  `tab()`, `show(tab)` (opens in the one window or its own as the choice
+  now stands, through its Route) and `hide()`. Without them a split falls
+  back to `open` and a join to `SharedWindow.Open(key)`, so an older
+  copy still works.
+- Here: the Butler window and Settings (`ButlerTabs` in `UI/ButlerTabs.lua`) carry the join gem.
+- Words: the six tooltip strings in every locale (deDE from the mockup).
+- Tested in `tools/test_swapgem.lua` (the same in all five) and
+  `tools/test_swapwindows.lua` (this addon's windows in the fake game).
+  Not yet seen in game.
+
+## An empty realm name (Forever 1.60.1)
+
+Forever 1.60.1 (a hotfix, announced 2026-11-20) makes GetRealmName, GetRealmID and the C_BattleNet realm fields hand back "" or 0, and scrambles the realm, server and spawn parts of Creature, Vehicle, Pet and GameObject GUIDs (player GUIDs are not named). Every reader of a mob, vendor or trainer ID from a GUID takes any text in parts 2 to 5 (`[^%-]+`), never `%d+`; a new one must too. The class training note is rewritten at each login, so a blank realm would have wiped the saved one: `CT.Player()` falls back on this character's saved note. `Logic/ClassTraining.lua` is the same in Equipment. The other "this realm and side" lists read Tradeskills' records, which keep their realm. Tested in `tools/test_classtraining.lua`.
 ## Warm glass (2026-11-21)
 
 The owner said build it from the UI pass mockup (ui-pass-1-warm-glass): the

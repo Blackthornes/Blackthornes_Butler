@@ -64,7 +64,8 @@ lines = Hover(GameTooltip, 503)
 suite.check("one place reads as words", lines[3] == "Mia Thorn | 2 in the bank", lines[3])
 
 lines = Hover(GameTooltip, 502)
-suite.check("only in your own bags says nothing", #lines == 0, table.concat(lines, " / "))
+suite.check("only in your own bags is one line with your total", #lines == 2
+    and lines[2] == "You have 3 | 3 in bags", table.concat(lines, " / "))
 lines = Hover(GameTooltip, 999)
 suite.check("nobody has it says nothing", #lines == 0)
 

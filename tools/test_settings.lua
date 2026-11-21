@@ -158,9 +158,12 @@ pages.describe:GetScript("OnClick")(pages.describe)
 suite.check("Show descriptions is saved", ns.db.settingsDescriptions == true)
 suite.check("and puts the words under the rows", minimapRow.hint:IsShown())
 suite.check("but nothing under a row with nothing to say", (styleRow.hint:GetText() or "") == "")
-suite.check("and the window grows to fit them", SettingsUI.frame:GetHeight() > before)
+-- Butler keeps its size and the page scrolls (tools/test_staysonscreen.lua):
+-- taller pages stretched every tab down the screen (2026-11-18).
+suite.check("the window keeps its height", SettingsUI.frame:GetHeight() == before)
+suite.check("and the page scrolls instead", (pages.need and pages.need[2] or 0) >= before)
 pages.describe:GetScript("OnClick")(pages.describe)
-suite.check("unticked, the window goes back", SettingsUI.frame:GetHeight() == before)
+suite.check("unticked, the window is the same", SettingsUI.frame:GetHeight() == before)
 
 -- Find a setting.
 pages.find:SetText("after updates")
