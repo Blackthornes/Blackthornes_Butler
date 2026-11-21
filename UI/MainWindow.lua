@@ -186,6 +186,8 @@ function UI:Build()
         createRow = function(row) UI.CreateRow(row) end,
         updateRow = function(row, data) UI.UpdateRow(row, data) end,
         onClick = function(data, button) UI:Clicked(data, button) end,
+        -- Shift-click links a row's item in chat, Ctrl-click tries it on.
+        itemOf = function(data) return UI.ItemOfRow(data) end,
         onEnter = function(row, data) UI:Enter(row, data) end,
         onLeave = function() GameTooltip:Hide() end,
         -- A row grows to fit its longest note, so a long German or
@@ -1049,6 +1051,23 @@ UI.AMMO_BEST = {
     crossbow = L["The best ammo this vendor has for your crossbow at your level."],
     gun = L["The best ammo this vendor has for your gun at your level."],
 }
+
+--- The item a row is about, when it is one: itemID, link. Shift-click
+--- with the chat box open links it, Ctrl-click tries it on
+--- (Widgets.ItemClick); every other click is the row's.
+function UI.ItemOfRow(data)
+    if type(data) ~= "table" then return nil end
+    local kind = data.type
+    if kind == nil then return tonumber(data.itemID), type(data.link) == "string" and data.link or nil end
+    if (kind == "everyone" or kind == "holder" or kind == "questbuy") and type(data.item) == "table" then
+        return tonumber(data.item.itemID)
+    end
+    if kind == "ammo" and type(data.offer) == "table" and type(data.offer.ammo) == "table" then
+        return tonumber(data.offer.ammo.itemID)
+    end
+    if kind == "wishlist" and type(data.entry) == "table" then return tonumber(data.entry.itemID) end
+    return nil
+end
 
 function UI:Clicked(data, button)
     if data.type == "everyone" or data.type == "holder" then
@@ -2901,6 +2920,12 @@ end
 function UI:Hide()
     if self.frame then self.frame:Hide() end
 end
+
+-- The window's key, under Options, Keybindings, AddOns (Bindings.xml).
+-- No key is set for the player. It does what /bbutler on its own does, so
+-- with the one window on it opens or closes this addon's tab.
+_G.BINDING_HEADER_BLACKTHORNESBUTLER = L["Blackthornes Butler"]
+_G.BINDING_NAME_BLACKTHORNESBUTLER_TOGGLE = L["Open or close the window"]
 
 function UI:Toggle()
     -- Any tab up, Settings too, closes the whole window.
