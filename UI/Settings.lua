@@ -575,7 +575,7 @@ SettingsUI.acrossOpen = {}
 --- The ITEM, KEEP, HAVE and STATUS headings over the list.
 function SettingsUI.BuildAcrossHeader(list)
     local function Heading(text, right, justify)
-        local label = Theme.CreateLabel(list, "tiny", "muted", justify)
+        local label = Theme.CreateLabel(list, "tiny", "heading", justify)
         label:SetText(text)
         if right then
             label:SetPoint("TOPRIGHT", list, "TOPLEFT", right, -3)
@@ -852,7 +852,7 @@ function SettingsUI.BuildRuleHeader(list)
     local function Heading(by, text, left, width, justify)
         local head = CreateFrame("Button", nil, list)
         head:SetHeight(RULE_HEADER)
-        head.label = Theme.CreateLabel(head, "tiny", "muted", justify)
+        head.label = Theme.CreateLabel(head, "tiny", "heading", justify)
         head.label:SetAllPoints()
         head.text = text
         head.label:SetText(text)
@@ -864,7 +864,7 @@ function SettingsUI.BuildRuleHeader(list)
         head:SetWidth(width)
         head:SetScript("OnClick", function() SettingsUI:SortRules(by) end)
         head:SetScript("OnEnter", function(self) self.label:SetTextColor(Theme.Unpack("accentHi")) end)
-        head:SetScript("OnLeave", function(self) self.label:SetTextColor(Theme.Unpack("muted")) end)
+        head:SetScript("OnLeave", function(self) self.label:SetTextColor(Theme.Unpack("heading")) end)
         list.heads[by] = head
     end
     Heading("item", L["ITEM OR KIND"], 8, RULE_NAME_WIDTH)

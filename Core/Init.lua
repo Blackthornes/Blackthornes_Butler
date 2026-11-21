@@ -60,9 +60,9 @@ ns.COLORS = {
     accent    = "ffc8a44d",
     good      = "ff4fd18b",
     bad       = "ffe5604f",
-    muted     = "ff7a8089",
+    muted     = "ff857c68",
     warn      = "ffe8c15a",
-    text      = "ffe6e8ec",
+    text      = "ffffffff",
 }
 
 local PREFIX = "|c" .. ns.COLORS.accent .. "Butler|r "
