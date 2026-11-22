@@ -414,7 +414,9 @@ local DEFAULTS = {
 
     -- Also kept here, never renamed (made when first needed, so not given
     -- defaults): alwaysKeep, alwaysSell and alwaysBank ([itemID] = true, the player's
-    -- right-click choices), alwaysMail ([itemID] = a character's short name)
+    -- right-click choices), alwaysMail ([itemID] = a character's short name),
+    -- read only since 2026-11-22: each character's own copy is in
+    -- BlackthornesButlerCharDB.marks (Logic/Verdicts.lua),
     -- sellTest (what /bbutler selltest found) and sellBelow (copper, the
     -- player's Sell below amount; nil is off) and windowScale (the
     -- window's size from its corner grip; 1 is the normal size), and

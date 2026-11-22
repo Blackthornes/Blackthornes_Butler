@@ -2935,3 +2935,28 @@ it borrowed:
 
 The item menu's Mail page now shows for anything not soulbound. Tested in
 `tools/test_mailfill.lua` and `tools/test_errands.lua`.
+
+## Marks per character (2026-11-22)
+
+A player found that a mark made on one character changed on the other: the
+main marked an item Always mail to the alt, the alt marked it Store in
+bank, and the main's mark turned to bank too. The six Always lists
+(`alwaysKeep`, `alwaysSell`, `alwaysAuction`, `alwaysBank`,
+`alwaysDisenchant`, `alwaysMail`) were one account wide set, and each pick
+clears the other five.
+
+- Now each character keeps its own, in its own save:
+  `BlackthornesButlerCharDB.marks = { alwaysKeep = {...}, ... }` (never
+  rename it). The game opens the right file for whoever plays, so no GUID
+  or name is read, and a dungeon changes nothing.
+- The old account wide lists in `BlackthornesButlerDB` keep their names and
+  are never deleted or changed. Each character copies them the first time
+  it reads its marks, so nobody loses the setup they had (a character made
+  later starts with that copy too).
+- `Verdicts:MarkList(name)` hands out the playing character's list; read
+  through it (MailRules does), never `ns.db.alwaysX`. `Verdicts.MARK_LISTS`
+  names the six. Reset This Item and `/bbutler reset confirm` clear the
+  character playing only.
+- Tradeskills' `Verdicts:Choice` call asks for the character playing, so it
+  now gets that character's own mark.
+- Tested in `tools/test_charmarks.lua`.

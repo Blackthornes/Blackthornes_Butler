@@ -97,7 +97,7 @@ _G.C_QuestLog = {
 }
 
 env.Enable(ns)
-ns.db.alwaysSell = { [730] = true }
+ns.Verdicts:MarkList("alwaysSell")[730] = true
 
 local function Find(itemName)
     for _, group in ipairs(Verdicts:Groups()) do

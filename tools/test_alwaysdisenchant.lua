@@ -54,7 +54,7 @@ local row = Find("Ridge Cleaver")
 suite.check("on the list: disenchant", row.verdict == "disenchant", row.verdict)
 suite.check("saying why", row.reason == "On your Always disenchant list", row.reason)
 suite.check("the choice reads back", Verdicts:Choice(801) == "disenchant")
-suite.check("saved account wide", ns.db.alwaysDisenchant[801] == true)
+suite.check("saved for this character", ns.Verdicts:MarkList("alwaysDisenchant")[801] == true)
 
 -- 3. Can't break it here.
 can, enchanter = false, "Dusty Anvil"
@@ -75,7 +75,7 @@ upgrade = false
 -- Taken off: back to auction.
 Verdicts:SetChoice(801, nil)
 suite.check("off the list: auction again", Find("Ridge Cleaver").verdict == "auction", Find("Ridge Cleaver").verdict)
-suite.check("off the list in the save", ns.db.alwaysDisenchant[801] == nil)
+suite.check("off the list in the save", ns.Verdicts:MarkList("alwaysDisenchant")[801] == nil)
 
 -- 5. On the Order page.
 local listed = false

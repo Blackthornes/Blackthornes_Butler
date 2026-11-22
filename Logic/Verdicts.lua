@@ -75,9 +75,11 @@
 -- disenchanted or looked at.
 --
 -- The Always keep, Always sell and Always bank lists are the player's own
--- choices, account wide, by item ID: BlackthornesButlerDB.alwaysKeep,
+-- choices, per character, by item ID: BlackthornesButlerCharDB.marks.alwaysKeep,
 -- .alwaysSell, .alwaysBank, .alwaysDisenchant and .alwaysAuction ([itemID] = true), and
--- .alwaysMail ([itemID] = the character's short name). Never rename them.
+-- .alwaysMail ([itemID] = the character's name). Never rename them. Until
+-- 2026-11-22 they were account wide in BlackthornesButlerDB under the same
+-- names; those are kept as they were and copied once into each character.
 --
 -- Sell below (a player asked, the owner agreed 2026-10-11) is
 -- BlackthornesButlerDB.sellBelow, copper, account wide, nil when off (never
@@ -146,10 +148,52 @@ local memo, memoVersion = {}, 0
 -- The player's own choices
 --------------------------------------------------------------------------------
 
+-- The six Always lists are kept per character (a player found a mark made
+-- on an alt changed the main's too, 2026-11-22): in the character's own
+-- save, BlackthornesButlerCharDB.marks = { alwaysKeep = {...}, ... } (never
+-- rename it). The game opens the right file for whoever is playing, so no
+-- GUID is needed and a dungeon changes nothing. The old account wide lists
+-- (BlackthornesButlerDB.alwaysKeep and the rest) are never deleted or
+-- changed: each character starts with a copy of them the first time it
+-- reads its marks, so nobody loses the setup they had.
+Verdicts.MARK_LISTS = { "alwaysKeep", "alwaysSell", "alwaysAuction", "alwaysBank", "alwaysDisenchant", "alwaysMail" }
+local IS_MARK = {}
+for _, name in ipairs(Verdicts.MARK_LISTS) do IS_MARK[name] = true end
+
+local function Marks()
+    local char = ns.charDB
+    if type(char) ~= "table" then return nil end
+    if type(char.marks) ~= "table" then
+        local marks = {}
+        for _, name in ipairs(Verdicts.MARK_LISTS) do
+            local copy, old = {}, ns.db and ns.db[name]
+            if type(old) == "table" then
+                for itemID, value in pairs(old) do copy[itemID] = value end
+            end
+            marks[name] = copy
+        end
+        char.marks = marks
+    end
+    return char.marks
+end
+
 local function List(name)
+    if IS_MARK[name] then
+        local marks = Marks()
+        if not marks then return {} end
+        if type(marks[name]) ~= "table" then marks[name] = {} end
+        return marks[name]
+    end
     if not ns.db then return {} end
     if type(ns.db[name]) ~= "table" then ns.db[name] = {} end
     return ns.db[name]
+end
+
+--- One of the character playing's Always lists by its saved name
+--- ("alwaysMail" and the rest in Verdicts.MARK_LISTS), { [itemID] = value }.
+function Verdicts:MarkList(name)
+    if not IS_MARK[name] then return {} end
+    return List(name)
 end
 
 --- "keep", "sell", "auction", "bank", "disenchant", "mail" or nil: what the player
@@ -2173,9 +2217,11 @@ ns.RegisterCommand("reset", L["empty your Always keep, sell, bank and mail lists
         ns.Print(L["this empties your Always keep, Always sell, Always bank and Always mail lists, and forgets what Butler learned from you. To do it, type /bbutler reset confirm"])
         return
     end
-    ns.db.alwaysKeep, ns.db.alwaysSell, ns.db.alwaysBank, ns.db.alwaysMail = {}, {}, {}, {}
-    -- The two lists added later too, so "decides every item again" is true.
-    ns.db.alwaysAuction, ns.db.alwaysDisenchant = {}, {}
+    -- This character's lists only; the old account wide ones stay as they were.
+    for _, name in ipairs(Verdicts.MARK_LISTS) do
+        local list = List(name)
+        for itemID in pairs(list) do list[itemID] = nil end
+    end
     if ns.Learning then ns.Learning:ForgetAll() end
     Verdicts:Changed(true)
     ns.Print(L["your Always keep, Always sell, Always bank and Always mail lists are empty, and Butler has forgotten what it learned from you. Butler decides every item again."])

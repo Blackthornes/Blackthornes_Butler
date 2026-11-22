@@ -64,14 +64,14 @@ suite.check("once it loads, the grey goes to Sell", Find("Cracked Jar").verdict 
 -- The player's own choices.
 Verdicts:SetChoice(102, "sell")
 suite.check("Always sell puts a white item under Sell", Find("Linen Cloth").verdict == "sell")
-suite.check("saved by item ID, account wide", ns.db.alwaysSell[102] == true)
+suite.check("saved by item ID, for this character", ns.Verdicts:MarkList("alwaysSell")[102] == true)
 Verdicts:SetChoice(101, "keep")
 suite.check("Always keep beats grey", Find("Broken Fang").verdict == "keep")
 Verdicts:SetChoice(103, "sell")
 suite.check("a quest item is kept even on the sell list", Find("Gnoll Paw").verdict == "keep")
 Verdicts:SetChoice(101, nil)
 suite.check("Let Butler decide takes it off both lists",
-    ns.db.alwaysKeep[101] == nil and ns.db.alwaysSell[101] == nil and Find("Broken Fang").verdict == "sell")
+    ns.Verdicts:MarkList("alwaysKeep")[101] == nil and ns.Verdicts:MarkList("alwaysSell")[101] == nil and Find("Broken Fang").verdict == "sell")
 
 -- The groups come in order: what to do first at the top.
 local order = {}
@@ -127,9 +127,9 @@ suite.check("Always keep moves it", Find("Linen Cloth").verdict == "keep" and no
 
 -- The typed reset empties both lists; without confirm it does nothing.
 ns.HandleSlash("reset")
-suite.check("reset without confirm keeps the lists", ns.db.alwaysKeep[102] == true)
+suite.check("reset without confirm keeps the lists", ns.Verdicts:MarkList("alwaysKeep")[102] == true)
 ns.HandleSlash("reset confirm")
-suite.check("reset confirm empties them", next(ns.db.alwaysKeep) == nil and next(ns.db.alwaysSell) == nil)
+suite.check("reset confirm empties them", next(ns.Verdicts:MarkList("alwaysKeep")) == nil and next(ns.Verdicts:MarkList("alwaysSell")) == nil)
 
 -- The bags change while a read is under way: the read goes again, and the
 -- window is redrawn even when the second pass finds nothing new (what the

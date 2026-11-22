@@ -57,7 +57,7 @@ ns.db.mailNames = { "Ana Stone" }
 
 -- 5. Always mail to a typed name.
 suite.check("MailTo sets it", MR:MailTo(4776, "Dee Fox") == "Dee Fox")
-suite.check("saved on Always mail", ns.db.alwaysMail[4776] == "Dee Fox", ns.db.alwaysMail[4776])
+suite.check("saved on Always mail", ns.Verdicts:MarkList("alwaysMail")[4776] == "Dee Fox", ns.Verdicts:MarkList("alwaysMail")[4776])
 ns.UI:Show("bags")
 Verdicts:Changed(true)
 local row
@@ -92,15 +92,15 @@ for _, each in ipairs(withKinds) do if each.kind == "kind" and each.key == "clot
 suite.check("a kind with its own character", cloth and cloth.to == "Ana Stone" and not cloth.bankAlt)
 
 MR:Change(Find(rows, "item"), "Cal Reed")
-suite.check("Change moves Always mail", ns.db.alwaysMail[4776] == "Cal Reed", ns.db.alwaysMail[4776])
+suite.check("Change moves Always mail", ns.Verdicts:MarkList("alwaysMail")[4776] == "Cal Reed", ns.Verdicts:MarkList("alwaysMail")[4776])
 MR:Change(Find(rows, "learned"), "Cal Reed")
-suite.check("a learned mail becomes Always mail", ns.db.alwaysMail[2589] == "Cal Reed", ns.db.alwaysMail[2589])
+suite.check("a learned mail becomes Always mail", ns.Verdicts:MarkList("alwaysMail")[2589] == "Cal Reed", ns.Verdicts:MarkList("alwaysMail")[2589])
 MR:Remove(cloth)
 suite.check("a kind's own character goes back to the bank alt", ns.BankAlt:KindTo("cloth") == nil)
 MR:Remove(Find(rows, "list"))
 suite.check("list Mail To removed", (ns.ListRules:Get(1) or {}).mailTo == nil)
 MR:Remove({ kind = "item", itemID = 4776 })
-suite.check("Always mail removed", ns.db.alwaysMail[4776] == nil)
+suite.check("Always mail removed", ns.Verdicts:MarkList("alwaysMail")[4776] == nil)
 
 -- The Settings list draws.
 ns.SettingsUI:Show()

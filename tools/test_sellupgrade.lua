@@ -34,7 +34,7 @@ UI:Show()
 local boots = Find("Thendal Boots")
 suite.check("an upgrade on Always sell is Look at it", boots and boots.verdict == "look", boots and boots.verdict)
 suite.check("the other pair is sold", Find("Old Boots").verdict == "sell", Find("Old Boots").verdict)
-suite.check("the list still holds it", ns.db.alwaysSell[701] == true)
+suite.check("the list still holds it", ns.Verdicts:MarkList("alwaysSell")[701] == true)
 
 upgrade = false
 Verdicts:Changed(true)
@@ -69,7 +69,7 @@ Verdicts:Changed(true)
 UI:Hide()
 UI:Show()
 suite.check("nothing needs it: Sell again", Find("Old Boots").verdict == "sell", Find("Old Boots").verdict)
-suite.check("and the list kept it all along", ns.db.alwaysSell[702] == true)
+suite.check("and the list kept it all along", ns.Verdicts:MarkList("alwaysSell")[702] == true)
 _G.BlackthornesFarmer, _G.BlackthornesTS = nil, nil
 
 -- Always mail gives way to an upgrade to wear now, the same way (2026-10-17).
@@ -83,7 +83,7 @@ UI:Hide()
 UI:Show()
 boots = Find("Thendal Boots")
 suite.check("an upgrade on Always mail is Look at it", boots and boots.verdict == "look", boots and boots.verdict)
-suite.check("the mail list still holds it", ns.db.alwaysMail[701] == "Someone Else")
+suite.check("the mail list still holds it", ns.Verdicts:MarkList("alwaysMail")[701] == "Someone Else")
 upgrade = false
 Verdicts:Changed(true)
 UI:Hide()
