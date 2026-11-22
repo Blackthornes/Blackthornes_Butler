@@ -64,7 +64,7 @@ that touches one.
 - **Window spots.** Windows remember where they were dragged
   (`SharedWindow.KeepSpot(frame, key)`, `windowSpots`,
   `oneWindowDockSpots`, `foldedWindows`; never rename). `UI/SharedWindow.lua` is
-  FILE_VERSION 15 (the round button, the swap gem, Butler at the vendor, shelves, dock places, All Addons gear, no placing mid-drag) and
+  FILE_VERSION 16 (the round button, the swap gem, Butler at the vendor, shelves, dock places, All Addons gear, no placing mid-drag) and
   `UI/WhatsNew.lua` FILE_VERSION 7.
 - **Writing for players.** Plain, warm, sixth grade. Short sentences. No
   hype, no filler, no em-dashes, no questions to the reader. deDE changes
