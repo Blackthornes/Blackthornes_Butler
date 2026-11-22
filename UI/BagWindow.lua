@@ -620,7 +620,7 @@ function BagWindow:Build()
     -- The fold gem beside the close gem (UI/FoldWindow.lua). Folded, the
     -- squares are out of sight, so the trash can leaves them.
     if ns.FoldWindow then
-        ns.FoldWindow:Add(frame, { onToggle = function(folded)
+        ns.FoldWindow:Add(frame, { key = "Bags", onToggle = function(folded)
             if not folded then BagWindow:Changed(true) end
             if ns.Trash then ns.Trash:Changed() end
         end })

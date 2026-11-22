@@ -1194,6 +1194,9 @@ L["Click to show the way to your trainer."] = "点击显示前往训练师的路
 -- The fold gem beside a window's close gem (2026-10-24)
 L["Collapse this window"] = "收起这个窗口"
 L["Expand this window"] = "展开这个窗口"
+L["Click to open it again."] = "点击再次打开。"
+L["Drag to move it."] = "拖动可以移动它。"
+L["Opens to %s."] = "打开到%s。"
 L["Split Into Own Windows"] = "拆分为独立窗口"
 L["Gives each addon its own window again."] = "让每个插件重新拥有自己的窗口。"
 L["You can join them back with this same button."] = "用同一个按钮可以把它们重新合并。"
