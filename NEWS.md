@@ -23,6 +23,11 @@ tell a friend: no hype, no questions to the reader, no exclamation marks
 outside the thanks line, no dashes as punctuation, no "now you can". The
 tool prints a note for a shipped line that reads like an advert.
 
+## 1.25.1
+
+Fixes and changes:
+- The Bags window shows bag names again, and its tabs no longer overlap in a fight.
+
 ## 1.25.0
 
 - Windows fold into a round button with the Butler badge.
