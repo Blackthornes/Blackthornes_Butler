@@ -1763,10 +1763,9 @@ function UI:ShowMenu(data, stay)
     menu.disenchant:SetPoint("TOPLEFT", menu.bank, "BOTTOMLEFT", 0, 0)
     local above = canBreak and menu.disenchant or menu.bank
 
-    -- Mail needs Tradeskills to know the player's characters, and gear
-    -- bound to this one can't be mailed at all.
-    local canMail = choice == "mail" or (not data.bound
-        and (#ns.Errands:Characters() > 0 or ns.Errands.Tradeskills("FillMail") ~= nil))
+    -- Gear bound to this one can't be mailed at all. Butler fills the mail
+    -- itself when Tradeskills is off, so anything else can be.
+    local canMail = choice == "mail" or not data.bound
     menu.mail:SetShown(canMail)
 
     -- Marked or unmarked through Tradeskills, so only with it loaded.

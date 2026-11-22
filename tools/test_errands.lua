@@ -230,7 +230,14 @@ local fillMail = _G.BlackthornesTS.Butler.FillMail
 _G.BlackthornesTS.Butler.FillMail = nil
 env.Fire("MAIL_SHOW")
 ok, why = Errands:FillMail()
-suite.check("without Tradeskills it says so", not ok and why:find("Tradeskills", 1, true) ~= nil)
+suite.check("with no Send Mail page it says so", not ok and why:find("mailbox", 1, true) ~= nil, why)
+-- Butler fills it itself then (2026-11-22): the To box gets Bob's name.
+_G.SendMailNameEditBox = env.Stub()
+ok, why = Errands:FillMail()
+suite.check("without Tradeskills Butler fills the mail itself", ok == true, why)
+suite.check("and the To box gets the name", SendMailNameEditBox:GetText() ~= nil, SendMailNameEditBox:GetText())
+ns.MailFill.filling = false
+_G.SendMailNameEditBox = nil
 _G.BlackthornesTS.Butler.FillMail = function() error("boom") end
 ok = Errands:FillMail()
 suite.check("a Tradeskills that raises fills nothing", not ok)
