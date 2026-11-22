@@ -333,7 +333,7 @@ suite.check("away from the bank nothing moves", not ok and why == "Open your ban
 UI:Show()
 UI:ShowMenu({ itemID = 401, name = "Bolt of Wool" })
 UI.menu.bank:GetScript("OnClick")(UI.menu.bank)
-suite.check("the menu puts it on the Always bank list", ns.db.alwaysBank[401] == true
+suite.check("the menu puts it on the Always bank list", ns.Verdicts:MarkList("alwaysBank")[401] == true
     and ns.Verdicts:Choice(401) == "bank")
 UI:ShowMenu({ itemID = 401, name = "Bolt of Wool" })
 suite.check("and says so", UI.menu.bank.label:GetText() == "Always Bank (now)" and UI.menu.decide:IsShown())
@@ -347,7 +347,7 @@ UI.menu.decide:GetScript("OnClick")(UI.menu.decide)
 UI.menu.decide:GetScript("OnClick")(UI.menu.decide)
 _G.C_Timer.After = runTimers
 end
-suite.check("Reset This Item takes it off", ns.db.alwaysBank[401] == nil)
+suite.check("Reset This Item takes it off", ns.Verdicts:MarkList("alwaysBank")[401] == nil)
 
 -- Always mail to: the player's characters on this realm and side.
 local names = Errands:Characters()
@@ -361,7 +361,7 @@ suite.check("which lists them", UI.menu.characters[1]:IsShown()
 UI.menu.characters[2]:GetScript("OnClick")(UI.menu.characters[2])
 local choice, to = ns.Verdicts:Choice(404)
 suite.check("a pick puts it on the Always mail list", choice == "mail" and to == "Bob"
-    and ns.db.alwaysMail[404] == "Bob" and not ns.db.alwaysBank[404])
+    and ns.Verdicts:MarkList("alwaysMail")[404] == "Bob" and not ns.Verdicts:MarkList("alwaysBank")[404])
 UI:ShowMenu({ itemID = 404, name = "Copper Ore" })
 suite.check("and the menu says who", UI.menu.mail.label:GetText() == "Always Mail To Bob")
 UI:HideMenu()
@@ -382,7 +382,7 @@ UI.menu.decide:GetScript("OnClick")(UI.menu.decide)
 UI.menu.decide:GetScript("OnClick")(UI.menu.decide)
 _G.C_Timer.After = runTimers
 end
-suite.check("Reset This Item takes it off the mail list", ns.db.alwaysMail[404] == nil)
+suite.check("Reset This Item takes it off the mail list", ns.Verdicts:MarkList("alwaysMail")[404] == nil)
 
 -- Never a mail to the character playing (a player found one, 2026-10-11):
 -- the Always mail list is account wide, so it can name this character, and
@@ -426,24 +426,24 @@ _G.BlackthornesTS.Butler.Holdings = function()
     }
 end
 ns.Verdicts:Changed(true)
-ns.db.alwaysMail[404] = "Bob S."
+ns.Verdicts:MarkList("alwaysMail")[404] = "Bob S."
 local _, savedTo = ns.Verdicts:Choice(404)
 suite.check("an old short name is read as the full one", savedTo == "Bob Stonebreakerson", savedTo)
-suite.check("and is left as saved", ns.db.alwaysMail[404] == "Bob S.")
-ns.db.alwaysMail[404] = "Me M."
+suite.check("and is left as saved", ns.Verdicts:MarkList("alwaysMail")[404] == "Bob S.")
+ns.Verdicts:MarkList("alwaysMail")[404] = "Me M."
 do
     local v, _, _, _, x = ns.Verdicts:Decide({ itemID = 404, count = 1 })
     suite.check("an old short name for the character playing is never mailed", not (v == "mail" and x and ns.Verdicts:IsMe(x.to)), x and x.to)
 end
 -- A first name alone, saved before last names were read.
-ns.db.alwaysMail[404] = "Me"
+ns.Verdicts:MarkList("alwaysMail")[404] = "Me"
 local _, bareTo = ns.Verdicts:Choice(404)
 suite.check("a first name alone is read as the full one", bareTo == "Me Myself", tostring(bareTo))
 do
     local v, _, _, _, x = ns.Verdicts:Decide({ itemID = 404, count = 1 })
     suite.check("and the character playing never mails it", not (v == "mail" and x and ns.Verdicts:IsMe(x.to)), x and x.to)
 end
-ns.db.alwaysMail[404] = "Bob"
+ns.Verdicts:MarkList("alwaysMail")[404] = "Bob"
 local _, twoBobs = ns.Verdicts:Choice(404)
 suite.check("a first name two characters share is left as saved", twoBobs == "Bob", tostring(twoBobs))
 _G.BlackthornesTS.Butler.Holdings = function()
@@ -465,7 +465,7 @@ _G.BlackthornesTS.Butler.Holdings = function()
     }
 end
 ns.Verdicts:Changed(true)
-ns.db.alwaysMail[404] = "Bob S."
+ns.Verdicts:MarkList("alwaysMail")[404] = "Bob S."
 UI:ShowMenu({ itemID = 404, name = "Copper Ore" })
 local menuWidth = UI.menu:GetWidth()
 suite.check("the menu is as wide as its longest button",
@@ -474,7 +474,7 @@ suite.check("the menu is as wide as its longest button",
 UI.menu.mail:GetScript("OnClick")(UI.menu.mail)
 suite.check("and the characters page too", UI.menu:GetWidth() >= UI.menu.characters[1]:GetWidth() + 16)
 UI:HideMenu()
-ns.db.alwaysMail[404] = nil
+ns.Verdicts:MarkList("alwaysMail")[404] = nil
 _G.BlackthornesTS.Butler.Holdings = holdings
 ns.Verdicts:Changed(true)
 
@@ -498,18 +498,17 @@ suite.check("/bbutler mailbox turns it off", ns.db.openAtMailbox == false)
 -- list keeps the rest.
 _G.BlackthornesTS.Butler.Advise = advise
 ns.Verdicts:Forget()
-ns.db.alwaysKeep = ns.db.alwaysKeep or {}
-ns.db.alwaysKeep[403] = true
+ns.Verdicts:MarkList("alwaysKeep")[403] = true
 local verdict, reason, _, _, extra = ns.Verdicts:Decide({ itemID = 403, count = 20, quality = 1 })
 suite.check("Always keep still mails an alt's craft share", verdict == "mail" and extra and extra.to == "Bob"
     and extra.count == 5 and reason == "Mail 5 to Bob for their crafts, keep the rest", tostring(reason))
 verdict = ns.Verdicts:Decide({ itemID = 403, count = 20, quality = 1, bound = true })
 suite.check("but soulbound stays kept", verdict == "keep")
-ns.db.alwaysKeep[403] = nil
-ns.db.alwaysKeep[402] = true
+ns.Verdicts:MarkList("alwaysKeep")[403] = nil
+ns.Verdicts:MarkList("alwaysKeep")[402] = true
 verdict = ns.Verdicts:Decide({ itemID = 402, count = 1, quality = 1 })
 suite.check("and with no alt craft the list keeps it", verdict == "keep")
-ns.db.alwaysKeep[402] = nil
+ns.Verdicts:MarkList("alwaysKeep")[402] = nil
 
 -- Gear that is no use here but an upgrade for another character goes in
 -- the mail to them, named by Tradeskills from Equipment's GUID.

@@ -57,7 +57,7 @@ local row = Find("Heavy Linen Bandage")
 suite.check("on the list: auction", row.verdict == "auction", row.verdict)
 suite.check("saying why", row.reason == "On your Always auction list", row.reason)
 suite.check("the choice reads back", Verdicts:Choice(901) == "auction")
-suite.check("saved account wide", ns.db.alwaysAuction[901] == true)
+suite.check("saved for this character", ns.Verdicts:MarkList("alwaysAuction")[901] == true)
 
 -- 3. An upgrade and a soulbound copy stay.
 upgrade = true
@@ -80,7 +80,7 @@ queueNeed = 0
 
 -- Picking another list takes it off this one.
 Verdicts:SetChoice(901, "sell")
-suite.check("another pick clears it", ns.db.alwaysAuction[901] == nil)
+suite.check("another pick clears it", ns.Verdicts:MarkList("alwaysAuction")[901] == nil)
 
 -- Taken off: back to sell.
 Verdicts:SetChoice(901, nil)

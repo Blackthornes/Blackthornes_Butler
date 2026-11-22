@@ -81,11 +81,11 @@ suite.check("leather no craft needs goes on down the rules", reason ~= nil and n
 suite.check("Tradeskills asked once for the whole look", asked == 1, tostring(asked))
 
 -- 4.
-ns.db.alwaysSell = { [2840] = true }
+ns.Verdicts:MarkList("alwaysSell")[2840] = true
 Verdicts:Changed(true)
 verdict = Judge(2840)
 suite.check("the Always sell list still wins", verdict == "sell", tostring(verdict))
-ns.db.alwaysSell = nil
+ns.Verdicts:MarkList("alwaysSell")[2840] = nil
 
 -- 5.
 advice[2589] = { auction = 0, mailTo = "Bob Stone", mailCount = 6 }

@@ -80,7 +80,7 @@ fake.Put({ bag = 0, slot = 1, id = 701, name = "Broken Fang", quality = 0, price
 -- 6. A mail says why under it, so "Mail to NAME" is never read as "NAME
 -- can wear it" (a player read an enchanter's mail as an upgrade).
 fake.Put({ bag = 0, slot = 2, id = 702, name = "Heavy Mace", quality = 2, price = 900 })
-ns.db.alwaysMail = { [702] = "Bob Stone" }
+ns.Verdicts:MarkList("alwaysMail")[702] = "Bob Stone"
 ns.Verdicts:Changed(true)
 local mailButton = env.Stub({ GetBagID = function() return 0 end, GetID = function() return 2 end })
 lines = Hover(GameTooltip, 702, mailButton)

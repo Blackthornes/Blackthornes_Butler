@@ -47,7 +47,7 @@ local herb = Find("Mageroyal")
 suite.check("Always sell gives the alt's craft its share", herb and herb.verdict == "mail", herb and herb.verdict)
 suite.check("to the alt", herb.mailTo == ALT, herb.mailTo)
 suite.check("only what it needs", herb.mailCount == 12, herb.mailCount)
-suite.check("the list still holds it", ns.db.alwaysSell[785] == true)
+suite.check("the list still holds it", ns.Verdicts:MarkList("alwaysSell")[785] == true)
 
 local vial = Find("Leaded Vial")
 suite.check("a learned keep gives the alt its share too", vial and vial.verdict == "mail", vial and vial.verdict)

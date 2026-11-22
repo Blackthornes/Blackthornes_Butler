@@ -79,7 +79,7 @@ function MailRules:OtherNames()
         names[#names + 1] = name
     end
     for _, name in ipairs(ns.db and type(ns.db.mailNames) == "table" and ns.db.mailNames or {}) do Add(name) end
-    for _, to in pairs(ns.db and type(ns.db.alwaysMail) == "table" and ns.db.alwaysMail or {}) do Add(to) end
+    for _, to in pairs(ns.Verdicts and ns.Verdicts:MarkList("alwaysMail") or {}) do Add(to) end
     table.sort(names, function(a, b) return a:lower() < b:lower() end)
     return names
 end
@@ -128,7 +128,8 @@ function MailRules:All(showKinds)
     local rows = {}
     local db = ns.db
     if not db then return rows end
-    for itemID, to in pairs(type(db.alwaysMail) == "table" and db.alwaysMail or {}) do
+    local alwaysMail = ns.Verdicts and ns.Verdicts:MarkList("alwaysMail") or {}
+    for itemID, to in pairs(alwaysMail) do
         to = Text(to)
         if to and tonumber(itemID) then
             if ns.Errands and ns.Errands.FullName then to = ns.Errands:FullName(to) end
@@ -145,7 +146,7 @@ function MailRules:All(showKinds)
     end
     for itemID, entry in pairs(type(db.learned) == "table" and db.learned or {}) do
         if type(entry) == "table" and entry.verdict == "mail" and Text(entry.to) and tonumber(itemID)
-            and not (type(db.alwaysMail) == "table" and db.alwaysMail[itemID]) then
+            and not alwaysMail[itemID] then
             rows[#rows + 1] = { kind = "learned", itemID = tonumber(itemID), to = Text(entry.to), from = FROM.learned }
         end
     end

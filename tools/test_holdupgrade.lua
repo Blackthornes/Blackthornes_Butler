@@ -48,7 +48,7 @@ local function Rows(verdict)
     return byID
 end
 
-ns.db.alwaysKeep = { [999] = true }
+ns.Verdicts:MarkList("alwaysKeep")[999] = true
 UI:Show("bags")
 Verdicts:Changed(true)
 local mail = Rows("mail")
@@ -114,7 +114,7 @@ ns.HandleSlash("upgrademail undo Bob Stone")
 suite.check("the command undoes both", ns.db.noUpgradesFor["Bob Stone"] == nil and ns.db.noUpgradeMail[405] == nil)
 
 -- 5.
-suite.check("the player's lists are untouched", ns.db.alwaysKeep[999] == true)
+suite.check("the player's lists are untouched", ns.Verdicts:MarkList("alwaysKeep")[999] == true)
 
 _G.BlackthornesEquipment = nil
 _G.BlackthornesTS = nil
