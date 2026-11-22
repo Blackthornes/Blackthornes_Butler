@@ -197,6 +197,20 @@ local function Holdings()
     return list, me
 end
 
+--- The names of your characters: Tradeskills' Holdings, else the ones
+--- Butler wrote down itself (MailFill:Holdings, names only), so the name
+--- picker works with Butler alone (2026-11-22).
+local function Names()
+    local list, me = Holdings()
+    if list then return list, me end
+    list = ns.MailFill and ns.MailFill:Holdings()
+    if not list then return nil end
+    for _, entry in ipairs(list) do
+        if entry.isCurrent == true then return list, entry end
+    end
+    return list, nil
+end
+
 --- Tradeskills' Holdings and the character playing's entry (the gold fund
 --- reads it), or nil without Tradeskills.
 function Errands:Holdings()
@@ -241,7 +255,7 @@ local function AllNames()
     local version = ns.Verdicts and ns.Verdicts.version
     if namesCache and namesVersion == version then return namesCache, myName, myNames end
     local names = {}
-    local list, me = Holdings()
+    local list, me = Names()
     myName = me and (Text(me.short) or Text(me.name)) or nil
     myNames = MyNames(list)
     for _, entry in ipairs(list or {}) do
@@ -264,7 +278,7 @@ function Errands:NameOf(key)
     local version = ns.Verdicts and ns.Verdicts.version
     if not byKeyCache or byKeyVersion ~= version then
         byKeyCache, byKeyVersion = {}, version
-        local list, me = Holdings()
+        local list, me = Names()
         for _, entry in ipairs(list or {}) do
             local name = type(entry) == "table" and (Text(entry.short) or Text(entry.name))
             local entryKey = type(entry) == "table" and Text(entry.key)
@@ -334,7 +348,7 @@ function Errands:FullName(name)
 end
 
 function Errands:Characters()
-    local list, me = Holdings()
+    local list, me = Names()
     if not list then return {} end
 
     local names, seen = {}, {}
@@ -422,8 +436,8 @@ end
 function Errands:FillMail(to)
     if not self.mailOpen then return false, L["Open a mailbox first."] end
     if InCombat() then return false, L["Not in combat."] end
+    -- Tradeskills' filler when it is loaded, else Butler's own copy.
     local butler = Errands.Tradeskills("FillMail")
-    if not butler then return false, L["Filling mail needs Blackthornes Tradeskills."] end
     -- Ask the other addons afresh: an alt's queue may have changed since
     -- the window last asked, and the click must send what it wants now.
     ns.Verdicts:Changed(true)
@@ -444,8 +458,16 @@ function Errands:FillMail(to)
     for _, item in ipairs(recipient.items) do items[#items + 1] = { itemID = item.itemID, count = item.count } end
     Errands.FewestStacksFirst(items)
 
-    local ok, started, why, fullName = pcall(butler.FillMail, butler, recipient.to, items, recipient.money)
-    if not ok then return false, L["Tradeskills could not fill the mail."] end
+    local ok, started, why, fullName
+    if butler then
+        ok, started, why, fullName = pcall(butler.FillMail, butler, recipient.to, items, recipient.money)
+        if not ok then return false, L["Tradeskills could not fill the mail."] end
+    else
+        fullName = self:FullName(recipient.to)
+        if self:IsMe(fullName) then return false, L["That's the character you're on."] end
+        ok, started, why = pcall(ns.MailFill.Fill, ns.MailFill, fullName, items, recipient.money)
+        if not ok then started, why = false, nil end
+    end
     if started ~= true then
         return false, type(why) == "string" and L.Format("Couldn't fill it: %s.", why) or L["Couldn't fill it."]
     end

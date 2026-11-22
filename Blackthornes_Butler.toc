@@ -43,6 +43,7 @@ Logic\KeepHere.lua
 Logic\KeepAcross.lua
 Logic\ListRules.lua
 Logic\MailRules.lua
+Logic\MailFill.lua
 Logic\VendorPrices.lua
 
 UI\Theme.lua

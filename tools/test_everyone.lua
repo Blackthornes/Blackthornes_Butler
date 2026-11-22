@@ -36,7 +36,7 @@ suite.check("/bbutler all opens All characters", UI:IsShown() and UI.view == "al
 suite.check("the search box takes the subtitle's place", UI.search:IsShown() and not UI.subtitle:IsShown())
 local linen = Find("Linen Cloth")
 suite.check("stacks of one item are counted together", linen and linen.total == 25, linen and linen.total)
-suite.check("held by the character playing", linen and linen.holders[1].character.short == "Mia")
+suite.check("held by the character playing", linen and linen.holders[1].character.short == "Mia", linen and linen.holders[1].character.short)
 suite.check("the footer says only these bags are shown",
     UI.footer:GetText():find("Only your bags", 1, true) ~= nil, UI.footer:GetText())
 suite.check("no Sell button over the list", not UI.sellShown)

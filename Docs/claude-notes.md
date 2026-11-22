@@ -2898,3 +2898,28 @@ takes `itemOf(data) -> itemID, link`, checked on a left click before
 buys, ammo and wishlist rows (`UI.ItemOfRow`), and the Bags window's Bank
 and Everyone squares. Your bags squares are the game's own item buttons and
 already answer these. Tested in `tools/test_itemclicks.lua`.
+
+## Mail without Tradeskills (2026-11-22)
+
+A player asked why mailing the bank alt needed Tradeskills; the owner said
+build it. `Logic/MailFill.lua` gives Butler its own copy of the two pieces
+it borrowed:
+
+- Your characters: at login each character is written down account wide
+  in `myCharacters[guid] = { name, realm, faction }` (never rename it), the
+  whole name, first and last, and nothing else. A GUID or last name the
+  client won't read writes nothing (the last name is read the way
+  Tradeskills' `Config:ReadSurname` reads it); a blank realm keeps the one
+  written before. `Errands` reads it through `Names()` only when
+  Tradeskills' Holdings is missing: the name picker, `Errands:Characters`,
+  `NameOf` and `IsMe`. `Errands:Holdings()` (gold, bags, mail counts) is
+  still Tradeskills' alone.
+- Fill mail: `MailFill:Fill(name, items, money, onDone)` is a copy of
+  Tradeskills' `QueueMail:Fill` (whole stacks first, a part stack split
+  into an empty bag slot before it goes in, too-big attachments taken back
+  out, gold only without COD). `Errands:FillMail` calls Tradeskills'
+  `Butler:FillMail` when it is loaded, this otherwise, after the same
+  `IsMe` guard. A fix to the filler belongs in both.
+
+The item menu's Mail page now shows for anything not soulbound. Tested in
+`tools/test_mailfill.lua` and `tools/test_errands.lua`.
