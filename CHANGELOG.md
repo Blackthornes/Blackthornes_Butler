@@ -4,6 +4,14 @@ Versions follow [semantic versioning](https://semver.org): the middle number
 moves for new behaviour, the last for fixes alone. The newest version goes at
 the top; a release is refused if its version has no section here.
 
+## 1.25.0
+
+For WoW: Forever (interface 16001). A full restart is needed after updating.
+
+- **Round button.** The gold gem on a window's title bar folds the window into a round button with the Butler badge, on the window's top right corner. Click it to open the window. Drag it where you like. It stays a button after `/reload`.
+- **Mail without Tradeskills.** Butler fills mail for your bank alts and lists your characters when Tradeskills is not loaded.
+- **One Window.** Folding the One Window no longer shuts it for good. It opens full from its button.
+
 ## 1.24.0
 
 For WoW: Forever (interface 16001). A full restart is needed after updating.
