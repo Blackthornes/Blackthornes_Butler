@@ -1488,10 +1488,17 @@ function BagWindow:Draw()
     local content = self.content
     local width = (tonumber(self.scroll:GetWidth()) or (WIDTH - 2 * PADDING - 22))
     if width < 100 then width = WIDTH - 2 * PADDING - 22 end
-    content:SetWidth(width)
+    -- A guarded window in a fight: the squares and what holds them can't
+    -- be sized, moved or hidden, and DrawBags only repaints them, so the
+    -- headings over them stay as they are (hidden here, they were never
+    -- shown again until the fight ended).
+    local locked = self:Locked()
+    if not locked then content:SetWidth(width) end
 
-    for _, heading in ipairs(headings) do heading:Hide() end
-    for _, button in pairs(self.headingButtons or {}) do button:Hide() end
+    if not (locked and self.tab == "bags") then
+        for _, heading in ipairs(headings) do heading:Hide() end
+        for _, button in pairs(self.headingButtons or {}) do button:Hide() end
+    end
     for _, button in ipairs(plain) do button:Hide() end
     self.emptyLabel:Hide()
 
@@ -1499,7 +1506,9 @@ function BagWindow:Draw()
     if self.tab == "bags" then
         self:DrawBags(width, search)
     else
-        for _, button in pairs(buttons) do button:Hide() end
+        if not locked then
+            for _, button in pairs(buttons) do button:Hide() end
+        end
         self:DrawList(width, search)
     end
     self:UpdateFoot()
@@ -1660,6 +1669,9 @@ function BagWindow:IsShown()
 end
 
 function BagWindow:SetTab(tab)
+    -- A guarded window in a fight can't hide or show its squares, so
+    -- another tab's list would be drawn over them: it stays where it is.
+    if tab ~= self.tab and self:Locked() then return end
     self.tab = tab
     self:PaintTabs()
     if self.scroll then self.scroll:SetVerticalScroll(0) end
@@ -1676,6 +1688,11 @@ end
 --- The square made for a bag slot, shown or not, or nil.
 function BagWindow.SquareAt(bag, slot)
     return buttons[bag .. ":" .. slot]
+end
+
+--- The section heading made at a place in the list, shown or not, or nil.
+function BagWindow.HeadingAt(index)
+    return headings[index]
 end
 
 --- The square shown for a bag slot, for the trash can, or nil.

@@ -1750,6 +1750,13 @@ Bags:" under BAGS on the General page, and `/bbutler bags [on|off]`
   read by the click marks it as ours, and the game refuses to use an item
   from it in a fight. Tested in `tools/test_bagwindow.lua`. Not yet seen
   in game.
+  Headings and tabs in a fight (found reading the code, 2026-11-22):
+  `Draw` hid every heading first and a guarded window's `DrawBags` only
+  repaints, so each redraw in a fight left the squares with no headings
+  until it ended; and a click on Bank or Everyone drew that list over
+  squares that can't be hidden. A guarded window in a fight now keeps its
+  headings and its width, and `SetTab` keeps the tab it is on. Not
+  guarded, nothing changes. `BagWindow.HeadingAt(index)` is for the test.
 
 Saved, account wide, never rename them: `bagWindow` (off unless ticked),
 `bagGroupBy`, `bagItemSize`, `bagItemLevel`, `bagNewGlow`, `bagEmptySlots` (unread), `bagScale`,
