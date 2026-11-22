@@ -23,6 +23,12 @@ tell a friend: no hype, no questions to the reader, no exclamation marks
 outside the thanks line, no dashes as punctuation, no "now you can". The
 tool prints a note for a shipped line that reads like an advert.
 
+## 1.24.0
+
+- Panels and rows have a warm brown-black look.
+- Item rows link in chat and try on gear.
+- Butler has its own key in Key Bindings.
+
 ## 1.23.0
 
 - The Butler Bar has a Buy button at vendors that sell what the craft queue needs.
