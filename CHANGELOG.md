@@ -4,6 +4,13 @@ Versions follow [semantic versioning](https://semver.org): the middle number
 moves for new behaviour, the last for fixes alone. The newest version goes at
 the top; a release is refused if its version has no section here.
 
+## 1.25.2
+
+For WoW: Forever (interface 16001). `/reload` is enough after updating.
+
+- **Item marks.** Marks like Always mail, Store in bank and Always auction are kept for each character. A mark on one character no longer changes the mark on another.
+
+
 ## 1.25.1
 
 For WoW: Forever (interface 16001). `/reload` is enough after updating.
