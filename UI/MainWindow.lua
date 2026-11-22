@@ -156,7 +156,7 @@ function UI:Build()
     -- The fold gem beside the close gem (UI/FoldWindow.lua): the window
     -- folds to its plate and opens again.
     if ns.FoldWindow then
-        ns.FoldWindow:Add(frame, { onToggle = function(folded)
+        ns.FoldWindow:Add(frame, { key = "Main", onToggle = function(folded)
             if not folded then UI:Refresh() end
             UI:PlaceButtons()
         end })
@@ -2995,3 +2995,8 @@ ns.RegisterCommand("all", L["every character's items in one list, with where eac
         if not wasShown then UI:Say("open") end
     end
 end)
+
+-- Kept folded through a /reload, its round button opens it (UI/FoldWindow.lua).
+if ns.FoldWindow and ns.FoldWindow.Opener then
+    ns.FoldWindow:Opener("Main", { open = function() UI:Show() end })
+end

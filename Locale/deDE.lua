@@ -1195,6 +1195,9 @@ L["Click to show the way to your trainer."] = "Klick, um den Weg zu deinem Lehre
 -- The fold gem beside a window's close gem (2026-10-24)
 L["Collapse this window"] = "Dieses Fenster einklappen"
 L["Expand this window"] = "Dieses Fenster aufklappen"
+L["Click to open it again."] = "Klick, um es wieder zu öffnen."
+L["Drag to move it."] = "Zieh es, um es zu verschieben."
+L["Opens to %s."] = "Öffnet sich bei %s."
 L["Split Into Own Windows"] = "In eigene Fenster teilen"
 L["Gives each addon its own window again."] = "Gibt jedem Addon wieder sein eigenes Fenster."
 L["You can join them back with this same button."] = "Mit diesem Knopf kannst du sie wieder verbinden."

@@ -143,7 +143,7 @@ function SettingsUI:Build()
     -- The fold gem beside the close gem, as on every other tab
     -- (UI/FoldWindow.lua), so the corner never changes between tabs.
     if ns.FoldWindow then
-        ns.FoldWindow:Add(frame, { onToggle = function(folded)
+        ns.FoldWindow:Add(frame, { key = "Settings", onToggle = function(folded)
             if not folded then SettingsUI:Refresh() end
         end })
     end
@@ -2212,3 +2212,8 @@ ns.RegisterCommand("windows", L["put every Blackthornes window back where it sta
         ns.Print(L["Type /bbutler windows reset to put every window back in its first spot."])
     end
 end)
+
+-- Kept folded through a /reload, its round button opens it (UI/FoldWindow.lua).
+if ns.FoldWindow and ns.FoldWindow.Opener then
+    ns.FoldWindow:Opener("Settings", { open = function() SettingsUI:Show() end })
+end
