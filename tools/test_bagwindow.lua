@@ -473,10 +473,22 @@ do
     suite.check("not guarded, it lays out in a fight", frame:IsShown() and Placed())
 
     -- Guarded, its squares keep still in a fight.
+    local groupedBy = ns.BagView:GroupBy()
+    ns.BagView:SetGroupBy("bag")
+    BagWindow:Draw()
     frame.IsProtected = function() return true end
     Unplace()
     BagWindow:Draw()
     suite.check("guarded, its squares keep still in a fight", not Placed())
+    -- Its headings stay up too: a redraw in a fight hid every one and,
+    -- with the squares kept still, never showed them again.
+    local heading = BagWindow.HeadingAt(1)
+    suite.check("guarded, its headings stay up in a fight", heading ~= nil and heading:IsShown())
+    -- The squares can't be hidden in a fight, so another tab's list would
+    -- be drawn over them: it stays on Your bags until the fight ends.
+    BagWindow:SetTab("bank")
+    suite.check("guarded, it stays on Your bags in a fight", BagWindow.tab == "bags")
+    ns.BagView:SetGroupBy(groupedBy)
     frame.IsProtected = nil
     _G.InCombatLockdown = function() return false end
     env.Fire("PLAYER_REGEN_ENABLED")
