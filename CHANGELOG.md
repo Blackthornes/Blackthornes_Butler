@@ -4,6 +4,13 @@ Versions follow [semantic versioning](https://semver.org): the middle number
 moves for new behaviour, the last for fixes alone. The newest version goes at
 the top; a release is refused if its version has no section here.
 
+## 1.25.3
+
+For WoW: Forever (interface 16001). `/reload` is enough after updating.
+
+- **Swap When Full.** It no longer offers loot that is locked, and it no longer misses quest items.
+- **Mailbox.** Inbox tooltips are no longer blank.
+
 ## 1.25.2
 
 For WoW: Forever (interface 16001). `/reload` is enough after updating.
