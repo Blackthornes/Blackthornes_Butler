@@ -932,9 +932,9 @@ function BagWindow:UpdateFoot()
         self.freeLabel:SetTextColor(color[1], color[2], color[3])
     end
     local mine = ns.BagView.MyGold()
-    self.myGoldLabel:SetText(mine and L.Format("Gold: %s", Items.FormatMoney(mine)) or "")
+    self.myGoldLabel:SetText(mine and L.Format("Gold: %s", Items.FormatCoins(mine)) or "")
     local gold = ns.BagView.Gold()
-    self.goldLabel:SetText(gold and L.Format("All characters: %s", Items.FormatMoney(gold)) or "")
+    self.goldLabel:SetText(gold and L.Format("All characters: %s", Items.FormatCoins(gold)) or "")
     self.sortButton:SetShown(BagWindow.CanSort() and self.tab == "bags")
     if self.sortButton.SetEnabled then self.sortButton:SetEnabled(not InCombat()) end
     self:PlaceHint()
