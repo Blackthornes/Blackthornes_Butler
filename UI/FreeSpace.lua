@@ -45,9 +45,7 @@ local function Call(name, ...)
     local container = _G.C_Container
     local fn = container and container[name] or _G[name]
     if type(fn) ~= "function" then return nil end
-    local results = { pcall(fn, ...) }
-    if not results[1] then return nil end
-    return select(2, unpack(results))
+    return ns.Items.Answers(pcall(fn, ...))
 end
 
 -- A client number as a plain one: a secret value (instances) or anything

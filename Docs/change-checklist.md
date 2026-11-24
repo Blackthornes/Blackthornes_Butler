@@ -144,3 +144,12 @@ Check: `local x, y = thing and Call()` keeps only the first value, so `y` is
   always nil. Declare the locals, then `if thing then x, y = Call() end`.
 Why: The trip line never drew on the world map: y was nil and the draw
   raised inside its pcall, in all five addons (2026-11-20).
+
+## A pcall's answers in a table (Butler)
+Lines: \{ *pcall\(|unpack\(
+Check: Never `local r = { pcall(fn, ...) }` and then `unpack(r, 2)`. Return
+  `ns.Items.Answers(pcall(fn, ...))` (or `Items.Call`), which hands every
+  answer on as it came.
+Why: A table loses its length when an answer in the middle is nil and the
+  last ones are too. The loot window's locked and quest flags and a mail's
+  days left could read as nil (2026-11-24).

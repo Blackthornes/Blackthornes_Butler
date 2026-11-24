@@ -75,9 +75,7 @@ end
 local function Global(name, ...)
     local fn = rawget(_G, name)
     if type(fn) ~= "function" then return nil end
-    local results = { pcall(fn, ...) }
-    if not results[1] then return nil end
-    return unpack(results, 2)
+    return ns.Items.Answers(pcall(fn, ...))
 end
 
 local function InCombat()

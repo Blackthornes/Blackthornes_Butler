@@ -1011,9 +1011,7 @@ local function Client(path, ...)
         fn = type(fn) == "table" and fn[part] or nil
     end
     if type(fn) ~= "function" then return nil end
-    local results = { pcall(fn, ...) }
-    if not results[1] then return nil end
-    return unpack(results, 2)
+    return ns.Items.Answers(pcall(fn, ...))
 end
 
 --- Every item in the player's equipment sets, by ID: the retail calls

@@ -29,15 +29,23 @@ function Items.Resolve(path)
     return type(value) == "function" and value or nil
 end
 
+--- What a pcall gave back, without its first value: every answer when
+--- the call went through, nil when it raised. Never by way of a table: a
+--- table loses its length when an answer in the middle is nil and the last
+--- ones are too, and the answers after that were lost (GetLootSlotInfo's
+--- locked and quest flags, 2026-11-24).
+function Items.Answers(ok, ...)
+    if not ok then return nil end
+    return ...
+end
+
 --- Call the first of `paths` the client has, inside a pcall. Returns what it
 --- returned, or nothing when none is there or it raised.
 function Items.Call(paths, ...)
     for _, path in ipairs(paths) do
         local fn = Items.Resolve(path)
         if fn then
-            local results = { pcall(fn, ...) }
-            if not results[1] then return nil end
-            return select(2, unpack(results))
+            return Items.Answers(pcall(fn, ...))
         end
     end
     return nil

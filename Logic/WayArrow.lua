@@ -34,9 +34,7 @@ WayArrow.REFRESH = 2
 
 local function Read(fn, ...)
     if type(fn) ~= "function" then return nil end
-    local result = { pcall(fn, ...) }
-    if not result[1] then return nil end
-    return unpack(result, 2)
+    return ns.Items.Answers(pcall(fn, ...))
 end
 
 local function Plain(value)
