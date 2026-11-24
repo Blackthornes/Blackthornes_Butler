@@ -39,9 +39,7 @@ end
 local function Call(name, ...)
     local fn = rawget(_G, name)
     if type(fn) ~= "function" then return nil end
-    local result = { pcall(fn, ...) }
-    if not result[1] then return nil end
-    return unpack(result, 2)
+    return ns.Items.Answers(pcall(fn, ...))
 end
 
 --- What one of an item is worth to Butler: a vendor's price for greys,
