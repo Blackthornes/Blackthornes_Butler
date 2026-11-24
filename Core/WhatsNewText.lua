@@ -5,6 +5,9 @@
 local _, ns = ...
 
 ns.WHATS_NEW = {
+    { version = "1.26.0", lines = {
+        "The All Addons page in Settings has a Set Default button. Click Confirm and this addon's settings go back to how they started.",
+    } },
     { version = "1.25.0", lines = {
         "Windows fold into a round button with the Butler badge.",
         "Butler fills mail for your bank alts without Tradeskills.",
@@ -13,8 +16,5 @@ ns.WHATS_NEW = {
         "Panels and rows have a warm brown-black look.",
         "Item rows link in chat and try on gear.",
         "Butler has its own key in Key Bindings.",
-    } },
-    { version = "1.23.0", lines = {
-        "The Butler Bar has a Buy button at vendors that sell what the craft queue needs.",
     } },
 }
