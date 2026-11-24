@@ -2960,3 +2960,22 @@ clears the other five.
 - Tradeskills' `Verdicts:Choice` call asks for the character playing, so it
   now gets that character's own mark.
 - Tested in `tools/test_charmarks.lua`.
+
+## Restore Defaults (Butler Settings: Set Default)
+
+The owner said build it, 2026-11-23 (a player asked how to reset settings),
+in all five addons, from `Docs/mockups/restore-defaults.html` in the project
+files. A row on the ALL ADDONS page under Window Locations (renamed from
+Window Spots the same day): "Butler Settings:" with Set Default. The first
+click turns the words red and says Confirm; a second within
+`SettingsUI.CONFIRM_WAIT` (4 s) runs `SettingsUI:RestoreDefaults()`: every
+key in `SettingsUI.SETTING_KEYS` back to `ns.DEFAULTS` (else nil), then
+`settingsRestored` is set and the interface reloads;
+`SettingsUI:SayRestored()` at login says "Every Butler setting is back to
+how it started." once. Never touched: the Always keep, sell, bank and mail
+lists, the rule order (it has its own Set Default), what Butler learned,
+characters, window spots and the ALL ADDONS choices (text size, window
+style, effects, mute, combined buttons, One Window, sister note). It is not
+`/bbutler reset`, which empties the lists. `tools/test_restoredefaults.lua`
+clicks every Settings control twice and fails if one writes a key that is
+in neither list nor its kept list: a new setting must join the list.

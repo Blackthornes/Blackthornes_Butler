@@ -92,7 +92,7 @@ do
     for _, row in ipairs(pages.pages.all.rows) do onAll[row.labelText] = true end
     for _, row in ipairs(pages.pages.general.rows) do onGeneral[row.labelText] = true end
     for _, label in ipairs({ "Window Style:", "Text Size:", "Effects:", "Mute All Sounds:",
-        "Combine Addon Buttons:", "One Window:", "Window Spots:", "Sister Addons:", "What's New:",
+        "Combine Addon Buttons:", "One Window:", "Window Locations:", "Sister Addons:", "What's New:",
         "After Updates:" }) do
         suite.check("on All Addons: " .. label, onAll[label] and not onGeneral[label])
     end

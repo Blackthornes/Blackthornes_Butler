@@ -457,6 +457,7 @@ ns.LoadSavedVariables = LoadSavedVariables
 
 -- Read-only: a settings page can put window positions back from here.
 ns.DEFAULTS = DEFAULTS
+ns.CHAR_DEFAULTS = CHAR_DEFAULTS
 
 local bootstrap = ns.NewModule("Bootstrap")
 
