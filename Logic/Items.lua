@@ -328,3 +328,28 @@ function Items.FormatMoney(copper)
     end
     return ("%d%s"):format(copperPart, COPPER)
 end
+
+-- The game's own coin icons, sized to the text around them.
+Items.COIN_ICONS = {
+    gold = "|TInterface\\MoneyFrame\\UI-GoldIcon:0:0:2:0|t",
+    silver = "|TInterface\\MoneyFrame\\UI-SilverIcon:0:0:2:0|t",
+    copper = "|TInterface\\MoneyFrame\\UI-CopperIcon:0:0:2:0|t",
+}
+
+--- Copper the way the game's own bag shows money: each number with its coin
+--- icon after it, no leading zeros ("18 7 97" with gold, silver and copper
+--- coins). The coins below the biggest one always show, as the game's do.
+function Items.FormatCoins(copper)
+    if type(copper) ~= "number" then return "|c" .. ns.COLORS.muted .. "--|r" end
+    local amount = math.floor(math.max(0, copper) + 0.5)
+    local gold = math.floor(amount / COPPER_PER_GOLD)
+    local silver = math.floor((amount % COPPER_PER_GOLD) / COPPER_PER_SILVER)
+    local copperPart = amount % COPPER_PER_SILVER
+    local icons = Items.COIN_ICONS
+    if gold > 0 then
+        return ("%d%s  %d%s  %d%s"):format(gold, icons.gold, silver, icons.silver, copperPart, icons.copper)
+    elseif silver > 0 then
+        return ("%d%s  %d%s"):format(silver, icons.silver, copperPart, icons.copper)
+    end
+    return ("%d%s"):format(copperPart, icons.copper)
+end

@@ -292,6 +292,16 @@ do
     local all = BagWindow.goldLabel:GetText() or ""
     suite.check("the foot says this character's gold", mine:find("Gold: ", 1, true) == 1)
     suite.check("from the purse now", BagView.MyGold() == 864050)
+    -- 86 gold 40 silver 50 copper, as the game's bag shows it: coin icons,
+    -- no leading zeros, no "g", "s" or "c" letters.
+    suite.check("the gold shows with the game's coin icons",
+        mine:find("86|TInterface\\MoneyFrame\\UI-GoldIcon", 1, true) ~= nil
+        and mine:find("40|TInterface\\MoneyFrame\\UI-SilverIcon", 1, true) ~= nil
+        and mine:find("50|TInterface\\MoneyFrame\\UI-CopperIcon", 1, true) ~= nil)
+    suite.check("with no coin letters", not mine:find("|cffffd700g|r", 1, true))
+    suite.check("and no leading zeros", ns.Items.FormatCoins(180797):find("18|T", 1, true) == 1
+        and ns.Items.FormatCoins(180797):find("  7|T", 1, true) ~= nil
+        and ns.Items.FormatCoins(5):find("^5|T") ~= nil)
     suite.check("and every character's after it", all:find("All characters: ", 1, true) == 1)
     suite.check("adding the purse to the others", BagView.Gold() == 1864050)
     ns.Errands.Holdings = function() return nil end
