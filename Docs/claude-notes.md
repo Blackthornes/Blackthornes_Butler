@@ -999,6 +999,13 @@ an item in the bags with that name, else `GetItemInfoInstant(name)`.
 Forever's own quests work by name; one nothing names is looked at again
 when the bags or the item come in.
 
+When what the quests want moves (one more Clam Meat looted), only the
+items whose want moved are judged again (`Quests.moved`, gathered by
+`Quests:Read`, passed to `Verdicts:ForgetItems` and `BagView:ForgetItems`
+at `Quests:Announce`). Judging every bag item again asked the four
+sisters about each one and hitched each clam opened with Butler Bags up
+(the owner, 2026-11-25). Tested in `tools/test_questjudge.lua`.
+
 - Every item an open quest collects is Keep (`Verdicts:Decide` step 2,
   `Quests:Reason`: "Westfall Stew needs 5 more", "For Westfall Stew" once
   there are enough for the hand-in), Always sell or not.

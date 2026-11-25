@@ -190,7 +190,8 @@ suite.check("the same log judges nothing again", Verdicts.version == version)
 log[1].objectives[1].numFulfilled = 8
 log[1].objectives[1].finished = true
 env.Fire("QUEST_LOG_UPDATE")
-suite.check("a change has the items judged again", Verdicts.version > version)
+suite.check("a change has its items judged again", Quests.announced == Quests.version)
+suite.check("without judging every other item again", Verdicts.version == version)
 UI:Refresh(true)
 suite.check("enough Murloc Eyes: they are for the hand-in", Find("Murloc Eye").reason == "For Westfall Stew",
     Find("Murloc Eye").reason)
