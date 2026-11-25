@@ -1148,6 +1148,25 @@ page; `Logic/TomTom.lua`, the same file as Farmer's, Equipment's and
 Pets'), TomTom's arrow shows the way instead of the dial. Tested in
 `tools/test_wayarrow.lua`.
 
+The slim pill (the owner picked "A. Slim Pill" 2026-11-25 from
+`Docs/mockups/arrow-redesign/index.html` in the project files, in place of
+the dial above, in all five addons): one thin dark glass pill, 26 tall at
+100% Arrow Size and 140 to 300 wide by its words (taller only when a long
+name wraps), a gold hairline edge, a round dark well at the left end, the
+red close gem inside the right end. The name on top in gilt, the distance
+under it in white; the place and note lines are gone. The chevron is flat,
+so it turns with SetRotation in 180 steps (`ArrowUI.FrameFor`, `TURNS`),
+touched only on a new step. There: a green check in the well, the edge and
+rim green, "You're there". Can't point (a boat, a Hearthstone, far away):
+a gold dot that pulses on Full only, and the second line says "Step N of
+M" (`ArrowUI.StepText`) on a trip. `make_arrow_art.py` now draws
+`Pill`/`PillEdge` (white, three slices), `Well`, `WellEdge` (white),
+`Chevron`, `ChevronGlow` (white), `Dot` (white) and `Check`; Ring, Blade
+and BladeGlow are gone, and the step box's small dial (`UI/TravelCard.lua`)
+uses the same Well, Chevron and Dot. `ArrowUI.dial` is the pill itself, so
+the step box hangs under it. No clicks, no hover card, as before. The
+build code is the same in all five arrow files apart from names.
+
 Arrow Size (the owner, 2026-10-26, in every addon with an arrow): "Arrow
 Size:" under "Guide Me:" picks 50%, 75% or 100% for the whole dial,
 plate and words (`ArrowUI.SIZES`, `Scale`, `Size`, `SetSize`;
