@@ -37,6 +37,11 @@ local function RealmKey(name)
     return key
 end
 
+--- The server part of a character's key ("Player-<server>-<id>"), or nil.
+local function ServerOf(key)
+    return type(key) == "string" and key:match("^Player%-([^%-]+)%-") or nil
+end
+
 local Everyone = ns.NewModule("Everyone")
 
 local Items = ns.Items
@@ -93,6 +98,14 @@ function Everyone.SameSide(entry, me)
     if type(me) ~= "table" then return true end
     local realm, theirs = RealmKey(me.realm), RealmKey(entry.realm)
     if realm and theirs and realm ~= theirs then return false end
+    -- A realm not given (Forever 1.60.1 hands back an empty name, so a
+    -- character made since has none): one account's characters on one
+    -- realm share the server in their key, so another server is another
+    -- realm. A linked account's characters sit on another server anyway.
+    if not (realm and theirs) and not entry.linked and not me.linked then
+        local mine, other = ServerOf(me.key), ServerOf(entry.key)
+        if mine and other and mine ~= other then return false end
+    end
     local side, theirSide = Place(me.faction), Place(entry.faction)
     if side and theirSide and side ~= theirSide then return false end
     return true

@@ -41,6 +41,17 @@ suite.check("the other account's server is this realm",
     Everyone.SameSide({ realm = "CAMWOW US2 Realm 3 PvE" }, { realm = "CAMWOW US2 Realm 7 PvE" }))
 suite.check("another kind of realm is still left out",
     not Everyone.SameSide({ realm = "CAMWOW US2 Realm 4 PvP" }, { realm = "CAMWOW US2 Realm 7 PvE" }))
+-- A character made since the realm went blank has none (2026-11-25: a
+-- player's PvP and RP characters were listed with the PvE ones). The
+-- server in the key tells one account's realms apart.
+suite.check("no realm, another server: left out",
+    not Everyone.SameSide({ key = "Player-7000-B", realm = "?" }, { key = "Player-6933-A", realm = "CAMWOW US2 Realm 3 PvE" }))
+suite.check("no realm, same server: kept",
+    Everyone.SameSide({ key = "Player-6933-B", realm = "?" }, { key = "Player-6933-A", realm = "CAMWOW US2 Realm 3 PvE" }))
+suite.check("no realm on either, another server: left out",
+    not Everyone.SameSide({ key = "Player-7000-B" }, { key = "Player-6933-A" }))
+suite.check("a linked account's character on another server: kept",
+    Everyone.SameSide({ key = "Player-7000-B", realm = "?", linked = "Bo" }, { key = "Player-6933-A", realm = "?" }))
 
 local names = {}
 for _, character in ipairs(Everyone:Read() or {}) do names[#names + 1] = character.name end
