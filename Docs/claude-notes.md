@@ -516,8 +516,14 @@ window's gold (`BagView.Gold`), the Always mail picker
 (`Errands:Characters`), Equipment's alt names (`Errands:NameOf`) and the
 gold fund (`Funds:Characters`) ask. The one playing, under any of its
 records, always passes and counts once; a realm or side Tradeskills does
-not give (nil or "?") is not held against a record. Nothing saved
-changes. Tested in `tools/test_samerealm.lua`.
+not give (nil or "?") is not held against a record, except that one
+account's characters on another server (the server part of the GUID
+key) are another realm, so a character made since Forever 1.60.1 blanked
+the realm name is not listed with another realm's (2026-11-25; a linked
+account's characters, `linked`, are not judged by server). Tradeskills
+puts right saved realms it guessed from another server
+(`Config:MendGuessedRealms`). Nothing saved changes. Tested in
+`tools/test_samerealm.lua`.
 The playing character's bags are Butler's own read (`Bags.slots`), the
 freshest there is. Without Tradeskills (or when it raises) the view shows
 only those bags and says so. Butler saves nothing for this view. Smooth
