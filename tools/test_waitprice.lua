@@ -140,5 +140,25 @@ local joined = table.concat(tip.lines, "|")
 suite.check("the hover shows the numbers", joined:find("Costs to Make:", 1, true) ~= nil
     and joined:find("Sell Anyway moves it", 1, true) ~= nil, joined)
 
+-- A new Tradeskills scan moves the prices: Butler asks again at once, so
+-- the Wait numbers match the tooltip's Butler Says line (a player's report,
+-- 2026-11-25: "usually 1g 16s" beside "Auction, 1g 01s" after a scan).
+ns.Verdicts:ClearSellAnyway()
+local before = ns.Verdicts:Waiting(601, 0, 1)
+suite.check("before the scan: the old prices", before and before.usual == 1000 and before.now == 600)
+local Advise = _G.BlackthornesTS.Butler.Advise
+_G.BlackthornesTS.Prices = { changes = 1 }
+_G.BlackthornesTS.Butler.Advise = function(self, id)
+    if id == 601 then return { auction = 2000, auctionNow = 900 } end
+    return Advise(self, id)
+end
+local after = ns.Verdicts:Waiting(601, 0, 1)
+suite.check("after the scan: the new prices", after and after.usual == 2000 and after.now == 900,
+    after and (tostring(after.usual) .. " " .. tostring(after.now)))
+suite.check("the row agrees", Find("Silk Cloth").unit == 2000, Find("Silk Cloth").unit)
+_G.BlackthornesTS.Butler.Advise = Advise
+_G.BlackthornesTS.Prices = { changes = 2 }
+suite.check("and goes back when the prices do", ns.Verdicts:Waiting(601, 0, 1).usual == 1000)
+
 _G.BlackthornesTS = nil
 suite.done()

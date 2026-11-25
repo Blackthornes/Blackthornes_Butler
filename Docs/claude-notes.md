@@ -156,6 +156,16 @@ queue wants then (`tools/test_mailcount.lua`). The verdicts they feed, in order,
 Sell: Disenchant, or Look at it. `/bbutler probe` says which sisters are
 loaded and which answer Butler.
 
+
+Butler judges again when Tradeskills' prices move (2026-11-25, a player's
+report): `Verdicts:PricesMoved`, at the top of `Judge` and `Groups`, reads
+`_G.BlackthornesTS.Prices.changes` (a number Tradeskills bumps on every
+price it writes, read with rawget, no call) and bumps `Verdicts.version`
+when it changed. Before, Wait kept the prices from before a scan while the
+tooltip line asked again, so the two showed different numbers. Tested in
+`tools/test_waitprice.lua`. If Tradeskills renames `Prices.changes`,
+change this too.
+
 ## Bought to disenchant
 
 The owner asked (2026-10-11) for items bought on the auction house to
