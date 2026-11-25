@@ -67,6 +67,11 @@ suite.check("in yards", state.yards and math.abs(state.yards - 300) < 1, state.y
 suite.check("said in yards", state.distance == "300 yd", state.distance)
 ArrowUI:Draw(true)
 suite.check("the dial shows", ArrowUI.frame and ArrowUI.frame:IsShown())
+suite.check("a slim pill: the trainer on top, how far under it",
+    ArrowUI.title:GetText() == "Mage trainer: Jennea Cannon" and ArrowUI.distance:GetText() == "300 yd",
+    ArrowUI.title:GetText())
+suite.check("the chevron points, no plate or old dial", ArrowUI.chevron:IsShown() and ArrowUI.plate == nil
+    and ArrowUI.arrow == nil and ArrowUI.frame:GetHeight() <= 30)
 
 -- Inside a dungeon it hides.
 inside = true
