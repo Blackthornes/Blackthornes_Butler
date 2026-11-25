@@ -23,6 +23,12 @@ tell a friend: no hype, no questions to the reader, no exclamation marks
 outside the thanks line, no dashes as punctuation, no "now you can". The
 tool prints a note for a shipped line that reads like an advert.
 
+## 1.26.3
+
+Fixes and changes:
+- Butler Says Wait uses the new price after a scan.
+- Characters from another server are not listed with yours.
+
 ## 1.26.2
 
 Fixes and changes:
