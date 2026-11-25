@@ -139,8 +139,8 @@ end
 -- Marks
 --------------------------------------------------------------------------------
 
--- [link or ID] = marks, for one Verdicts.version.
-local marks, marksVersion = {}, -1
+-- [link or ID] = marks, for one Verdicts.version, and the item each is for.
+local marks, marksItem, marksVersion = {}, {}, -1
 
 --- What an item's square says at a glance: { upgrade, sell, vendor, mail, goal,
 --- craft, quest, verdict }. The sisters are asked once per item each time
@@ -149,7 +149,7 @@ function BagView:Marks(entry)
     if not entry or not entry.itemID then return nil end
     local verdicts = ns.Verdicts
     if marksVersion ~= verdicts.version then
-        marks, marksVersion = {}, verdicts.version
+        marks, marksItem, marksVersion = {}, {}, verdicts.version
     end
     local key = tostring(entry.link or entry.itemID) .. "|" .. tostring(entry.count or 1)
         .. "|" .. entry.bag .. ":" .. entry.slot
@@ -170,7 +170,20 @@ function BagView:Marks(entry)
         quest = entry.quest ~= nil,
     }
     marks[key] = result
+    marksItem[key] = entry.itemID
     return result
+end
+
+--- Drop the marks kept for these items (`ids`: [itemID] = true), so they
+--- are read again with their new verdict (Verdicts:ForgetItems).
+function BagView:ForgetItems(ids)
+    if marksVersion ~= ns.Verdicts.version then return end
+    for key, itemID in pairs(marksItem) do
+        if ids[itemID] then
+            marks[key] = nil
+            marksItem[key] = nil
+        end
+    end
 end
 
 --- Does an item answer the chip lit (nil: every item does)?

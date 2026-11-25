@@ -141,7 +141,7 @@ Verdicts.CRAFT_LEAST = 200
 -- so kept answers and the drawn list are known to be stale.
 Verdicts.version = 0
 
--- [link] = { verdict, reason, unit, extra }, for Verdicts.version.
+-- [link] = { verdict, reason, unit, extra, itemID }, for Verdicts.version.
 local memo, memoVersion = {}, 0
 
 --------------------------------------------------------------------------------
@@ -334,7 +334,7 @@ function Verdicts:Judge(entry, noAlt, pastKeep, pastWear)
 
     local verdict, reason, unit, final, extra = self:Decide(entry, noAlt, pastKeep, pastWear)
     -- An answer that waits on the client loading the item is asked again.
-    if final then memo[key] = { verdict, reason, unit, extra } end
+    if final then memo[key] = { verdict, reason, unit, extra, entry.itemID } end
     return verdict, reason, unit, extra
 end
 
@@ -2062,6 +2062,20 @@ end
 function Verdicts:Changed(now)
     self.version = self.version + 1
     self:Redraw(now)
+end
+
+--- Judge only these items again (`ids`: [itemID] = true), and redraw. What
+--- an open quest wants moved for them alone; every other item keeps its
+--- answer, so the four sisters are not asked about the whole bag again.
+function Verdicts:ForgetItems(ids)
+    if memoVersion == self.version then
+        for key, known in pairs(memo) do
+            if known[5] == nil or ids[known[5]] then memo[key] = nil end
+        end
+    end
+    self.groupCache = nil
+    if ns.BagView and type(ns.BagView.ForgetItems) == "function" then ns.BagView:ForgetItems(ids) end
+    self:Redraw()
 end
 
 --- Judge every item again next time it is asked, without a redraw: the

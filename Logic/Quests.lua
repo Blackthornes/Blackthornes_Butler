@@ -253,17 +253,34 @@ function Quests:Read()
             end
         end
     end
-    local parts = {}
+    local parts, each = {}, {}
     for itemID, item in pairs(byItem) do
-        parts[#parts + 1] = ("%d:%d:%d:%s"):format(itemID, item.need, item.want, tostring(item.trade))
+        local part = ("%d:%d:%d:%s:%s"):format(itemID, item.need, item.want, tostring(item.trade),
+            table.concat(item.quests, "|"))
+        parts[#parts + 1] = part
+        each[itemID] = part
     end
     table.sort(parts)
     local signature = table.concat(parts, ",")
+    local before = self.each or {}
     self.byItem = byItem
     self.unnamedAt = unnamed and (ns.Bags and ns.Bags.version or 0) or nil
+    self.each = each
     if signature ~= self.signature then
         self.signature = signature
         self.version = self.version + 1
+        -- The items whose quest wants moved, gathered until Announce: only
+        -- they are judged again. One Clam Meat looted judged every bag item
+        -- again and asked the four sisters about each, a hitch with Butler
+        -- Bags open (the owner, 2026-11-25).
+        local moved = self.moved or {}
+        for itemID, part in pairs(each) do
+            if before[itemID] ~= part then moved[itemID] = true end
+        end
+        for itemID in pairs(before) do
+            if each[itemID] == nil then moved[itemID] = true end
+        end
+        self.moved = moved
         return true
     end
     return false
@@ -434,7 +451,15 @@ Quests.announced = 0
 function Quests:Announce()
     if self.version == self.announced then return end
     self.announced = self.version
-    if ns.Verdicts then ns.Verdicts:Changed() end
+    local moved = self.moved
+    self.moved = nil
+    local verdicts = ns.Verdicts
+    if not verdicts then return end
+    if moved and type(verdicts.ForgetItems) == "function" then
+        verdicts:ForgetItems(moved)
+    else
+        verdicts:Changed()
+    end
 end
 
 function Quests:Stale()
