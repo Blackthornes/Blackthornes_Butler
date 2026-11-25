@@ -4,6 +4,13 @@ Versions follow [semantic versioning](https://semver.org): the middle number
 moves for new behaviour, the last for fixes alone. The newest version goes at
 the top; a release is refused if its version has no section here.
 
+## 1.26.3
+
+For WoW: Forever (interface 16001). `/reload` is enough after updating.
+
+- **Wait.** Butler Says Wait uses the new price after a scan.
+- **Characters.** Characters from another server are not listed with yours.
+
 ## 1.26.2
 
 For WoW: Forever (interface 16001). `/reload` is enough after updating.
