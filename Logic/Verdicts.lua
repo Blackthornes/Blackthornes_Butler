@@ -291,7 +291,23 @@ end
 --- (Logic/KeepHere.lua, Verdicts:Groups).
 --- `pastWear` judges a copy of an upgrade for this character past the
 --- one it wears (two rings or trinkets): the spare gets its own verdict.
+--- Tradeskills' prices moved since the verdicts were judged (a scan, a
+--- search, a guildmate's prices): judge again. Its `Prices.changes` counts
+--- every price it writes, read without a call. Without this, Wait kept the
+--- prices from before a scan beside a tooltip that had asked again
+--- (a player's report, 2026-11-25).
+function Verdicts:PricesMoved()
+    local ts = rawget(_G, "BlackthornesTS")
+    local prices = type(ts) == "table" and rawget(ts, "Prices")
+    local changes = type(prices) == "table" and rawget(prices, "changes")
+    if type(changes) ~= "number" or changes == self.pricesSeen then return false end
+    self.pricesSeen = changes
+    self.version = self.version + 1
+    return true
+end
+
 function Verdicts:Judge(entry, noAlt, pastKeep, pastWear)
+    self:PricesMoved()
     if memoVersion ~= self.version then
         memo, memoVersion = {}, self.version
     end
@@ -1873,6 +1889,7 @@ end
 --- worth }, each row one item (stacks of the same link put together) with
 --- its slots. Kept until the bags or a verdict change.
 function Verdicts:Groups()
+    self:PricesMoved()
     local bagsVersion = ns.Bags.version
     local cache = self.groupCache
     if cache and cache.bags == bagsVersion and cache.verdicts == self.version then
