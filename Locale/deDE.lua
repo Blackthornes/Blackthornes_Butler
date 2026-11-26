@@ -1457,6 +1457,21 @@ L["Mage Scrolls:"] = "Magierschriftrollen:"
 L["Recipes I Know:"] = "Bekannte Rezepte:"
 L["Kinds:"] = "Arten:"
 
+-- Look choices (All Addons page)
+L["Font:"] = "Schrift:"
+L["House##font"] = "Haus"
+L["Game##font"] = "Spiel"
+L["Clear##font"] = "Klar"
+L["Colors:"] = "Farben:"
+L["Warm"] = "Warm"
+L["Darker"] = "Dunkler"
+L["Fold Gem:"] = "Einklappen:"
+L["Round Button"] = "Runder Knopf"
+L["Small Bar"] = "Kleine Leiste"
+L["House, Game or Clear. Clear is plain and easy to read, and it has Russian letters."] = "Haus, Spiel oder Klar. Klar ist schlicht und gut zu lesen, und es hat russische Buchstaben."
+L["Warm is the look today. Darker takes the warm tint out of the glass."] = "Warm ist das Aussehen wie bisher. Dunkler nimmt den warmen Ton aus dem Glas."
+L["What a folded window turns into: the round button, or a small bar with its title."] = "Was aus einem eingeklappten Fenster wird: der runde Knopf oder eine kleine Leiste mit seinem Namen."
+
 -- Calmer rows (2026-11-26).
 L["%d grey items"] = "%d graue Gegenstände"
 L["Vendor pays more"] = "Händler zahlt mehr"

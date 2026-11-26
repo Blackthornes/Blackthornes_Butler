@@ -1458,6 +1458,21 @@ L["Mage Scrolls:"] = "Parchemins de mage :"
 L["Recipes I Know:"] = "Recettes que je connais :"
 L["Kinds:"] = "Types :"
 
+-- Look choices (All Addons page)
+L["Font:"] = "Police :"
+L["House##font"] = "Maison"
+L["Game##font"] = "Jeu"
+L["Clear##font"] = "Nette"
+L["Colors:"] = "Couleurs :"
+L["Warm"] = "Chaudes"
+L["Darker"] = "Plus sombres"
+L["Fold Gem:"] = "Repli :"
+L["Round Button"] = "Bouton rond"
+L["Small Bar"] = "Petite barre"
+L["House, Game or Clear. Clear is plain and easy to read, and it has Russian letters."] = "Maison, Jeu ou Nette. Nette est simple et facile à lire, et elle a les lettres russes."
+L["Warm is the look today. Darker takes the warm tint out of the glass."] = "Chaudes, c'est le look de toujours. Plus sombres retire la teinte chaude du verre."
+L["What a folded window turns into: the round button, or a small bar with its title."] = "Ce que devient une fenêtre repliée : le bouton rond, ou une petite barre avec son titre."
+
 -- Calmer rows (2026-11-26).
 L["%d grey items"] = "%d objets gris"
 L["Vendor pays more"] = "Le marchand paie plus"
