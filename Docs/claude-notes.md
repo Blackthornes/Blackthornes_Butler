@@ -148,6 +148,11 @@ _G.BlackthornesPets.Butler:Advise(itemID)
   --   (how many of this item stay) and extra (the rest): see "Food to Keep"
 ```
 
+The restock list (2026-11-26, `Logic/Restock.lua`) also reads
+`_G.BlackthornesTS.Butler:MakersOf(itemID)` (who on the account can craft
+it: `{ recipeID, name, per, makers = { { key, name, short, playing } } }`)
+and `_G.BlackthornesTS_API.GetPrice(itemID)`, inside a pcall, read only.
+
 Each sister's `CLAUDE.md` lists its call under "What Butler calls here".
 If one changes, change `Logic/Sisters.lua` and `Logic/Verdicts.lua` here
 in the same breath. `Verdicts:Judge` keeps each item's verdict until
@@ -3286,7 +3291,24 @@ when the GUID won't read. An empty list is off: no group, no button.
   (amber when short), dark glass rows, and a last row: drop an item on it,
   or click for a menu of the kinds not on it yet (`UI/RestockList.lua`).
 - `/bbutler probe` has a restock line (spell names, how bag food reads).
-- PR 2 adds the other sources: an alt's bank (a job), a craft one of
-  yours can make (Tradeskills' `Butler:CraftFor`, `QueueCraft`) and the
-  auction house (price and Search only).
+- PR 2, the other places, in order of cost (`Restock:Sources`, kept a
+  look by `SourcesFor`; item lines only, a kind is bought at a vendor):
+  your own bank ("Your bank has 3."), the other character who can spare
+  most past what it keeps ("Ana Stone has 40 in the bank.", Add a Job), a
+  craft one of yours can make ("Ana Stone can make them.", Queue through
+  Tradeskills' `QueueCraft`; who comes from Tradeskills' new
+  `Butler:MakersOf(itemID)`), and the auction house ("On the auction
+  house, about 2s 10c each." from `BlackthornesTS_API.GetPrice`; Search
+  only at the auction house, through `Quests:Search`). The row shows the
+  first two and one button (`Restock.RowAction`): Buy, else Search, else
+  Add a Job, else Queue.
+- Add a Job saves an ask account wide, `restockAsks = { { from (holder
+  key), fromName, to (full name), toGUID, itemID, count } }` (never
+  rename). Never aimed at the one playing. On the holder (`Restock:
+  AsksHere`, by GUID or `Errands:IsMe`) it is a RESTOCK row "Mail 20
+  Linen Bandage to Mira Vale" with Fill Mail at a mailbox (`MailsTo`), a
+  recipient in `Errands:Recipients`, and a take from the bank in
+  `Errands:BankWants`. It goes once mailed (`Restock:Mailed` from
+  `Errands:Sent`) or once the one who asked has enough (`PruneMyAsks`).
+  Tested in `tools/test_restocksources.lua`.
 - Tested in `tools/test_restock.lua`. Not yet seen in game.

@@ -294,6 +294,7 @@ function Restock:Low()
         end
     end
     self.lowKey, self.low = key, low
+    self:PruneMyAsks(low)
     return low
 end
 
@@ -418,12 +419,288 @@ function Restock:Buy(only)
 end
 
 --------------------------------------------------------------------------------
+-- Other places to get it (PR 2): your bank, your other characters, a craft
+-- one of yours can make, the auction house. Item lines only; a kind is
+-- bought at a vendor.
+--------------------------------------------------------------------------------
+
+local function Tradeskills(method)
+    local global = rawget(_G, "BlackthornesTS")
+    local butler = type(global) == "table" and rawget(global, "Butler")
+    if type(butler) ~= "table" or type(butler[method]) ~= "function" then return nil end
+    return butler
+end
+
+--- Who on the account can craft the item, from Tradeskills, checked field
+--- by field: { recipeID, per, makers = { { short, playing } } }, or nil.
+function Restock.Makers(itemID)
+    local butler = Tradeskills("MakersOf")
+    if not butler then return nil end
+    local ok, answer = pcall(butler.MakersOf, butler, itemID)
+    if not ok or type(answer) ~= "table" then return nil end
+    local recipeID = Number(answer.recipeID)
+    if not recipeID or type(answer.makers) ~= "table" then return nil end
+    local makers = {}
+    for _, maker in ipairs(answer.makers) do
+        local name = type(maker) == "table" and (Text(maker.short) or Text(maker.name))
+        if name then makers[#makers + 1] = { short = name, playing = maker.playing == true } end
+    end
+    if #makers == 0 then return nil end
+    return { recipeID = recipeID, per = math.max(1, math.floor(Number(answer.per) or 1)), makers = makers }
+end
+
+--- About what one costs on the auction house, from Tradeskills' price, or nil.
+function Restock.AuctionPrice(itemID)
+    local api = rawget(_G, "BlackthornesTS_API")
+    if type(api) ~= "table" or type(api.GetPrice) ~= "function" then return nil end
+    local ok, price = pcall(api.GetPrice, itemID)
+    price = ok and Number(price) or nil
+    if price and price > 0 then return price end
+    return nil
+end
+
+--- How many another character can spare: what it carries and banks, less
+--- what it keeps itself.
+local function Spare(entry, itemID)
+    local bags, bank = entry.bags[itemID] or 0, entry.bank[itemID] or 0
+    local keep = ns.KeepHere:CountFor(entry.key, itemID) or 0
+    local record = Record(entry.key)
+    for _, line in ipairs(record and record.lines or {}) do
+        if line.item == itemID then keep = math.max(keep, Clean(line.keep)) end
+    end
+    local spare = math.max(0, bags + bank - keep)
+    return spare, bags, bank
+end
+
+--- The places a low line can come from, in order of cost: { bank = count }
+--- (your own bank), { alt = entry, count, inBank } (the one who can spare
+--- most), { craft = Makers }, { auction = price }. Each only when known.
+function Restock:Sources(low)
+    local sources = {}
+    local itemID = low.item
+    if Restock.IsKind(itemID) then return sources end
+    for _, entry in ipairs(ns.KeepAcross and ns.KeepAcross:Characters() or {}) do
+        if entry.isCurrent then
+            local bank = entry.bank[itemID] or 0
+            if bank > 0 then sources[#sources + 1] = { bank = bank } end
+        end
+    end
+    local best
+    for _, entry in ipairs(ns.KeepAcross and ns.KeepAcross:Characters() or {}) do
+        if not entry.isCurrent and not entry.linked and not ns.Errands:IsMe(entry.name) then
+            local spare, bags, bank = Spare(entry, itemID)
+            if spare > 0 and (not best or spare > best.count) then
+                best = { alt = entry, count = spare, inBank = bank > bags }
+            end
+        end
+    end
+    if best then sources[#sources + 1] = best end
+    local makers = Restock.Makers(itemID)
+    if makers then sources[#sources + 1] = { craft = makers } end
+    local price = Restock.AuctionPrice(itemID)
+    if price then sources[#sources + 1] = { auction = price } end
+    return sources
+end
+
+--------------------------------------------------------------------------------
+-- Asking another character (Add a Job)
+--------------------------------------------------------------------------------
+
+-- Saved account wide, never renamed:
+--   restockAsks = { { from = holder key, fromName, to = full name,
+--     toGUID, itemID, count } }
+-- On the holder, the ask is a mail (Errands:Recipients) and a take from the
+-- bank (Errands:BankWants). It goes once mailed, or once the one who asked
+-- has enough.
+
+local function Asks(make)
+    if not ns.db then return {} end
+    if type(ns.db.restockAsks) ~= "table" then
+        if not make then return {} end
+        ns.db.restockAsks = {}
+    end
+    return ns.db.restockAsks
+end
+
+local function AskValid(ask)
+    return type(ask) == "table" and Number(ask.itemID) and Number(ask.count) and Text(ask.to)
+        and Text(ask.toGUID) and (Text(ask.from) or Text(ask.fromName))
+end
+
+--- The ask this character made for an item, or nil.
+function Restock:MyAsk(itemID)
+    local me = ns.KeepHere.PlayerGUID()
+    if not me then return nil end
+    for _, ask in ipairs(Asks()) do
+        if AskValid(ask) and ask.toGUID == me and ask.itemID == itemID then return ask end
+    end
+    return nil
+end
+
+--- Ask `entry` (another character, from Sources) to mail `count` of an
+--- item here. Never the character playing; nothing when the GUID won't read.
+function Restock:Ask(itemID, entry, count)
+    local me = ns.KeepHere.PlayerGUID()
+    local myName = ns.KeepHere.PlayingName()
+    if not (me and myName and type(entry) == "table" and Text(entry.key)) then return false end
+    if entry.isCurrent or entry.key == me or ns.Errands:IsMe(entry.name) then return false end
+    count = Clean(count)
+    if count < 1 then return false end
+    local asks = Asks(true)
+    for index = #asks, 1, -1 do
+        local ask = asks[index]
+        if type(ask) == "table" and ask.toGUID == me and ask.itemID == itemID then table.remove(asks, index) end
+    end
+    asks[#asks + 1] = { from = entry.key, fromName = entry.name, to = myName, toGUID = me,
+        itemID = itemID, count = count }
+    Changed()
+    return true
+end
+
+--- Is the ask for the character playing to do?
+local function ForMe(ask)
+    local me = ns.KeepHere.PlayerGUID()
+    if not me or ask.toGUID == me then return false end
+    if ns.Errands:IsMe(ask.to) then return false end
+    if Text(ask.from) and ask.from == me then return true end
+    return Text(ask.fromName) ~= nil and ns.Errands:IsMe(ask.fromName)
+end
+
+--- What other characters asked the one playing to mail: { ask, to (the
+--- name the mail goes to) }.
+function Restock:AsksHere()
+    local list = {}
+    local short = {}
+    for _, entry in ipairs(ns.KeepAcross and ns.KeepAcross:Characters() or {}) do
+        short[entry.key] = entry.short or entry.name
+    end
+    for _, ask in ipairs(Asks()) do
+        if AskValid(ask) and ForMe(ask) then
+            list[#list + 1] = { ask = ask, to = short[ask.toGUID] or ask.to }
+        end
+    end
+    return list
+end
+
+--- Asks mailed to `to` go once what was attached covered them. `ids` is
+--- what the mail carried ({ [itemID] = count or true }), nil to trust it.
+function Restock:Mailed(to, ids)
+    local asks = Asks()
+    local changed = false
+    for index = #asks, 1, -1 do
+        local ask = asks[index]
+        if AskValid(ask) and ForMe(ask) and ns.Errands.SameName(ask.to, to) then
+            local went = ids == nil or (ids[ask.itemID] ~= nil and ids[ask.itemID] ~= false)
+            if went then
+                table.remove(asks, index)
+                changed = true
+            end
+        end
+    end
+    if changed then Changed() end
+end
+
+--- The one playing's asks for items no longer low go (it has enough now).
+function Restock:PruneMyAsks(low)
+    local me = ns.KeepHere.PlayerGUID()
+    if not me or type(ns.db and ns.db.restockAsks) ~= "table" then return end
+    local short = {}
+    for _, each in ipairs(low) do short[each.item] = true end
+    local asks = ns.db.restockAsks
+    for index = #asks, 1, -1 do
+        local ask = asks[index]
+        if type(ask) == "table" and ask.toGUID == me and not short[ask.itemID] then table.remove(asks, index) end
+    end
+end
+
+--- Restock's part of the mailbox: { to, items = { { itemID, count } } }.
+function Restock:MailPlan()
+    local byTo, list = {}, {}
+    for _, each in ipairs(self:AsksHere()) do
+        local plan = byTo[each.to]
+        if not plan then
+            plan = { to = each.to, items = {} }
+            byTo[each.to] = plan
+            list[#list + 1] = plan
+        end
+        plan.items[#plan.items + 1] = { itemID = each.ask.itemID, count = each.ask.count }
+    end
+    return list
+end
+
+--- What the asks want taken from the bank: { [itemID] = count } past what
+--- the bags hold.
+function Restock:BankWants()
+    local wants = {}
+    for _, each in ipairs(self:AsksHere()) do
+        local itemID = each.ask.itemID
+        wants[itemID] = (wants[itemID] or 0) + each.ask.count
+    end
+    for itemID, count in pairs(wants) do
+        local short = count - ns.Bags:Carried(itemID)
+        wants[itemID] = short > 0 and short or nil
+    end
+    return wants
+end
+
+--- Queue enough crafts for a low line in Tradeskills.
+function Restock:QueueCraft(low, makers)
+    if not (makers and low) then return false end
+    local crafts = math.ceil(low.need / makers.per)
+    local done = ns.Sisters:QueueCraft(makers.recipeID, crafts)
+    if done then
+        ns.Print(L.Format("queued %d %s in Tradeskills.", crafts, Restock.Label(low.item)))
+    end
+    return done
+end
+
+--------------------------------------------------------------------------------
 -- Words
 --------------------------------------------------------------------------------
 
---- A low line's name: "Buy 14 Tough Jerky" when this vendor can sell it,
---- else "4 Healing Potion".
+--- The places a low line can come from, kept while the line, the bags and
+--- the verdicts stand still (Tradeskills is asked once a look).
+function Restock:SourcesFor(low)
+    local key = ("%s:%d"):format(self.lowKey or "", ns.Verdicts and ns.Verdicts.version or 0)
+    if self.sourcesKey ~= key then self.sourcesKey, self.sources = key, {} end
+    local found = self.sources[low.item]
+    if not found then
+        found = self:Sources(low)
+        self.sources[low.item] = found
+    end
+    return found
+end
+
+--- The rows of the RESTOCK group: { low, plan, sources } for each short
+--- line (the vendor's plan at a vendor), then { ask, to } for each mail
+--- another character asked of this one.
+function Restock:Rows()
+    local rows = {}
+    local low = self:Low()
+    local offer = #low > 0 and self:Offer()
+    if offer then
+        for _, row in ipairs(offer.rows) do rows[#rows + 1] = row end
+    else
+        for _, each in ipairs(low) do rows[#rows + 1] = { low = each } end
+    end
+    for _, row in ipairs(rows) do
+        if not (row.plan and row.plan.state == "buy") then row.sources = self:SourcesFor(row.low) end
+    end
+    for _, each in ipairs(self:AsksHere()) do rows[#rows + 1] = { ask = each.ask, to = each.to } end
+    return rows
+end
+
+local function ItemName(itemID)
+    local name = Restock.Label(itemID)
+    return Items:ColorName(name, itemID) or name
+end
+
+--- A row's name: "Buy 14 Tough Jerky" when this vendor can sell it, "Mail
+--- 6 Heavy Wool Bandage to Ana" for an ask, else "4 Healing Potion".
 function Restock.RowName(row)
+    if row.ask then
+        return L.Format("Mail %d %s to %s", row.ask.count, ItemName(row.ask.itemID), row.to)
+    end
     local low, plan = row.low, row.plan
     if plan and plan.state == "buy" then
         local name = plan.item.name and Items:ColorName(plan.item.name, plan.item.itemID)
@@ -435,8 +712,33 @@ function Restock.RowName(row)
     return L.Format("%d %s", low.need, name)
 end
 
---- A low line's note under its name.
+--- One sentence for a place the line can come from.
+function Restock.SourceText(source, low)
+    if source.bank then return L.Format("Your bank has %d.", source.bank) end
+    if source.alt then
+        local ask = ns.Restock:MyAsk(low.item)
+        local name = source.alt.short or source.alt.name
+        if ask then return L.Format("Asked %s to mail %d.", name, ask.count) end
+        if source.inBank then return L.Format("%s has %d in the bank.", name, source.count) end
+        return L.Format("%s has %d in their bags.", name, source.count)
+    end
+    if source.craft then
+        local maker = source.craft.makers[1]
+        for _, each in ipairs(source.craft.makers) do
+            if each.playing then maker = each end
+        end
+        if maker.playing then return L["You can make them."] end
+        return L.Format("%s can make them.", maker.short)
+    end
+    if source.auction then
+        return L.Format("On the auction house, about %s each.", Items.FormatMoney(source.auction))
+    end
+    return nil
+end
+
+--- A row's note under its name.
 function Restock.RowReason(row)
+    if row.ask then return L.Format("%s runs low on these.", row.to) end
     local low, plan = row.low, row.plan
     if plan and plan.state == "buy" then
         local text = L.Format("This vendor sells it. %s in all.", Items.FormatMoney(plan.cost))
@@ -444,11 +746,49 @@ function Restock.RowReason(row)
         if notes ~= "" then text = text .. " " .. notes end
         return text
     end
+    local parts = {}
     if plan then
         local _, note = ns.BuyMany.Describe(plan)
-        if note ~= "" then return note end
+        if note ~= "" then parts[#parts + 1] = note end
     end
-    return L.Format("You have %d of %d.", low.have, low.keep)
+    for _, source in ipairs(row.sources or {}) do
+        if #parts >= 2 then break end
+        parts[#parts + 1] = Restock.SourceText(source, low)
+    end
+    if #parts == 0 then return L.Format("You have %d of %d.", low.have, low.keep) end
+    return table.concat(parts, " ")
+end
+
+--- The row's button, or nil: { label, run }. Buy at a vendor who sells
+--- it; Search at the auction house; Add a Job for another character who
+--- has some; Queue for a craft one of yours can make.
+function Restock.RowAction(row)
+    if row.ask then return nil end
+    local low, plan = row.low, row.plan
+    if plan and plan.state == "buy" then
+        return { label = ns.Restock.buying and L["Buying..."] or L.Format("Buy %d", plan.count),
+            run = function() ns.Restock:Buy(low.item) end }
+    end
+    local find = {}
+    for _, source in ipairs(row.sources or {}) do
+        for kind in pairs(source) do find[kind] = find[kind] or source end
+    end
+    if find.auction and ns.Quests and ns.Quests.CanSearch() then
+        return { label = L["Search"], run = function()
+            return ns.Quests:Search({ { itemID = low.item, count = low.need } })
+        end }
+    end
+    if find.alt and not ns.Restock:MyAsk(low.item) then
+        local count = math.min(low.need, find.alt.count)
+        return { label = L["Add a Job"], tip = L.Format("%s mails you %d next time they're at a mailbox.",
+            find.alt.alt.short or find.alt.alt.name, count),
+            run = function() return ns.Restock:Ask(low.item, find.alt.alt, count) end }
+    end
+    if find.craft and Tradeskills("QueueCraft") then
+        return { label = L["Queue"], tip = L["Adds the crafts to the Tradeskills queue."],
+            run = function() return ns.Restock:QueueCraft(low, find.craft.craft) end }
+    end
+    return nil
 end
 
 --- One line for /bbutler probe: the Food and Drink spell names and what
