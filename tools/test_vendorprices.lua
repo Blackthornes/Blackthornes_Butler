@@ -110,7 +110,10 @@ suite.check("no stack line with Shift up", Find(lines, "Stack of") == nil, table
 shiftDown = true
 lines = HoverSlot(701, 1)
 local at = Find(lines, "Stack of 20: | ")
-suite.check("Shift adds the stack's worth under each", at ~= nil and Find(lines, "Vendor Pays: ") == at - 1
+-- It shows only while Shift is held, so it opens at the bottom of the
+-- block under its own gold line (2026-11-26).
+suite.check("Shift adds the stack's worth at the bottom", at ~= nil and at == #lines
+    and tostring(lines[at - 1]):match("^%s*$") ~= nil and Find(lines, "Vendor Pays: ") < at
     and lines[at]:find("25.-s") ~= nil, table.concat(lines, " / "))
 suite.check("a single item gets no stack line", Find(HoverSlot(702, 2), "Stack of") == nil)
 suite.check("a slot holding something else gets no stack line", Find(HoverSlot(701, 2), "Stack of") == nil)
