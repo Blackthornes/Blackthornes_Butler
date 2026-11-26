@@ -2085,7 +2085,7 @@ function Verdicts:Groups()
                 -- A short tag for the one-line row; the full reason shows
                 -- under the row the mouse is on (UI/MainWindow.lua).
                 tag = extra and extra.tag,
-                name = Items.NameFromLink(entry.link) or L.Format("item %s", tostring(entry.itemID)),
+                name = Items:Name(entry.link, entry.itemID) or L.Format("item %s", tostring(entry.itemID)),
                 count = 0, slots = {},
             }
             rowsByKey[key] = row

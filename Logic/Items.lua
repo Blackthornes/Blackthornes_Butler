@@ -177,11 +177,27 @@ function Items.IsQuestClass(itemID)
     return Items.ClassID(itemID) == QUEST_CLASS
 end
 
---- The name inside a link ("|cff...|Hitem:...|h[Linen Cloth]|h|r").
+--- The name inside a link ("|cff...|Hitem:...|h[Linen Cloth]|h|r"). Nil
+--- for empty brackets: the game hands those out for an item it has not
+--- loaded yet, and an empty name drew rows with no words (2026-11-26).
 function Items.NameFromLink(link)
     if type(link) ~= "string" then return nil end
     local ok, name = pcall(string.match, link, "|h%[(.-)%]|h")
-    return ok and name or nil
+    if not ok or type(name) ~= "string" or name == "" then return nil end
+    return name
+end
+
+--- An item's name for a row: the link's, else the game's own record, else
+--- nil with the item asked for (GET_ITEM_INFO_RECEIVED judges again).
+function Items:Name(link, itemID)
+    local name = Items.NameFromLink(link)
+    if name then return name end
+    itemID = tonumber(itemID)
+    if not itemID then return nil end
+    name = Items.Call({ "C_Item.GetItemNameByID", "C_Item.GetItemInfo", "GetItemInfo" }, itemID)
+    if type(name) == "string" and name ~= "" then return name end
+    Items:RequestLoad(itemID)
+    return nil
 end
 
 --------------------------------------------------------------------------------

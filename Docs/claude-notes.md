@@ -3261,6 +3261,11 @@ The owner said build it (2026-11-26, from the improvement mockups, #3).
   `UI:OpenReason` and `UI:Left` draw through `UI:DrawForReason`, and while
   it draws (`UI.reasonDraw`) neither changes anything. `UI:Left` closes the
   reason whatever row it was under. Tested in `tools/test_reasonredraw.lua`.
+- **A name the game has not loaded** (2026-11-26): a bag link can come with
+  empty brackets, "|h[]|h", until the game loads the item. `Items.NameFromLink`
+  answers nil for it, and a row takes `Items:Name(link, itemID)`: the link's
+  name, else the game's record, else the item is asked for and the row is
+  drawn again when it comes. Tested in `tools/test_blanknames.lua`.
 
 Tested in `tools/test_calmerrows.lua`.
 
