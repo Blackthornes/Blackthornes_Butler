@@ -103,6 +103,29 @@ suite.check("the rest are not bought", not bagSlots[2].bought and not bagSlots[8
 BankWindow:Draw()
 suite.check("the bought bag's slots are read too", Square(7, 4) ~= nil)
 suite.check("the foot counts every free slot", BankWindow.freeLabel:GetText():find("9", 1, true), BankWindow.freeLabel:GetText())
+
+-- Twelve bag slots and Game Bank share the foot: the slots shrink so the
+-- last one ends before the button (seen in game 2026-11-26, the locks ran
+-- over the button's words).
+_G.C_Container.ContainerIDToInventoryID = function(bag)
+    if bag >= 7 and bag <= 18 then return 80 + bag end
+    return nil
+end
+BankWindow:Draw()
+local swapLeft = 480 - 18 - BankWindow.swapButton:GetWidth()
+local label = ns.Theme.TextWidth("small", ns.L["Bag Slots:"])
+suite.check("twelve bag slots in the foot", #BankWindow.BagSlots() == 12, #BankWindow.BagSlots())
+suite.check("the bag slots end before Game Bank", 18 + BankWindow.footEnd <= swapLeft - 6,
+    tostring(18 + BankWindow.footEnd) .. " vs " .. tostring(swapLeft))
+suite.check("the bag slots start after their label", BankWindow.footStart >= label + 4)
+suite.check("the bag slots stay a size to see", BankWindow.footIcon >= 12, BankWindow.footIcon)
+-- With a long German label, they still fit.
+local oldLabel = ns.L["Bag Slots:"]
+ns.L["Bag Slots:"] = "Taschenplätze im Bankfach:"
+BankWindow:Draw()
+suite.check("a long label still leaves the button clear", 18 + BankWindow.footEnd <= swapLeft - 6,
+    tostring(18 + BankWindow.footEnd) .. " vs " .. tostring(swapLeft))
+ns.L["Bag Slots:"] = oldLabel
 _G.C_Container.ContainerIDToInventoryID = nil
 _G.C_Container.GetContainerNumSlots = function(bag)
     if bag == -1 then return 32 elseif bag == 6 then return 8 end
