@@ -2270,7 +2270,7 @@ replacing the last one; chat adds "Saved for Claude, /reload to write it."
 It wraps `/bts probe` (Tradeskills, saved under `BlackthornesTSDB.global`),
 `/beq probe` and `/beq arrow check` (Equipment), `/bpet probe` and `/bpet
 arrow check` (Pets), `/farm arrow check` and `/farm gathering check`
-(Farmer, which has no probe), and `/bbutler probe` (Butler). None has a Settings button (the owner, 2026-10-23: checks and debug are typed only, so players never see them; `RegisterHiddenCommand` keeps them out of help, Tradeskills' short help leaves them out). Never rename `lastProbe`; a new check that players run for
+(Farmer, which has no probe), `/bbutler probe` and `/bbutler bankprobe` (Butler; the bank one, 2026-11-26, asks what a Butler Bank window needs and shows one test square of the first bank item, kept again once the player clicks it; see "The bank" in `docs/FOREVER_API_FINDINGS.md`). None has a Settings button (the owner, 2026-10-23: checks and debug are typed only, so players never see them; `RegisterHiddenCommand` keeps them out of help, Tradeskills' short help leaves them out). Never rename `lastProbe`; a new check that players run for
 a report goes through `ns.KeepCheck` too, and a fix to it belongs in all
 five.
 
@@ -3084,6 +3084,20 @@ saved, so logout or a reload lets it go. `Verdicts:Decide` checks it
 before every rule ("Kept until you log out."), so it beats the player's
 Always marks too; `SetChoice` with any mark ends it, and Reset This Item
 clears it (`HasOwnChoices` counts it). Tested in `tools/test_quickmarks.lua`.
+
+## Auction Only If It Pays (2026-11-26)
+
+The owner said "build 1-10" from the improvement mockups; this is number 6.
+Selling page, AT A VENDOR: "Auction Only If It Pays:", a drop-down of 0, 5,
+10, 20, 30 and 50 percent, then "more than a vendor". Saved account wide as
+`auctionMargin` (whole percent, nil when 0; never rename it), listed in
+`SettingsUI.SETTING_KEYS` so Set Default clears it. `Verdicts:Best` picks
+Auction only when what one brings after the cut (the slow-seller weight
+too) is above the vendor price times (100 + percent) / 100. At 0 nothing
+changed: one copper more is still enough. It only moves items toward the
+vendor (reason "Auction pays only a little more ..."); it never stops a
+post, and Tradeskills' sell list doesn't read it. Tested in
+`tools/test_auctionmargin.lua`.
 
 ## Quest Items group, kind rules and the Bags button (2026-11-26)
 
