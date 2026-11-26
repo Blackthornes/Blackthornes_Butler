@@ -1,10 +1,23 @@
 <!-- The game loads this file by itself; it is not listed in the TOC.
      The Butler Bags key (UI/BagWindow.lua) clicks a hidden secure button
      that opens and closes Butler's bag window, whether Use Butler Bags is
-     on or off. -->
+     on or off. The quick marks keys (UI/QuickMarks.lua) mark the bag item
+     under the mouse; none has a key until the player gives it one. -->
 <Bindings>
     <Binding name="BLACKTHORNESBUTLER_TOGGLE" header="BLACKTHORNESBUTLER" category="ADDONS">
         if BlackthornesButler and BlackthornesButler.UI then BlackthornesButler.UI:Toggle() end
     </Binding>
     <Binding name="CLICK BlackthornesButlerBagsKey:LeftButton" category="ADDONS"/>
+    <Binding name="BLACKTHORNESBUTLER_MARKSELL" category="ADDONS">
+        if BlackthornesButler and BlackthornesButler.QuickMarks then BlackthornesButler.QuickMarks:Key("sell") end
+    </Binding>
+    <Binding name="BLACKTHORNESBUTLER_MARKKEEP" category="ADDONS">
+        if BlackthornesButler and BlackthornesButler.QuickMarks then BlackthornesButler.QuickMarks:Key("keep") end
+    </Binding>
+    <Binding name="BLACKTHORNESBUTLER_KEEPNOW" category="ADDONS">
+        if BlackthornesButler and BlackthornesButler.QuickMarks then BlackthornesButler.QuickMarks:Key("now") end
+    </Binding>
+    <Binding name="BLACKTHORNESBUTLER_QUICKBAR" runOnUp="true" category="ADDONS">
+        if BlackthornesButler and BlackthornesButler.QuickMarks then BlackthornesButler.QuickMarks:BarKey(keystate) end
+    </Binding>
 </Bindings>

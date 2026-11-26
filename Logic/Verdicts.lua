@@ -229,6 +229,8 @@ function Verdicts:SetChoice(itemID, choice, to)
     List("alwaysBank")[itemID] = (choice == "bank") or nil
     List("alwaysDisenchant")[itemID] = (choice == "disenchant") or nil
     List("alwaysMail")[itemID] = (choice == "mail") and to or nil
+    -- A real mark ends Keep For Now, or it would hide the mark until logout.
+    self.keptForNow[itemID] = nil
     -- The player's own pick (or Let Butler decide) replaces what was learned.
     if ns.Learning then ns.Learning:Forget(itemID) end
     self:Changed(true)
@@ -240,6 +242,7 @@ end
 function Verdicts:HasOwnChoices(itemID)
     if not itemID then return false end
     if self:Choice(itemID) ~= nil then return true end
+    if self.keptForNow[itemID] then return true end
     if ns.Learning and ns.Learning:Get(itemID) ~= nil then return true end
     if ns.KeepHere and (ns.KeepHere:Count(itemID) or 0) > 0 then return true end
     if ns.KeepAcross and (ns.KeepAcross:Count(itemID) or 0) > 0 then return true end
@@ -265,6 +268,7 @@ function Verdicts:ResetItem(itemID)
     if ns.KeepAcross and (ns.KeepAcross:Count(itemID) or 0) > 0 then pcall(ns.KeepAcross.Set, ns.KeepAcross, itemID, 0) end
     List("noUpgradeMail")[itemID] = nil
     if self.sellAnyway then self.sellAnyway[itemID] = nil end
+    self.keptForNow[itemID] = nil
     self:Changed(true)
     local settings = ns.SettingsUI
     if settings then
@@ -273,6 +277,28 @@ function Verdicts:ResetItem(itemID)
         end
     end
     return true
+end
+
+-- Keep For Now (the owner said build it, 2026-11-26, from the quick marks
+-- mockup): [itemID] = true, kept until the player logs out. Nothing is
+-- saved, so a reload or logout lets every item go by itself. It beats
+-- every rule but none of the player's Always marks: picking one ends it.
+Verdicts.keptForNow = {}
+
+--- Keep this item until logout (`on` true), or let it go (`on` false).
+--- `on` nil turns it the other way. Returns the new state.
+function Verdicts:KeepForNow(itemID, on)
+    itemID = tonumber(itemID)
+    if not itemID then return false end
+    if on == nil then on = not self.keptForNow[itemID] end
+    self.keptForNow[itemID] = on and true or nil
+    self:Changed(true)
+    return on and true or false
+end
+
+--- True while the player keeps this item for now.
+function Verdicts:KeptForNow(itemID)
+    return itemID ~= nil and self.keptForNow[tonumber(itemID) or itemID] == true
 end
 
 --------------------------------------------------------------------------------
@@ -1015,6 +1041,9 @@ end
 --- is who a Mail row goes to and how many ({ to, count }).
 function Verdicts:Decide(entry, noAlt, pastKeep, pastWear)
     local c = { entry = entry, itemID = entry.itemID, noAlt = noAlt, pastKeep = pastKeep, pastWear = pastWear }
+    if entry.itemID and self.keptForNow[entry.itemID] then
+        return "keep", L["Kept until you log out."], nil, true
+    end
     for _, id in ipairs(self.FIRST) do
         local verdict, reason, unit, final, extra = Ask(self, c, id)
         if verdict then return verdict, reason, unit, final, extra end
@@ -1693,6 +1722,30 @@ function Verdicts:SetSellBelow(copper)
     self:Changed(true)
 end
 
+--- Auction Only If It Pays (the owner said build it, 2026-11-26, from a
+--- mockup): how much more, in percent, the auction house must pay after
+--- its cut before Butler picks it over a vendor. 0 (the start) keeps the
+--- old way, where one copper more is enough. It only moves items toward
+--- the vendor; it never stops a post. Account wide as `auctionMargin`.
+Verdicts.AUCTION_MARGINS = { 0, 5, 10, 20, 30, 50 }
+
+function Verdicts:AuctionMargin()
+    local margin = ns.db and tonumber(ns.db.auctionMargin)
+    if not margin or margin <= 0 then return 0 end
+    return math.min(math.floor(margin), 1000)
+end
+
+--- Save the percent (nil or 0 turns it off) and judge every item again.
+function Verdicts:SetAuctionMargin(percent)
+    if not ns.db then return end
+    percent = tonumber(percent)
+    if percent then percent = math.floor(percent) end
+    if percent and percent < 1 then percent = nil end
+    if percent == ns.db.auctionMargin then return end
+    ns.db.auctionMargin = percent
+    self:Changed(true)
+end
+
 --- Copper from "1g 50s", "75s", "30c" or "2g5s"; 0 for "off", "0" or
 --- nothing. nil when it can't be read. A plain number counts as gold.
 function Verdicts.ParseMoney(text)
@@ -1765,8 +1818,12 @@ function Verdicts:Best(entry, unit, said, noBelow)
         if verdict then return verdict, reason, worth end
     end
 
+    -- Auction Only If It Pays: the auction house must beat a vendor by
+    -- the player's percent (0 keeps the old way, one copper is enough).
+    local margin = self:AuctionMargin()
+    local needed = margin > 0 and math.floor((unit or 0) * (100 + margin) / 100) or unit
     local best, value = "sell", unit
-    if auctionWorth and auctionWorth > value then best, value = "auction", auctionWorth end
+    if auctionWorth and auctionWorth > needed then best, value = "auction", auctionWorth end
     if disenchant and disenchant > value then best, value = "disenchant", disenchant end
 
     local craft = self:CraftPays(entry, value)
@@ -1816,13 +1873,17 @@ function Verdicts:Best(entry, unit, said, noBelow)
         -- Say which: the auction house pays less once its cut and deposit
         -- are taken, or it pays more but sells too slowly to wait for (a
         -- player read "vendor pays more" under a higher auction price).
+        if margin > 0 and auctionWorth and auctionWorth > unit then
+            return "sell", L.Format("Auction pays only a little more (about %s after the cut). Vendor pays %s each",
+                Items.FormatMoney(auction), Items.FormatMoney(unit)), unit
+        end
         if auction and auction > unit then
             return "sell", L.Format("Sells slowly at auction (about %s after the cut), vendor pays %s each",
-                Items.FormatMoney(auction), Items.FormatMoney(unit)), unit
+                Items.FormatMoney(auction), Items.FormatMoney(unit)), unit, { tag = L["Sells slowly at auction"] }
         end
         if auction then
             return "sell", L.Format("Vendor pays more than the auction house after its cut (about %s): %s each",
-                Items.FormatMoney(auction), Items.FormatMoney(unit)), unit
+                Items.FormatMoney(auction), Items.FormatMoney(unit)), unit, { tag = L["Vendor pays more"] }
         end
         return "sell", L.Format("Not an upgrade: %s each", Items.FormatMoney(unit)), unit
     end
@@ -1835,9 +1896,10 @@ function Verdicts:Best(entry, unit, said, noBelow)
         and unit and unit > 0 and (disenchant or not canDisenchant) then
         if disenchant then
             return "sell", L.Format("Your class can't use it. Vendor pays more than disenchanting (about %s): %s each",
-                Items.FormatMoney(disenchant), Items.FormatMoney(unit)), unit
+                Items.FormatMoney(disenchant), Items.FormatMoney(unit)), unit, { tag = L["Your class can't use it"] }
         end
-        return "sell", L.Format("Your class can't use it. Vendor pays %s each", Items.FormatMoney(unit)), unit
+        return "sell", L.Format("Your class can't use it. Vendor pays %s each", Items.FormatMoney(unit)), unit,
+            { tag = L["Your class can't use it"] }
     end
 
     if bound and (entry.quality or 0) >= 2 and eq and True(eq, "sell") then
@@ -2020,6 +2082,9 @@ function Verdicts:Groups()
                 upgrade = extra and extra.upgrade or nil,
                 bought = extra and extra.bought,
                 craft = extra and extra.craft, wait = extra and extra.wait,
+                -- A short tag for the one-line row; the full reason shows
+                -- under the row the mouse is on (UI/MainWindow.lua).
+                tag = extra and extra.tag,
                 name = Items.NameFromLink(entry.link) or L.Format("item %s", tostring(entry.itemID)),
                 count = 0, slots = {},
             }

@@ -69,6 +69,8 @@ local function Stub(fields)
 
     -- Recorded so a test can check where something was anchored.
     function frame:SetPoint(...) self._point = { ... } end
+    function frame:SetAlpha(value) self._alpha = value end
+    function frame:GetAlpha() return rawget(self, "_alpha") or 1 end
     function frame:SetParent(parent) self._parent = parent end
     function frame:GetParent() return rawget(self, "_parent") end
     function frame:GetCenter() return self._cx or 0, self._cy or 0 end
@@ -305,6 +307,9 @@ function env.Load(locale)
     -- "One Window:" is on unless unticked; suites test Butler's own windows
     -- unless they tick it (test_onewindow.lua checks the default).
     if ns.db then ns.db.oneWindow = false end
+    -- Set Up Butler shows once on a new account; suites test the rest of
+    -- Butler unless they clear this (test_quicksetup.lua does).
+    if ns.db then ns.db.quickSetupShown = true end
 
     env.ns = ns
     return ns

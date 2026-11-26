@@ -115,7 +115,7 @@ for _, row in ipairs(UI.list.rows) do
 end
 suite.check("a row with Fill mail shows the button", fillRow and fillRow.action:IsShown())
 suite.check("in the worth column, with the worth on its tooltip", fillRow and fillRow.worth:GetText() == ""
-    and fillRow.worth._point[1] == "RIGHT" and fillRow.worth._point[2] == -6)
+    and fillRow.worth._point[1] == "RIGHT" and fillRow.worth._point[4] == -6)
 suite.check("the footer says who presses Send", UI.footer:GetText():find("You press Send", 1, true) ~= nil)
 suite.check("no bank buttons at a mailbox", not UI.bankButton:IsShown() and not UI.takeButton:IsShown())
 suite.check("Tradeskills' mail panel is told to step aside", mailboxSaid[#mailboxSaid] == true)
