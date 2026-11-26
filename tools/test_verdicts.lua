@@ -76,8 +76,8 @@ suite.check("Let Butler decide takes it off both lists",
 -- The groups come in order: what to do first at the top.
 local order = {}
 for _, group in ipairs(Verdicts:Groups()) do order[#order + 1] = group.verdict end
-suite.check("Craft, Sell, Auction, Disenchant, Mail, Bank, Look at it, Wait, then Keep",
-    table.concat(order, ",") == "craft,sell,auction,disenchant,mail,bank,look,wait,keep")
+suite.check("Quest Items, Craft, Sell, Auction, Disenchant, Mail, Bank, Look at it, Wait, then Keep",
+    table.concat(order, ",") == "quest,craft,sell,auction,disenchant,mail,bank,look,wait,keep")
 
 -- Only a slot whose key changed is read further.
 local questReads = 0
@@ -99,10 +99,11 @@ suite.check("a sold or moved item leaves the list", Find("Old Pole") == nil)
 
 -- The window shows it all.
 local lines = ns.UI:Lines()
-suite.check("each group has a heading", lines[1].type == "header" and lines[1].group.verdict == "sell")
-local keepFolded = true
+suite.check("each group has a heading, Quest Items first", lines[1].type == "header" and lines[1].group.verdict == "quest")
+local keepFolded, under = true, nil
 for _, line in ipairs(lines) do
-    if line.type == "item" and line.verdict == "keep" then keepFolded = false end
+    if line.type == "header" then under = line.group.verdict end
+    if line.type == "item" and under == "keep" then keepFolded = false end
 end
 suite.check("Keep starts folded away", keepFolded)
 for _, line in ipairs(lines) do

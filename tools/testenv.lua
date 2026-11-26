@@ -208,7 +208,7 @@ function env.FakeBags(items)
                 itemID = item.id, hyperlink = Link(item), stackCount = item.count or 1,
                 quality = item.quality or 1, isLocked = item.locked or false,
                 hasNoValue = item.noValue or false, isBound = item.bound or false,
-                iconFileID = 134400,
+                hasLoot = item.openable or false, iconFileID = 134400,
             }
         end,
         GetContainerItemQuestInfo = function(bag, slot)

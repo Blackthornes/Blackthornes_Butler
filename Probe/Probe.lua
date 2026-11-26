@@ -216,6 +216,7 @@ function Probe:Run()
     Line("forever tables", ForeverTables())
     if ns.Jobs then Line("jobs", ns.Jobs:ProbeText()) end
     if ns.Quests then Line("quest items", ns.Quests:ProbeText()) end
+    if ns.Kinds then Line("kinds", ns.Kinds:ProbeText()) end
     if ns.QuestBuy then Line("buy quest items", ns.QuestBuy:ProbeText()) end
     if ns.BagWindow then Line("bag window", ns.BagWindow:ProbeText()) end
 end
