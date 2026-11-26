@@ -3183,3 +3183,31 @@ The owner said build it (2026-11-26, from the improvement mockups, #3).
   `UI.SettleRow` puts a row back when it gets new data.
 
 Tested in `tools/test_calmerrows.lua`.
+
+## The Right Now card (2026-11-26)
+
+The owner said build it (2026-11-26, from the improvement mockups, #1).
+`UI/RightNow.lua`: at most `RightNow.MOST` (4) steps at the top of the
+Butler window under a RIGHT NOW heading (`verdict = "now"`, `noCount`),
+lit ones first. Off unless ticked: "Right Now Card:" on the WINDOWS page,
+`rightNow`, account wide (never rename it; in `SETTING_KEYS`).
+
+- Steps (type `now`: `key`, `lit`, `title`, `detail`, `dock`, `mailTo`,
+  `action = { label, run }`): Sell (lit at a vendor, `dock = "sell"`, dim
+  "At the next vendor." elsewhere), Buy what the craft queue needs from this
+  vendor (`Jobs.offer`, already read; `Jobs:BuyAtVendor`), Fill mail to each
+  character at a mailbox (`mailTo`, so `UI:PlaceMail` puts Fill Mail on it;
+  the first one dim elsewhere), Move to bank at the bank (`dock = "bank"`),
+  Bags are nearly full (`FreeSpace.Read`, below "plenty"), and new spells
+  (`ClassTraining`, Train All at the trainer, else Show the Way).
+- Nothing new is scanned and nothing runs on a timer: the steps are built in
+  `UI:Lines`, so they redraw with the list.
+- `UI:DockRow(verdict)` gives the card's step for a group's button while it
+  is on screen, else the heading; `Selling:Place` and `UI:PlaceErrands`
+  (Move to bank) use it. On a step the button sits at the right edge
+  (`UI.ButtonRight`) and the words keep room for it (`UI.NowRoom`).
+- While the card has a step, groups with no saved fold start folded
+  (`UI.IsFolded(folded, verdict, nowSteps)`); opening one by hand saves it
+  open (`folded[verdict] = false`).
+
+Tested in `tools/test_rightnow.lua`.

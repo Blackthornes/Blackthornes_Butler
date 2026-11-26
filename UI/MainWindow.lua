@@ -18,7 +18,7 @@
 -- only while the window is up. Only the rows on screen exist
 -- (Widgets.CreateRowList).
 
-local _, ns = ...
+local addonName, ns = ...
 local L = ns.L
 
 local UI = ns.NewModule("UI")
@@ -446,6 +446,8 @@ function UI.RowAction(data)
         if message then ns.Print(message) end
     elseif data.verdict == "wait" and data.itemID and data.wait then
         ns.Verdicts:SellAnyway(data.itemID)
+    elseif data.type == "now" and data.action then
+        data.action.run()
     elseif data.type == "ammo" then
         ns.Ammo:Buy()
     elseif data.type == "job" and data.step and data.step.kind == "buy" then
@@ -575,6 +577,9 @@ function UI.UpdateRow(row, data)
     if row.action then row.action.tooltipText = nil end
     UI.DrawRow(row, data)
     UI.FitWorth(row)
+    -- A Right Now step keeps room on its right for its button, so its
+    -- words wrap short of it.
+    if data.type == "now" then row.worth:SetWidth(UI.NowRoom(data)) end
     local to = row.action and UI.fillRows[data]
     if to then
         -- The button takes the worth column's place, so the note keeps the
@@ -694,6 +699,39 @@ function UI:Sold(item)
     end
 end
 
+-- A step's dot: lit gold when it can be done here, dim when it waits.
+UI.DOT = "Interface\\AddOns\\" .. tostring(addonName) .. "\\Media\\Frame\\TravelDot.tga"
+UI.DOT_SIZE = 8
+
+--- A step on the Right Now card: its dot, what to do and why, and its
+--- button where it has one of its own (Buy, Train All, Show the Way).
+function UI.UpdateNowRow(row, data)
+    row.fold:Hide()
+    row.icon:Hide()
+    local dot = rawget(row, "dot")
+    if not dot then
+        dot = row.top:CreateTexture(nil, "ARTWORK")
+        dot:SetSize(UI.DOT_SIZE, UI.DOT_SIZE)
+        dot:SetPoint("CENTER", row.top, "LEFT", 18, 0)
+        pcall(dot.SetTexture, dot, UI.DOT)
+        row.dot = dot
+    end
+    if data.lit then
+        dot:SetVertexColor(Theme.Unpack("accent"))
+    else
+        dot:SetVertexColor(Theme.Unpack("muted"))
+    end
+    dot:Show()
+    row.name:SetTextColor(Theme.Unpack(data.lit and "text" or "muted"))
+    row.name:SetText(data.title or "")
+    row.reason:SetText(data.detail or "")
+    row.worth:SetText("")
+    if data.action and row.action then
+        row.action:SetText(data.action.label)
+        row.action:Show()
+    end
+end
+
 --- Greys folded into one line (Calmer rows): "5 grey items", their names
 --- and what they are worth together. A click shows each one.
 function UI.UpdateGreysRow(row, data)
@@ -739,6 +777,8 @@ function UI.DrawRow(row, data)
     if openEdge then openEdge:Hide() end
     local full = rawget(row, "full")
     if full then full:Hide() end
+    local dot = rawget(row, "dot")
+    if dot then dot:Hide() end
     UI.SettleRow(row, data)
     row.worth:SetTextColor(Theme.Unpack("text"))
     row.reason:SetTextColor(Theme.Unpack("muted"))
@@ -758,6 +798,7 @@ function UI.DrawRow(row, data)
     end
 
     if data.type == "greys" then return UI.UpdateGreysRow(row, data) end
+    if data.type == "now" then return UI.UpdateNowRow(row, data) end
 
     if data.type == "header" then
         local group = data.group
@@ -767,8 +808,8 @@ function UI.DrawRow(row, data)
         row.name:SetTextColor(Theme.Unpack("accent"))
         row.name:SetText(group.label:upper())
         UI.MarkHeading(row, group.verdict)
-        row.reason:SetText(Plural(group.count, group.one or L["item"], group.many or L["items"])
-            .. UI.SoldText(group))
+        row.reason:SetText(group.noCount and ""
+            or (Plural(group.count, group.one or L["item"], group.many or L["items"]) .. UI.SoldText(group)))
         row.worth:SetText(group.worth > 0 and Items.FormatMoney(group.worth) or "")
         return
     end
@@ -1115,6 +1156,18 @@ function UI:Lines()
         self:PlaceMail(lines)
         return lines
     end
+    -- The Right Now card on top (UI/RightNow.lua): what to do here, at
+    -- most four steps. While it has one, the groups below start folded.
+    local steps = ns.RightNow and ns.RightNow:Steps() or {}
+    self.nowSteps = #steps > 0 or nil
+    if #steps > 0 then
+        local group = { verdict = "now", label = L["Right Now"], count = #steps, worth = 0, noCount = true }
+        local isFolded = folded.now == true
+        lines[#lines + 1] = { type = "header", group = group, folded = isFolded }
+        if not isFolded then
+            for _, step in ipairs(steps) do lines[#lines + 1] = step end
+        end
+    end
     -- At a vendor, filling a hunter's quiver or pouch comes first
     -- (Logic/Ammo.lua).
     local offer = ns.Ammo and ns.Ammo:Offer()
@@ -1169,7 +1222,7 @@ function UI:Lines()
     end
     for _, group in ipairs(ns.Verdicts:Groups()) do
         if group.count > 0 then
-            local isFolded = UI.IsFolded(folded, group.verdict)
+            local isFolded = UI.IsFolded(folded, group.verdict, self.nowSteps)
             lines[#lines + 1] = { type = "header", group = group, folded = isFolded }
             if not isFolded then self:GroupRows(group, lines) end
         end
@@ -1196,6 +1249,7 @@ local function MailsTo(line)
     if line.type == "job" then return line.step and line.step.kind == "mail" and line.step.to or nil end
     if line.type == "gold" then return line.entry and line.entry.to end
     if line.type == "item" and line.verdict == "mail" then return line.mailTo end
+    if line.type == "now" then return line.mailTo end
     return nil
 end
 
@@ -1234,9 +1288,9 @@ end
 -- whose folds were saved before the group existed: false means opened.
 UI.FOLDED_AT_FIRST = { wait = true }
 
-function UI.IsFolded(folded, verdict)
+function UI.IsFolded(folded, verdict, nowSteps)
     local state = folded[verdict]
-    if state == nil then return UI.FOLDED_AT_FIRST[verdict] == true end
+    if state == nil then return UI.FOLDED_AT_FIRST[verdict] == true or nowSteps == true end
     return state == true
 end
 
@@ -1275,6 +1329,7 @@ function UI:Clicked(data, button)
         self:Refresh(true)
         return
     end
+    if data.type == "now" then return end
     if data.type == "everyone" or data.type == "holder" then
         local itemID = data.item.itemID
         self.open[itemID] = not self.open[itemID] or nil
@@ -1288,10 +1343,12 @@ function UI:Clicked(data, button)
         if self:BagSearch() ~= "" then return end
         local folded = self:Folded()
         local verdict = data.group.verdict
-        local fold = not UI.IsFolded(folded, verdict)
+        local fold = not UI.IsFolded(folded, verdict, verdict ~= "now" and self.nowSteps or nil)
         if fold then
             folded[verdict] = true
-        elseif UI.FOLDED_AT_FIRST[verdict] then
+        elseif UI.FOLDED_AT_FIRST[verdict] or self.nowSteps then
+            -- Opened by hand: stays open while the Right Now card folds
+            -- the rest.
             folded[verdict] = false
         else
             folded[verdict] = nil
@@ -1334,7 +1391,7 @@ end
 
 function UI:Enter(row, data)
     self:OpenReason(row, data)
-    if data.type == "greys" then return end
+    if data.type == "greys" or data.type == "now" then return end
     -- A heading's +/- already says a click folds it, so only Wait for a
     -- better price, which needs saying why, has a hover (the owner, 2026-10-15).
     if data.type == "header" and data.group.verdict ~= "wait" then return end
@@ -2547,13 +2604,44 @@ function UI:HeaderRow(verdict)
     return nil
 end
 
+--- Where a group's button goes: the Right Now card's step for it while it
+--- is on screen, else the group's heading (UI:HeaderRow), or nil.
+function UI:DockRow(verdict)
+    if self.list and self:IsShown() and self.view ~= "all" then
+        for _, row in ipairs(self.list.rows) do
+            local data = row.data
+            if row:IsShown() and data and data.type == "now" and data.dock == verdict then return row end
+        end
+    end
+    return self:HeaderRow(verdict)
+end
+
 --- Put a secure button on a line, inside the window (UI:Dock). True when
 --- placed.
 function UI.PlaceOnLine(button, row)
     if not (row and row:IsShown()) or not UI:Dock(button) then return false end
     button:ClearAllPoints()
-    button:SetPoint("RIGHT", row, "RIGHT", -UI.LINE_BUTTON_RIGHT, 0)
+    button:SetPoint("RIGHT", row, "RIGHT", -UI.ButtonRight(row), 0)
     return true
+end
+
+--- How far in from a line's right edge its button ends: a Right Now step
+--- has no worth column, so its button sits at the edge.
+function UI.ButtonRight(row)
+    local data = row and row.data
+    if type(data) == "table" and data.type == "now" then return 8 end
+    return UI.LINE_BUTTON_RIGHT
+end
+
+-- The room a Right Now step keeps for its button: the Sell button, Move to
+-- bank, or a row button (Fill Mail, Buy, Train All, Show the Way).
+UI.NOW_ROOM = { sell = 150, bank = 140 }
+UI.NOW_ACTION = 80
+
+function UI.NowRoom(data)
+    if data.dock and UI.NOW_ROOM[data.dock] then return UI.NOW_ROOM[data.dock] + 4 end
+    if data.action or data.mailTo then return UI.NOW_ACTION + 4 end
+    return 1
 end
 
 --- The secure buttons (Sell, Disenchant, Log out, Leave form) live inside
@@ -2737,19 +2825,19 @@ end
 --- how much of the foot they take.
 function UI:PlaceErrands()
     local foot = {}
-    local function Place(button, verdict)
+    local function Place(button, verdict, card)
         if not button:IsShown() then return end
-        local row = verdict and self:HeaderRow(verdict)
+        local row = verdict and (card and self:DockRow(verdict) or self:HeaderRow(verdict))
         button:ClearAllPoints()
         if row then
-            button:SetPoint("RIGHT", row, "RIGHT", -UI.LINE_BUTTON_RIGHT, 0)
+            button:SetPoint("RIGHT", row, "RIGHT", -UI.ButtonRight(row), 0)
             button:SetFrameLevel(row:GetFrameLevel() + 5)
         else
             foot[#foot + 1] = button
         end
     end
     Place(self.mailButton)
-    Place(self.bankButton, "bank")
+    Place(self.bankButton, "bank", true)
     Place(self.takeButton, "jobs")
     -- Queue sits on the Craft heading only; out of sight, it waits for it.
     local craftRow = self:HeaderRow("craft")

@@ -120,7 +120,7 @@ SettingsUI.SETTING_KEYS = {
     "disenchantGreens", "fillNext", "freeSpace", "goldGoals", "jobsAtLogin",
     "keepAcrossBank", "keepAcrossMail", "keepLevelUp", "learn",
     "mailContents", "mailRunsOut", "namePicker", "openAtBank",
-    "openAtMailbox", "openAtVendor", "placeBar", "questBuy", "questItems",
+    "openAtMailbox", "openAtVendor", "placeBar", "questBuy", "questItems", "rightNow",
     "settingsDescriptions", "skillUpLine", "swapWhenFull", "trashCan",
     "useTomTom", "vendorPrice", "verdictTip", "voice", "wayArrowSize",
     "whoHas", "windowScale",
@@ -1987,6 +1987,16 @@ function SettingsUI:BuildPages()
     end, true)
     controls.voice:SetPoint("TOPLEFT", CONTROL_X, -2)
 
+    -- The Right Now card (the owner said build it, 2026-11-26). Off
+    -- unless ticked.
+    local nowRow = pages:Row("general", 1, L["Right Now Card:"],
+        L["The top of the Butler window says what to do here, in order, with a button for each step."])
+    controls.rightNow = Widgets.CreateCheckbox(nowRow, L["On"], function(checked)
+        ns.db.rightNow = checked and true or nil
+        if ns.UI then ns.UI:Refresh(true) end
+    end, false)
+    controls.rightNow:SetPoint("TOPLEFT", CONTROL_X, -2)
+
     -- Three bag helpers on one row (2026-11-16, from a mockup): a tick
     -- each, their words on the hover and in the row's description. The
     -- saved keys are as they were.
@@ -2096,6 +2106,7 @@ function SettingsUI:Refresh()
     controls.tooltipLines:Sync()
     controls.craftDetails:SetChecked(ns.VerdictTip ~= nil and ns.VerdictTip:DetailsOn())
     controls.voice:SetChecked(ns.db.voice ~= false)
+    controls.rightNow:SetChecked(ns.db.rightNow == true)
     controls.learn:SetChecked(ns.db.learn ~= false)
     for kind, picker in pairs(controls.kinds or {}) do
         picker:SetValue(ns.Kinds:Rule(kind) or "butler")
