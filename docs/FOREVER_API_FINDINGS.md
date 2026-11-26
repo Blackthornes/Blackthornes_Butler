@@ -61,7 +61,7 @@ client can close these through `PLAYER_INTERACTION_MANAGER_FRAME_HIDE`
 Trainer 7, Auctioneer 21) without the old close event, so that event
 undocks too. Every event is registered inside a pcall.
 
-## The bank (probe added 2026-11-26, not yet run)
+## The bank (probe added 2026-11-26)
 
 Asked before a Butler Bank window is built (Butler idea 8): a window with
 real item squares beside Butler Bags at a banker. `/bbutler bankprobe`, run
@@ -83,8 +83,34 @@ at a banker, prints and keeps (`lastProbe`) what that needs:
   settle the probe says whether the item left the bank slot, whether it
   went on the cursor, and any `ADDON_ACTION_BLOCKED` or `_FORBIDDEN`.
 
-In a fight it makes and shows nothing, and says so. Results go here once
-the owner has run it.
+In a fight it makes and shows nothing, and says so.
+
+First run (2026-11-26, level 44, at a banker):
+
+- The bank is in tabs, as on retail: `Enum.BagIndex.CharacterBankTab_1`
+  is 6 (to `_6` = 11), `AccountBankTab_1` is 15. Tab 6 had 48 slots and the
+  40 items the game's bank shows; 7 and 8 had 10 and 12 empty slots; 9 to
+  12 had none. `NUM_BANKBAGSLOTS` is nil.
+- Bag -1 still answers: 32 slots, 4 items. The game's bank shows none of
+  them, and a right-click on one says the spot is empty. Treat -1 as not
+  part of the bank when the client has tabs (`Errands.BankBagIDs` still
+  lists it; the window build must leave it out).
+- Present: `C_Bank.CanUseBank` (true), `C_Bank.FetchPurchasedBankTabData`,
+  `C_Bank.FetchNumPurchasedBankTabs`, `C_Bank.AutoDepositItemsIntoBank`,
+  `C_Container.SortBankBags`, `C_Container.GetBankAutosortDisabled`,
+  `C_Container.ContainerIDToInventoryID`. Absent: `GetNumBankSlots`,
+  `PurchaseSlot`, `GetBankSlotCost`, `BankButtonIDToInvSlotID`,
+  `SortBankBags`, `DepositReagentBank`, `CloseBankFrame`.
+- Frames: `BankFrame`, `BankPanel`, `BankItemSearchBox` (none protected);
+  no `BankSlotsFrame`, `BankFrameItem1`, `ReagentBankFrame` or
+  `AccountBankPanel`.
+- `ContainerFrameItemButtonTemplate` made by Butler on a bank slot: not
+  protected, `GetBagID` reads the holder's bag, `SetBagID` and `OnClick`
+  present. `BankItemButtonGenericTemplate` does not exist (asking for it
+  raised and printed a taint line), so the probe no longer tries it.
+- The click test so far only used bag -1. The probe now takes its test
+  item from the first tab; the right-click on a real bank item is still to
+  be seen.
 
 ## Food and drink for the restock list
 

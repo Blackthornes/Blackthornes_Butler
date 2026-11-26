@@ -258,7 +258,9 @@ BankProbe.BAG_INDEX = {
     "CharacterBankTab_6", "AccountBankTab_1",
 }
 
-BankProbe.TEMPLATES = { "ContainerFrameItemButtonTemplate", "BankItemButtonGenericTemplate" }
+-- BankItemButtonGenericTemplate is not in Forever (asking for it raised
+-- and printed a taint line, 2026-11-26), so only the bag template is tried.
+BankProbe.TEMPLATES = { "ContainerFrameItemButtonTemplate" }
 
 -- Made once and kept, so running the probe again adds no frames.
 local made = {}
@@ -298,12 +300,20 @@ end
 function BankProbe.Containers()
     local parts, first = {}, nil
     local ids = ns.Errands and ns.Errands.BankBagIDs() or { -1 }
+    -- Forever's bank is in tabs (Enum.BagIndex.CharacterBankTab_1 and on).
+    -- Bag -1 still answers there with a few items, but the game shows none
+    -- of them and a click says the spot is empty (seen 2026-11-26). So the
+    -- test item comes from a tab when the client has tabs.
+    local enum = rawget(_G, "Enum")
+    local index = type(enum) == "table" and type(enum.BagIndex) == "table" and enum.BagIndex
+    local firstTab = index and tonumber(index.CharacterBankTab_1)
     for _, bag in ipairs(ids) do
         local slots, items = NumSlots(bag), 0
+        local counts = not firstTab or bag >= firstTab
         for slot = 1, slots do
             if ItemAt(bag, slot) then
                 items = items + 1
-                if not first then first = { bag = bag, slot = slot } end
+                if counts and not first then first = { bag = bag, slot = slot } end
             end
         end
         parts[#parts + 1] = ("%d: %d slots %d items"):format(bag, slots, items)

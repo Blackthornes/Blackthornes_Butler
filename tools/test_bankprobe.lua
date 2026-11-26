@@ -82,4 +82,19 @@ suite.check("and makes no square", Kept("in a fight, not made"), Lines())
 suite.check("and shows none", square:GetParent()._shown == false)
 _G.InCombatLockdown = nil
 
+-- Forever's bank is in tabs: bag -1 answers with items the game does not
+-- show, so the test item comes from the first tab (seen 2026-11-26).
+_G.Enum = { BagIndex = { Bank = -1, CharacterBankTab_1 = 6 } }
+fake.bags[6] = { [2] = { bag = 6, slot = 2, id = 2592, name = "Wool Cloth", count = 3 } }
+fake.info[2592] = fake.bags[6][2]
+_G.C_Container.GetContainerNumSlots = function(bag)
+    if bag == -1 then return 28 elseif bag == 6 then return 48 end
+    return slotsOf(bag)
+end
+ns.Errands.bankOpen = true
+ns.HandleSlash("bankprobe")
+suite.check("with tabs the test item comes from a tab", Kept("first bank item  bag 6 slot 2"), Lines())
+suite.check("bag -1 is still counted", Kept("-1: 28 slots 1 items"), Lines())
+_G.Enum = nil
+
 suite.done()
