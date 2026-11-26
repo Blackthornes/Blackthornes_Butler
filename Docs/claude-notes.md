@@ -3350,9 +3350,13 @@ the Butler Bags style beside Butler Bags, with a search, Group By (Item
 Type or One Grid, kept for the session), Item Type headings in Butler
 Bags' order with the empty slots last, Take for Crafts on the trade goods
 heading (`Errands:TakeFromBank`, shown with the count when
-`Errands:WantedCount()` is above 0), and "Bank Bags:" along the foot (each
-tab's icon and name from `C_Bank.FetchPurchasedBankTabData`, else
-`BagView.BagInfo`) with the free slots. Off unless ticked: "Butler Bank:"
+`Errands:WantedCount()` is above 0), and "Bag Slots:" along the foot as
+the game's bank shows them (the owner, 2026-11-26: the first try's tab
+icons showed as red question marks and did not match): each bank bag slot
+after the bank's own container (`BankWindow.BagSlots`, every bag with a
+`ContainerIDToInventoryID` slot), the bag's own icon and tooltip when
+bought, a lock when not (Forever showed 2 bags and 6 locks), with the free
+slots on the right. Off unless ticked: "Butler Bank:"
 under BAGS on the General page, saved account wide as `bankWindow` (never
 rename it; in `SETTING_KEYS`, so Restore Defaults turns it off), and only
 with Use Butler Bags on too. Opened by `Errands:Arrived("bank")` once the bags are read,

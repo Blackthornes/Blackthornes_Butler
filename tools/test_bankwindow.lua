@@ -85,6 +85,31 @@ suite.check("trade goods next", sections[2].key == "trade" and #sections[2].plac
 suite.check("empty slots last", sections[3].key == "empty" and sections[3].free == 5, sections[3] and sections[3].free)
 suite.check("the foot counts the free slots", BankWindow.freeLabel:GetText():find("5", 1, true), BankWindow.freeLabel:GetText())
 
+-- Bag Slots along the foot match the game's bank: the bag bought in the
+-- first slot, then a lock for each of the other seven.
+_G.C_Container.ContainerIDToInventoryID = function(bag)
+    if bag >= 7 and bag <= 14 then return 80 + bag end
+    return nil
+end
+_G.GetInventoryItemTexture = function(_, slot) return slot == 87 and 133639 or nil end
+_G.C_Container.GetContainerNumSlots = function(bag)
+    if bag == -1 then return 32 elseif bag == 6 then return 8 elseif bag == 7 then return 4 end
+    return slotsOf(bag)
+end
+local bagSlots = BankWindow.BagSlots()
+suite.check("eight bag slots after the bank itself", #bagSlots == 8, #bagSlots)
+suite.check("the first holds the bag bought", bagSlots[1].bag == 7 and bagSlots[1].bought and bagSlots[1].icon == 133639)
+suite.check("the rest are not bought", not bagSlots[2].bought and not bagSlots[8].bought)
+BankWindow:Draw()
+suite.check("the bought bag's slots are read too", Square(7, 4) ~= nil)
+suite.check("the foot counts every free slot", BankWindow.freeLabel:GetText():find("9", 1, true), BankWindow.freeLabel:GetText())
+_G.C_Container.ContainerIDToInventoryID = nil
+_G.C_Container.GetContainerNumSlots = function(bag)
+    if bag == -1 then return 32 elseif bag == 6 then return 8 end
+    return slotsOf(bag)
+end
+BankWindow:Draw()
+
 -- One Grid: one section, every slot.
 BankWindow.groupIndex = 2
 sections = BankWindow:Sections(BankWindow.Slots())

@@ -40,7 +40,7 @@ local GAP = 4
 local HEADING = 24
 local SECTION_GAP = 8
 local SCROLL_STEP = 48
-local TAB_ICON = 22
+local TAB_ICON = 26
 
 BankWindow.GROUPS = { "type", "grid" }
 BankWindow.SPOT_KEY = "butler.bank"
@@ -102,7 +102,16 @@ function BankWindow.Slots()
     local places = {}
     local errands = ns.Errands
     if not (errands and errands.bankOpen) then return places end
+    local bags, listed = {}, {}
     for _, bag in ipairs(errands.BankBagIDs()) do
+        bags[#bags + 1] = bag
+        listed[bag] = true
+    end
+    -- A bag bought in a bag slot past the ones Butler lists still counts.
+    for _, info in ipairs(BankWindow.BagSlots()) do
+        if info.bought and not listed[info.bag] then bags[#bags + 1] = info.bag end
+    end
+    for _, bag in ipairs(bags) do
         for slot = 1, NumSlots(bag) do
             local entry = ns.Bags.ReadSlot(bag, slot)
             if entry then entry.quest = ns.Bags.ReadQuest(bag, slot, entry.itemID) end
@@ -273,13 +282,14 @@ function BankWindow:SizeScroll()
     end
 end
 
---- "Bank Bags:" and an icon for each bank bag or tab along the foot, with
---- the free slots on the right.
+--- "Bag Slots:" along the foot, as the game's bank shows them: each bank
+--- bag slot with the bag in it, then a lock for each slot not bought yet.
+--- The free slots on the right.
 function BankWindow:BuildFoot()
     local frame = self.frame
     local label = Theme.CreateLabel(frame, "small", "muted", "LEFT")
     label:SetPoint("BOTTOMLEFT", PADDING, 14)
-    label:SetText(L["Bank Bags:"])
+    label:SetText(L["Bag Slots:"])
     self.bagsLabel = label
 
     local free = Theme.CreateLabel(frame, "normal", "text", "RIGHT")
@@ -287,7 +297,11 @@ function BankWindow:BuildFoot()
     self.freeLabel = free
 end
 
---- The icon shown for a bank bag along the foot, made once.
+BankWindow.EMPTY_SLOT = "Interface\\PaperDoll\\UI-PaperDoll-Slot-Bag"
+BankWindow.LOCK = "Interface\\PetBattles\\PetBattle-LockIcon"
+BankWindow.MOST_BAG_SLOTS = 12
+
+--- The square shown for a bank bag slot along the foot, made once.
 local function TabIcon(index)
     local icon = tabIcons[index]
     if icon then return icon end
@@ -301,10 +315,20 @@ local function TabIcon(index)
     art:SetAllPoints(icon)
     art:SetTexCoord(0.08, 0.92, 0.08, 0.92)
     icon.art = art
+    local lock = icon:CreateTexture(nil, "OVERLAY")
+    lock:SetPoint("CENTER")
+    lock:SetSize(TAB_ICON - 8, TAB_ICON - 8)
+    lock:SetTexture(BankWindow.LOCK)
+    lock:Hide()
+    icon.lock = lock
     icon:EnableMouse(true)
     icon:SetScript("OnEnter", function(self)
+        if not self.invSlot or not self.bought then return end
         GameTooltip:SetOwner(self, "ANCHOR_TOP")
-        GameTooltip:SetText(self.name or L["Bank"], 1, 1, 1)
+        local shown = pcall(GameTooltip.SetInventoryItem, GameTooltip, "player", self.invSlot)
+        if not shown or (GameTooltip.NumLines and GameTooltip:NumLines() == 0) then
+            GameTooltip:SetText(self.name or L["Bank"], 1, 1, 1)
+        end
         GameTooltip:AddLine(L.Format("%d free", self.free or 0), Theme.Unpack("muted"))
         GameTooltip:Show()
     end)
@@ -313,60 +337,67 @@ local function TabIcon(index)
     return icon
 end
 
---- The bank's bags that hold slots: { bag, name, icon, free }.
-function BankWindow.BankBags(places)
-    local free, order, seen = {}, {}, {}
-    for _, place in ipairs(places) do
-        if not seen[place.bag] then
-            seen[place.bag] = true
-            order[#order + 1] = place.bag
-            free[place.bag] = 0
-        end
-        if not place.entry then free[place.bag] = free[place.bag] + 1 end
+local function InventorySlot(bag)
+    local slot = ns.Items.Call({ "C_Container.ContainerIDToInventoryID", "ContainerIDToInventoryID" }, bag)
+    return type(slot) == "number" and slot or nil
+end
+
+--- The bank's bag slots after the bank itself, as the game's bank shows
+--- them: { bag, invSlot, bought, icon, name }. The first bank container is
+--- the bank's own slots; each bag after it that has a bag slot counts,
+--- bought when it has slots. Forever showed 2 bags and 6 locks (2026-11-26).
+function BankWindow.BagSlots()
+    local ids = ns.Errands and ns.Errands.BankBagIDs() or {}
+    local main = ids[1]
+    local slots = {}
+    if type(main) ~= "number" then return slots end
+    for bag = main + 1, main + BankWindow.MOST_BAG_SLOTS do
+        local invSlot = InventorySlot(bag)
+        if not invSlot then break end
+        local bought = NumSlots(bag) > 0
+        local icon = bought and ns.Items.Call({ "GetInventoryItemTexture" }, "player", invSlot) or nil
+        if type(icon) ~= "string" and type(icon) ~= "number" then icon = nil end
+        slots[#slots + 1] = {
+            bag = bag, invSlot = invSlot, bought = bought,
+            icon = icon or (bought and "Interface\\Icons\\INV_Misc_Bag_08") or BankWindow.EMPTY_SLOT,
+            name = bought and ns.BagView.BagInfo(bag) or nil,
+        }
     end
-    -- Forever's bank tabs carry their own name and icon (C_Bank).
-    local tabs = {}
-    local bank = rawget(_G, "C_Bank")
-    local enum = rawget(_G, "Enum")
-    local kind = type(enum) == "table" and type(enum.BankType) == "table" and enum.BankType.Character
-    if type(bank) == "table" and type(bank.FetchPurchasedBankTabData) == "function" and kind ~= nil then
-        local ok, list = pcall(bank.FetchPurchasedBankTabData, kind)
-        if ok and type(list) == "table" then
-            for _, tab in ipairs(list) do
-                if type(tab) == "table" and type(tab.ID) == "number" then tabs[tab.ID] = tab end
+    -- A client that names no bag slots: the bags that hold slots, no locks.
+    if #slots == 0 then
+        for i = 2, #ids do
+            if NumSlots(ids[i]) > 0 then
+                local name, icon = ns.BagView.BagInfo(ids[i])
+                slots[#slots + 1] = { bag = ids[i], bought = true, name = name,
+                    icon = icon or "Interface\\Icons\\INV_Misc_Bag_08" }
             end
         end
     end
-    local bags = {}
-    for _, bag in ipairs(order) do
-        local name, icon
-        local tab = tabs[bag]
-        if tab then
-            name, icon = tab.name, tab.icon
-        else
-            name, icon = ns.BagView.BagInfo(bag)
-        end
-        if type(name) ~= "string" or name == "" then name = L["Bank"] end
-        bags[#bags + 1] = { bag = bag, name = name, icon = icon or "Interface\\Icons\\INV_Misc_Bag_08", free = free[bag] }
-    end
-    return bags
+    return slots
 end
 
 function BankWindow:DrawFoot(places)
-    local bags = self.BankBags(places)
-    local total = 0
-    local x = Theme.TextWidth("small", L["Bank Bags:"]) + 8
-    for i, info in ipairs(bags) do
+    local free, total = {}, 0
+    for _, place in ipairs(places) do
+        if not place.entry then
+            free[place.bag] = (free[place.bag] or 0) + 1
+            total = total + 1
+        end
+    end
+    local slots = self.BagSlots()
+    local x = Theme.TextWidth("small", L["Bag Slots:"]) + 8
+    for i, info in ipairs(slots) do
         local icon = TabIcon(i)
-        icon.name, icon.free = info.name, info.free
+        icon.name, icon.free, icon.invSlot, icon.bought = info.name, free[info.bag] or 0, info.invSlot, info.bought
         icon.art:SetTexture(info.icon)
+        if icon.art.SetDesaturated then icon.art:SetDesaturated(not info.bought) end
+        icon.lock:SetShown(not info.bought)
         icon:ClearAllPoints()
         icon:SetPoint("LEFT", self.bagsLabel, "LEFT", x, 0)
         icon:Show()
         x = x + TAB_ICON + 4
-        total = total + info.free
     end
-    for i = #bags + 1, #tabIcons do tabIcons[i]:Hide() end
+    for i = #slots + 1, #tabIcons do tabIcons[i]:Hide() end
     self.freeLabel:SetText(L.Format("%d free", total))
 end
 
