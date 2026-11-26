@@ -61,6 +61,7 @@ function Bags.ReadSlot(bag, slot)
             locked = locked,
             noValue = info.hasNoValue and true or false,
             bound = info.isBound and true or false,
+            openable = info.hasLoot and true or false,
             icon = info.iconFileID,
             key = ("%s:%d:%s"):format(tostring(link or info.itemID), count, locked and "l" or ""),
         }

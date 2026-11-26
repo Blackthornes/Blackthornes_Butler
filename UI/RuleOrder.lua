@@ -42,6 +42,7 @@ RuleOrderUI.RULES = {
     bankList = { L["Always Bank List:"], "bank", L["Goes in the bank when you click Move to bank."] },
     mailList = { L["Always Mail List:"], "mail", L["Each item goes to the character you picked for it. An upgrade you can wear now stays."] },
     lists = { L["Your Lists:"], "mail" },
+    kinds = { L["Kinds:"], "kinds", L["Your Keep, Sell or Bank pick for crates, writs, mage scrolls, recipes you know and pet food, on the Keep page."] },
     buyback = { L["Things You Bought Back:"], "keep", L["Butler sold it and you bought it back, so it stays from now on."] },
     noValue = { L["Vendors Won't Buy It:"], "keep", L["No vendor pays for it, so it stays. A queued craft on another character still gets its share."] },
     sellList = { L["Always Sell List:"], "sell", L["Sold at a vendor, unless a goal, a craft or an upgrade still needs it."] },
@@ -78,6 +79,7 @@ local CHIPS = {
     disenchant = { L["Disenchant"], { 0.761, 0.580, 0.957 } },
     best = { L["Best"], { 1.000, 1.000, 1.000 } },
     look = { L["Look"], { 0.608, 0.573, 0.486 } },
+    kinds = { L["Kinds"], { 0.945, 0.831, 0.533 } },
 }
 
 -- Rules turned on on another page, where their amount or character is set.
