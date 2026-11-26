@@ -138,13 +138,17 @@ function KeepHere.FromTradeskills(itemID)
     return nil
 end
 
---- The number Butler keeps by: the biggest of its own, Tradeskills' and a
+--- The number Butler keeps by: the biggest of its own (with the restock
+--- list's, Logic/Restock.lua), Tradeskills' and a
 --- list's Keep Here (Logic/ListRules.lua) and this character's share of
 --- Keep Across Characters (Logic/KeepAcross.lua). The second return is
 --- that list's name when its number is the one kept; the third is true
 --- when the number across characters is.
 function KeepHere:Effective(itemID)
     local own = self:Count(itemID)
+    -- The restock list keeps its number too (Logic/Restock.lua).
+    local restock = ns.Restock and ns.Restock:Keep(itemID)
+    if restock and (not own or restock > own) then own = restock end
     local ts = self.FromTradeskills(itemID)
     local best = own or ts
     if own and ts then best = math.max(own, ts) end

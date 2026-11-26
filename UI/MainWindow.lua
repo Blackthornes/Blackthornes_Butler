@@ -422,6 +422,8 @@ function UI.RowAction(data)
         ns.Verdicts:SellAnyway(data.itemID)
     elseif data.type == "ammo" then
         ns.Ammo:Buy()
+    elseif data.type == "restock" then
+        ns.Restock:Buy(data.row.low.item)
     elseif data.type == "job" and data.step and data.step.kind == "buy" then
         ns.Jobs:BuyAtVendor()
     elseif data.type == "questbuy" then
@@ -554,6 +556,7 @@ function UI.DrawRow(row, data)
     if row.action then row.action:Hide() end
     UI.ClearLook(row)
     if data.type == "ammo" then return UI.UpdateAmmoRow(row, data) end
+    if data.type == "restock" then return UI.UpdateRestockRow(row, data) end
     if data.type == "everyone" then return UI.UpdateItemRow(row, data) end
     if data.type == "holder" then return UI.UpdateHolderRow(row, data) end
     if data.type == "gold" then return UI.UpdateGoldRow(row, data) end
@@ -826,6 +829,30 @@ function UI.UpdateAmmoRow(row, data)
     end
 end
 
+--- A line of the restock list that runs low (Logic/Restock.lua): how
+--- many to get, and Buy N when this vendor sells it.
+function UI.UpdateRestockRow(row, data)
+    local entry, restock = data.row, ns.Restock
+    local low, plan = entry.low, entry.plan
+    row.fold:Hide()
+    row.icon:Show()
+    local icon = plan and plan.item.icon
+    if not icon and not restock.IsKind(low.item) then
+        icon = Items.Call({ "C_Item.GetItemIconByID", "GetItemIcon" }, low.item)
+    end
+    row.icon:SetTexture(icon or (low.item == "water" and [[Interface\Icons\INV_Drink_07]])
+        or (low.item == "food" and [[Interface\Icons\INV_Misc_Food_15]]) or [[Interface\Icons\INV_Misc_QuestionMark]])
+    row.name:SetTextColor(Theme.Unpack("text"))
+    row.name:SetText(restock.RowName(entry))
+    row.reason:SetText(restock.RowReason(entry))
+    row.worth:SetText("")
+    if plan and plan.state == "buy" then
+        row.action:SetText(restock.buying and L["Buying..."] or L.Format("Buy %d", plan.count))
+        row.action.tooltipText = nil
+        row.action:Show()
+    end
+end
+
 --- An item in All characters: its name, who has it and how many in all.
 function UI.UpdateItemRow(row, data)
     local item = data.item
@@ -869,6 +896,18 @@ function UI.UpdateHolderRow(row, data)
     row.reason:SetText(ns.Everyone.Where(holder))
     row.worth:SetTextColor(Theme.Unpack("muted"))
     row.worth:SetText(ns.Everyone.Age(ns.Everyone.Seen(holder)))
+end
+
+--- The restock list's short lines: the vendor's offer at a vendor, else
+--- each low line on its own.
+function UI.RestockRows()
+    local restock = ns.Restock
+    if not (restock and restock:IsOn()) then return {} end
+    local offer = restock:Offer()
+    if offer then return offer.rows end
+    local rows = {}
+    for _, low in ipairs(restock:Low()) do rows[#rows + 1] = { low = low } end
+    return rows
 end
 
 --- The rows to show: each group's heading, then its items unless folded.
@@ -923,6 +962,19 @@ function UI:Lines()
         local isFolded = folded.ammo == true
         lines[#lines + 1] = { type = "header", group = group, folded = isFolded }
         if not isFolded then lines[#lines + 1] = { type = "ammo", offer = offer } end
+    end
+    -- What the restock list is short of (Logic/Restock.lua), with Buy N
+    -- at a vendor who sells it.
+    local restockRows = UI.RestockRows()
+    if #restockRows > 0 then
+        local offer = ns.Restock:Offer()
+        local group = { verdict = "restock", label = L["Restock"], count = #restockRows,
+            worth = offer and offer.cost or 0, one = L["item"], many = L["items"] }
+        local isFolded = folded.restock == true
+        lines[#lines + 1] = { type = "header", group = group, folded = isFolded }
+        if not isFolded then
+            for _, entry in ipairs(restockRows) do lines[#lines + 1] = { type = "restock", row = entry } end
+        end
     end
     -- Jobs for the craft queue, here and on other characters
     -- (Logic/Jobs.lua).
@@ -1066,6 +1118,11 @@ function UI.ItemOfRow(data)
         return tonumber(data.offer.ammo.itemID)
     end
     if kind == "wishlist" and type(data.entry) == "table" then return tonumber(data.entry.itemID) end
+    if kind == "restock" and type(data.row) == "table" then
+        local plan, low = data.row.plan, data.row.low
+        if plan and plan.item then return tonumber(plan.item.itemID) end
+        return low and tonumber(low.item) or nil
+    end
     return nil
 end
 
@@ -1099,7 +1156,7 @@ function UI:Clicked(data, button)
         and type(data.job) == "table" and type(data.job.name) == "string" then
         return self:ShowJobMenu(data)
     end
-    if data.type == "ammo" or data.type == "job" or data.type == "jobnext" or data.type == "questbuy"
+    if data.type == "ammo" or data.type == "restock" or data.type == "job" or data.type == "jobnext" or data.type == "questbuy"
         or data.type == "skillup" or data.type == "wishlist"
         or data.type == "train" or data.type == "trainnext" or data.type == "trainalt" then return end
     if button == "RightButton" and data.type ~= "gold" then
@@ -1118,6 +1175,17 @@ function UI:Enter(row, data)
     if data.type == "header" then
         GameTooltip:AddLine(data.group.label, Theme.Unpack("accent"))
         GameTooltip:AddLine(L["These sell for a lot less than usual today. Hold on to them until the price comes back."], 1, 1, 1, true)
+        GameTooltip:Show()
+        return
+    end
+    if data.type == "restock" then
+        local entry = data.row
+        local itemID = UI.ItemOfRow(data)
+        local shown = itemID and pcall(GameTooltip.SetItemByID, GameTooltip, itemID)
+        if not shown then GameTooltip:AddLine(ns.Restock.Label(entry.low.item), 1, 1, 1) end
+        GameTooltip:AddLine(" ")
+        GameTooltip:AddLine(L["Restock"], Theme.Unpack("accent"))
+        GameTooltip:AddLine(L.Format("You have %d of %d.", entry.low.have, entry.low.keep), 1, 1, 1, true)
         GameTooltip:Show()
         return
     end

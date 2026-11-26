@@ -1412,6 +1412,17 @@ function SettingsUI:BuildPages()
     end, { width = 100, height = 20 })
     controls.heldItems:SetPoint("TOPLEFT", CONTROL_X, 0)
 
+    -- What this character always carries (Logic/Restock.lua,
+    -- UI/RestockList.lua; the owner said build it, 2026-11-26).
+    local restockHead = pages:Section("keep", 2, L["KEEP IN YOUR BAGS"])
+    local restockList = CreateFrame("Frame", nil, pages.pages.keep.content)
+    restockList:SetWidth(COLUMN_WIDTH)
+    restockList.fixedHeight = 60
+    restockList:SetHeight(60)
+    pages:Place("keep", 2, restockList, 4)
+    controls.restockList = restockList
+    ns.RestockList:Build(restockHead, restockList, COLUMN_WIDTH)
+
     -- How many of an item each character keeps (Logic/KeepHere.lua, a
     -- player asked, the owner said build it 2026-10-17). Set with a
     -- right-click in the Butler window; seen and changed here.
@@ -2084,6 +2095,7 @@ function SettingsUI:Refresh()
     self:SyncHeld()
     self:SyncKeepHere()
     self:SyncKeepAcross()
+    if ns.RestockList then ns.RestockList:Sync() end
     self:SyncBankAlt()
     self:SyncMailRules()
     self:SyncLists()

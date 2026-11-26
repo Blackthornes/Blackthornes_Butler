@@ -127,7 +127,14 @@ function Bar:Build()
         Bar:Changed()
     end, { height = 22, primary = true })
     self.buy:Hide()
-    for _, button in ipairs({ self.mail, self.toBank, self.fromBank, self.buy }) do Tip(button) end
+    -- What the restock list is short of at this vendor (Logic/Restock.lua).
+    self.restock = Widgets.CreateButton(frame, L["Buying..."], function()
+        if not ns.Restock then return end
+        ns.Restock:Buy()
+        Bar:Changed()
+    end, { height = 22, primary = true })
+    self.restock:Hide()
+    for _, button in ipairs({ self.mail, self.toBank, self.fromBank, self.buy, self.restock }) do Tip(button) end
 
     self.frame = frame
     return frame
@@ -222,6 +229,38 @@ function Bar:PlaceBuy()
     buy:SetPoint("RIGHT", right, "LEFT", -GAP, 0)
 end
 
+--- Restock, left of Buy, else of Sell, else of Open.
+function Bar:PlaceRestock()
+    local restock = self.restock
+    if not (restock and restock:IsShown()) then return end
+    local sell = self.sell
+    local right = self.open
+    if self.buy and self.buy:IsShown() then
+        right = self.buy
+    elseif sell and sell:IsShown() and sell:GetParent() == self.frame then
+        right = sell
+    end
+    restock:ClearAllPoints()
+    restock:SetPoint("RIGHT", right, "LEFT", -GAP, 0)
+end
+
+--- Words and width for Restock from what this vendor sells of the
+--- restock list (Restock:Offer). As wide as its longest words.
+function Bar:WordRestock()
+    local button, restock = self.restock, ns.Restock
+    local offer = restock and restock:IsOn() and restock:Offer()
+    if not (offer and (restock.buying or offer.count > 0)) then
+        button:Hide()
+        return
+    end
+    button:SetText(restock.buying and L["Buying..."] or L.Format("Restock %d", offer.count))
+    button:SetWidth(math.max(Theme.TextWidth("small", L.Format("Restock %d", math.max(offer.count, 99))),
+        Theme.TextWidth("small", L["Buying..."])) + 12)
+    button.tooltipText = L.Format("Tops up what you keep in your bags. %s in all.",
+        ns.Items.FormatMoney(offer.cost))
+    button:Show()
+end
+
 --- Words and width for Buy from what this vendor has for the queue
 --- (Jobs:VendorOffer, read afresh: the window is shut, so nothing else
 --- reads it). As wide as its longest words, so it never jumps.
@@ -249,9 +288,10 @@ function Bar:Fit()
     local frame, game = self.frame, self.place and Bar.Game(self.place)
     if not (frame and game) then return end
     self:PlaceBuy()
+    self:PlaceRestock()
     local need = PAD + Theme.TextWidth("small", self.title:GetText() or "") + 10
         + Theme.TextWidth("small", self.text:GetText() or "") + 12
-        + Width(self.sell) + Width(self.buy) + Width(self.mail) + Width(self.toBank) + Width(self.fromBank)
+        + Width(self.sell) + Width(self.buy) + Width(self.restock) + Width(self.mail) + Width(self.toBank) + Width(self.fromBank)
         + (tonumber(self.open:GetWidth()) or 0) + PAD
     local okWidth, width = pcall(game.GetWidth, game)
     frame:SetWidth(math.max(need, okWidth and tonumber(width) or 0))
@@ -283,10 +323,12 @@ function Bar:Refresh()
     self.toBank:Hide()
     self.fromBank:Hide()
     self.buy:Hide()
+    self.restock:Hide()
     local text = ""
 
     if place == "vendor" then
         self:WordBuy()
+        self:WordRestock()
         local _, _, count = ns.Selling:Words()
         if count > 0 then
             local worth = 0
