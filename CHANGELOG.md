@@ -4,6 +4,12 @@ Versions follow [semantic versioning](https://semver.org): the middle number
 moves for new behaviour, the last for fixes alone. The newest version goes at
 the top; a release is refused if its version has no section here.
 
+## 1.26.5
+
+For WoW: Forever (interface 16001). `/reload` is enough after updating.
+
+- Various bug fixes for Butler.
+
 ## 1.26.4
 
 For WoW: Forever (interface 16001). A full restart is needed after updating.
