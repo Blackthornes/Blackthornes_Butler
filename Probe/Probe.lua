@@ -426,7 +426,7 @@ function BankProbe:Settled()
         still and ("still in the bank (id %s)"):format(Text(still.itemID)) or "left the bank slot",
         #w.blocked > 0 and ("blocked: " .. table.concat(w.blocked, "; ")) or "nothing blocked",
     }
-    self:StopWatching()
+    BankProbe:StopWatching()
     Report(result)
 end
 
@@ -461,7 +461,7 @@ function BankProbe:Watch(first)
 end
 
 function BankProbe:Run()
-    self:StopWatching()
+    BankProbe:StopWatching()
     ns.Print("bankprobe: what this client allows at a banker")
 
     local atBank = ns.Errands and ns.Errands.bankOpen == true
@@ -499,7 +499,7 @@ function BankProbe:Run()
         Add("test square", "not shown: open the bank and run it again")
     elseif not first then
         Add("test square", "not shown: the bank is empty")
-    elseif self:Watch(first) then
+    elseif BankProbe:Watch(first) then
         Add("test square", "shown above the middle of the screen. Right-click it to move the item to your bags.")
     else
         Add("test square", "not shown (in a fight, or the template is missing)")
