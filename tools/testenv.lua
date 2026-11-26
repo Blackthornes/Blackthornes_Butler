@@ -305,6 +305,9 @@ function env.Load(locale)
     -- "One Window:" is on unless unticked; suites test Butler's own windows
     -- unless they tick it (test_onewindow.lua checks the default).
     if ns.db then ns.db.oneWindow = false end
+    -- Set Up Butler shows once on a new account; suites test the rest of
+    -- Butler unless they clear this (test_quicksetup.lua does).
+    if ns.db then ns.db.quickSetupShown = true end
 
     env.ns = ns
     return ns
