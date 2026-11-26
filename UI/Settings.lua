@@ -1385,6 +1385,28 @@ function SettingsUI:BuildPages()
     end)
     controls.learn:SetPoint("TOPLEFT", CONTROL_X, -2)
 
+    -- One rule for a whole kind of item (Logic/Kinds.lua, the owner said
+    -- build it, 2026-11-26). As Butler Says until the player picks.
+    controls.kinds = {}
+    if ns.Kinds then
+        local options = {
+            { text = L["As Butler Says"], value = "butler" },
+            { text = L["Keep"], value = "keep" },
+            { text = L["Sell"], value = "sell" },
+            { text = L["Bank"], value = "bank" },
+        }
+        local width = Widgets.DropdownWidth(options, 120)
+        for _, kind in ipairs(ns.Kinds.LIST) do
+            local row = pages:Row("keep", 1, ns.Kinds.ROW_LABELS[kind],
+                L["One choice for every item of this kind. A mark on one item still wins."])
+            local picker = Widgets.CreateDropdown(row, options, function(value)
+                ns.Kinds:SetRule(kind, value ~= "butler" and value or nil)
+            end, { width = width })
+            picker:SetPoint("TOPLEFT", CONTROL_X, -1)
+            controls.kinds[kind] = picker
+        end
+    end
+
     -- Keep Level Up Materials (the owner said build it, 2026-11-17).
     pages:Section("keep", 1, L["LEVELING PROFESSIONS"])
 
@@ -2075,6 +2097,9 @@ function SettingsUI:Refresh()
     controls.craftDetails:SetChecked(ns.VerdictTip ~= nil and ns.VerdictTip:DetailsOn())
     controls.voice:SetChecked(ns.db.voice ~= false)
     controls.learn:SetChecked(ns.db.learn ~= false)
+    for kind, picker in pairs(controls.kinds or {}) do
+        picker:SetValue(ns.Kinds:Rule(kind) or "butler")
+    end
     controls.classTraining:SetChecked(ns.ClassTraining:IsOn())
     controls.arrowRoute:SetChecked(ns.db.arrowRoute ~= false)
     controls.arrowSize:SetValue(ns.WayArrowUI and ns.WayArrowUI.Size() or 100, true)
