@@ -126,6 +126,10 @@ _G.BlackthornesTS.Butler:WishlistHere()
   -- { { recipeID, name, itemID, price, needs, short, kind = "vendor" or
   --   "trainer", index } }, or nil: the starred recipes the open vendor or
   --   trainer teaches (see "Recipes on the wishlist")
+_G.BlackthornesTS.Butler:Disenchanter()
+  -- the disenchanter typed on its Mail page, or nil (see "Set Up Butler")
+_G.BlackthornesTS.Butler:SetDisenchanter(name)
+  -- types it there; true, or false (the one playing is refused)
 _G.BlackthornesEquipment.Butler:Advise(link, bag, slot)
   -- { upgrade = "now" | "later" | nil, gain, sell (its bag coin), tool,
   --   alt = { key (a GUID), gain, level } when it is an upgrade for
@@ -2495,6 +2499,34 @@ and another to Always; the one box sets every ticked line. Off unticks all
 and remembers them for the session. `SettingsUI.TooltipShiftControl` (a
 box per line) is gone from Butler. Tested in `tools/test_settingsrows.lua`
 and `tools/test_tooltipshift.lua`.
+
+## Set Up Butler (first open)
+
+The owner said build it (2026-11-26, from a mockup, "build 1-10", number
+9). `UI/QuickSetup.lua` (`ns.QuickSetup`): a card shown once, the first
+time Butler's window opens on an account (`UI:Show` asks
+`QuickSetup:Offer` 0.3 s later, so it lands over the window; never in a
+fight). Three columns: 1. BANK ALT and 2. DISENCHANTER, each a drop-down
+of None and `Errands:Characters` (this realm and side, never the one
+playing), and 3. WHERE BUTLER SHOWS UP, the Open Butler At ticks (Vendors,
+Mailboxes, The Bank) and "Slim bar under the game's window" (the Butler
+bar). It starts from what is saved, so Confirm with nothing touched
+writes nothing new. Confirm writes `bankAlt` (`BankAlt:SetName`),
+Tradeskills' disenchanter box (its `Butler:SetDisenchanter`, new
+2026-11-26, in a pcall), `openAtVendor`, `openAtMailbox`, `openAtBank` and
+`placeBar` (`PlaceBar:SetOn`); every name is asked `Errands:IsMe` first.
+Later and the close gem write nothing. Without a Tradeskills that has
+`SetDisenchanter`, the disenchanter column says "Blackthornes Tradeskills
+isn't loaded." and has nothing to pick.
+
+It never shows to a player who set any choice before
+(`QuickSetup:AnySet`: a bank alt, a kind sent to its own character
+(`bankAltKindTo`), any Open Butler At place unticked, the Butler bar on,
+or a name typed in Tradeskills' disenchanter box; "Pick One for Me:"
+alone doesn't count). `quickSetupShown` (account wide, never rename it,
+not in DEFAULTS so nil means not yet) is set the moment it shows, so a
+reload never brings it back. `tools/testenv.lua` sets it for every suite;
+`tools/test_quicksetup.lua` clears it.
 
 ## The Keep page and Open Butler At
 

@@ -1375,6 +1375,17 @@ L["Butler Settings:"] = "Настройки Butler:"
 L["Puts every Butler setting back to how it started. Your keep and sell lists and your characters stay. So do your window locations and the choices on this page."] = "Возвращает каждую настройку Butler к началу. Твои списки «оставить» и «продать» и твои персонажи остаются. Положение окон и выбор на этой странице тоже остаются."
 L["Every Butler setting is back to how it started."] = "Все настройки Butler снова как в начале."
 
+-- Set Up Butler (2026-11-26)
+L["Set Up Butler"] = "Настроить Butler"
+L["Three quick choices and Butler is ready. Change them any time in Settings."] = "Три быстрых выбора, и Butler готов. Их можно изменить в настройках в любое время."
+L["1. BANK ALT"] = "1. БАНКОВСКИЙ ПЕРСОНАЖ"
+L["The character who stores your spare cloth, herbs and ore."] = "Персонаж, который хранит лишнюю ткань, травы и руду."
+L["2. DISENCHANTER"] = "2. КТО РАСПЫЛЯЕТ"
+L["The character who breaks greens into dust."] = "Персонаж, который распыляет зелёные вещи в пыль."
+L["3. WHERE BUTLER SHOWS UP"] = "3. ГДЕ ПОЯВЛЯЕТСЯ BUTLER"
+L["Pick the full window or the slim bar."] = "Выбери большое окно или узкую полосу."
+L["Slim bar under the game's window"] = "Узкая полоса под окном игры"
+
 -- One rule for a whole kind, Quest Items group (2026-11-26).
 L["Quest Items"] = "Вещи для заданий"
 L["Crates and Lockboxes"] = "Ящики и сундучки"
