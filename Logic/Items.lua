@@ -64,6 +64,7 @@ local priceMemo = {}
 function Items:Forget()
     priceMemo = {}
     Items.qualityMemo = {}
+    Items.missed = {}
 end
 
 -- The tooltip line type retail gives "Sell Price:". 11 on every retail build
@@ -277,8 +278,18 @@ end
 -- Items asked for and not yet answered: GET_ITEM_INFO_RECEIVED says which.
 Items.waiting = {}
 
+-- The game also answers for an item it does not have (one a patch took
+-- out, say). Asking again each time brought the same answer, and every
+-- answer judged every item again, without end while a window was open. So
+-- an answer that leaves the item without a name counts as a miss
+-- ([itemID] = how many), and after MISSES of them the item is not asked for
+-- again this session.
+Items.missed = {}
+Items.MISSES = 3
+
 function Items:RequestLoad(itemID)
     if self.waiting[itemID] then return end
+    if (self.missed[itemID] or 0) >= self.MISSES then return end
     self.waiting[itemID] = true
     Items.Call({ "C_Item.RequestLoadItemDataByID" }, itemID)
 end
@@ -288,6 +299,12 @@ end
 function Items:Loaded(itemID)
     if not self.waiting[itemID] then return end
     self.waiting[itemID] = nil
+    local name = Items.Call({ "C_Item.GetItemInfo", "GetItemInfo" }, itemID)
+    if name then
+        self.missed[itemID] = nil
+    else
+        self.missed[itemID] = (self.missed[itemID] or 0) + 1
+    end
     if self.loadPending then return end
     self.loadPending = true
     C_Timer.After(0.2, function()

@@ -768,6 +768,14 @@ when it gives none. `/bbutler probe` has a "forever tables" line comparing
 the two for each bag. Tested in
 `tools/test_foreveritems.lua`.
 
+An item the game can't load (2026-11-26, found reading the code, not seen
+in game): the game answers `GET_ITEM_INFO_RECEIVED` for an item it does not
+have too, and each answer judged every item again, which asked for the item
+again, without end while a window was open. `Items:Loaded` now counts an
+answer that leaves the item without a name as a miss (`Items.missed`), and
+`Items:RequestLoad` stops asking after `Items.MISSES` (3) for the session.
+Tested in `tools/test_itemload.lua`.
+
 ## Learning from the player
 
 The owner's goal (2026-10-11): the addons should work "almost like it's
