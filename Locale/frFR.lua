@@ -1429,6 +1429,17 @@ L["Mark to Sell"] = "Marquer à vendre"
 L["Mark to Keep"] = "Marquer à garder"
 L["Quick Marks Bar"] = "Barre de marques rapides"
 
+-- Set Up Butler (2026-11-26)
+L["Set Up Butler"] = "Configurer Butler"
+L["Three quick choices and Butler is ready. Change them any time in Settings."] = "Trois choix rapides et Butler est prêt. Tu peux les changer quand tu veux dans les options."
+L["1. BANK ALT"] = "1. PERSONNAGE BANQUE"
+L["The character who stores your spare cloth, herbs and ore."] = "Le personnage qui garde ton tissu, tes herbes et ton minerai en trop."
+L["2. DISENCHANTER"] = "2. DÉSENCHANTEUR"
+L["The character who breaks greens into dust."] = "Le personnage qui désenchante les objets verts en poussière."
+L["3. WHERE BUTLER SHOWS UP"] = "3. OÙ BUTLER APPARAÎT"
+L["Pick the full window or the slim bar."] = "Choisis la grande fenêtre ou la barre fine."
+L["Slim bar under the game's window"] = "Barre fine sous la fenêtre du jeu"
+
 -- One rule for a whole kind, Quest Items group (2026-11-26).
 L["Quest Items"] = "Objets de quête"
 L["Crates and Lockboxes"] = "Caisses et coffres verrouillés"

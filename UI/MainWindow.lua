@@ -2886,6 +2886,12 @@ end
 
 --- Bring the window up, on `view` ("bags" or "all") when one is given.
 function UI:Show(view)
+    -- The first time on an account, Set Up Butler comes up over the
+    -- window once it has opened (UI/QuickSetup.lua; it asks itself
+    -- whether it is wanted).
+    if ns.QuickSetup and ns.db and not ns.db.quickSetupShown then
+        C_Timer.After(0.3, function() ns.QuickSetup:Offer() end)
+    end
     -- With "One Window:" ticked, the one window opens on Butler instead
     -- (UI/ButlerTabs.lua), and lays this window in.
     if ns.ButlerTabs and ns.ButlerTabs:Route(view) then return end

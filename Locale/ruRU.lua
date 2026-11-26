@@ -1382,6 +1382,17 @@ L["Mark to Sell"] = "Пометить на продажу"
 L["Mark to Keep"] = "Пометить, чтобы оставить"
 L["Quick Marks Bar"] = "Панель быстрых меток"
 
+-- Set Up Butler (2026-11-26)
+L["Set Up Butler"] = "Настроить Butler"
+L["Three quick choices and Butler is ready. Change them any time in Settings."] = "Три быстрых выбора, и Butler готов. Их можно изменить в настройках в любое время."
+L["1. BANK ALT"] = "1. БАНКОВСКИЙ ПЕРСОНАЖ"
+L["The character who stores your spare cloth, herbs and ore."] = "Персонаж, который хранит лишнюю ткань, травы и руду."
+L["2. DISENCHANTER"] = "2. КТО РАСПЫЛЯЕТ"
+L["The character who breaks greens into dust."] = "Персонаж, который распыляет зелёные вещи в пыль."
+L["3. WHERE BUTLER SHOWS UP"] = "3. ГДЕ ПОЯВЛЯЕТСЯ BUTLER"
+L["Pick the full window or the slim bar."] = "Выбери большое окно или узкую полосу."
+L["Slim bar under the game's window"] = "Узкая полоса под окном игры"
+
 -- One rule for a whole kind, Quest Items group (2026-11-26).
 L["Quest Items"] = "Вещи для заданий"
 L["Crates and Lockboxes"] = "Ящики и сундучки"

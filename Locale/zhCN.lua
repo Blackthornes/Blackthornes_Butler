@@ -1427,6 +1427,17 @@ L["Mark to Sell"] = "标记为出售"
 L["Mark to Keep"] = "标记为保留"
 L["Quick Marks Bar"] = "快速标记栏"
 
+-- Set Up Butler (2026-11-26)
+L["Set Up Butler"] = "设置 Butler"
+L["Three quick choices and Butler is ready. Change them any time in Settings."] = "做三个简单选择，Butler 就准备好了。以后随时可以在设置里更改。"
+L["1. BANK ALT"] = "1. 银行小号"
+L["The character who stores your spare cloth, herbs and ore."] = "存放你多余布料、草药和矿石的角色。"
+L["2. DISENCHANTER"] = "2. 分解者"
+L["The character who breaks greens into dust."] = "把绿色物品分解成粉尘的角色。"
+L["3. WHERE BUTLER SHOWS UP"] = "3. BUTLER 出现的地方"
+L["Pick the full window or the slim bar."] = "选择完整窗口或细条。"
+L["Slim bar under the game's window"] = "游戏窗口下方的细条"
+
 -- One rule for a whole kind, Quest Items group (2026-11-26).
 L["Quest Items"] = "任务物品"
 L["Crates and Lockboxes"] = "箱子和锁箱"
