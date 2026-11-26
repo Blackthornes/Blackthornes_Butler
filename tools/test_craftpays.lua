@@ -80,7 +80,7 @@ suite.check("saying what to make and how much more",
         .. " more than selling it", wool.reason)
 suite.check("the row is worth the gain", wool.worth == 960, wool.worth)
 local group = Verdicts:Group("craft")
-suite.check("Craft is the first group", Verdicts:Groups()[1].verdict == "craft")
+suite.check("Craft is the first group after Quest Items", Verdicts:Groups()[2].verdict == "craft")
 suite.check("its heading reads Craft", group.label == "Craft")
 
 -- 3. Other materials named.

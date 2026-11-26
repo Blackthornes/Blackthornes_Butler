@@ -113,7 +113,7 @@ end
 --- purpose. tools/test_restoredefaults.lua clicks every control and fails
 --- if one writes a key missing here.
 SettingsUI.SETTING_KEYS = {
-    "altUpgrades", "arrowRoute", "bagGroupBy", "bagItemLevel", "bagItemSize",
+    "altUpgrades", "arrowRoute", "auctionMargin", "bagGroupBy", "bagItemLevel", "bagItemSize",
     "bagMarks", "bagNewGlow", "bagWindow", "bankAltAuctions",
     "bankAltFullStacks", "bankAltStore", "bankAltWhen", "buyMany",
     "classTraining", "craftDetails", "craftPays", "disenchantAnyPrice",
@@ -1258,6 +1258,25 @@ function SettingsUI:BuildPages()
     end, true)
     controls.buyMany:SetPoint("TOPLEFT", CONTROL_X, -2)
 
+    -- Auction Only If It Pays (the owner said build it, 2026-11-26, from
+    -- a mockup). Starts at 0%, so nothing changes until a player picks.
+    local marginRow = pages:Row("selling", 1, L["Auction Only If It Pays:"],
+        L["Below this, Butler says sell it to the vendor. It is quicker and sure."])
+    local marginOptions = {}
+    for _, percent in ipairs(ns.Verdicts.AUCTION_MARGINS) do
+        marginOptions[#marginOptions + 1] = { text = percent .. "%", value = percent }
+    end
+    local marginWidth = Widgets.DropdownWidth(marginOptions, 60)
+    controls.auctionMargin = Widgets.CreateDropdown(marginRow, marginOptions, function(percent)
+        ns.Verdicts:SetAuctionMargin(percent)
+    end, { width = marginWidth })
+    controls.auctionMargin:SetPoint("TOPLEFT", CONTROL_X, -1)
+    local marginNote = Theme.CreateLabel(marginRow, "tiny", "muted")
+    marginNote:SetPoint("LEFT", controls.auctionMargin, "RIGHT", 6, 0)
+    marginNote:SetWidth(COLUMN_WIDTH - CONTROL_X - marginWidth - 6)
+    marginNote:SetWordWrap(true)
+    marginNote:SetText(L["more than a vendor"])
+
     pages:Section("selling", 1, L["MAIL AND BANK"])
 
     local nextRow = pages:Row("selling", 1, L["Fill the Next Mail:"],
@@ -1365,6 +1384,28 @@ function SettingsUI:BuildPages()
         ns.Verdicts:Changed(true)
     end)
     controls.learn:SetPoint("TOPLEFT", CONTROL_X, -2)
+
+    -- One rule for a whole kind of item (Logic/Kinds.lua, the owner said
+    -- build it, 2026-11-26). As Butler Says until the player picks.
+    controls.kinds = {}
+    if ns.Kinds then
+        local options = {
+            { text = L["As Butler Says"], value = "butler" },
+            { text = L["Keep"], value = "keep" },
+            { text = L["Sell"], value = "sell" },
+            { text = L["Bank"], value = "bank" },
+        }
+        local width = Widgets.DropdownWidth(options, 120)
+        for _, kind in ipairs(ns.Kinds.LIST) do
+            local row = pages:Row("keep", 1, ns.Kinds.ROW_LABELS[kind],
+                L["One choice for every item of this kind. A mark on one item still wins."])
+            local picker = Widgets.CreateDropdown(row, options, function(value)
+                ns.Kinds:SetRule(kind, value ~= "butler" and value or nil)
+            end, { width = width })
+            picker:SetPoint("TOPLEFT", CONTROL_X, -1)
+            controls.kinds[kind] = picker
+        end
+    end
 
     -- Keep Level Up Materials (the owner said build it, 2026-11-17).
     pages:Section("keep", 1, L["LEVELING PROFESSIONS"])
@@ -2056,6 +2097,9 @@ function SettingsUI:Refresh()
     controls.craftDetails:SetChecked(ns.VerdictTip ~= nil and ns.VerdictTip:DetailsOn())
     controls.voice:SetChecked(ns.db.voice ~= false)
     controls.learn:SetChecked(ns.db.learn ~= false)
+    for kind, picker in pairs(controls.kinds or {}) do
+        picker:SetValue(ns.Kinds:Rule(kind) or "butler")
+    end
     controls.classTraining:SetChecked(ns.ClassTraining:IsOn())
     controls.arrowRoute:SetChecked(ns.db.arrowRoute ~= false)
     controls.arrowSize:SetValue(ns.WayArrowUI and ns.WayArrowUI.Size() or 100, true)
@@ -2065,6 +2109,7 @@ function SettingsUI:Refresh()
     controls.sisters:SetChecked(ns.SisterNote:IsOn())
     controls.whatsNewAfter:Sync()
     controls.sellBelow:SetValue(ns.Verdicts:SellBelow() or 0)
+    controls.auctionMargin:SetValue(ns.Verdicts:AuctionMargin())
     controls.goldMinimum:SetValue(ns.Funds:Minimum() or 0)
     local names = {}
     for _, character in ipairs((ns.Funds:Characters())) do names[#names + 1] = character.name end

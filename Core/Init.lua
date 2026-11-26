@@ -418,7 +418,8 @@ local DEFAULTS = {
     -- read only since 2026-11-22: each character's own copy is in
     -- BlackthornesButlerCharDB.marks (Logic/Verdicts.lua),
     -- sellTest (what /bbutler selltest found) and sellBelow (copper, the
-    -- player's Sell below amount; nil is off) and windowScale (the
+    -- player's Sell below amount; nil is off), auctionMargin (Auction
+    -- Only If It Pays, a whole percent; nil is 0) and windowScale (the
     -- window's size from its corner grip; 1 is the normal size), and
     -- jobsIgnored ([full name] = when, a character's jobs put away until it
     -- next logs in; Logic/Jobs.lua).
