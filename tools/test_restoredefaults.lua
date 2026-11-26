@@ -104,7 +104,7 @@ local KEPT = {
     textSize = true, windowStyle = true, windowEffects = true, effects = true,
     effectsLevel = true, muteSounds = true, muteSoundsAt = true, minimapButton = true,
     minimapButtonAt = true, oneWindow = true, oneWindowAt = true,
-    oneWindowPick = true, sisterNote = true,
+    oneWindowPick = true, lookChoices = true, sisterNote = true,
     point = true, relativePoint = true, x = true, y = true,
 }
 

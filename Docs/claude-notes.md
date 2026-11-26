@@ -126,6 +126,10 @@ _G.BlackthornesTS.Butler:WishlistHere()
   -- { { recipeID, name, itemID, price, needs, short, kind = "vendor" or
   --   "trainer", index } }, or nil: the starred recipes the open vendor or
   --   trainer teaches (see "Recipes on the wishlist")
+_G.BlackthornesTS.Butler:Disenchanter()
+  -- the disenchanter typed on its Mail page, or nil (see "Set Up Butler")
+_G.BlackthornesTS.Butler:SetDisenchanter(name)
+  -- types it there; true, or false (the one playing is refused)
 _G.BlackthornesEquipment.Butler:Advise(link, bag, slot)
   -- { upgrade = "now" | "later" | nil, gain, sell (its bag coin), tool,
   --   alt = { key (a GUID), gain, level } when it is an upgrade for
@@ -134,6 +138,9 @@ _G.BlackthornesEquipment.Butler:Advise(link, bag, slot)
   -- nil for anything that is not gear; bag and slot let it see soulbound
 _G.BlackthornesFarmer.Butler:Advise(itemID)
   -- { goal, have, target, need }: the character playing's own goals
+_G.BlackthornesEquipment.Butler:Worn()
+  -- { { key (GUID), worn = { [itemID] = count }, at } }: each character's
+  --   worn gear, for All Characters (see "Search that knows words")
 _G.BlackthornesPets.Butler:Advise(itemID)
   -- { eats, buff, hours, count }: hours is for all the food carried and
   -- only a rough guess, so Butler shows it and never sells food on it
@@ -539,6 +546,44 @@ each view keeps its own words. Tested in `tools/test_bagsearch.lua`. The Sell bu
 view, and a vendor opens the window on Your bags. Tradeskills'
 `CLAUDE.md` lists `Holdings` under "What Butler calls here"; if it
 changes, change `Logic/Everyone.lua` too.
+
+## Search that knows words
+
+The owner said build it, 2026-11-26, from the mockup (improvement 5).
+Every search box (All Characters, Your Bags, the Bags window) reads words
+as well as names through `Logic/SearchWords.lua`: `SearchWords.Parse(text,
+characters)` reads what was typed once a redraw, `SearchWords.Match(query,
+item)` asks of each item. Kinds: gear, boe, bound, quest, materials,
+food, grey, upgrade, worn, on auction; money with over and under ("over
+1g", "under 50s", "1g50s", "2 gold", a bare number is gold); "level 30 to
+40" (required level, else item level); a character's first or whole name
+(what they hold, All Characters and the Bags window's Everyone tab only).
+Words left over must all be in the item's name, any order. A kind's own
+word in a name still finds that item ("quest" finds Sealed Quest Note), so
+no name search finds less than before. Each line of words is a locale key
+with commas (`L["gear, armor, weapon, weapons"]`), and the English always
+works too. `SearchWords.Fold` lowers Latin accents and Cyrillic capitals,
+which string.lower does not, and a number touching another script is
+parted from it, so "超过1金" reads.
+
+Hovering a search box lists the words ("Words Butler Knows:",
+`SearchWords.AttachTip`). All Characters has chips over its list
+(`SearchWords.CHIPS`: Gear, Binds When Worn, Materials, Quest, Food,
+Upgrades, Worth Over 1g, On Auction); several can be lit and an item must
+pass all of them and the words; Clear Search lets them go
+(`UI.chipsOn`, session only, nothing saved). The footer says "N of M
+items" while it filters.
+
+Two more places per character in All Characters (`Everyone.PLACES` now
+`bags, bank, mail, worn, auction`), each in the total and the holder line:
+worn gear from `_G.BlackthornesEquipment.Butler:Worn()` (`{ { key, worn,
+at } }`, matched by key, the one playing by `UnitGUID` too;
+`Everyone.ReadWorn`) and items on auction from Tradeskills' `Holdings()`
+`auctions` and `auctionsAt` (listings not yet ended). Both read only, in a
+pcall, once a build; nothing without that addon. Worth is a vendor's price
+for greys, else the best of a vendor and `BlackthornesTS_API.GetPrice`;
+worth and upgrade answers are kept until `Verdicts.version` moves, item
+facts for the session. Tested in `tools/test_searchwords.lua`.
 
 ## At the mailbox and the bank
 
@@ -2270,7 +2315,7 @@ replacing the last one; chat adds "Saved for Claude, /reload to write it."
 It wraps `/bts probe` (Tradeskills, saved under `BlackthornesTSDB.global`),
 `/beq probe` and `/beq arrow check` (Equipment), `/bpet probe` and `/bpet
 arrow check` (Pets), `/farm arrow check` and `/farm gathering check`
-(Farmer, which has no probe), and `/bbutler probe` (Butler). None has a Settings button (the owner, 2026-10-23: checks and debug are typed only, so players never see them; `RegisterHiddenCommand` keeps them out of help, Tradeskills' short help leaves them out). Never rename `lastProbe`; a new check that players run for
+(Farmer, which has no probe), `/bbutler probe` and `/bbutler bankprobe` (Butler; the bank one, 2026-11-26, asks what a Butler Bank window needs and shows one test square of the first bank item, kept again once the player clicks it; see "The bank" in `docs/FOREVER_API_FINDINGS.md`). None has a Settings button (the owner, 2026-10-23: checks and debug are typed only, so players never see them; `RegisterHiddenCommand` keeps them out of help, Tradeskills' short help leaves them out). Never rename `lastProbe`; a new check that players run for
 a report goes through `ns.KeepCheck` too, and a fix to it belongs in all
 five.
 
@@ -2495,6 +2540,34 @@ and another to Always; the one box sets every ticked line. Off unticks all
 and remembers them for the session. `SettingsUI.TooltipShiftControl` (a
 box per line) is gone from Butler. Tested in `tools/test_settingsrows.lua`
 and `tools/test_tooltipshift.lua`.
+
+## Set Up Butler (first open)
+
+The owner said build it (2026-11-26, from a mockup, "build 1-10", number
+9). `UI/QuickSetup.lua` (`ns.QuickSetup`): a card shown once, the first
+time Butler's window opens on an account (`UI:Show` asks
+`QuickSetup:Offer` 0.3 s later, so it lands over the window; never in a
+fight). Three columns: 1. BANK ALT and 2. DISENCHANTER, each a drop-down
+of None and `Errands:Characters` (this realm and side, never the one
+playing), and 3. WHERE BUTLER SHOWS UP, the Open Butler At ticks (Vendors,
+Mailboxes, The Bank) and "Slim bar under the game's window" (the Butler
+bar). It starts from what is saved, so Confirm with nothing touched
+writes nothing new. Confirm writes `bankAlt` (`BankAlt:SetName`),
+Tradeskills' disenchanter box (its `Butler:SetDisenchanter`, new
+2026-11-26, in a pcall), `openAtVendor`, `openAtMailbox`, `openAtBank` and
+`placeBar` (`PlaceBar:SetOn`); every name is asked `Errands:IsMe` first.
+Later and the close gem write nothing. Without a Tradeskills that has
+`SetDisenchanter`, the disenchanter column says "Blackthornes Tradeskills
+isn't loaded." and has nothing to pick.
+
+It never shows to a player who set any choice before
+(`QuickSetup:AnySet`: a bank alt, a kind sent to its own character
+(`bankAltKindTo`), any Open Butler At place unticked, the Butler bar on,
+or a name typed in Tradeskills' disenchanter box; "Pick One for Me:"
+alone doesn't count). `quickSetupShown` (account wide, never rename it,
+not in DEFAULTS so nil means not yet) is set the moment it shows, so a
+reload never brings it back. `tools/testenv.lua` sets it for every suite;
+`tools/test_quicksetup.lua` clears it.
 
 ## The Keep page and Open Butler At
 
@@ -3060,6 +3133,122 @@ shadowed. While it shows, each arrow's `ArrowUI.Words` asks
 `TravelCard:Words(state)` and keeps only its name. `travelCardScale` is no
 longer read (left in saves). Tested in `tools/test_stepbox.lua` (the same in
 all five). Not yet seen in game.
+
+## Quick marks and Keep For Now
+
+The owner said build it (2026-11-26, improvement review mockup #4). Hold
+Alt over a bag square, the game's or Butler Bags', and a small bar of marks
+comes up above it (`UI/QuickMarks.lua`). One click sets the mark through
+`Verdicts:SetChoice`; a click on the mark it has takes it off. Only marks
+that fit show (`QuickMarks.Fits`): no Mail or Auction for bound, no
+Disenchant under green, no Sell when no vendor buys it. Mail opens the
+menu's own mail page to pick who. The square is learned from the game's
+bag tooltip (`GameTooltip:SetBagItem`, hooked only) and Butler Bags'
+OnEnter. Never in a fight; a fight starting closes the bar.
+
+Keys under Blackthornes Butler in `Bindings.xml`: Mark to Sell, Mark to
+Keep, Keep For Now (the item under the mouse, set only, never toggled,
+one chat line says what was set) and Quick Marks Bar (`keystate`, run on
+up). None has a key until the player gives one. Once Quick Marks Bar has
+a key, Alt no longer shows the bar.
+
+Keep For Now: `Verdicts.keptForNow[itemID] = true`, session only, never
+saved, so logout or a reload lets it go. `Verdicts:Decide` checks it
+before every rule ("Kept until you log out."), so it beats the player's
+Always marks too; `SetChoice` with any mark ends it, and Reset This Item
+clears it (`HasOwnChoices` counts it). Tested in `tools/test_quickmarks.lua`.
+
+## Auction Only If It Pays (2026-11-26)
+
+The owner said "build 1-10" from the improvement mockups; this is number 6.
+Selling page, AT A VENDOR: "Auction Only If It Pays:", a drop-down of 0, 5,
+10, 20, 30 and 50 percent, then "more than a vendor". Saved account wide as
+`auctionMargin` (whole percent, nil when 0; never rename it), listed in
+`SettingsUI.SETTING_KEYS` so Set Default clears it. `Verdicts:Best` picks
+Auction only when what one brings after the cut (the slow-seller weight
+too) is above the vendor price times (100 + percent) / 100. At 0 nothing
+changed: one copper more is still enough. It only moves items toward the
+vendor (reason "Auction pays only a little more ..."); it never stops a
+post, and Tradeskills' sell list doesn't read it. Tested in
+`tools/test_auctionmargin.lua`.
+
+## Quest Items group, kind rules and the Bags button (2026-11-26)
+
+The owner said build it (2026-11-26, from the improvement mockups, #7).
+
+- **Quest Items group.** `Verdicts.ORDER` starts with `quest`. A Keep from
+  the quest rule for an open quest or a quest an item starts carries
+  `extra.quest`, and `Verdicts:Groups` puts that row under `quest`; the row
+  itself still says `keep`. A quest item no open quest needs ("Quest item")
+  stays under Keep. Butler Bags' What To Do grouping follows, since it reads
+  `Groups`. The heading wears the Keep mark (`UI.MARK_FOR.quest`) and starts
+  open. `Verdicts:Group("keep")` still finds Keep.
+- **One rule for a kind** (`Logic/Kinds.lua`): Crates and Lockboxes,
+  Writs, Mage Scrolls, Recipes I Know and Pet Food, each Keep, Sell, Bank or
+  As Butler Says, on the Keep page under YOUR LISTS. Saved account wide as
+  `kindRules` (never rename it); empty means nothing changes. A rule step
+  `kinds` sits after `lists` in `DEFAULT_ORDER` and on the ORDER page; it
+  skips an item with a mark or a number kept here, and Sell skips what no
+  vendor buys. A writ starts a quest, so the quest rule lets a writ with a
+  kind rule go on down. How each kind is told is at the top of the file;
+  none is seen on Forever yet (`/bbutler probe`, "kinds"). Writs match by
+  the English name only. Butler Settings: Set Default leaves `kindRules`, as
+  it leaves the lists. Bags read `hasLoot` into `entry.openable`.
+- **Bags button** in the Butler window's header (`UI.bagsButton`), right
+  side, calls `BagWindow:Toggle`.
+
+Tested in `tools/test_smallwins.lua`.
+
+## Look choices (Font, Colors, Fold Gem, 2026-11-26)
+
+The owner said build it (Equipment improvement idea 9, words from its
+mockup). Three rows on the All Addons page of every addon, picked once for
+all five: "Font:" House (the game's own, as before), Game (the game's plain
+chat font) or Clear (Liberation Sans, SIL Open Font License 1.1, shipped
+unchanged in `Media/Fonts` with its license; Chinese and Korean clients
+draw the house font for it, since it has no such letters); "Colors:" Warm
+(as before) or Darker (the warm tint taken out of the glass, gold kept);
+"Fold Gem:" Round Button (as before) or Small Bar (badge, title and the
+window's small number, along the window's top right corner).
+
+The logic is in `UI/SharedChoices.lua` (the same in all five): `Look`,
+`SetLook`, `Drawn`, `NeedsReload`, `FontPath`, `Recolor`. Picks are kept in
+every loaded addon's save as `lookChoices = { font, colors, fold, at }`
+(never rename it), the newest `at` winning, and Restore Defaults leaves it.
+Font and Colors are read once, the first time the addon draws after its
+save is in, so they wait for /reload (Settings shows Reload). `Theme.FONT`
+is looked up as read (`Theme.Font()`), and `Theme.Unpack`/`Theme.Font` put
+Darker into the palette in place, once. The fold pick counts from the next
+fold (`FoldWindow.Style`, `FoldWindow.Bar`, `FoldWindow.FitBar`). Font names
+use the keys `House##font`, `Game##font`, `Clear##font`, since "Clear" is a
+button's word elsewhere. Tested in `tools/test_housekit.lua` and
+`tools/test_foldwindow.lua`. Not yet seen in game.
+
+## Calmer rows (2026-11-26)
+
+The owner said build it (2026-11-26, from the improvement mockups, #3).
+
+- **One line a row.** An item row shows `UI.Tag(data, width)`: the rule's
+  own `row.tag` (set from `extra.tag`; `Verdicts:Best` gives "Vendor pays
+  more", "Sells slowly at auction" and "Your class can't use it"), else the
+  reason when it fits, else its part before the first ": ", " (", ". " or
+  ", " when that fits, else nothing. Never a cut word or "...".
+- **The whole reason under the mouse.** Every row's pieces sit in
+  `row.top`; `row.full` is under it. `UI:OpenReason` (from `UI:Enter`) sets
+  `UI.openRow` and refreshes the list when the tag says less than the
+  reason; `UI:Left` closes it. `UI.RowHeight` adds the opened text and sets
+  `row.top` to the base height. The tooltip still shows as before.
+- **Greys folded.** Under Sell, two or more greys become one line after the
+  rest (`UI:GroupRows`, type `greys`): "N grey items", their names and their
+  worth. A click opens them (`UI.greysOpen`, this session only). A search
+  still lists them one by one. Selling is unchanged: Sell sells the group.
+- **Sold rows slide out.** `Selling:Told(item)` after each sale calls
+  `UI:Sold`, which slides and fades that row's `row.top` (Effects Full; fade
+  only on Subtle) and counts the Sell heading's "+gold" up to
+  `Selling.soldWorth` (`UI.SoldText`). Effects Off shows the sum at once.
+  `UI.SettleRow` puts a row back when it gets new data.
+
+Tested in `tools/test_calmerrows.lua`.
 
 ## The restock list (2026-11-26)
 

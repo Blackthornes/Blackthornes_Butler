@@ -212,6 +212,18 @@ function BagView.Matches(name, itemID, search)
     return itemID ~= nil and tostring(itemID) == search
 end
 
+--- Does a bag square's item pass the search? `search` is a query from
+--- SearchWords.Parse (nil for none) or the words typed, folded.
+function BagView.MatchesEntry(entry, search)
+    if search == nil then return true end
+    if type(search) == "string" then search = ns.SearchWords.Parse(search) end
+    return ns.SearchWords.Match(search, {
+        itemID = entry.itemID, name = BagView.NameOf(entry), link = entry.link,
+        quality = entry.quality, bound = entry.bound, quest = entry.quest,
+        bag = entry.bag, slot = entry.slot,
+    })
+end
+
 --- An item's name from its link, else the client.
 function BagView.NameOf(entry)
     local name = Items.NameFromLink(entry.link)

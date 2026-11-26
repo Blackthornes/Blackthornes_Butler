@@ -189,7 +189,7 @@ function UI:Build()
         -- Shift-click links a row's item in chat, Ctrl-click tries it on.
         itemOf = function(data) return UI.ItemOfRow(data) end,
         onEnter = function(row, data) UI:Enter(row, data) end,
-        onLeave = function() GameTooltip:Hide() end,
+        onLeave = function(row) UI:Left(row) end,
         -- A row grows to fit its longest note, so a long German or
         -- French reason wraps onto a third line instead of running over
         -- the row below (a player's report, 2026-10-28).
@@ -200,6 +200,7 @@ function UI:Build()
     })
     self.list:SetPoint("TOPLEFT", 6, -6)
     self.list:SetPoint("BOTTOMRIGHT", -6, 6)
+    self:BuildChips(well)
 
     -- Gold goals sit at the bottom, under the list (UI/GoldGoals.lua; the
     -- owner, 2026-10-13: "the purse section goes at the bottom").
@@ -309,6 +310,7 @@ function UI:BuildHeader()
     search:SetPoint("LEFT", header, "LEFT", 48, -2)
     search:SetWidth(260)
     search:Hide()
+    ns.SearchWords.AttachTip(search)
     self.search = search
 
     -- Your bags' own search (the owner said yes, 2026-10-13), the same box
@@ -319,15 +321,87 @@ function UI:BuildHeader()
     bagSearch:SetPoint("LEFT", header, "LEFT", 48, -2)
     bagSearch:SetWidth(260)
     bagSearch:SetShown(self.view ~= "all")
+    ns.SearchWords.AttachTip(bagSearch)
     subtitle:Hide()
     self.bagSearch = bagSearch
+
+    -- Bags (a player asked, the owner said build it, 2026-11-26): opens or
+    -- closes Butler Bags, as its key binding does. Sized to its word.
+    local word = L["Bags"]
+    local bags = Widgets.CreateButton(header, word, function()
+        if ns.BagWindow then ns.BagWindow:Toggle() end
+    end, { width = math.ceil(Theme.TextWidth("small", word)) + 24, height = 22 })
+    bags:SetPoint("RIGHT", header, "RIGHT", -8, -2)
+    self.bagsButton = bags
 end
 
 --- Empty a search box and draw the list again (the empty block's Clear
---- Search).
+--- Search). All Characters' chips go dark with it.
 function UI:ClearSearch(box)
     if box and box.SetText then box:SetText("") end
+    if box == self.search then
+        self.chipsOn = {}
+        self:PaintChips()
+    end
     self:Refresh()
+end
+
+-- All Characters' chips (the owner said build it, 2026-11-26): the common
+-- words, one click each, over the list. Several can be lit at once; an
+-- item must pass them all, and what is typed too.
+UI.chipsOn = {}
+UI.CHIP_ROW = 24
+
+--- The chips along the top of the well, wrapped onto a second row when the
+--- words run long. Shown only on All Characters.
+function UI:BuildChips(well)
+    local row = CreateFrame("Frame", nil, well)
+    row:SetPoint("TOPLEFT", 8, -6)
+    row:SetPoint("TOPRIGHT", -8, -6)
+    self.chipRow, self.chips = row, {}
+    local room = WIDTH - 2 * PADDING - 16
+    local x, rows = 0, 1
+    for _, key in ipairs(ns.SearchWords.CHIPS) do
+        local chip = Widgets.CreateChip(row, ns.SearchWords.CHIP_WORDS[key], function()
+            UI.chipsOn[key] = not UI.chipsOn[key] or nil
+            UI:PaintChips()
+            UI:Refresh()
+        end)
+        local width = chip:GetWidth() or 34
+        if x > 0 and x + width > room then x, rows = 0, rows + 1 end
+        chip:SetPoint("TOPLEFT", row, "TOPLEFT", x, -(rows - 1) * UI.CHIP_ROW)
+        x = x + width + 4
+        self.chips[key] = chip
+    end
+    row:SetHeight(rows * UI.CHIP_ROW)
+    self.chipRows = rows
+    self:ShowChips(self.view == "all")
+    self:PaintChips()
+end
+
+function UI:PaintChips()
+    for key, chip in pairs(self.chips or {}) do
+        if chip.SetSelected then chip:SetSelected(self.chipsOn[key] == true) end
+    end
+end
+
+--- The chips show on All Characters, and the list moves down under them.
+function UI:ShowChips(all)
+    if not self.chipRow then return end
+    self.chipRow:SetShown(all)
+    local top = all and (6 + (self.chipRows or 1) * UI.CHIP_ROW) or 6
+    self.list:ClearAllPoints()
+    self.list:SetPoint("TOPLEFT", 6, -top)
+    self.list:SetPoint("BOTTOMRIGHT", -6, 6)
+end
+
+--- The chips lit, as one word for the drawn key ("gear,boe"), "" for none.
+function UI:ChipKey()
+    local keys = {}
+    for _, key in ipairs(ns.SearchWords.CHIPS) do
+        if self.chipsOn[key] then keys[#keys + 1] = key end
+    end
+    return table.concat(keys, ",")
 end
 
 --- Show one list or the other: "bags" or "all".
@@ -342,6 +416,7 @@ function UI:SetView(view)
     self.subtitle:Hide()
     self.search:SetShown(all)
     self.bagSearch:SetShown(not all)
+    self:ShowChips(all)
     if all then self.bagSearch:ClearFocus() else self.search:ClearFocus() end
     if ns.ButlerTabs then ns.ButlerTabs:Light(self) end
 
@@ -368,45 +443,62 @@ UI.WORTH_MOST = 200
 --- A row's pieces, built once: the item's icon and name, the reason, and
 --- what the stack is worth. A group's heading uses the same pieces.
 function UI.CreateRow(row)
-    row.icon = row:CreateTexture(nil, "ARTWORK")
+    -- Everything sits in the row's top part, one row tall (or as tall as
+    -- its text needs); the full reason of the item row under the mouse
+    -- opens below it (Calmer rows, the owner said build it, 2026-11-26).
+    -- A sold row slides out by moving and fading this part.
+    local top = CreateFrame("Frame", nil, row)
+    top:SetPoint("TOPLEFT")
+    top:SetPoint("TOPRIGHT")
+    top:SetHeight(ROW_HEIGHT)
+    row.top = top
+
+    row.icon = top:CreateTexture(nil, "ARTWORK")
     row.icon:SetSize(ROW_HEIGHT - 6, ROW_HEIGHT - 6)
-    row.icon:SetPoint("LEFT", 6, 0)
+    row.icon:SetPoint("LEFT", top, "LEFT", 6, 0)
     if row.icon.SetTexCoord then row.icon:SetTexCoord(0.07, 0.93, 0.07, 0.93) end
     -- The thin quality ring and the stack's count in the corner (UI/ItemLook.lua).
     if ns.ItemLook then ns.ItemLook.Attach(row.icon) end
 
-    row.fold = Theme.CreateLabel(row, "normal", "accent", "CENTER")
-    row.fold:SetPoint("CENTER", row, "LEFT", 14, 0)
+    row.fold = Theme.CreateLabel(top, "normal", "accent", "CENTER")
+    row.fold:SetPoint("CENTER", top, "LEFT", 14, 0)
     row.fold:SetWidth(16)
 
     -- A group heading's mark, in the verdict's colour (UI/Marks.lua).
-    row.mark = row:CreateTexture(nil, "ARTWORK")
+    row.mark = top:CreateTexture(nil, "ARTWORK")
     row.mark:SetSize(12, 12)
-    row.mark:SetPoint("LEFT", 21, 0)
+    row.mark:SetPoint("LEFT", top, "LEFT", 21, 0)
     row.mark:Hide()
     if ns.Marks then ns.Marks.Attach(row.mark) end
 
-    row.name = Theme.CreateLabel(row, "small", "text")
-    row.name:SetPoint("LEFT", 34, 0)
+    row.name = Theme.CreateLabel(top, "small", "text")
+    row.name:SetPoint("LEFT", top, "LEFT", 34, 0)
     row.name:SetWidth(184)
     row.name:SetWordWrap(true)
 
-    row.worth = Theme.CreateLabel(row, "small", "text", "RIGHT")
-    row.worth:SetPoint("RIGHT", -6, 0)
+    row.worth = Theme.CreateLabel(top, "small", "text", "RIGHT")
+    row.worth:SetPoint("RIGHT", top, "RIGHT", -6, 0)
     row.worth:SetWidth(UI.WORTH_WIDTH)
     row.worth:SetWordWrap(true)
 
-    row.reason = Theme.CreateLabel(row, "small", "muted")
+    row.reason = Theme.CreateLabel(top, "small", "muted")
     row.reason:SetPoint("LEFT", row.name, "RIGHT", 8, 0)
     row.reason:SetPoint("RIGHT", row.worth, "LEFT", -8, 0)
     row.reason:SetWordWrap(true)
+
+    -- The whole reason, wrapped, under the item row the mouse is on.
+    row.full = Theme.CreateLabel(row, "small", "muted")
+    row.full:SetPoint("TOPLEFT", top, "BOTTOMLEFT", 34, 0)
+    row.full:SetPoint("TOPRIGHT", top, "BOTTOMRIGHT", -6, 0)
+    row.full:SetWordWrap(true)
+    row.full:Hide()
 
     -- The Ammo row's Fill button and a job's Craft or Buy button sit where
     -- the worth goes (Logic/Ammo.lua, Logic/Jobs.lua).
     row.action = Widgets.CreateButton(row, L["Fill"], function() UI.RowAction(row.data) end, {
         primary = true, width = 80, height = 22,
     })
-    row.action:SetPoint("RIGHT", -8, 0)
+    row.action:SetPoint("RIGHT", top, "RIGHT", -8, 0)
     row.action:Hide()
 end
 
@@ -498,7 +590,53 @@ function UI.RowHeight(row)
         TextHeight(row.worth, "small", worthWidth))
     local shown = row.action and row.action.IsShown and row.action:IsShown()
     if shown == true then tallest = math.max(tallest, 22) end
-    return math.max(ROW_HEIGHT, math.ceil(tallest + UI.ROW_PAD))
+    local base = math.max(ROW_HEIGHT, math.ceil(tallest + UI.ROW_PAD))
+    if row.top then row.top:SetHeight(base) end
+    -- The whole reason, open under the row the mouse is on.
+    local full = rawget(row, "full")
+    if full and full:IsShown() then
+        local fullWidth = math.max(40, rowWidth - 34 - 6)
+        return base + math.ceil(TextHeight(full, "small", fullWidth) + UI.FULL_PAD)
+    end
+    return base
+end
+
+-- Room under the opened reason.
+UI.FULL_PAD = 6
+
+-- How wide the tag column is when the row can't say (not laid out yet).
+UI.TAG_WIDTH = 240
+
+--- How wide the note beside a row's name is, as RowHeight measures it.
+function UI.ReasonWidth(row)
+    local ok, rowWidth = pcall(row.GetWidth, row)
+    rowWidth = ok and tonumber(rowWidth) or 0
+    if rowWidth <= 0 then return UI.TAG_WIDTH end
+    local ok2, worthWidth = pcall(row.worth.GetWidth, row.worth)
+    worthWidth = ok2 and tonumber(worthWidth) or UI.WORTH_WIDTH
+    return math.max(40, rowWidth - 34 - 184 - 8 - 8 - worthWidth - 6)
+end
+
+--- The short tag an item row shows in one line: the rule's own tag, else
+--- the reason when it fits, else its first part when that fits, else
+--- nothing. Never cut short: the whole reason opens under the row the
+--- mouse is on.
+function UI.Tag(data, width)
+    if type(data.tag) == "string" and data.tag ~= "" then return data.tag end
+    local reason = data.reason
+    if type(reason) ~= "string" or reason == "" then return "" end
+    width = width or UI.TAG_WIDTH
+    if Theme.TextWidth("small", reason) <= width then return reason end
+    local cut
+    for _, mark in ipairs({ ": ", " (", ". ", ", " }) do
+        local at = reason:find(mark, 1, true)
+        if at and at > 1 and (not cut or at < cut) then cut = at end
+    end
+    if cut then
+        local part = reason:sub(1, cut - 1)
+        if Theme.TextWidth("small", part) <= width then return part end
+    end
+    return ""
 end
 
 function UI.UpdateRow(row, data)
@@ -524,7 +662,7 @@ end
 
 -- Which mark each verdict group wears (UI/Marks.lua's kinds).
 UI.MARK_FOR = {
-    craft = "craft", sell = "sell", auction = "list", disenchant = "disenchant",
+    quest = "keep", craft = "craft", sell = "sell", auction = "list", disenchant = "disenchant",
     mail = "mail", bank = "bank", look = "look", wait = "waiting", keep = "keep",
 }
 
@@ -548,9 +686,128 @@ function UI.MarkHeading(row, verdict)
     ns.Marks.Paint(row.name, kind)
 end
 
+-- A sold row slides this far to the right as it fades out.
+UI.SLIDE = 40
+UI.SLIDE_TIME = 0.3
+-- How long the Sell heading takes to count up what was sold.
+UI.COUNT_TIME = 0.6
+
+--- Put a row's top part back in place, unless its own data is sliding out.
+function UI.SettleRow(row, data)
+    local top = rawget(row, "top")
+    if not top or (data and data.leaving and ns.Motion:Running(row, "leave")) then return end
+    ns.Motion:Stop(row, "leave")
+    ns.Motion:SetValue(row, "leave", 0)
+    top:SetAlpha(1)
+    top:ClearAllPoints()
+    top:SetPoint("TOPLEFT")
+    top:SetPoint("TOPRIGHT")
+end
+
+--- The gold sold at this vendor so far, as the Sell heading counts it up:
+--- " +4s 06c", or "" when nothing has sold this visit.
+function UI.SoldText(group)
+    if not (group and group.verdict == "sell" and ns.Selling) then return "" end
+    local sold = tonumber(ns.Selling.soldWorth) or 0
+    if sold <= 0 then
+        UI.soldShown = nil
+        return ""
+    end
+    local shown = math.floor((UI.soldShown or sold) + 0.5)
+    if shown <= 0 then return "" end
+    return "   +" .. Items.FormatMoney(shown)
+end
+
+--- Selling sold a stack (Logic/Selling.lua): its row slides out and the
+--- Sell heading counts the gold up. Effects Off skips the motion.
+function UI:Sold(item)
+    if not (self.list and self:IsShown()) or type(item) ~= "table" then return end
+    local Motion = ns.Motion
+    local level = Motion.Level()
+    for _, row in ipairs(self.list.rows) do
+        local data = row.data
+        if row:IsShown() and data and data.type == "item" and data.verdict == "sell"
+            and data.itemID == item.itemID and rawget(row, "top") then
+            data.leaving = true
+            if level ~= "off" then
+                local top = row.top
+                local slide = level == "full" and UI.SLIDE or 0
+                Motion:Blend(row, "leave", 1, UI.SLIDE_TIME, function(value)
+                    top:SetAlpha(1 - value)
+                    top:ClearAllPoints()
+                    top:SetPoint("TOPLEFT", slide * value, 0)
+                    top:SetPoint("TOPRIGHT", slide * value, 0)
+                end)
+            end
+            break
+        end
+    end
+    local target = tonumber(ns.Selling and ns.Selling.soldWorth) or 0
+    local function Show(value)
+        UI.soldShown = value
+        local header = self:HeaderRow("sell")
+        if header and header.data then
+            local group = header.data.group
+            header.reason:SetText(Plural(group.count, group.one or L["item"], group.many or L["items"])
+                .. UI.SoldText(group))
+        end
+    end
+    if level == "off" then
+        Motion:Stop(self, "sold")
+        Motion:SetValue(self, "sold", target)
+        Show(target)
+    else
+        if UI.soldShown == nil then Motion:SetValue(self, "sold", 0) end
+        Motion:Blend(self, "sold", target, UI.COUNT_TIME, Show)
+    end
+end
+
+--- Greys folded into one line (Calmer rows): "5 grey items", their names
+--- and what they are worth together. A click shows each one.
+function UI.UpdateGreysRow(row, data)
+    row.fold:Hide()
+    row.icon:Show()
+    row.icon:SetTexture(data.icon or [[Interface\Icons\INV_Misc_QuestionMark]])
+    if ns.ItemLook then ns.ItemLook.SetQuality(row.icon, 0) end
+    row.name:SetTextColor(QualityColor(0))
+    row.name:SetText(L.Format("%d grey items", data.count))
+    local names = {}
+    for _, item in ipairs(data.rows) do names[#names + 1] = item.name end
+    row.reason:SetText(table.concat(names, ", "))
+    row.worth:SetText((data.worth or 0) > 0 and Items.FormatMoney(data.worth) or "")
+end
+
+--- A group's rows for the list. Under Sell, two or more greys fold into
+--- one line after the rest, opened by a click (UI.greysOpen, this session).
+function UI:GroupRows(group, lines)
+    local greys = {}
+    if group.verdict == "sell" then
+        for _, row in ipairs(group.rows) do
+            if row.quality == 0 then greys[#greys + 1] = row end
+        end
+    end
+    if #greys < 2 then
+        for _, row in ipairs(group.rows) do lines[#lines + 1] = row end
+        return
+    end
+    local worth = 0
+    for _, row in ipairs(group.rows) do
+        if row.quality ~= 0 then lines[#lines + 1] = row end
+    end
+    for _, row in ipairs(greys) do worth = worth + (row.worth or 0) end
+    lines[#lines + 1] = { type = "greys", rows = greys, count = #greys, worth = worth,
+        icon = greys[1].icon, open = self.greysOpen == true }
+    if self.greysOpen then
+        for _, row in ipairs(greys) do lines[#lines + 1] = row end
+    end
+end
+
 function UI.DrawRow(row, data)
     local openEdge = rawget(row, "openEdge")
     if openEdge then openEdge:Hide() end
+    local full = rawget(row, "full")
+    if full then full:Hide() end
+    UI.SettleRow(row, data)
     row.worth:SetTextColor(Theme.Unpack("text"))
     row.reason:SetTextColor(Theme.Unpack("muted"))
     if row.action then row.action:Hide() end
@@ -569,6 +826,8 @@ function UI.DrawRow(row, data)
         return UI.UpdateTrainRow(row, data)
     end
 
+    if data.type == "greys" then return UI.UpdateGreysRow(row, data) end
+
     if data.type == "header" then
         local group = data.group
         row.icon:Hide()
@@ -577,7 +836,8 @@ function UI.DrawRow(row, data)
         row.name:SetTextColor(Theme.Unpack("accent"))
         row.name:SetText(group.label:upper())
         UI.MarkHeading(row, group.verdict)
-        row.reason:SetText(Plural(group.count, group.one or L["item"], group.many or L["items"]))
+        row.reason:SetText(Plural(group.count, group.one or L["item"], group.many or L["items"])
+            .. UI.SoldText(group))
         row.worth:SetText(group.worth > 0 and Items.FormatMoney(group.worth) or "")
         return
     end
@@ -593,7 +853,15 @@ function UI.DrawRow(row, data)
     else
         row.name:SetText(data.count > 1 and L.Format("%s x%d", data.name, data.count) or data.name)
     end
-    row.reason:SetText(data.reason or "")
+    -- One line: a short tag, and the whole reason under the row the mouse
+    -- is on (Calmer rows, 2026-11-26).
+    local tag = UI.Tag(data, UI.ReasonWidth(row))
+    row.reason:SetText(tag)
+    if full and UI.openRow == data and type(data.reason) == "string" and data.reason ~= ""
+        and data.reason ~= tag then
+        full:SetText(data.reason)
+        full:Show()
+    end
     -- Bought to disenchant reads in the tag's violet, as on Tradeskills' tab.
     if data.bought then
         row.reason:SetTextColor(0.73, 0.55, 1)
@@ -918,12 +1186,23 @@ function UI:BagSearch()
     return (text:lower():gsub("^%s+", ""):gsub("%s+$", ""))
 end
 
---- Does an item row match the Your bags search? By name, as All
---- characters does (Everyone.Matches), or by item ID.
+--- An item row as the search reads it (Logic/SearchWords.lua).
+function UI.SearchItem(row)
+    local first = row.slots and row.slots[1] or nil
+    return {
+        itemID = row.itemID, name = row.name, link = row.link, quality = row.quality,
+        bound = row.bound, upgrade = row.upgrade, quest = first and first.quest or nil,
+        bag = first and first.bag or nil, slot = first and first.slot or nil,
+    }
+end
+
+--- Does an item row match the Your bags search? By name or item ID, as
+--- All characters does, and by the words Butler knows. `search` is the
+--- text or a query already read.
 function UI.RowMatches(row, search)
-    if search == "" then return true end
-    local name = type(row.name) == "string" and row.name:lower() or ""
-    return name:find(search, 1, true) ~= nil or tostring(row.itemID) == search
+    if search == nil or search == "" then return true end
+    if type(search) == "string" then search = ns.SearchWords.Parse(search) end
+    return ns.SearchWords.Match(search, UI.SearchItem(row))
 end
 
 function UI:Lines()
@@ -934,10 +1213,11 @@ function UI:Lines()
     local search = self:BagSearch()
     if search ~= "" then
         self.matched = 0
+        local query = ns.SearchWords.Parse(search)
         for _, group in ipairs(ns.Verdicts:Groups()) do
             local rows, worth = {}, 0
             for _, row in ipairs(group.rows) do
-                if UI.RowMatches(row, search) then
+                if UI.RowMatches(row, query) then
                     rows[#rows + 1] = row
                     worth = worth + (row.worth or 0)
                 end
@@ -1021,9 +1301,7 @@ function UI:Lines()
         if group.count > 0 then
             local isFolded = UI.IsFolded(folded, group.verdict)
             lines[#lines + 1] = { type = "header", group = group, folded = isFolded }
-            if not isFolded then
-                for _, row in ipairs(group.rows) do lines[#lines + 1] = row end
-            end
+            if not isFolded then self:GroupRows(group, lines) end
         end
     end
     -- Training that waits for a level or another character goes last,
@@ -1127,6 +1405,11 @@ function UI.ItemOfRow(data)
 end
 
 function UI:Clicked(data, button)
+    if data.type == "greys" then
+        self.greysOpen = not self.greysOpen or nil
+        self:Refresh(true)
+        return
+    end
     if data.type == "everyone" or data.type == "holder" then
         local itemID = data.item.itemID
         self.open[itemID] = not self.open[itemID] or nil
@@ -1164,7 +1447,29 @@ function UI:Clicked(data, button)
     end
 end
 
+--- The mouse left a row: its tooltip goes, and its opened reason closes.
+function UI:Left(row)
+    GameTooltip:Hide()
+    if self.openRow ~= nil and (row == nil or row.data == self.openRow) then
+        self.openRow = nil
+        if self.list then self.list:Refresh() end
+    end
+end
+
+--- Open the whole reason under an item row the mouse is on, when its tag
+--- says less.
+function UI:OpenReason(row, data)
+    if data.type ~= "item" or self.openRow == data then return end
+    local reason = data.reason
+    if type(reason) ~= "string" or reason == "" then return end
+    if UI.Tag(data, UI.ReasonWidth(row)) == reason then return end
+    self.openRow = data
+    if self.list then self.list:Refresh() end
+end
+
 function UI:Enter(row, data)
+    self:OpenReason(row, data)
+    if data.type == "greys" then return end
     -- A heading's +/- already says a click folds it, so only Wait for a
     -- better price, which needs saying why, has a hover (the owner, 2026-10-15).
     if data.type == "header" and data.group.verdict ~= "wait" then return end
@@ -2300,12 +2605,13 @@ function UI:RefreshAll(force)
     end
 
     local search = self.search:GetText() or ""
-    local key = ("all:%d:%s:%d"):format(everyone.version, search, self.openVersion or 0)
+    local chips = self:ChipKey()
+    local key = ("all:%d:%s:%d:%s"):format(everyone.version, search, self.openVersion or 0, chips)
     if force or key ~= self.drawnKey then
         -- The same search keeps its place; a new one starts at the top.
-        local keep = self.drawnKey ~= nil and search == self.drawnSearch
-        self.drawnKey, self.drawnSearch = key, search
-        local lines, shown = everyone:Lines(search, self.open)
+        local keep = self.drawnKey ~= nil and search .. "|" .. chips == self.drawnSearch
+        self.drawnKey, self.drawnSearch = key, search .. "|" .. chips
+        local lines, shown = everyone:Lines(search, self.open, self.chipsOn)
         self.shownItems = shown
         self.list:SetData(lines, keep)
     end
@@ -2317,7 +2623,8 @@ function UI:RefreshAll(force)
         text = everyone:FromTradeskills() and L["No items seen yet."]
             or L["Your bags are empty. Blackthornes Tradeskills remembers your other characters' items."]
     elseif (self.shownItems or 0) == 0 then
-        text = L.Format('Nothing matches "%s".', search)
+        text = search ~= "" and L.Format('Nothing matches "%s".', search)
+            or L["Nothing matches the chips you picked."]
     end
     if text ~= "" and (self.shownItems or 0) == 0 and #everyone.sorted > 0 then
         self.emptyLabel:Set(text, L["Clear Search"], function() UI:ClearSearch(UI.search) end)
@@ -2337,9 +2644,16 @@ function UI:UpdateFooter()
         if not everyone:FromTradeskills() then
             text = L["Only your bags. Load Blackthornes Tradeskills to add your other characters."]
         else
-            text = L.Format("%s on %s.",
-                Plural(#everyone.sorted, L["item"], L["items"]),
-                Plural(everyone:Holders(), L["character"], L["characters"]))
+            local filtered = (self.search:GetText() or "") ~= "" or self:ChipKey() ~= ""
+            if filtered then
+                text = L.Format("%d of %s on %s.", self.shownItems or 0,
+                    Plural(#everyone.sorted, L["item"], L["items"]),
+                    Plural(everyone:Holders(), L["character"], L["characters"]))
+            else
+                text = L.Format("%s on %s.",
+                    Plural(#everyone.sorted, L["item"], L["items"]),
+                    Plural(everyone:Holders(), L["character"], L["characters"]))
+            end
         end
         self.footer:SetText(text)
         return
@@ -2945,6 +3259,12 @@ end
 
 --- Bring the window up, on `view` ("bags" or "all") when one is given.
 function UI:Show(view)
+    -- The first time on an account, Set Up Butler comes up over the
+    -- window once it has opened (UI/QuickSetup.lua; it asks itself
+    -- whether it is wanted).
+    if ns.QuickSetup and ns.db and not ns.db.quickSetupShown then
+        C_Timer.After(0.3, function() ns.QuickSetup:Offer() end)
+    end
     -- With "One Window:" ticked, the one window opens on Butler instead
     -- (UI/ButlerTabs.lua), and lays this window in.
     if ns.ButlerTabs and ns.ButlerTabs:Route(view) then return end

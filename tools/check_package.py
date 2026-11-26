@@ -30,7 +30,7 @@ ALLOWED_TOP = {"Blackthornes_Butler.toc", "Core", "Data", "Logic", "UI",
                "Media", "Probe", "Locale", "LICENSE", "CHANGELOG.md",
                # The Butler Bags key; the game loads it by itself.
                "Bindings.xml"}
-ALLOWED_EXT = {".lua", ".toc", ".xml", ".tga", ".blp", ".ogg", ".md", ""}
+ALLOWED_EXT = {".lua", ".toc", ".xml", ".tga", ".blp", ".ogg", ".ttf", ".md", ""}
 
 # Never shipped, wherever it turns up.
 FORBIDDEN_NAMES = {"BlackthornesButlerDB.lua",

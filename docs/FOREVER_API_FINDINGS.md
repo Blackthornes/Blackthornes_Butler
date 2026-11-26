@@ -61,6 +61,31 @@ client can close these through `PLAYER_INTERACTION_MANAGER_FRAME_HIDE`
 Trainer 7, Auctioneer 21) without the old close event, so that event
 undocks too. Every event is registered inside a pcall.
 
+## The bank (probe added 2026-11-26, not yet run)
+
+Asked before a Butler Bank window is built (Butler idea 8): a window with
+real item squares beside Butler Bags at a banker. `/bbutler bankprobe`, run
+at a banker, prints and keeps (`lastProbe`) what that needs:
+
+- which bank calls the client has (`C_Bank.*`, `GetNumBankSlots`,
+  `C_Container.SortBankBags` and the like), `Enum.BagIndex`'s bank keys and
+  `NUM_BANKBAGSLOTS`;
+- each bank container Butler reads (`Errands.BankBagIDs`), with its slots
+  and items;
+- which of the game's bank frames exist (`BankFrame`, `BankSlotsFrame`,
+  `BankPanel`, `ReagentBankFrame`, the bank bag container frames), shown
+  and protected;
+- whether `ContainerFrameItemButtonTemplate` and
+  `BankItemButtonGenericTemplate`, made by this addon on the first bank
+  item, come out protected and read the bag (`GetBagID`);
+- one live test: a square of the first bank item. A right-click on it
+  should move the item to the bags as the game's bank does. Once the bags
+  settle the probe says whether the item left the bank slot, whether it
+  went on the cursor, and any `ADDON_ACTION_BLOCKED` or `_FORBIDDEN`.
+
+In a fight it makes and shows nothing, and says so. Results go here once
+the owner has run it.
+
 ## Food and drink for the restock list
 
 `Logic/Restock.lua` (2026-11-26) tells food from drink by the spell the
