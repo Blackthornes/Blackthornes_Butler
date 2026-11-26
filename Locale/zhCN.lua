@@ -1433,3 +1433,9 @@ L["Writs:"] = "订单："
 L["Mage Scrolls:"] = "法师卷轴："
 L["Recipes I Know:"] = "已学会的配方："
 L["Kinds:"] = "种类："
+
+-- Calmer rows (2026-11-26).
+L["%d grey items"] = "%d 件灰色物品"
+L["Vendor pays more"] = "商人给得更多"
+L["Sells slowly at auction"] = "拍卖行卖得慢"
+L["Your class can't use it"] = "你的职业用不了"

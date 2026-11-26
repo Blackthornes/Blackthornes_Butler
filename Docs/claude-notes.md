@@ -3087,3 +3087,29 @@ The owner said build it (2026-11-26, from the improvement mockups, #7).
   side, calls `BagWindow:Toggle`.
 
 Tested in `tools/test_smallwins.lua`.
+
+## Calmer rows (2026-11-26)
+
+The owner said build it (2026-11-26, from the improvement mockups, #3).
+
+- **One line a row.** An item row shows `UI.Tag(data, width)`: the rule's
+  own `row.tag` (set from `extra.tag`; `Verdicts:Best` gives "Vendor pays
+  more", "Sells slowly at auction" and "Your class can't use it"), else the
+  reason when it fits, else its part before the first ": ", " (", ". " or
+  ", " when that fits, else nothing. Never a cut word or "...".
+- **The whole reason under the mouse.** Every row's pieces sit in
+  `row.top`; `row.full` is under it. `UI:OpenReason` (from `UI:Enter`) sets
+  `UI.openRow` and refreshes the list when the tag says less than the
+  reason; `UI:Left` closes it. `UI.RowHeight` adds the opened text and sets
+  `row.top` to the base height. The tooltip still shows as before.
+- **Greys folded.** Under Sell, two or more greys become one line after the
+  rest (`UI:GroupRows`, type `greys`): "N grey items", their names and their
+  worth. A click opens them (`UI.greysOpen`, this session only). A search
+  still lists them one by one. Selling is unchanged: Sell sells the group.
+- **Sold rows slide out.** `Selling:Told(item)` after each sale calls
+  `UI:Sold`, which slides and fades that row's `row.top` (Effects Full; fade
+  only on Subtle) and counts the Sell heading's "+gold" up to
+  `Selling.soldWorth` (`UI.SoldText`). Effects Off shows the sum at once.
+  `UI.SettleRow` puts a row back when it gets new data.
+
+Tested in `tools/test_calmerrows.lua`.

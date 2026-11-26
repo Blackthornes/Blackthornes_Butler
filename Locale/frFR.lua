@@ -1435,3 +1435,9 @@ L["Writs:"] = "Commandes :"
 L["Mage Scrolls:"] = "Parchemins de mage :"
 L["Recipes I Know:"] = "Recettes que je connais :"
 L["Kinds:"] = "Types :"
+
+-- Calmer rows (2026-11-26).
+L["%d grey items"] = "%d objets gris"
+L["Vendor pays more"] = "Le marchand paie plus"
+L["Sells slowly at auction"] = "Se vend lentement aux enchères"
+L["Your class can't use it"] = "Ta classe ne peut pas l'utiliser"
