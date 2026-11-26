@@ -3341,3 +3341,29 @@ when the GUID won't read. An empty list is off: no group, no button.
   `Errands:Sent`) or once the one who asked has enough (`PruneMyAsks`).
   Tested in `tools/test_restocksources.lua`.
 - Tested in `tools/test_restock.lua`. Not yet seen in game.
+
+## The Butler Bank window (Butler idea 8, 2026-11-26)
+
+The owner said build it (2026-11-26, "build 1-10", mockup
+butler-improve-8-live-bank). `UI/BankWindow.lua`: at a banker, a window in
+the Butler Bags style beside Butler Bags, with a search, Group By (Item
+Type or One Grid, kept for the session), Item Type headings in Butler
+Bags' order with the empty slots last, Take for Crafts on the trade goods
+heading (`Errands:TakeFromBank`, shown with the count when
+`Errands:WantedCount()` is above 0), and "Bank Bags:" along the foot (each
+tab's icon and name from `C_Bank.FetchPurchasedBankTabData`, else
+`BagView.BagInfo`) with the free slots. No setting of its own: on with Use
+Butler Bags. Opened by `Errands:Arrived("bank")` once the bags are read,
+closed by `Errands:Left("bank")`; the close gem hides it and gives the game's
+bank back. The game's `BankFrame` goes under `ns.Veil`, never hidden.
+Squares are `ContainerFrameItemButtonTemplate` on a holder carrying the bag
+(as Butler Bags), made out of a fight only; spot kept as
+`windowSpots["butler.bank"]`. Redrawn on `BAG_UPDATE_DELAYED`,
+`PLAYERBANKSLOTS_CHANGED` and `ITEM_LOCK_CHANGED`, coalesced, only while
+shown. Move to Bank stays on Butler Bags' own Bank heading.
+
+`/bbutler bankprobe` (PRs 370 and 380) showed Forever's bank is in tabs
+(bag 6 on) and that bag -1 answers with items the game never shows, so
+`Errands.BankBagIDs` leaves -1 out once `Enum.BagIndex.CharacterBankTab_1`
+exists. That also takes them out of Butler Bags' Bank tab, the kept bank
+copy and Take from bank. Tested in `tools/test_bankwindow.lua`.

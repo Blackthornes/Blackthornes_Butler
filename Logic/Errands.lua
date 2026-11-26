@@ -639,7 +639,12 @@ function Errands.BankBagIDs()
             ids[#ids + 1] = id
         end
     end
-    Add(type(index) == "table" and index.Bank or -1)
+    -- Forever's bank is in tabs (CharacterBankTab_1 and on). Bag -1 still
+    -- answers there with items the game never shows, and a click on one
+    -- says the spot is empty (seen 2026-11-26, /bbutler bankprobe), so it
+    -- is left out once the client has tabs.
+    local tabs = type(index) == "table" and index.CharacterBankTab_1 ~= nil
+    if not tabs then Add(type(index) == "table" and index.Bank or -1) end
     if type(index) == "table" then Add(index.Reagentbank or index.ReagentBank) end
     -- The bank bags come after every carried bag: on a retail client the
     -- reagent bag is 5, so a guess from NUM_BAG_SLOTS alone would count it
@@ -888,6 +893,7 @@ function Errands:Arrived(place)
         if not open or Errands.visit ~= visit then return end
         if place ~= "mail" and ns.BagView then ns.BagView:NoteBank() end
         if ns.UI then ns.UI:AtPlace(place) end
+        if place ~= "mail" and ns.BankWindow then ns.BankWindow:BankOpened() end
         Errands:Update()
     end)
 end
@@ -907,6 +913,7 @@ function Errands:Left(place)
         if self.bankOpen and ns.BagView then pcall(ns.BagView.NoteBank, ns.BagView) end
         self.bankOpen = false
         self:ForgetBankUpgrades()
+        if ns.BankWindow then ns.BankWindow:BankClosed() end
     end
     if ns.UI then ns.UI:LeftPlace(place) end
     self:TellTradeskills()

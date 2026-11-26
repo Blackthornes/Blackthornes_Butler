@@ -108,9 +108,10 @@ First run (2026-11-26, level 44, at a banker):
   protected, `GetBagID` reads the holder's bag, `SetBagID` and `OnClick`
   present. `BankItemButtonGenericTemplate` does not exist (asking for it
   raised and printed a taint line), so the probe no longer tries it.
-- The click test so far only used bag -1. The probe now takes its test
-  item from the first tab; the right-click on a real bank item is still to
-  be seen.
+- Second run (11:09, from tab 6): a right-click on Butler's square moved
+  the item from bank tab 6 slot 1 into the bags. Not on the cursor,
+  nothing blocked, not in a fight. The Butler Bank window is built on this
+  (`UI/BankWindow.lua`).
 
 ## Food and drink for the restock list
 

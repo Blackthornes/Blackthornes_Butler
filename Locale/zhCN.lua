@@ -1551,3 +1551,8 @@ L["On the auction house, about %s each."] = "拍卖行里大约每个 %s。"
 L["queued %d %s in Tradeskills."] = "已在 Tradeskills 中排入 %d %s。"
 L["You can make them."] = "你可以制作。"
 L["Your bank has %d."] = "你的银行里有 %d 个。"
+
+-- The Butler Bank window (UI/BankWindow.lua)
+L["Search the bank"] = "搜索银行"
+L["Take for Crafts"] = "取出制作材料"
+L["Bank Bags:"] = "银行背包："

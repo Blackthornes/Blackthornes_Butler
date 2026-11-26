@@ -1552,3 +1552,8 @@ L["On the auction house, about %s each."] = "Im Auktionshaus etwa %s pro Stück.
 L["queued %d %s in Tradeskills."] = "%d %s in Tradeskills eingereiht."
 L["You can make them."] = "Du kannst sie herstellen."
 L["Your bank has %d."] = "Deine Bank hat %d."
+
+-- The Butler Bank window (UI/BankWindow.lua)
+L["Search the bank"] = "Bank durchsuchen"
+L["Take for Crafts"] = "Für Handwerk holen"
+L["Bank Bags:"] = "Bankfächer:"

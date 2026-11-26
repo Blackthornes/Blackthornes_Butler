@@ -1095,6 +1095,10 @@ local function OwnIcon(button)
     return icon
 end
 
+-- The Bank window's squares wear the same pieces (UI/BankWindow.lua).
+BagWindow.Dress = Dress
+BagWindow.OwnIcon = OwnIcon
+
 --- The bag the game's own click reads from a square, or nil.
 function BagWindow.ReadsBag(button)
     if type(button) ~= "table" or type(button.GetBagID) ~= "function" then return nil end
