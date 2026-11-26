@@ -38,6 +38,7 @@ Logic\Quests.lua
 Logic\QuestBuy.lua
 Logic\Verdicts.lua
 Logic\Everyone.lua
+Logic\SearchWords.lua
 Logic\BankAlt.lua
 Logic\KeepHere.lua
 Logic\KeepAcross.lua

@@ -666,6 +666,7 @@ function BagWindow:BuildHeader()
     end)
     search:SetPoint("TOPLEFT", 59, -EDGE_PAD - 6)
     search:SetWidth(math.max(BagWindow.SEARCH_WIDTH, Theme.TextWidth("small", placeholder) + 40))
+    ns.SearchWords.AttachTip(search)
     self.search = search
 
     local words = {}
@@ -1318,7 +1319,7 @@ function BagWindow:Paint(button, entry, search)
 
     local lit = true
     if entry then
-        lit = ns.BagView.Matches(ns.BagView.NameOf(entry), entry.itemID, search)
+        lit = ns.BagView.MatchesEntry(entry, search)
             and ns.BagView:MatchesChip(entry, self.chip)
     elseif search or self.chip then
         lit = false
@@ -1502,7 +1503,10 @@ function BagWindow:Draw()
     for _, button in ipairs(plain) do button:Hide() end
     self.emptyLabel:Hide()
 
-    local search = ns.BagView.Fold(self.search:GetText())
+    -- The words Butler knows (Logic/SearchWords.lua), read once a draw; a
+    -- character's name means what they hold on the Everyone tab.
+    local search = ns.SearchWords.Parse(self.search:GetText(),
+        self.tab == "everyone" and ns.Everyone.characters or nil)
     if self.tab == "bags" then
         self:DrawBags(width, search)
     else
@@ -1635,7 +1639,7 @@ function BagWindow:DrawList(width, search)
 
     local index, column, y = 0, 0, 0
     for _, item in ipairs(list) do
-        if ns.BagView.Matches(item.name, item.itemID, search) then
+        if ns.SearchWords.Match(search, item) then
             index = index + 1
             local button = PlainButton(index)
             button:SetSize(size, size)

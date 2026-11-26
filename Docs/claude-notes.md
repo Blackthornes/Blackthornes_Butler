@@ -134,6 +134,9 @@ _G.BlackthornesEquipment.Butler:Advise(link, bag, slot)
   -- nil for anything that is not gear; bag and slot let it see soulbound
 _G.BlackthornesFarmer.Butler:Advise(itemID)
   -- { goal, have, target, need }: the character playing's own goals
+_G.BlackthornesEquipment.Butler:Worn()
+  -- { { key (GUID), worn = { [itemID] = count }, at } }: each character's
+  --   worn gear, for All Characters (see "Search that knows words")
 _G.BlackthornesPets.Butler:Advise(itemID)
   -- { eats, buff, hours, count }: hours is for all the food carried and
   -- only a rough guess, so Butler shows it and never sells food on it
@@ -539,6 +542,44 @@ each view keeps its own words. Tested in `tools/test_bagsearch.lua`. The Sell bu
 view, and a vendor opens the window on Your bags. Tradeskills'
 `CLAUDE.md` lists `Holdings` under "What Butler calls here"; if it
 changes, change `Logic/Everyone.lua` too.
+
+## Search that knows words
+
+The owner said build it, 2026-11-26, from the mockup (improvement 5).
+Every search box (All Characters, Your Bags, the Bags window) reads words
+as well as names through `Logic/SearchWords.lua`: `SearchWords.Parse(text,
+characters)` reads what was typed once a redraw, `SearchWords.Match(query,
+item)` asks of each item. Kinds: gear, boe, bound, quest, materials,
+food, grey, upgrade, worn, on auction; money with over and under ("over
+1g", "under 50s", "1g50s", "2 gold", a bare number is gold); "level 30 to
+40" (required level, else item level); a character's first or whole name
+(what they hold, All Characters and the Bags window's Everyone tab only).
+Words left over must all be in the item's name, any order. A kind's own
+word in a name still finds that item ("quest" finds Sealed Quest Note), so
+no name search finds less than before. Each line of words is a locale key
+with commas (`L["gear, armor, weapon, weapons"]`), and the English always
+works too. `SearchWords.Fold` lowers Latin accents and Cyrillic capitals,
+which string.lower does not, and a number touching another script is
+parted from it, so "超过1金" reads.
+
+Hovering a search box lists the words ("Words Butler Knows:",
+`SearchWords.AttachTip`). All Characters has chips over its list
+(`SearchWords.CHIPS`: Gear, Binds When Worn, Materials, Quest, Food,
+Upgrades, Worth Over 1g, On Auction); several can be lit and an item must
+pass all of them and the words; Clear Search lets them go
+(`UI.chipsOn`, session only, nothing saved). The footer says "N of M
+items" while it filters.
+
+Two more places per character in All Characters (`Everyone.PLACES` now
+`bags, bank, mail, worn, auction`), each in the total and the holder line:
+worn gear from `_G.BlackthornesEquipment.Butler:Worn()` (`{ { key, worn,
+at } }`, matched by key, the one playing by `UnitGUID` too;
+`Everyone.ReadWorn`) and items on auction from Tradeskills' `Holdings()`
+`auctions` and `auctionsAt` (listings not yet ended). Both read only, in a
+pcall, once a build; nothing without that addon. Worth is a vendor's price
+for greys, else the best of a vendor and `BlackthornesTS_API.GetPrice`;
+worth and upgrade answers are kept until `Verdicts.version` moves, item
+facts for the session. Tested in `tools/test_searchwords.lua`.
 
 ## At the mailbox and the bank
 

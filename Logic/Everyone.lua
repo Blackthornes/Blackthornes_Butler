@@ -50,9 +50,12 @@ local Items = ns.Items
 Everyone.BUDGET = 300
 Everyone.NAME_BUDGET = 40
 
--- Where an item can be, in the order a holder's line names them.
-Everyone.PLACES = { "bags", "bank", "mail" }
-Everyone.PLACE_WORDS = { bags = L["in bags"], bank = L["in the bank"], mail = L["in the mail"] }
+-- Where an item can be, in the order a holder's line names them. Worn
+-- gear comes from Equipment and items on auction from Tradeskills, each
+-- only while that addon is loaded (2026-11-26, the search that knows words).
+Everyone.PLACES = { "bags", "bank", "mail", "worn", "auction" }
+Everyone.PLACE_WORDS = { bags = L["in bags"], bank = L["in the bank"], mail = L["in the mail"],
+    worn = L["worn"], auction = L["on auction"] }
 
 -- The built list: { [itemID] = item }, in name order in `sorted`.
 Everyone.items = {}
@@ -159,7 +162,7 @@ local function Self()
     local name = Items.Call({ "UnitName" }, "player")
     return {
         key = "self", name = Text(name) or L["You"], short = Text(name) or L["You"],
-        isCurrent = true, bags = {}, bank = {}, mail = {},
+        isCurrent = true, bags = {}, bank = {}, mail = {}, worn = {}, auction = {},
     }
 end
 
@@ -192,6 +195,10 @@ function Everyone:Read()
                 bags = Counts(entry.bags),
                 bank = Counts(entry.bank),
                 mail = Counts(entry.mail),
+                worn = {},
+                -- Up at the auction house, as Tradeskills last read it.
+                auction = Counts(entry.auctions),
+                auctionAt = Stamp(entry.auctionsAt),
                 bagsAt = Stamp(entry.bagsAt),
                 bankAt = Stamp(entry.bankAt),
                 mailAt = Stamp(entry.mailAt),
@@ -202,6 +209,38 @@ function Everyone:Read()
     end
     if #characters == 0 then return nil end
     return characters
+end
+
+--- Equipment's Butler table when it is loaded and answers Worn.
+function Everyone.Equipment()
+    local global = rawget(_G, "BlackthornesEquipment")
+    if type(global) ~= "table" then return nil end
+    local butler = rawget(global, "Butler")
+    if type(butler) ~= "table" or type(butler.Worn) ~= "function" then return nil end
+    return butler
+end
+
+--- What each character wears, from Equipment (read only, in a pcall),
+--- put on the characters by key. The character playing is matched by its
+--- GUID too, for the list without Tradeskills. Nothing without Equipment.
+function Everyone.ReadWorn(characters)
+    local butler = Everyone.Equipment()
+    if not butler then return end
+    local ok, list = pcall(butler.Worn, butler)
+    if not ok or type(list) ~= "table" then return end
+    local byKey = {}
+    for _, entry in ipairs(list) do
+        if type(entry) == "table" and Text(entry.key) then byKey[entry.key] = entry end
+    end
+    local guid = Items.Call({ "UnitGUID" }, "player")
+    for _, character in ipairs(characters) do
+        local entry = byKey[character.key]
+            or (character.isCurrent and type(guid) == "string" and byKey[guid]) or nil
+        if entry then
+            character.worn = Counts(entry.worn)
+            character.wornAt = Stamp(entry.at)
+        end
+    end
 end
 
 --- Is the list everyone's, or only the bags of the character playing?
@@ -311,6 +350,7 @@ function Everyone:Build(done)
     local characters = self:Read()
     self.fromTradeskills = characters ~= nil
     characters = characters or { Self() }
+    Everyone.ReadWorn(characters)
 
     -- The character playing carries what Butler's own read says.
     local ownRead = next(ns.Bags.slots) ~= nil or not ns.Bags.stale
@@ -326,7 +366,7 @@ function Everyone:Build(done)
     for _, character in ipairs(characters) do
         for _, place in ipairs(Everyone.PLACES) do
             local list = {}
-            for itemID, count in pairs(character[place]) do list[#list + 1] = { itemID, count } end
+            for itemID, count in pairs(character[place] or {}) do list[#list + 1] = { itemID, count } end
             if #list > 0 then steps[#steps + 1] = { character = character, place = place, list = list } end
         end
     end
@@ -337,7 +377,7 @@ function Everyone:Build(done)
     local function Holder(item, character)
         local holder = item.byKey[character.key]
         if not holder then
-            holder = { character = character, bags = 0, bank = 0, mail = 0, total = 0 }
+            holder = { character = character, bags = 0, bank = 0, mail = 0, worn = 0, auction = 0, total = 0 }
             item.byKey[character.key] = holder
             item.holders[#item.holders + 1] = holder
         end
@@ -459,7 +499,7 @@ end
 function Everyone.Where(holder)
     local parts = {}
     for _, place in ipairs(Everyone.PLACES) do
-        if holder[place] > 0 then
+        if (holder[place] or 0) > 0 then
             parts[#parts + 1] = L.Format("%d %s", holder[place], Everyone.PLACE_WORDS[place])
         end
     end
@@ -471,7 +511,7 @@ end
 function Everyone.Seen(holder)
     local oldest
     for _, place in ipairs(Everyone.PLACES) do
-        if holder[place] > 0 then
+        if (holder[place] or 0) > 0 then
             local at = holder.character[place .. "At"]
             if at == nil then return nil end
             if not oldest or at < oldest then oldest = at end
@@ -496,22 +536,31 @@ function Everyone.Summary(item, most)
     return table.concat(parts, ", ")
 end
 
---- Does an item match what was typed? Names, and an item number typed
---- whole.
+--- Does an item match what was typed? Names, an item number typed whole,
+--- and the words Butler knows (Logic/SearchWords.lua). `search` is the
+--- text or a query already read.
 function Everyone.Matches(item, search)
-    if not search or search == "" then return true end
-    if item.lower and item.lower:find(search, 1, true) then return true end
-    return tostring(item.itemID) == search
+    if search == nil or search == "" then return true end
+    if type(search) == "string" then search = ns.SearchWords.Parse(search, Everyone.characters) end
+    return ns.SearchWords.Match(search, item)
+end
+
+--- The query for what was typed and the chips lit ({ [key] = true }), or
+--- nil when there is neither.
+function Everyone:Query(search, chips)
+    local query = ns.SearchWords.Parse(type(search) == "string" and search or "", self.characters)
+    return ns.SearchWords.WithChips(query, chips)
 end
 
 --- The rows to show: each item that matches, and under an open one a row
---- per character holding it. `open` is { [itemID] = true }.
-function Everyone:Lines(search, open)
-    search = type(search) == "string" and search:lower():gsub("^%s+", ""):gsub("%s+$", "") or ""
+--- per character holding it. `open` is { [itemID] = true }, `chips` the
+--- chips lit over the list.
+function Everyone:Lines(search, open, chips)
+    local query = self:Query(search, chips)
     open = open or {}
     local lines, shown = {}, 0
     for _, item in ipairs(self.sorted) do
-        if Everyone.Matches(item, search) then
+        if ns.SearchWords.Match(query, item) then
             shown = shown + 1
             local isOpen = open[item.itemID] == true
             lines[#lines + 1] = { type = "everyone", item = item, open = isOpen }
@@ -529,7 +578,8 @@ end
 function Everyone:Holders()
     local count = 0
     for _, character in ipairs(self.characters) do
-        if next(character.bags) or next(character.bank) or next(character.mail) then
+        if next(character.bags) or next(character.bank) or next(character.mail)
+            or next(character.worn or {}) or next(character.auction or {}) then
             count = count + 1
         end
     end
