@@ -2220,6 +2220,14 @@ window shut and never came back from its button (2026-11-22). A window
 closed anyway as it folds opens full instead. Tested in
 `tools/test_foldwindow.lua` (the same in all five).
 
+Folded, the window hears no mouse at all (a player, 2026-11-25: the
+game's ping said "Can't ping this." over the whole empty one window).
+`Deafen` turns off `EnableMouse`, `SetMouseClickEnabled`,
+`SetMouseMotionEnabled` and the wheel, and sets `SetHitRectInsets` so no
+part of the frame hears the mouse; `Hear` puts each back as it was when it
+opens. SharedWindow went to FILE_VERSION 17 so a fixed copy draws the one
+window. Tested in `tools/test_foldwindow.lua` (`Catches`).
+
 Here, the Butler window (`Main`) and Settings, each with an opener, and
 the Bags window (`Bags`).
 
@@ -2859,7 +2867,7 @@ shows two panes and splits ("Split Into Own Windows"); on an own window it
 shows one pane with a rail line and joins ("Join Into One Window"). Floating
 arrows, bars, trackers, the Zone Board and similar pieces get none.
 
-- `UI/SharedWindow.lua` (FILE_VERSION 16 since the round button's fixes, the same in all five):
+- `UI/SharedWindow.lua` (FILE_VERSION 17 since the fold stopped catching the mouse, the same in all five):
   `SharedWindow.AddSwap(frame, key)` puts the gem on a dressed window's
   trim (so it hides with the trim inside the one window); `key` nil is the
   one window. `SharedWindow.Swap(key, join)` is its click. Split: the
