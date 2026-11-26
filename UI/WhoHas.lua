@@ -250,6 +250,15 @@ end
 -- Hooks
 --------------------------------------------------------------------------------
 
+-- A line on Shift shows only while Shift is held, so it goes at the
+-- bottom of the tooltip block (2026-11-26).
+local function MarkShift(lines, key)
+    local shift = ns.TooltipShift
+    if type(lines) ~= "table" or not (shift and shift.Read and shift.Read(key)) then return lines end
+    for _, line in ipairs(lines) do line.shift = true end
+    return lines
+end
+
 --- The same lines for the shared tooltip block (UI/TooltipBlock.lua,
 --- 2026-11-21): "You Have:" with where, or "Your Characters:" with the
 --- total and a row for each. Lines and whether they were held back.
@@ -264,7 +273,7 @@ function WhoHas:BlockLines(tooltip, data)
     local out = {}
     if #lines == 1 and lines[1][2] then
         out[1] = { L["You Have:"], lines[1][2] }
-        return out
+        return MarkShift(out, WhoHas.SHIFT_KEY)
     end
     out[1] = { L["Your Characters:"], tostring(item and item.total or "") }
     for i = 2, #lines do
@@ -275,7 +284,7 @@ function WhoHas:BlockLines(tooltip, data)
             out[#out + 1] = { "   " .. line[1], leftColor = { 0.6, 0.6, 0.6 } }
         end
     end
-    return out
+    return MarkShift(out, WhoHas.SHIFT_KEY)
 end
 
 --- Hook item tooltips once: the post call on a client that has it (Forever

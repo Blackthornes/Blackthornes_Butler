@@ -188,14 +188,19 @@ function VendorPrices:BlockLines(tooltip, itemID)
         if not (price or sell) then return nil end
         if not ns.TooltipShift:Shows(self.SHIFT_KEY) then return nil, true end
         local money, out = ns.Items.FormatMoney, {}
+        -- A line on Shift shows only while Shift is held, so it goes at the
+        -- bottom of the tooltip block (2026-11-26); so does the stack's
+        -- worth, which shows only then.
+        local read = ns.TooltipShift.Read
+        local onShift = read and read(self.SHIFT_KEY) and true or nil
         if sell then
-            out[#out + 1] = { L["Vendor Pays:"], L.Format("%s each", money(sell)) }
+            out[#out + 1] = { L["Vendor Pays:"], L.Format("%s each", money(sell)), shift = onShift }
             local count = ns.TooltipShift.ShiftDown() and VendorPrices.StackCount(tooltip, itemID)
             if count and count > 1 then
-                out[#out + 1] = { L.Format("Stack of %d:", count), money(sell * count) }
+                out[#out + 1] = { L.Format("Stack of %d:", count), money(sell * count), shift = true }
             end
         end
-        if price then out[#out + 1] = { L["Vendor Sells For:"], money(price) } end
+        if price then out[#out + 1] = { L["Vendor Sells For:"], money(price), shift = onShift } end
         return out
     end)
     if not ok then return nil end
