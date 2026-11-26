@@ -114,7 +114,7 @@ end
 --- if one writes a key missing here.
 SettingsUI.SETTING_KEYS = {
     "altUpgrades", "arrowRoute", "auctionMargin", "bagGroupBy", "bagItemLevel", "bagItemSize",
-    "bagMarks", "bagNewGlow", "bagWindow", "bankAltAuctions",
+    "bagMarks", "bagNewGlow", "bagWindow", "bankAltAuctions", "bankWindow",
     "bankAltFullStacks", "bankAltStore", "bankAltWhen", "buyMany",
     "classTraining", "craftDetails", "craftPays", "disenchantAnyPrice",
     "disenchantGreens", "fillNext", "freeSpace", "goldGoals", "jobsAtLogin",

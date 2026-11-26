@@ -60,9 +60,15 @@ BankWindow:BankOpened()
 suite.check("off while Butler Bags is off", not BankWindow:IsShown())
 suite.check("the game's bank is left alone", not ns.Veil:Covers(_G.BankFrame))
 
--- On.
+-- Butler Bags on is not enough: it has its own box, off unless ticked.
 ns.HandleSlash("bags on")
 BankWindow:BankOpened()
+suite.check("off until its own box is ticked", not BankWindow:IsShown())
+suite.check("nothing saved for it yet", ns.db.bankWindow == nil)
+
+-- Ticked at the bank, it opens there and then.
+BankWindow:SetOn(true)
+suite.check("ticking it saves it", ns.db.bankWindow == true)
 suite.check("it opens at a banker", BankWindow:IsShown())
 suite.check("the game's bank goes under the veil", ns.Veil:Covers(_G.BankFrame))
 suite.check("and is never hidden", _G.BankFrame:IsShown())
@@ -119,6 +125,14 @@ suite.check("open again", BankWindow:IsShown())
 Errands:Left("bank")
 suite.check("leaving the banker closes it", not BankWindow:IsShown())
 suite.check("and uncovers the game's bank", not ns.Veil:Covers(_G.BankFrame))
+
+-- Unticking it closes it and gives the game's bank back.
+BankWindow:BankOpened()
+BankWindow:SetOn(false)
+suite.check("unticking closes it", not BankWindow:IsShown() and not ns.Veil:Covers(_G.BankFrame))
+suite.check("and forgets it", ns.db.bankWindow == nil)
+BankWindow:SetOn(true)
+BankWindow:Close()
 
 -- In a fight it does not open.
 Errands.bankOpen = true

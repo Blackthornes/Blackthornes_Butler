@@ -1800,6 +1800,15 @@ function BagWindow:AddSettings(pages, controls, x)
     end, false)
     controls.bagWindow:SetPoint("TOPLEFT", x, -2)
 
+    -- The Butler Bank window (UI/BankWindow.lua): a big new feature, so it
+    -- starts off, and works only with Butler Bags on.
+    local bankRow = pages:Row("general", 2, L["Butler Bank:"],
+        L["At a banker, opens your bank in the Butler Bags style beside your bags. The game's bank is still there underneath."])
+    controls.bankWindow = Widgets.CreateCheckbox(bankRow, L["On"], function(checked)
+        if ns.BankWindow then ns.BankWindow:SetOn(checked) end
+    end, false)
+    controls.bankWindow:SetPoint("TOPLEFT", x, -2)
+
     local groupRow = pages:Row("general", 2, L["Group By:"], nil)
     local words = {}
     for _, key in ipairs(ns.BagView.GROUPS) do words[#words + 1] = ns.BagView.GROUP_WORDS[key] end
@@ -1849,6 +1858,7 @@ end
 function BagWindow:SyncSettings(controls)
     if not controls.bagWindow then return end
     controls.bagWindow:SetChecked(self:On())
+    if controls.bankWindow and ns.BankWindow then controls.bankWindow:SetChecked(ns.BankWindow:Ticked()) end
     controls.bagGroupBy:SetValue(BagWindow.GroupIndex(), true)
     controls.bagItemSize:SetValue(BagWindow.SizeIndex(), true)
     controls.bagItemLevel:SetChecked(ns.BagView:ItemLevelOn())

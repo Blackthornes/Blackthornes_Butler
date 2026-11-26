@@ -3,7 +3,8 @@
 -- beside Butler Bags. Butler idea 8 (the owner said build it, 2026-11-26,
 -- from the mockup butler-improve-8-live-bank).
 --
--- On with Use Butler Bags (`bagWindow`); no setting of its own. The squares
+-- Off unless ticked ("Butler Bank:" under BAGS on the General page,
+-- `bankWindow`), and only with Use Butler Bags on too. The squares
 -- are the game's own item button template bound to a bank bag and slot, as
 -- Butler Bags' are, so a click, a right-click (to the bags), a drag and the
 -- tooltip are the game's. /bbutler bankprobe found Forever allows that from
@@ -61,8 +62,25 @@ local function NumSlots(bag)
     return tonumber(ns.Items.Call({ "C_Container.GetContainerNumSlots", "GetContainerNumSlots" }, bag)) or 0
 end
 
+--- Its own box, "Butler Bank:" under BAGS, off unless ticked (saved
+--- account wide as `bankWindow`; never rename it).
+function BankWindow:Ticked()
+    return ns.db ~= nil and ns.db.bankWindow == true
+end
+
+--- Works only with Butler Bags on too.
 function BankWindow:On()
-    return ns.BagWindow ~= nil and ns.BagWindow:On()
+    return self:Ticked() and ns.BagWindow ~= nil and ns.BagWindow:On()
+end
+
+function BankWindow:SetOn(on)
+    if not ns.db then return end
+    ns.db.bankWindow = on and true or nil
+    if on then
+        if ns.Errands and ns.Errands.bankOpen then self:BankOpened() end
+    else
+        self:Close()
+    end
 end
 
 function BankWindow:IsShown()

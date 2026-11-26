@@ -3352,8 +3352,10 @@ Bags' order with the empty slots last, Take for Crafts on the trade goods
 heading (`Errands:TakeFromBank`, shown with the count when
 `Errands:WantedCount()` is above 0), and "Bank Bags:" along the foot (each
 tab's icon and name from `C_Bank.FetchPurchasedBankTabData`, else
-`BagView.BagInfo`) with the free slots. No setting of its own: on with Use
-Butler Bags. Opened by `Errands:Arrived("bank")` once the bags are read,
+`BagView.BagInfo`) with the free slots. Off unless ticked: "Butler Bank:"
+under BAGS on the General page, saved account wide as `bankWindow` (never
+rename it; in `SETTING_KEYS`, so Restore Defaults turns it off), and only
+with Use Butler Bags on too. Opened by `Errands:Arrived("bank")` once the bags are read,
 closed by `Errands:Left("bank")`; the close gem hides it and gives the game's
 bank back. The game's `BankFrame` goes under `ns.Veil`, never hidden.
 Squares are `ContainerFrameItemButtonTemplate` on a holder carrying the bag
