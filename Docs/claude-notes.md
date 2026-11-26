@@ -3084,3 +3084,30 @@ saved, so logout or a reload lets it go. `Verdicts:Decide` checks it
 before every rule ("Kept until you log out."), so it beats the player's
 Always marks too; `SetChoice` with any mark ends it, and Reset This Item
 clears it (`HasOwnChoices` counts it). Tested in `tools/test_quickmarks.lua`.
+
+## Quest Items group, kind rules and the Bags button (2026-11-26)
+
+The owner said build it (2026-11-26, from the improvement mockups, #7).
+
+- **Quest Items group.** `Verdicts.ORDER` starts with `quest`. A Keep from
+  the quest rule for an open quest or a quest an item starts carries
+  `extra.quest`, and `Verdicts:Groups` puts that row under `quest`; the row
+  itself still says `keep`. A quest item no open quest needs ("Quest item")
+  stays under Keep. Butler Bags' What To Do grouping follows, since it reads
+  `Groups`. The heading wears the Keep mark (`UI.MARK_FOR.quest`) and starts
+  open. `Verdicts:Group("keep")` still finds Keep.
+- **One rule for a kind** (`Logic/Kinds.lua`): Crates and Lockboxes,
+  Writs, Mage Scrolls, Recipes I Know and Pet Food, each Keep, Sell, Bank or
+  As Butler Says, on the Keep page under YOUR LISTS. Saved account wide as
+  `kindRules` (never rename it); empty means nothing changes. A rule step
+  `kinds` sits after `lists` in `DEFAULT_ORDER` and on the ORDER page; it
+  skips an item with a mark or a number kept here, and Sell skips what no
+  vendor buys. A writ starts a quest, so the quest rule lets a writ with a
+  kind rule go on down. How each kind is told is at the top of the file;
+  none is seen on Forever yet (`/bbutler probe`, "kinds"). Writs match by
+  the English name only. Butler Settings: Set Default leaves `kindRules`, as
+  it leaves the lists. Bags read `hasLoot` into `entry.openable`.
+- **Bags button** in the Butler window's header (`UI.bagsButton`), right
+  side, calls `BagWindow:Toggle`.
+
+Tested in `tools/test_smallwins.lua`.

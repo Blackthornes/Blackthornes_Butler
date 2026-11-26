@@ -321,6 +321,15 @@ function UI:BuildHeader()
     bagSearch:SetShown(self.view ~= "all")
     subtitle:Hide()
     self.bagSearch = bagSearch
+
+    -- Bags (a player asked, the owner said build it, 2026-11-26): opens or
+    -- closes Butler Bags, as its key binding does. Sized to its word.
+    local word = L["Bags"]
+    local bags = Widgets.CreateButton(header, word, function()
+        if ns.BagWindow then ns.BagWindow:Toggle() end
+    end, { width = math.ceil(Theme.TextWidth("small", word)) + 24, height = 22 })
+    bags:SetPoint("RIGHT", header, "RIGHT", -8, -2)
+    self.bagsButton = bags
 end
 
 --- Empty a search box and draw the list again (the empty block's Clear
@@ -522,7 +531,7 @@ end
 
 -- Which mark each verdict group wears (UI/Marks.lua's kinds).
 UI.MARK_FOR = {
-    craft = "craft", sell = "sell", auction = "list", disenchant = "disenchant",
+    quest = "keep", craft = "craft", sell = "sell", auction = "list", disenchant = "disenchant",
     mail = "mail", bank = "bank", look = "look", wait = "waiting", keep = "keep",
 }
 

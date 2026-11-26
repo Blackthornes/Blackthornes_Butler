@@ -99,9 +99,12 @@ local Items = ns.Items
 local Sisters = ns.Sisters
 
 -- The order the groups show in: what to do first at the top.
-Verdicts.ORDER = { "craft", "sell", "auction", "disenchant", "mail", "bank", "look", "wait", "keep" }
+-- Quest items (2026-11-26) are Keep rows shown in a group of their own,
+-- first: Groups puts a keep whose rule was the quest one under "quest".
+Verdicts.ORDER = { "quest", "craft", "sell", "auction", "disenchant", "mail", "bank", "look", "wait", "keep" }
 
 Verdicts.LABELS = {
+    quest = L["Quest Items"],
     craft = L["Craft"],
     sell = L["Sell"],
     auction = L["Auction"],
@@ -377,7 +380,7 @@ end
 -- judges exactly as it always has.
 Verdicts.FIRST = { "sets", "quests" }
 Verdicts.DEFAULT_ORDER = {
-    "keepHere", "keepList", "bankList", "mailList", "lists", "buyback", "noValue", "sellList", "auctionList", "disenchantList", "ammo",
+    "keepHere", "keepList", "bankList", "mailList", "lists", "kinds", "buyback", "noValue", "sellList", "auctionList", "disenchantList", "ammo",
     "upgrades", "altCrafts", "goals", "queue", "levelUp", "altUpgrades", "petFood",
     "bought", "levelEnch", "greensHere", "disenchanter", "mailHabit",
     "sellHabit", "greys", "bankAlt", "sellBelow",
@@ -591,10 +594,18 @@ function Verdicts.QuestItemTrades(itemID)
     return bind ~= 1 and bind ~= 4
 end
 
+-- What the quest rule keeps for an open quest, or a quest it starts, goes
+-- in the Quest Items group (extra.quest); a quest item no open quest needs
+-- stays under Keep.
+local FOR_QUEST = { quest = true }
+
 function STEPS.quests(self, c)
     local entry = c.entry
     if entry.quest == "starts" then
-        return "keep", L["Starts a quest"], nil, true
+        -- A writ starts a quest; a rule for its kind (Logic/Kinds.lua)
+        -- decides it instead, further down.
+        if ns.Kinds and ns.Kinds:For(entry) then return nil end
+        return "keep", L["Starts a quest"], nil, true, FOR_QUEST
     elseif entry.quest == "item" then
         -- Kept while an open quest wants it or it can't be traded. A quest
         -- item that can go on the auction house and that no open quest
@@ -602,7 +613,7 @@ function STEPS.quests(self, c)
         -- their lists, the bank alt, mail, auction or sell.
         local forQuest = ns.Quests and ns.Quests:Reason(c.itemID)
         if forQuest then
-            return "keep", forQuest, nil, true
+            return "keep", forQuest, nil, true, FOR_QUEST
         end
         if entry.bound or not Verdicts.QuestItemTrades(c.itemID) then
             return "keep", L["Quest item"], nil, true
@@ -613,7 +624,7 @@ function STEPS.quests(self, c)
     -- game does not mark as a quest item (Logic/Quests.lua).
     local forQuest = ns.Quests and ns.Quests:Reason(c.itemID)
     if forQuest then
-        return "keep", forQuest, nil, true
+        return "keep", forQuest, nil, true, FOR_QUEST
     end
 end
 
@@ -739,6 +750,19 @@ end
 
 -- Butler sold it and the player bought it back: kept from then on, but an
 -- alt's queued craft still gets its share, as the Always keep list gives it.
+-- One rule for a whole kind of item (Logic/Kinds.lua): Keep, Sell or
+-- Bank. A mark on the item or a number kept here wins.
+function STEPS.kinds(self, c)
+    if not ns.Kinds or Choice(c) ~= nil then return nil end
+    if not c.pastKeep and ns.KeepHere and ns.KeepHere:Effective(c.itemID) then return nil end
+    local verdict, reason = ns.Kinds:For(c.entry)
+    if not verdict then return nil end
+    local unit = Unit(c)
+    if verdict == "keep" then return "keep", reason, nil, true end
+    if verdict == "sell" and (c.entry.noValue or unit == 0) then return nil end
+    return verdict, reason, unit, unit ~= nil
+end
+
 function STEPS.buyback(self, c)
     if Learned(c) ~= "keep" then return nil end
     local verdict, reason, extra = self:ForAltCraft(c.entry)
@@ -2011,8 +2035,10 @@ function Verdicts:Groups()
             end
         end
         slotVerdicts[entry.bag .. ":" .. entry.slot] = { key = entry.key, verdict = verdict }
-        local group = byVerdict[verdict]
-        local key = verdict .. "|" .. (entry.bound and "b|" or "") .. tostring(entry.link or entry.itemID)
+        -- Kept for a quest: its own group, first (the row is still Keep).
+        local groupKey = (verdict == "keep" and extra and extra.quest) and "quest" or verdict
+        local group = byVerdict[groupKey]
+        local key = groupKey .. "|" .. (entry.bound and "b|" or "") .. tostring(entry.link or entry.itemID)
         local row = rowsByKey[key]
         if not row then
             row = {
