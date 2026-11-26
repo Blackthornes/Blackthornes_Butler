@@ -308,6 +308,7 @@ end
 BankWindow.EMPTY_SLOT = "Interface\\PaperDoll\\UI-PaperDoll-Slot-Bag"
 BankWindow.LOCK = "Interface\\PetBattles\\PetBattle-LockIcon"
 BankWindow.MOST_BAG_SLOTS = 12
+BankWindow.LEAST_ICON = 12
 
 --- The square shown for a bank bag slot along the foot, made once.
 local function TabIcon(index)
@@ -394,24 +395,37 @@ function BankWindow:DrawFoot(places)
     end
     local slots = self.BagSlots()
     local x = Theme.TextWidth("small", L["Bag Slots:"]) + 8
+    -- The slots shrink to the room left of Game Bank, so twelve bags (or a
+    -- long label in another language) never run over its words.
+    local swapWidth = self.swapButton and tonumber(self.swapButton:GetWidth()) or 0
+    local room = WIDTH - 2 * PADDING - swapWidth - 10 - x
+    local size, gap = TAB_ICON, 4
+    if #slots > 0 and #slots * (size + gap) - gap > room then
+        size = math.floor((room + gap) / #slots) - gap
+        if size < TAB_ICON - 6 then gap = 2 size = math.floor((room + gap) / #slots) - gap end
+        size = math.max(size, BankWindow.LEAST_ICON)
+    end
+    self.footStart, self.footIcon = x, size
     for i, info in ipairs(slots) do
         local icon = TabIcon(i)
         icon.name, icon.free, icon.invSlot, icon.bought = info.name, free[info.bag] or 0, info.invSlot, info.bought
         icon.art:SetTexture(info.icon)
         if icon.art.SetDesaturated then icon.art:SetDesaturated(not info.bought) end
         icon.lock:SetShown(not info.bought)
+        icon:SetSize(size, size)
+        icon.lock:SetSize(math.max(size - 8, 8), math.max(size - 8, 8))
         icon:ClearAllPoints()
         icon:SetPoint("LEFT", self.bagsLabel, "LEFT", x, 0)
         icon:Show()
-        x = x + TAB_ICON + 4
+        x = x + size + gap
     end
+    self.footEnd = #slots > 0 and x - gap or x
     for i = #slots + 1, #tabIcons do tabIcons[i]:Hide() end
     local text = L.Format("%d free", total)
     self.freeLabel:SetText(text)
     -- Only where it fits between the bag slots and Game Bank (a long
     -- label in another language); the empty slots heading says it too.
-    local swapWidth = self.swapButton and tonumber(self.swapButton:GetWidth()) or 0
-    local room = WIDTH - 2 * PADDING - swapWidth - 10 - x
+    room = WIDTH - 2 * PADDING - swapWidth - 10 - x
     self.freeLabel:SetShown(room >= Theme.TextWidth("normal", text) + 8)
 end
 
