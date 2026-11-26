@@ -1879,11 +1879,11 @@ function Verdicts:Best(entry, unit, said, noBelow)
         end
         if auction and auction > unit then
             return "sell", L.Format("Sells slowly at auction (about %s after the cut), vendor pays %s each",
-                Items.FormatMoney(auction), Items.FormatMoney(unit)), unit
+                Items.FormatMoney(auction), Items.FormatMoney(unit)), unit, { tag = L["Sells slowly at auction"] }
         end
         if auction then
             return "sell", L.Format("Vendor pays more than the auction house after its cut (about %s): %s each",
-                Items.FormatMoney(auction), Items.FormatMoney(unit)), unit
+                Items.FormatMoney(auction), Items.FormatMoney(unit)), unit, { tag = L["Vendor pays more"] }
         end
         return "sell", L.Format("Not an upgrade: %s each", Items.FormatMoney(unit)), unit
     end
@@ -1896,9 +1896,10 @@ function Verdicts:Best(entry, unit, said, noBelow)
         and unit and unit > 0 and (disenchant or not canDisenchant) then
         if disenchant then
             return "sell", L.Format("Your class can't use it. Vendor pays more than disenchanting (about %s): %s each",
-                Items.FormatMoney(disenchant), Items.FormatMoney(unit)), unit
+                Items.FormatMoney(disenchant), Items.FormatMoney(unit)), unit, { tag = L["Your class can't use it"] }
         end
-        return "sell", L.Format("Your class can't use it. Vendor pays %s each", Items.FormatMoney(unit)), unit
+        return "sell", L.Format("Your class can't use it. Vendor pays %s each", Items.FormatMoney(unit)), unit,
+            { tag = L["Your class can't use it"] }
     end
 
     if bound and (entry.quality or 0) >= 2 and eq and True(eq, "sell") then
@@ -2081,6 +2082,9 @@ function Verdicts:Groups()
                 upgrade = extra and extra.upgrade or nil,
                 bought = extra and extra.bought,
                 craft = extra and extra.craft, wait = extra and extra.wait,
+                -- A short tag for the one-line row; the full reason shows
+                -- under the row the mouse is on (UI/MainWindow.lua).
+                tag = extra and extra.tag,
                 name = Items.NameFromLink(entry.link) or L.Format("item %s", tostring(entry.itemID)),
                 count = 0, slots = {},
             }

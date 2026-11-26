@@ -102,6 +102,12 @@ function Selling:Queue(limit)
     return queue
 end
 
+--- A stack sold: the window slides its row out and counts the gold up
+--- (UI:Sold, Calmer rows, 2026-11-26).
+function Selling:Told(item)
+    if ns.UI and type(ns.UI.Sold) == "function" then pcall(ns.UI.Sold, ns.UI, item) end
+end
+
 --- The next stack to sell that the bags still hold, or nil.
 --- Does the slot still hold this item, unlocked, and is it still under
 --- Sell? Read and judged again just before a sale: the same item ID can
@@ -157,6 +163,7 @@ function Selling:SellBatch()
             Selling.soldIDs[item.itemID] = true
             Selling.sold = (Selling.sold or 0) + 1
             Selling.soldWorth = (Selling.soldWorth or 0) + (item.unit or 0) * (item.count or 1)
+            Selling:Told(item)
         end
         C_Timer.After(Selling.GAP, Step)
     end
@@ -240,6 +247,7 @@ function Selling:Create()
             Selling.soldIDs[item.itemID] = true
             Selling.sold = (Selling.sold or 0) + 1
             Selling.soldWorth = (Selling.soldWorth or 0) + (item.unit or 0) * (item.count or 1)
+            Selling:Told(item)
             if Selling:TestResult() == nil then
                 -- Once the click's own sale has settled.
                 C_Timer.After(Selling.QUIET_WAIT, function() Selling:QuietTest(item) end)
@@ -445,6 +453,7 @@ function Selling:QuietTest(clicked)
             Selling.soldIDs[item.itemID] = true
             Selling.sold = (Selling.sold or 0) + 1
             Selling.soldWorth = (Selling.soldWorth or 0) + (item.unit or 0) * (item.count or 1)
+            Selling:Told(item)
         end
         Selling:Update()
     end)
