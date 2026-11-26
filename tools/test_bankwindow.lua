@@ -139,10 +139,35 @@ suite.check("and hides when nothing is wanted", not BankWindow.takeButton:IsShow
 -- Nothing moves without a click.
 suite.check("drawing moved nothing", #fake.used == 0)
 
--- The close gem gives the game's bank back.
+-- Game Bank swaps to the game's bank, still open; Butler Bank swaps back.
+BankWindow.swapButton:GetScript("OnClick")(BankWindow.swapButton, "LeftButton")
+suite.check("Game Bank hides Butler's window", not BankWindow:IsShown())
+suite.check("and shows the game's bank", not ns.Veil:Covers(_G.BankFrame))
+suite.check("with a Butler Bank button under it", BankWindow.backButton and BankWindow.backButton:IsShown())
+suite.check("the bank stays open", Errands.bankOpen)
+BankWindow.backButton:GetScript("OnClick")(BankWindow.backButton, "LeftButton")
+suite.check("Butler Bank swaps back", BankWindow:IsShown() and ns.Veil:Covers(_G.BankFrame))
+suite.check("and its button goes", not BankWindow.backButton:IsShown())
+BankWindow:SwapToGame()
+Errands:Left("bank")
+suite.check("leaving the banker takes the button away", not BankWindow.backButton:IsShown())
+Errands.bankOpen = true
+BankWindow:BankOpened()
+
+-- The close gem shuts the bank, as the game's own close does.
+local shut = 0
+_G.C_Bank = { CloseBankFrame = function() shut = shut + 1 end }
 BankWindow:Close()
 suite.check("closed", not BankWindow:IsShown())
-suite.check("the game's bank comes back", not ns.Veil:Covers(_G.BankFrame))
+suite.check("the bank is shut too", shut == 1)
+suite.check("the game's bank is not left veiled", not ns.Veil:Covers(_G.BankFrame))
+_G.C_Bank = nil
+local cleared
+_G.C_PlayerInteractionManager = { ClearInteraction = function(kind) cleared = kind end }
+_G.Enum.PlayerInteractionType = { Banker = 8 }
+suite.check("without that call the interaction is cleared", BankWindow.CloseBank() and cleared == 8)
+_G.C_PlayerInteractionManager = nil
+suite.check("with neither it says so", BankWindow.CloseBank() == false)
 
 -- Leaving the banker closes it.
 BankWindow:BankOpened()

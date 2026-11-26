@@ -14,7 +14,7 @@
 --
 -- The game's bank window is put out of sight with ns.Veil (see-through and
 -- no mouse; never Hide or Show) while this one is up, and put back when this
--- one closes, so the close gem gives the game's bank back. Nothing moves
+-- one closes. The close gem shuts the bank, as the game's own close does. Nothing moves
 -- without the player's click: Take for Crafts runs Errands:TakeFromBank, the
 -- same as the main window's Take from bank.
 --
@@ -29,7 +29,7 @@ local BankWindow = ns.NewModule("BankWindow")
 local Theme = ns.Theme
 local Widgets = ns.Widgets
 
-local WIDTH = 440
+local WIDTH = 480
 local HEIGHT = 560
 local PADDING = 18
 local EDGE_PAD = 11
@@ -40,7 +40,7 @@ local GAP = 4
 local HEADING = 24
 local SECTION_GAP = 8
 local SCROLL_STEP = 48
-local TAB_ICON = 26
+local TAB_ICON = 24
 
 BankWindow.GROUPS = { "type", "grid" }
 BankWindow.SPOT_KEY = "butler.bank"
@@ -295,6 +295,14 @@ function BankWindow:BuildFoot()
     local free = Theme.CreateLabel(frame, "normal", "text", "RIGHT")
     free:SetPoint("BOTTOMRIGHT", -PADDING, 13)
     self.freeLabel = free
+
+    -- Game Bank: swap to the game's own bank without leaving the banker
+    -- (the owner, 2026-11-26). Its Butler Bank button swaps back.
+    local swap = Widgets.CreateButton(frame, L["Game Bank"], function() BankWindow:SwapToGame() end, { height = 22 })
+    swap:SetPoint("BOTTOMRIGHT", -PADDING, 9)
+    self.swapButton = swap
+    free:ClearAllPoints()
+    free:SetPoint("RIGHT", swap, "LEFT", -10, 0)
 end
 
 BankWindow.EMPTY_SLOT = "Interface\\PaperDoll\\UI-PaperDoll-Slot-Bag"
@@ -398,7 +406,13 @@ function BankWindow:DrawFoot(places)
         x = x + TAB_ICON + 4
     end
     for i = #slots + 1, #tabIcons do tabIcons[i]:Hide() end
-    self.freeLabel:SetText(L.Format("%d free", total))
+    local text = L.Format("%d free", total)
+    self.freeLabel:SetText(text)
+    -- Only where it fits between the bag slots and Game Bank (a long
+    -- label in another language); the empty slots heading says it too.
+    local swapWidth = self.swapButton and tonumber(self.swapButton:GetWidth()) or 0
+    local room = WIDTH - 2 * PADDING - swapWidth - 10 - x
+    self.freeLabel:SetShown(room >= Theme.TextWidth("normal", text) + 8)
 end
 
 --------------------------------------------------------------------------------
@@ -652,6 +666,8 @@ end
 --- At a banker: up beside Butler Bags, with the game's bank out of sight.
 function BankWindow:BankOpened()
     if not self:On() or InCombat() then return end
+    self.swapped = false
+    if self.backButton then self.backButton:Hide() end
     self:Build()
     self:Place()
     self.frame:Show()
@@ -661,14 +677,79 @@ end
 
 --- Leaving the banker closes it.
 function BankWindow:BankClosed()
+    self.swapped = false
+    if self.backButton then self.backButton:Hide() end
     if self.frame and self.frame:IsShown() then self.frame:Hide() end
     self:UncoverGame()
 end
 
+--- The Butler Bank button shown under the game's bank while it is swapped
+--- in, made once. It sits on UIParent, placed under the game's frame;
+--- nothing is written on the game's frame.
+function BankWindow:BackButton()
+    if self.backButton then return self.backButton end
+    local button = Widgets.CreateButton(UIParent, L["Butler Bank"], function() BankWindow:SwapToButler() end,
+        { height = 22, primary = true })
+    button:SetFrameStrata("DIALOG")
+    button:Hide()
+    self.backButton = button
+    return button
+end
+
+--- Game Bank: Butler's window goes and the game's bank shows, still open.
+function BankWindow:SwapToGame()
+    if InCombat() then return end
+    self.swapped = true
+    if self.frame then self.frame:Hide() end
+    self:UncoverGame()
+    local game = rawget(_G, "BankFrame")
+    if type(game) == "table" then
+        local back = self:BackButton()
+        back:ClearAllPoints()
+        back:SetPoint("TOP", game, "BOTTOM", 0, -6)
+        back:Show()
+    end
+end
+
+--- Butler Bank: back from the game's bank to Butler's window.
+function BankWindow:SwapToButler()
+    if InCombat() then return end
+    self.swapped = false
+    if self.backButton then self.backButton:Hide() end
+    if not (ns.Errands and ns.Errands.bankOpen) then return end
+    self:Build()
+    self.frame:Show()
+    self:CoverGame()
+    self:Draw()
+end
+
 --- The close gem: this window goes and the game's bank comes back.
+--- The close gem shuts the bank, as the game's own close does (the owner,
+--- 2026-11-26). Forever has no CloseBankFrame, so the newer calls are
+--- tried in turn. If none is there, the game's bank comes back instead,
+--- so it can still be closed.
+function BankWindow.CloseBank()
+    local bank = rawget(_G, "C_Bank")
+    if type(bank) == "table" and type(bank.CloseBankFrame) == "function" and pcall(bank.CloseBankFrame) then
+        return true
+    end
+    local old = rawget(_G, "CloseBankFrame")
+    if type(old) == "function" and pcall(old) then return true end
+    local manager = rawget(_G, "C_PlayerInteractionManager")
+    local enum = rawget(_G, "Enum")
+    local types = type(enum) == "table" and enum.PlayerInteractionType
+    local banker = type(types) == "table" and types.Banker or nil
+    if type(manager) == "table" and type(manager.ClearInteraction) == "function" and banker ~= nil
+        and pcall(manager.ClearInteraction, banker) then
+        return true
+    end
+    return false
+end
+
 function BankWindow:Close()
     if self.frame then self.frame:Hide() end
     self:UncoverGame()
+    self.CloseBank()
 end
 
 function BankWindow:OnEnable()

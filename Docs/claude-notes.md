@@ -3360,8 +3360,11 @@ slots on the right. Off unless ticked: "Butler Bank:"
 under BAGS on the General page, saved account wide as `bankWindow` (never
 rename it; in `SETTING_KEYS`, so Restore Defaults turns it off), and only
 with Use Butler Bags on too. Opened by `Errands:Arrived("bank")` once the bags are read,
-closed by `Errands:Left("bank")`; the close gem hides it and gives the game's
-bank back. The game's `BankFrame` goes under `ns.Veil`, never hidden.
+closed by `Errands:Left("bank")`; the close gem shuts the bank too
+(`BankWindow.CloseBank`: `C_Bank.CloseBankFrame`, `CloseBankFrame`, then
+`C_PlayerInteractionManager.ClearInteraction`; none seen in game yet), as
+Trent asked 2026-11-26. The foot's Game Bank button shows the game's bank
+with a Butler Bank button under it to come back (`SwapToGame`, `SwapToButler`). The game's `BankFrame` goes under `ns.Veil`, never hidden.
 Squares are `ContainerFrameItemButtonTemplate` on a holder carrying the bag
 (as Butler Bags), made out of a fight only; spot kept as
 `windowSpots["butler.bank"]`. Redrawn on `BAG_UPDATE_DELAYED`,
