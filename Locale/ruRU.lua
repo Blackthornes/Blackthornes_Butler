@@ -1370,3 +1370,10 @@ L["Open or close the window"] = "Открыть или закрыть окно"
 L["Butler Settings:"] = "Настройки Butler:"
 L["Puts every Butler setting back to how it started. Your keep and sell lists and your characters stay. So do your window locations and the choices on this page."] = "Возвращает каждую настройку Butler к началу. Твои списки «оставить» и «продать» и твои персонажи остаются. Положение окон и выбор на этой странице тоже остаются."
 L["Every Butler setting is back to how it started."] = "Все настройки Butler снова как в начале."
+
+-- Quick marks (2026-11-26)
+L["Keep For Now"] = "Пока оставить"
+L["Kept until you log out."] = "Остаётся, пока ты не выйдешь из игры."
+L["Mark to Sell"] = "Пометить на продажу"
+L["Mark to Keep"] = "Пометить, чтобы оставить"
+L["Quick Marks Bar"] = "Панель быстрых меток"

@@ -1416,3 +1416,10 @@ L["Open or close the window"] = "Fenster öffnen oder schließen"
 L["Butler Settings:"] = "Butler-Einstellungen:"
 L["Puts every Butler setting back to how it started. Your keep and sell lists and your characters stay. So do your window locations and the choices on this page."] = "Setzt jede Butler-Einstellung auf den Anfang zurück. Deine Behalten- und Verkaufslisten und deine Charaktere bleiben. Auch deine Fensterpositionen und die Einstellungen auf dieser Seite bleiben."
 L["Every Butler setting is back to how it started."] = "Alle Butler-Einstellungen sind wieder wie am Anfang."
+
+-- Quick marks (2026-11-26)
+L["Keep For Now"] = "Vorerst behalten"
+L["Kept until you log out."] = "Bleibt, bis du dich ausloggst."
+L["Mark to Sell"] = "Zum Verkaufen markieren"
+L["Mark to Keep"] = "Zum Behalten markieren"
+L["Quick Marks Bar"] = "Leiste für schnelle Zeichen"

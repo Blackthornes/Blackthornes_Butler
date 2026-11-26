@@ -1144,6 +1144,8 @@ local function MakeButton(bag, slot)
     end)
 
     button:HookScript("OnEnter", function(self)
+        -- Quick marks: Alt over this square brings up the bar.
+        if ns.QuickMarks then ns.QuickMarks:Hover(self, self.bfrBag, self.bfrSlot) end
         local entry = ns.Bags.slots[self.bfrBag .. ":" .. self.bfrSlot]
         if entry and BagWindow.newShown and BagWindow.newShown[self] then
             if ns.BagView:Saw(entry) then
