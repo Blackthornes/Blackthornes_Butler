@@ -3369,3 +3369,12 @@ shown. Move to Bank stays on Butler Bags' own Bank heading.
 `Errands.BankBagIDs` leaves -1 out once `Enum.BagIndex.CharacterBankTab_1`
 exists. That also takes them out of Butler Bags' Bank tab, the kept bank
 copy and Take from bank. Tested in `tools/test_bankwindow.lua`.
+
+## The note stack's own spot (2026-11-26)
+
+`UI/Notice.lua` (shared by all five) reads `windowSpots["shared.notice"]`
+through `Notice.Spot`: the middle of the stack's top, in screen pixels.
+Farmer's Move Windows writes it when the player drags the Notes box. While
+it is set, every addon's notes stack there and leave the top shelf free.
+Window Locations: Set Default clears it with the other window spots. Never
+rename it.
