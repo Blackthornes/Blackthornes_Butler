@@ -3061,6 +3061,20 @@ shadowed. While it shows, each arrow's `ArrowUI.Words` asks
 longer read (left in saves). Tested in `tools/test_stepbox.lua` (the same in
 all five). Not yet seen in game.
 
+## Auction Only If It Pays (2026-11-26)
+
+The owner said "build 1-10" from the improvement mockups; this is number 6.
+Selling page, AT A VENDOR: "Auction Only If It Pays:", a drop-down of 0, 5,
+10, 20, 30 and 50 percent, then "more than a vendor". Saved account wide as
+`auctionMargin` (whole percent, nil when 0; never rename it), listed in
+`SettingsUI.SETTING_KEYS` so Set Default clears it. `Verdicts:Best` picks
+Auction only when what one brings after the cut (the slow-seller weight
+too) is above the vendor price times (100 + percent) / 100. At 0 nothing
+changed: one copper more is still enough. It only moves items toward the
+vendor (reason "Auction pays only a little more ..."); it never stops a
+post, and Tradeskills' sell list doesn't read it. Tested in
+`tools/test_auctionmargin.lua`.
+
 ## Quest Items group, kind rules and the Bags button (2026-11-26)
 
 The owner said build it (2026-11-26, from the improvement mockups, #7).
