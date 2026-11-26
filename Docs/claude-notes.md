@@ -3249,3 +3249,44 @@ The owner said build it (2026-11-26, from the improvement mockups, #3).
   `UI.SettleRow` puts a row back when it gets new data.
 
 Tested in `tools/test_calmerrows.lua`.
+
+## The restock list (2026-11-26)
+
+The top Discord ask; the owner said "build 1-10" from the mockup
+`butler-improve-2-restock`. Built in two PRs; this is PR 1 (the list, the
+low count and buying at a vendor). `Logic/Restock.lua` keeps what the
+character playing always carries: account wide by GUID,
+`restock[guid] = { name, lines = { { item, keep } } }`, item an item ID or
+the kind "food" or "water", with a copy in `BlackthornesButlerCharDB.restock`
+read when the GUID can't be (never rename either). Nothing is written
+when the GUID won't read. An empty list is off: no group, no button.
+
+- Kinds: "Food for my level" and "Water for my level" count every food
+  (or drink) in the bags that needs at least the level less
+  `Restock.LEVEL_SPAN` (15). Food and drink are told apart by the spell
+  the item casts, compared with the client's own names for spells 433
+  (Food) and 430 (Drink), after a class 0, subclass 5 check
+  (`Restock.KindOf`, cached). At a vendor a kind buys the best food that
+  counts: needs the most level, then cheapest a piece (`VendorIndex`).
+- `Restock:Low()` lists lines short of their number, read once a change
+  of the bags, the list or the level. The Butler window shows them as a
+  RESTOCK group right after Ammo (`UI.RestockRows`, row type `restock`):
+  "4 Healing Potion" with "You have 1 of 5." away from a vendor, "Buy 14
+  Haunch of Meat" with "This vendor sells it." and a Buy 14 button at one
+  who sells it. The Butler Bar shows "Restock N" left of Buy (or Sell, or
+  Open) for every line this vendor sells (`PlaceBar:WordRestock`,
+  `PlaceRestock`).
+- Buying goes through BuyMany's plan and run (`BuyMany:Plan`, `Start`), a
+  line at a time, each planned again on bags read afresh, so it never buys
+  past the need, the room or the purse. Only on the player's click.
+- Kept up to their count: `KeepHere:Effective` takes `Restock:Keep` as part
+  of its own number (a kind keeps its number of each item that counts).
+- Settings, Keep page, right column first: KEEP IN YOUR BAGS ("This
+  character"), columns ITEM OR KIND, KEEP (a box; 0 takes it off) and HAVE
+  (amber when short), dark glass rows, and a last row: drop an item on it,
+  or click for a menu of the kinds not on it yet (`UI/RestockList.lua`).
+- `/bbutler probe` has a restock line (spell names, how bag food reads).
+- PR 2 adds the other sources: an alt's bank (a job), a craft one of
+  yours can make (Tradeskills' `Butler:CraftFor`, `QueueCraft`) and the
+  auction house (price and Search only).
+- Tested in `tools/test_restock.lua`. Not yet seen in game.

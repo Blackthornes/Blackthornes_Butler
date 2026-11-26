@@ -92,8 +92,10 @@ UI\MailPicker.lua
 Logic\Funds.lua
 Logic\Ammo.lua
 Logic\BuyMany.lua
+Logic\Restock.lua
 UI\BuyMany.lua
 UI\KeepAcross.lua
+UI\RestockList.lua
 Logic\Learning.lua
 Logic\Jobs.lua
 Logic\MailRunsOut.lua
