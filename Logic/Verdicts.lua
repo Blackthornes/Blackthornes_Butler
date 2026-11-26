@@ -1669,6 +1669,30 @@ function Verdicts:SetSellBelow(copper)
     self:Changed(true)
 end
 
+--- Auction Only If It Pays (the owner said build it, 2026-11-26, from a
+--- mockup): how much more, in percent, the auction house must pay after
+--- its cut before Butler picks it over a vendor. 0 (the start) keeps the
+--- old way, where one copper more is enough. It only moves items toward
+--- the vendor; it never stops a post. Account wide as `auctionMargin`.
+Verdicts.AUCTION_MARGINS = { 0, 5, 10, 20, 30, 50 }
+
+function Verdicts:AuctionMargin()
+    local margin = ns.db and tonumber(ns.db.auctionMargin)
+    if not margin or margin <= 0 then return 0 end
+    return math.min(math.floor(margin), 1000)
+end
+
+--- Save the percent (nil or 0 turns it off) and judge every item again.
+function Verdicts:SetAuctionMargin(percent)
+    if not ns.db then return end
+    percent = tonumber(percent)
+    if percent then percent = math.floor(percent) end
+    if percent and percent < 1 then percent = nil end
+    if percent == ns.db.auctionMargin then return end
+    ns.db.auctionMargin = percent
+    self:Changed(true)
+end
+
 --- Copper from "1g 50s", "75s", "30c" or "2g5s"; 0 for "off", "0" or
 --- nothing. nil when it can't be read. A plain number counts as gold.
 function Verdicts.ParseMoney(text)
@@ -1741,8 +1765,12 @@ function Verdicts:Best(entry, unit, said, noBelow)
         if verdict then return verdict, reason, worth end
     end
 
+    -- Auction Only If It Pays: the auction house must beat a vendor by
+    -- the player's percent (0 keeps the old way, one copper is enough).
+    local margin = self:AuctionMargin()
+    local needed = margin > 0 and math.floor((unit or 0) * (100 + margin) / 100) or unit
     local best, value = "sell", unit
-    if auctionWorth and auctionWorth > value then best, value = "auction", auctionWorth end
+    if auctionWorth and auctionWorth > needed then best, value = "auction", auctionWorth end
     if disenchant and disenchant > value then best, value = "disenchant", disenchant end
 
     local craft = self:CraftPays(entry, value)
@@ -1792,6 +1820,10 @@ function Verdicts:Best(entry, unit, said, noBelow)
         -- Say which: the auction house pays less once its cut and deposit
         -- are taken, or it pays more but sells too slowly to wait for (a
         -- player read "vendor pays more" under a higher auction price).
+        if margin > 0 and auctionWorth and auctionWorth > unit then
+            return "sell", L.Format("Auction pays only a little more (about %s after the cut). Vendor pays %s each",
+                Items.FormatMoney(auction), Items.FormatMoney(unit)), unit
+        end
         if auction and auction > unit then
             return "sell", L.Format("Sells slowly at auction (about %s after the cut), vendor pays %s each",
                 Items.FormatMoney(auction), Items.FormatMoney(unit)), unit
