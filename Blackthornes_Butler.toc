@@ -37,7 +37,9 @@ Logic\Sisters.lua
 Logic\Quests.lua
 Logic\QuestBuy.lua
 Logic\Verdicts.lua
+Logic\Kinds.lua
 Logic\Everyone.lua
+Logic\SearchWords.lua
 Logic\BankAlt.lua
 Logic\KeepHere.lua
 Logic\KeepAcross.lua
@@ -78,7 +80,9 @@ UI\MailContents.lua
 UI\Trash.lua
 UI\Boxes.lua
 UI\PlaceBar.lua
+UI\QuickSetup.lua
 UI\BagMarks.lua
+UI\QuickMarks.lua
 UI\SwapWhenFull.lua
 
 Logic\Selling.lua

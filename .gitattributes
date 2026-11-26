@@ -3,3 +3,6 @@
 # Windows. Pin them so a checkout cannot normalise them to LF.
 *.bat text eol=crlf
 *.ps1 text eol=crlf
+
+# The Clear font ships unchanged (Media/Fonts); never touch its bytes.
+*.ttf binary
