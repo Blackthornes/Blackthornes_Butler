@@ -229,6 +229,8 @@ function Verdicts:SetChoice(itemID, choice, to)
     List("alwaysBank")[itemID] = (choice == "bank") or nil
     List("alwaysDisenchant")[itemID] = (choice == "disenchant") or nil
     List("alwaysMail")[itemID] = (choice == "mail") and to or nil
+    -- A real mark ends Keep For Now, or it would hide the mark until logout.
+    self.keptForNow[itemID] = nil
     -- The player's own pick (or Let Butler decide) replaces what was learned.
     if ns.Learning then ns.Learning:Forget(itemID) end
     self:Changed(true)
@@ -240,6 +242,7 @@ end
 function Verdicts:HasOwnChoices(itemID)
     if not itemID then return false end
     if self:Choice(itemID) ~= nil then return true end
+    if self.keptForNow[itemID] then return true end
     if ns.Learning and ns.Learning:Get(itemID) ~= nil then return true end
     if ns.KeepHere and (ns.KeepHere:Count(itemID) or 0) > 0 then return true end
     if ns.KeepAcross and (ns.KeepAcross:Count(itemID) or 0) > 0 then return true end
@@ -265,6 +268,7 @@ function Verdicts:ResetItem(itemID)
     if ns.KeepAcross and (ns.KeepAcross:Count(itemID) or 0) > 0 then pcall(ns.KeepAcross.Set, ns.KeepAcross, itemID, 0) end
     List("noUpgradeMail")[itemID] = nil
     if self.sellAnyway then self.sellAnyway[itemID] = nil end
+    self.keptForNow[itemID] = nil
     self:Changed(true)
     local settings = ns.SettingsUI
     if settings then
@@ -273,6 +277,28 @@ function Verdicts:ResetItem(itemID)
         end
     end
     return true
+end
+
+-- Keep For Now (the owner said build it, 2026-11-26, from the quick marks
+-- mockup): [itemID] = true, kept until the player logs out. Nothing is
+-- saved, so a reload or logout lets every item go by itself. It beats
+-- every rule but none of the player's Always marks: picking one ends it.
+Verdicts.keptForNow = {}
+
+--- Keep this item until logout (`on` true), or let it go (`on` false).
+--- `on` nil turns it the other way. Returns the new state.
+function Verdicts:KeepForNow(itemID, on)
+    itemID = tonumber(itemID)
+    if not itemID then return false end
+    if on == nil then on = not self.keptForNow[itemID] end
+    self.keptForNow[itemID] = on and true or nil
+    self:Changed(true)
+    return on and true or false
+end
+
+--- True while the player keeps this item for now.
+function Verdicts:KeptForNow(itemID)
+    return itemID ~= nil and self.keptForNow[tonumber(itemID) or itemID] == true
 end
 
 --------------------------------------------------------------------------------
@@ -1015,6 +1041,9 @@ end
 --- is who a Mail row goes to and how many ({ to, count }).
 function Verdicts:Decide(entry, noAlt, pastKeep, pastWear)
     local c = { entry = entry, itemID = entry.itemID, noAlt = noAlt, pastKeep = pastKeep, pastWear = pastWear }
+    if entry.itemID and self.keptForNow[entry.itemID] then
+        return "keep", L["Kept until you log out."], nil, true
+    end
     for _, id in ipairs(self.FIRST) do
         local verdict, reason, unit, final, extra = Ask(self, c, id)
         if verdict then return verdict, reason, unit, final, extra end

@@ -81,6 +81,7 @@ UI\Boxes.lua
 UI\PlaceBar.lua
 UI\QuickSetup.lua
 UI\BagMarks.lua
+UI\QuickMarks.lua
 UI\SwapWhenFull.lua
 
 Logic\Selling.lua

@@ -3093,6 +3093,30 @@ shadowed. While it shows, each arrow's `ArrowUI.Words` asks
 longer read (left in saves). Tested in `tools/test_stepbox.lua` (the same in
 all five). Not yet seen in game.
 
+## Quick marks and Keep For Now
+
+The owner said build it (2026-11-26, improvement review mockup #4). Hold
+Alt over a bag square, the game's or Butler Bags', and a small bar of marks
+comes up above it (`UI/QuickMarks.lua`). One click sets the mark through
+`Verdicts:SetChoice`; a click on the mark it has takes it off. Only marks
+that fit show (`QuickMarks.Fits`): no Mail or Auction for bound, no
+Disenchant under green, no Sell when no vendor buys it. Mail opens the
+menu's own mail page to pick who. The square is learned from the game's
+bag tooltip (`GameTooltip:SetBagItem`, hooked only) and Butler Bags'
+OnEnter. Never in a fight; a fight starting closes the bar.
+
+Keys under Blackthornes Butler in `Bindings.xml`: Mark to Sell, Mark to
+Keep, Keep For Now (the item under the mouse, set only, never toggled,
+one chat line says what was set) and Quick Marks Bar (`keystate`, run on
+up). None has a key until the player gives one. Once Quick Marks Bar has
+a key, Alt no longer shows the bar.
+
+Keep For Now: `Verdicts.keptForNow[itemID] = true`, session only, never
+saved, so logout or a reload lets it go. `Verdicts:Decide` checks it
+before every rule ("Kept until you log out."), so it beats the player's
+Always marks too; `SetChoice` with any mark ends it, and Reset This Item
+clears it (`HasOwnChoices` counts it). Tested in `tools/test_quickmarks.lua`.
+
 ## Auction Only If It Pays (2026-11-26)
 
 The owner said "build 1-10" from the improvement mockups; this is number 6.

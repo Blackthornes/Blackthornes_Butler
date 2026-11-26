@@ -1420,6 +1420,13 @@ L["Butler Settings:"] = "Butler 设置："
 L["Puts every Butler setting back to how it started. Your keep and sell lists and your characters stay. So do your window locations and the choices on this page."] = "把 Butler 的每个设置恢复到最初的样子。 你的保留和出售列表以及你的角色都会保留。 你的窗口位置和这一页的选择也会保留。"
 L["Every Butler setting is back to how it started."] = "Butler 的所有设置都已恢复到最初的样子。"
 
+-- Quick marks (2026-11-26)
+L["Keep For Now"] = "暂时保留"
+L["Kept until you log out."] = "保留到你下线为止。"
+L["Mark to Sell"] = "标记为出售"
+L["Mark to Keep"] = "标记为保留"
+L["Quick Marks Bar"] = "快速标记栏"
+
 -- Set Up Butler (2026-11-26)
 L["Set Up Butler"] = "设置 Butler"
 L["Three quick choices and Butler is ready. Change them any time in Settings."] = "做三个简单选择，Butler 就准备好了。以后随时可以在设置里更改。"
