@@ -110,6 +110,7 @@ Logic\GoldGoals.lua
 Logic\BagView.lua
 UI\Veil.lua
 UI\BagWindow.lua
+UI\BankWindow.lua
 UI\WayArrow.lua
 UI\TravelCard.lua
 UI\TravelMap.lua

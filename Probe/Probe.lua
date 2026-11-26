@@ -299,7 +299,11 @@ end
 --- items, and the first item found.
 function BankProbe.Containers()
     local parts, first = {}, nil
-    local ids = ns.Errands and ns.Errands.BankBagIDs() or { -1 }
+    local ids = ns.Errands and ns.Errands.BankBagIDs() or {}
+    -- Bag -1 is listed too, even where Butler leaves it out of the bank.
+    local listed = false
+    for _, bag in ipairs(ids) do if bag == -1 then listed = true end end
+    if not listed then table.insert(ids, 1, -1) end
     -- Forever's bank is in tabs (Enum.BagIndex.CharacterBankTab_1 and on).
     -- Bag -1 still answers there with a few items, but the game shows none
     -- of them and a click says the spot is empty (seen 2026-11-26). So the

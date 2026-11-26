@@ -1506,3 +1506,10 @@ L["On the auction house, about %s each."] = "На аукционе пример�
 L["queued %d %s in Tradeskills."] = "%d %s в очереди Tradeskills."
 L["You can make them."] = "Ты можешь их сделать."
 L["Your bank has %d."] = "В твоём банке %d."
+
+-- The Butler Bank window (UI/BankWindow.lua)
+L["Search the bank"] = "Поиск в банке"
+L["Take for Crafts"] = "Взять для ремесла"
+L["Bank Bags:"] = "Сумки банка:"
+L["Butler Bank:"] = "Банк Butler:"
+L["At a banker, opens your bank in the Butler Bags style beside your bags. The game's bank is still there underneath."] = "У банкира открывает твой банк в стиле сумок Butler рядом с сумками. Банк игры остаётся под ним."
