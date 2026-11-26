@@ -3255,6 +3255,13 @@ The owner said build it (2026-11-26, from the improvement mockups, #3).
   `Selling.soldWorth` (`UI.SoldText`). Effects Off shows the sum at once.
   `UI.SettleRow` puts a row back when it gets new data.
 
+- **One draw for a reason** (a hang, 2026-11-26). The list leaves and
+  enters the row under a still mouse each time it draws, and both drew the
+  list again, without end: the game hung, then "script ran too long". Now
+  `UI:OpenReason` and `UI:Left` draw through `UI:DrawForReason`, and while
+  it draws (`UI.reasonDraw`) neither changes anything. `UI:Left` closes the
+  reason whatever row it was under. Tested in `tools/test_reasonredraw.lua`.
+
 Tested in `tools/test_calmerrows.lua`.
 
 ## The Right Now card (2026-11-26)

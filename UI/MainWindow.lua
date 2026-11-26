@@ -1508,21 +1508,38 @@ end
 --- The mouse left a row: its tooltip goes, and its opened reason closes.
 function UI:Left(row)
     GameTooltip:Hide()
-    if self.openRow ~= nil and (row == nil or row.data == self.openRow) then
+    -- The list leaves and enters the row under a still mouse each time it
+    -- draws. Inside the draw that opening or closing a reason asked for,
+    -- that is not the mouse moving: the reason stays as that draw set it.
+    if self.reasonDraw then return end
+    -- Whatever row it was open under: the mouse is on one row at a time,
+    -- and after a redraw the open reason's row can hold new data.
+    if self.openRow ~= nil then
         self.openRow = nil
-        if self.list then self.list:Refresh() end
+        self:DrawForReason()
     end
+end
+
+--- Draw the list again for a reason that opened or closed. While it draws,
+--- Left and OpenReason change nothing, so the draw can never ask for
+--- another (it did, without end, and the game hung, 2026-11-26).
+function UI:DrawForReason()
+    if not self.list or self.reasonDraw then return end
+    self.reasonDraw = true
+    local ok, err = pcall(self.list.Refresh, self.list)
+    self.reasonDraw = false
+    if not ok then ns.Debug("reason draw failed:", tostring(err)) end
 end
 
 --- Open the whole reason under an item row the mouse is on, when its tag
 --- says less.
 function UI:OpenReason(row, data)
-    if data.type ~= "item" or self.openRow == data then return end
+    if self.reasonDraw or data.type ~= "item" or self.openRow == data then return end
     local reason = data.reason
     if type(reason) ~= "string" or reason == "" then return end
     if UI.Tag(data, UI.ReasonWidth(row)) == reason then return end
     self.openRow = data
-    if self.list then self.list:Refresh() end
+    self:DrawForReason()
 end
 
 function UI:Enter(row, data)
