@@ -247,6 +247,15 @@ end
 -- The shared tooltip block (UI/TooltipBlock.lua, 2026-11-21)
 --------------------------------------------------------------------------------
 
+-- A line on Shift shows only while Shift is held, so it goes at the
+-- bottom of the tooltip block (2026-11-26).
+local function MarkShift(lines, key)
+    local shift = ns.TooltipShift
+    if type(lines) ~= "table" or not (shift and shift.Read and shift.Read(key)) then return lines end
+    for _, line in ipairs(lines) do line.shift = true end
+    return lines
+end
+
 --- "Butler Says:" and what Butler would do: "Sell, 12s each". The grey
 --- reason or craft details stay under it. Lines and whether held back.
 function VerdictTip:BlockLines(tooltip, data)
@@ -258,7 +267,7 @@ function VerdictTip:BlockLines(tooltip, data)
     if not ns.TooltipShift:Shows(self.SHIFT_KEY) then return nil, true end
     local lines = { { L["Butler Says:"], right and L.Format("%s, %s", answer, right) or answer } }
     if why then lines[2] = { why, leftColor = { 0.7, 0.7, 0.7 }, wrap = true } end
-    return lines
+    return MarkShift(lines, self.SHIFT_KEY)
 end
 
 --- What a vendor pays and charges, for the price part of the block.

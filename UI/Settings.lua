@@ -1453,6 +1453,17 @@ function SettingsUI:BuildPages()
     end, { width = 100, height = 20 })
     controls.heldItems:SetPoint("TOPLEFT", CONTROL_X, 0)
 
+    -- What this character always carries (Logic/Restock.lua,
+    -- UI/RestockList.lua; the owner said build it, 2026-11-26).
+    local restockHead = pages:Section("keep", 2, L["KEEP IN YOUR BAGS"])
+    local restockList = CreateFrame("Frame", nil, pages.pages.keep.content)
+    restockList:SetWidth(COLUMN_WIDTH)
+    restockList.fixedHeight = 60
+    restockList:SetHeight(60)
+    pages:Place("keep", 2, restockList, 4)
+    controls.restockList = restockList
+    ns.RestockList:Build(restockHead, restockList, COLUMN_WIDTH)
+
     -- How many of an item each character keeps (Logic/KeepHere.lua, a
     -- player asked, the owner said build it 2026-10-17). Set with a
     -- right-click in the Butler window; seen and changed here.
@@ -1869,6 +1880,21 @@ function SettingsUI:BuildPages()
     local textRow = pages:Row("all", 1, L["Text Size:"], nil)
     controls.textSize = ns.SettingsPages.TextSizeControl(textRow, CONTROL_X, function() return ns.db end)
 
+    -- Look choices (the owner said build it, 2026-11-26): the same three
+    -- rows in every Blackthornes addon, picked once for all of them. See
+    -- UI/SharedChoices.lua.
+    if ns.SharedChoices and ns.SharedChoices.LOOKS then
+        local fontRow = pages:Row("all", 1, L["Font:"],
+            L["House, Game or Clear. Clear is plain and easy to read, and it has Russian letters."])
+        controls.lookFont = ns.SettingsPages.LookControl(fontRow, CONTROL_X, "font")
+        local colorsRow = pages:Row("all", 1, L["Colors:"],
+            L["Warm is the look today. Darker takes the warm tint out of the glass."])
+        controls.lookColors = ns.SettingsPages.LookControl(colorsRow, CONTROL_X, "colors")
+        local foldRow = pages:Row("all", 1, L["Fold Gem:"],
+            L["What a folded window turns into: the round button, or a small bar with its title."])
+        controls.lookFold = ns.SettingsPages.LookControl(foldRow, CONTROL_X, "fold")
+    end
+
     -- How much the windows move: they rise in, glow and glint at Full,
     -- only fade at Subtle and stay still at Off. Full until picked, and the
     -- same choice as every Blackthornes addon (UI/SharedChoices.lua).
@@ -2140,10 +2166,16 @@ function SettingsUI:Refresh()
     self:SyncHeld()
     self:SyncKeepHere()
     self:SyncKeepAcross()
+    if ns.RestockList then ns.RestockList:Sync() end
     self:SyncBankAlt()
     self:SyncMailRules()
     self:SyncLists()
     controls.textSize:Sync()
+    if controls.lookFont then
+        controls.lookFont:Sync()
+        controls.lookColors:Sync()
+        controls.lookFold:Sync()
+    end
     controls.windowStyle:Sync()
     controls.effects:SetValue(controls.effectsIndex(), true)
     controls.muteSounds:SetChecked(ns.Muted ~= nil and ns.Muted() == true)

@@ -200,6 +200,7 @@ function UI:Build()
     })
     self.list:SetPoint("TOPLEFT", 6, -6)
     self.list:SetPoint("BOTTOMRIGHT", -6, 6)
+    self:BuildChips(well)
 
     -- Gold goals sit at the bottom, under the list (UI/GoldGoals.lua; the
     -- owner, 2026-10-13: "the purse section goes at the bottom").
@@ -309,6 +310,7 @@ function UI:BuildHeader()
     search:SetPoint("LEFT", header, "LEFT", 48, -2)
     search:SetWidth(260)
     search:Hide()
+    ns.SearchWords.AttachTip(search)
     self.search = search
 
     -- Your bags' own search (the owner said yes, 2026-10-13), the same box
@@ -319,6 +321,7 @@ function UI:BuildHeader()
     bagSearch:SetPoint("LEFT", header, "LEFT", 48, -2)
     bagSearch:SetWidth(260)
     bagSearch:SetShown(self.view ~= "all")
+    ns.SearchWords.AttachTip(bagSearch)
     subtitle:Hide()
     self.bagSearch = bagSearch
 
@@ -333,10 +336,72 @@ function UI:BuildHeader()
 end
 
 --- Empty a search box and draw the list again (the empty block's Clear
---- Search).
+--- Search). All Characters' chips go dark with it.
 function UI:ClearSearch(box)
     if box and box.SetText then box:SetText("") end
+    if box == self.search then
+        self.chipsOn = {}
+        self:PaintChips()
+    end
     self:Refresh()
+end
+
+-- All Characters' chips (the owner said build it, 2026-11-26): the common
+-- words, one click each, over the list. Several can be lit at once; an
+-- item must pass them all, and what is typed too.
+UI.chipsOn = {}
+UI.CHIP_ROW = 24
+
+--- The chips along the top of the well, wrapped onto a second row when the
+--- words run long. Shown only on All Characters.
+function UI:BuildChips(well)
+    local row = CreateFrame("Frame", nil, well)
+    row:SetPoint("TOPLEFT", 8, -6)
+    row:SetPoint("TOPRIGHT", -8, -6)
+    self.chipRow, self.chips = row, {}
+    local room = WIDTH - 2 * PADDING - 16
+    local x, rows = 0, 1
+    for _, key in ipairs(ns.SearchWords.CHIPS) do
+        local chip = Widgets.CreateChip(row, ns.SearchWords.CHIP_WORDS[key], function()
+            UI.chipsOn[key] = not UI.chipsOn[key] or nil
+            UI:PaintChips()
+            UI:Refresh()
+        end)
+        local width = chip:GetWidth() or 34
+        if x > 0 and x + width > room then x, rows = 0, rows + 1 end
+        chip:SetPoint("TOPLEFT", row, "TOPLEFT", x, -(rows - 1) * UI.CHIP_ROW)
+        x = x + width + 4
+        self.chips[key] = chip
+    end
+    row:SetHeight(rows * UI.CHIP_ROW)
+    self.chipRows = rows
+    self:ShowChips(self.view == "all")
+    self:PaintChips()
+end
+
+function UI:PaintChips()
+    for key, chip in pairs(self.chips or {}) do
+        if chip.SetSelected then chip:SetSelected(self.chipsOn[key] == true) end
+    end
+end
+
+--- The chips show on All Characters, and the list moves down under them.
+function UI:ShowChips(all)
+    if not self.chipRow then return end
+    self.chipRow:SetShown(all)
+    local top = all and (6 + (self.chipRows or 1) * UI.CHIP_ROW) or 6
+    self.list:ClearAllPoints()
+    self.list:SetPoint("TOPLEFT", 6, -top)
+    self.list:SetPoint("BOTTOMRIGHT", -6, 6)
+end
+
+--- The chips lit, as one word for the drawn key ("gear,boe"), "" for none.
+function UI:ChipKey()
+    local keys = {}
+    for _, key in ipairs(ns.SearchWords.CHIPS) do
+        if self.chipsOn[key] then keys[#keys + 1] = key end
+    end
+    return table.concat(keys, ",")
 end
 
 --- Show one list or the other: "bags" or "all".
@@ -351,6 +416,7 @@ function UI:SetView(view)
     self.subtitle:Hide()
     self.search:SetShown(all)
     self.bagSearch:SetShown(not all)
+    self:ShowChips(all)
     if all then self.bagSearch:ClearFocus() else self.search:ClearFocus() end
     if ns.ButlerTabs then ns.ButlerTabs:Light(self) end
 
@@ -450,6 +516,9 @@ function UI.RowAction(data)
         data.action.run()
     elseif data.type == "ammo" then
         ns.Ammo:Buy()
+    elseif data.type == "restock" then
+        local action = ns.Restock.RowAction(data.row)
+        if action and action.run() then UI:Refresh(true) end
     elseif data.type == "job" and data.step and data.step.kind == "buy" then
         ns.Jobs:BuyAtVendor()
     elseif data.type == "questbuy" then
@@ -785,6 +854,7 @@ function UI.DrawRow(row, data)
     if row.action then row.action:Hide() end
     UI.ClearLook(row)
     if data.type == "ammo" then return UI.UpdateAmmoRow(row, data) end
+    if data.type == "restock" then return UI.UpdateRestockRow(row, data) end
     if data.type == "everyone" then return UI.UpdateItemRow(row, data) end
     if data.type == "holder" then return UI.UpdateHolderRow(row, data) end
     if data.type == "gold" then return UI.UpdateGoldRow(row, data) end
@@ -1069,6 +1139,33 @@ function UI.UpdateAmmoRow(row, data)
     end
 end
 
+--- A line of the restock list that runs low (Logic/Restock.lua): how
+--- many to get, where from, and its button (Buy, Search, Add a Job,
+--- Queue); or a mail another character asked of this one.
+function UI.UpdateRestockRow(row, data)
+    local entry, restock = data.row, ns.Restock
+    local plan = entry.plan
+    local item = entry.ask and entry.ask.itemID or entry.low.item
+    row.fold:Hide()
+    row.icon:Show()
+    local icon = plan and plan.item.icon
+    if not icon and not restock.IsKind(item) then
+        icon = Items.Call({ "C_Item.GetItemIconByID", "GetItemIcon" }, item)
+    end
+    row.icon:SetTexture(icon or (item == "water" and [[Interface\Icons\INV_Drink_07]])
+        or (item == "food" and [[Interface\Icons\INV_Misc_Food_15]]) or [[Interface\Icons\INV_Misc_QuestionMark]])
+    row.name:SetTextColor(Theme.Unpack("text"))
+    row.name:SetText(restock.RowName(entry))
+    row.reason:SetText(restock.RowReason(entry))
+    row.worth:SetText("")
+    local action = restock.RowAction(entry)
+    if action then
+        row.action:SetText(action.label)
+        row.action.tooltipText = action.tip
+        row.action:Show()
+    end
+end
+
 --- An item in All characters: its name, who has it and how many in all.
 function UI.UpdateItemRow(row, data)
     local item = data.item
@@ -1114,6 +1211,13 @@ function UI.UpdateHolderRow(row, data)
     row.worth:SetText(ns.Everyone.Age(ns.Everyone.Seen(holder)))
 end
 
+--- The restock list's short lines and the mail other characters asked
+--- of this one (Restock:Rows).
+function UI.RestockRows()
+    if not ns.Restock then return {} end
+    return ns.Restock:Rows()
+end
+
 --- The rows to show: each group's heading, then its items unless folded.
 --- Groups with nothing in them are left out.
 --- What the Your bags search asks for, trimmed and lower case; "" for none.
@@ -1122,12 +1226,23 @@ function UI:BagSearch()
     return (text:lower():gsub("^%s+", ""):gsub("%s+$", ""))
 end
 
---- Does an item row match the Your bags search? By name, as All
---- characters does (Everyone.Matches), or by item ID.
+--- An item row as the search reads it (Logic/SearchWords.lua).
+function UI.SearchItem(row)
+    local first = row.slots and row.slots[1] or nil
+    return {
+        itemID = row.itemID, name = row.name, link = row.link, quality = row.quality,
+        bound = row.bound, upgrade = row.upgrade, quest = first and first.quest or nil,
+        bag = first and first.bag or nil, slot = first and first.slot or nil,
+    }
+end
+
+--- Does an item row match the Your bags search? By name or item ID, as
+--- All characters does, and by the words Butler knows. `search` is the
+--- text or a query already read.
 function UI.RowMatches(row, search)
-    if search == "" then return true end
-    local name = type(row.name) == "string" and row.name:lower() or ""
-    return name:find(search, 1, true) ~= nil or tostring(row.itemID) == search
+    if search == nil or search == "" then return true end
+    if type(search) == "string" then search = ns.SearchWords.Parse(search) end
+    return ns.SearchWords.Match(search, UI.SearchItem(row))
 end
 
 function UI:Lines()
@@ -1138,10 +1253,11 @@ function UI:Lines()
     local search = self:BagSearch()
     if search ~= "" then
         self.matched = 0
+        local query = ns.SearchWords.Parse(search)
         for _, group in ipairs(ns.Verdicts:Groups()) do
             local rows, worth = {}, 0
             for _, row in ipairs(group.rows) do
-                if UI.RowMatches(row, search) then
+                if UI.RowMatches(row, query) then
                     rows[#rows + 1] = row
                     worth = worth + (row.worth or 0)
                 end
@@ -1178,6 +1294,19 @@ function UI:Lines()
         local isFolded = folded.ammo == true
         lines[#lines + 1] = { type = "header", group = group, folded = isFolded }
         if not isFolded then lines[#lines + 1] = { type = "ammo", offer = offer } end
+    end
+    -- What the restock list is short of (Logic/Restock.lua), with Buy N
+    -- at a vendor who sells it.
+    local restockRows = UI.RestockRows()
+    if #restockRows > 0 then
+        local offer = ns.Restock:Offer()
+        local group = { verdict = "restock", label = L["Restock"], count = #restockRows,
+            worth = offer and offer.cost or 0, one = L["item"], many = L["items"] }
+        local isFolded = folded.restock == true
+        lines[#lines + 1] = { type = "header", group = group, folded = isFolded }
+        if not isFolded then
+            for _, entry in ipairs(restockRows) do lines[#lines + 1] = { type = "restock", row = entry } end
+        end
     end
     -- Jobs for the craft queue, here and on other characters
     -- (Logic/Jobs.lua).
@@ -1250,6 +1379,7 @@ local function MailsTo(line)
     if line.type == "gold" then return line.entry and line.entry.to end
     if line.type == "item" and line.verdict == "mail" then return line.mailTo end
     if line.type == "now" then return line.mailTo end
+    if line.type == "restock" and line.row and line.row.ask then return line.row.to end
     return nil
 end
 
@@ -1320,6 +1450,12 @@ function UI.ItemOfRow(data)
         return tonumber(data.offer.ammo.itemID)
     end
     if kind == "wishlist" and type(data.entry) == "table" then return tonumber(data.entry.itemID) end
+    if kind == "restock" and type(data.row) == "table" then
+        if data.row.ask then return tonumber(data.row.ask.itemID) end
+        local plan, low = data.row.plan, data.row.low
+        if plan and plan.item then return tonumber(plan.item.itemID) end
+        return low and tonumber(low.item) or nil
+    end
     return nil
 end
 
@@ -1361,7 +1497,7 @@ function UI:Clicked(data, button)
         and type(data.job) == "table" and type(data.job.name) == "string" then
         return self:ShowJobMenu(data)
     end
-    if data.type == "ammo" or data.type == "job" or data.type == "jobnext" or data.type == "questbuy"
+    if data.type == "ammo" or data.type == "restock" or data.type == "job" or data.type == "jobnext" or data.type == "questbuy"
         or data.type == "skillup" or data.type == "wishlist"
         or data.type == "train" or data.type == "trainnext" or data.type == "trainalt" then return end
     if button == "RightButton" and data.type ~= "gold" then
@@ -1402,6 +1538,17 @@ function UI:Enter(row, data)
     if data.type == "header" then
         GameTooltip:AddLine(data.group.label, Theme.Unpack("accent"))
         GameTooltip:AddLine(L["These sell for a lot less than usual today. Hold on to them until the price comes back."], 1, 1, 1, true)
+        GameTooltip:Show()
+        return
+    end
+    if data.type == "restock" then
+        local entry = data.row
+        local itemID = UI.ItemOfRow(data)
+        local shown = itemID and pcall(GameTooltip.SetItemByID, GameTooltip, itemID)
+        if not shown then GameTooltip:AddLine(ns.Restock.Label(itemID or entry.low.item), 1, 1, 1) end
+        GameTooltip:AddLine(" ")
+        GameTooltip:AddLine(L["Restock"], Theme.Unpack("accent"))
+        GameTooltip:AddLine(ns.Restock.RowReason(entry), 1, 1, 1, true)
         GameTooltip:Show()
         return
     end
@@ -2516,12 +2663,13 @@ function UI:RefreshAll(force)
     end
 
     local search = self.search:GetText() or ""
-    local key = ("all:%d:%s:%d"):format(everyone.version, search, self.openVersion or 0)
+    local chips = self:ChipKey()
+    local key = ("all:%d:%s:%d:%s"):format(everyone.version, search, self.openVersion or 0, chips)
     if force or key ~= self.drawnKey then
         -- The same search keeps its place; a new one starts at the top.
-        local keep = self.drawnKey ~= nil and search == self.drawnSearch
-        self.drawnKey, self.drawnSearch = key, search
-        local lines, shown = everyone:Lines(search, self.open)
+        local keep = self.drawnKey ~= nil and search .. "|" .. chips == self.drawnSearch
+        self.drawnKey, self.drawnSearch = key, search .. "|" .. chips
+        local lines, shown = everyone:Lines(search, self.open, self.chipsOn)
         self.shownItems = shown
         self.list:SetData(lines, keep)
     end
@@ -2533,7 +2681,8 @@ function UI:RefreshAll(force)
         text = everyone:FromTradeskills() and L["No items seen yet."]
             or L["Your bags are empty. Blackthornes Tradeskills remembers your other characters' items."]
     elseif (self.shownItems or 0) == 0 then
-        text = L.Format('Nothing matches "%s".', search)
+        text = search ~= "" and L.Format('Nothing matches "%s".', search)
+            or L["Nothing matches the chips you picked."]
     end
     if text ~= "" and (self.shownItems or 0) == 0 and #everyone.sorted > 0 then
         self.emptyLabel:Set(text, L["Clear Search"], function() UI:ClearSearch(UI.search) end)
@@ -2553,9 +2702,16 @@ function UI:UpdateFooter()
         if not everyone:FromTradeskills() then
             text = L["Only your bags. Load Blackthornes Tradeskills to add your other characters."]
         else
-            text = L.Format("%s on %s.",
-                Plural(#everyone.sorted, L["item"], L["items"]),
-                Plural(everyone:Holders(), L["character"], L["characters"]))
+            local filtered = (self.search:GetText() or "") ~= "" or self:ChipKey() ~= ""
+            if filtered then
+                text = L.Format("%d of %s on %s.", self.shownItems or 0,
+                    Plural(#everyone.sorted, L["item"], L["items"]),
+                    Plural(everyone:Holders(), L["character"], L["characters"]))
+            else
+                text = L.Format("%s on %s.",
+                    Plural(#everyone.sorted, L["item"], L["items"]),
+                    Plural(everyone:Holders(), L["character"], L["characters"]))
+            end
         end
         self.footer:SetText(text)
         return

@@ -85,3 +85,14 @@ at a banker, prints and keeps (`lastProbe`) what that needs:
 
 In a fight it makes and shows nothing, and says so. Results go here once
 the owner has run it.
+
+## Food and drink for the restock list
+
+`Logic/Restock.lua` (2026-11-26) tells food from drink by the spell the
+item casts: `C_Item.GetItemSpell(itemID)` (else `GetItemSpell`) compared
+with the names of spell 433 (Food) and 430 (Drink) from
+`C_Spell.GetSpellName` (else `GetSpellInfo`), so any language matches. It
+first asks `C_Item.GetItemInfoInstant` for class 0, subclass 5 (Food &
+Drink). Both are the retail client's; not yet seen on Forever. The
+`/bbutler probe` "restock" line shows the two spell names and how up to
+three bag items read.

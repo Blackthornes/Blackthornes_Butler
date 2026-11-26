@@ -137,6 +137,36 @@ function Errands:Recipients()
             end
         end
     end
+    -- What another character asked this one to mail from the restock list
+    -- (Logic/Restock.lua's Add a Job).
+    for _, plan in ipairs(ns.Restock and ns.Restock:MailPlan() or {}) do
+        local to = plan.to
+        if not self:IsMe(to) then
+            local recipient
+            for _, known in ipairs(list) do
+                if Errands.SameName(known.to, to) then recipient = known break end
+            end
+            if not recipient then
+                recipient = { to = to, items = {}, byID = {}, count = 0, upgrades = {} }
+                byName[to] = recipient
+                list[#list + 1] = recipient
+            end
+            for _, wanted in ipairs(plan.items) do
+                local item = recipient.byID[wanted.itemID]
+                if ns.Verdicts:InSet(wanted.itemID) then
+                    item = false
+                elseif not item then
+                    item = { itemID = wanted.itemID, count = 0 }
+                    recipient.byID[wanted.itemID] = item
+                    recipient.items[#recipient.items + 1] = item
+                end
+                if item then
+                    item.count = item.count + wanted.count
+                    recipient.count = recipient.count + wanted.count
+                end
+            end
+        end
+    end
     -- Gold from the fund (Logic/Funds.lua) rides with that character's
     -- items, or goes as a mail of its own.
     if ns.Funds and self.mailOpen then
@@ -516,6 +546,7 @@ function Errands:Sent()
             ns.Verdicts:UpgradesMailed(was, upgrades)
         end
         if ns.Funds and ns.Funds.MailWent then ns.Funds:MailWent(was, call and call.money) end
+        if ns.Restock then ns.Restock:Mailed(was, call and call.ids) end
         -- What did not fit in this mail (more than a mail's worth of
         -- stacks) is offered again for this character, so the next mail
         -- carries the rest.
@@ -650,15 +681,21 @@ end
 --- What this character's queued crafts want from its bank, per Tradeskills:
 --- { [itemID] = count }, empty without it.
 function Errands:BankWants()
-    local butler = Errands.Tradeskills("FromBank")
-    if not butler then return {} end
-    local ok, wants = pcall(butler.FromBank, butler)
-    if not ok or type(wants) ~= "table" then return {} end
     local clean = {}
-    for itemID, count in pairs(wants) do
-        if type(itemID) == "number" and type(count) == "number" and count > 0 then
-            clean[itemID] = math.floor(count)
+    local butler = Errands.Tradeskills("FromBank")
+    local ok, wants = false, nil
+    if butler then ok, wants = pcall(butler.FromBank, butler) end
+    if ok and type(wants) == "table" then
+        for itemID, count in pairs(wants) do
+            if type(itemID) == "number" and type(count) == "number" and count > 0 then
+                clean[itemID] = math.floor(count)
+            end
         end
+    end
+    -- What other characters asked this one to mail, past what the bags
+    -- hold (Logic/Restock.lua).
+    for itemID, count in pairs(ns.Restock and ns.Restock:BankWants() or {}) do
+        clean[itemID] = math.max(clean[itemID] or 0, count)
     end
     return clean
 end

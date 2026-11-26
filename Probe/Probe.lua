@@ -210,6 +210,7 @@ function Probe:Run()
     if ns.Trash then Line("trash can", ns.Trash:ProbeText()) end
     if ns.SwapWhenFull then Line("swap when full", ns.SwapWhenFull:ProbeText()) end
     if ns.Ammo then Line("ammo", ns.Ammo:ProbeText()) end
+    if ns.Restock then Line("restock", ns.Restock:ProbeText()) end
     if ns.BuyManyUI then Line("buy more", ns.BuyManyUI:ProbeText()) end
     if ns.ClassTraining then Line("class training", ns.ClassTraining:ProbeText()) end
     if ns.GoldGoals then Line("gold goals", ns.GoldGoals:ProbeText()) end

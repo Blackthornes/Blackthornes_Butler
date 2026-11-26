@@ -138,12 +138,20 @@ _G.BlackthornesEquipment.Butler:Advise(link, bag, slot)
   -- nil for anything that is not gear; bag and slot let it see soulbound
 _G.BlackthornesFarmer.Butler:Advise(itemID)
   -- { goal, have, target, need }: the character playing's own goals
+_G.BlackthornesEquipment.Butler:Worn()
+  -- { { key (GUID), worn = { [itemID] = count }, at } }: each character's
+  --   worn gear, for All Characters (see "Search that knows words")
 _G.BlackthornesPets.Butler:Advise(itemID)
   -- { eats, buff, hours, count }: hours is for all the food carried and
   -- only a rough guess, so Butler shows it and never sells food on it
   -- With Pets' Food to Keep ticked, also keepAll (the number kept), keep
   --   (how many of this item stay) and extra (the rest): see "Food to Keep"
 ```
+
+The restock list (2026-11-26, `Logic/Restock.lua`) also reads
+`_G.BlackthornesTS.Butler:MakersOf(itemID)` (who on the account can craft
+it: `{ recipeID, name, per, makers = { { key, name, short, playing } } }`)
+and `_G.BlackthornesTS_API.GetPrice(itemID)`, inside a pcall, read only.
 
 Each sister's `CLAUDE.md` lists its call under "What Butler calls here".
 If one changes, change `Logic/Sisters.lua` and `Logic/Verdicts.lua` here
@@ -543,6 +551,44 @@ each view keeps its own words. Tested in `tools/test_bagsearch.lua`. The Sell bu
 view, and a vendor opens the window on Your bags. Tradeskills'
 `CLAUDE.md` lists `Holdings` under "What Butler calls here"; if it
 changes, change `Logic/Everyone.lua` too.
+
+## Search that knows words
+
+The owner said build it, 2026-11-26, from the mockup (improvement 5).
+Every search box (All Characters, Your Bags, the Bags window) reads words
+as well as names through `Logic/SearchWords.lua`: `SearchWords.Parse(text,
+characters)` reads what was typed once a redraw, `SearchWords.Match(query,
+item)` asks of each item. Kinds: gear, boe, bound, quest, materials,
+food, grey, upgrade, worn, on auction; money with over and under ("over
+1g", "under 50s", "1g50s", "2 gold", a bare number is gold); "level 30 to
+40" (required level, else item level); a character's first or whole name
+(what they hold, All Characters and the Bags window's Everyone tab only).
+Words left over must all be in the item's name, any order. A kind's own
+word in a name still finds that item ("quest" finds Sealed Quest Note), so
+no name search finds less than before. Each line of words is a locale key
+with commas (`L["gear, armor, weapon, weapons"]`), and the English always
+works too. `SearchWords.Fold` lowers Latin accents and Cyrillic capitals,
+which string.lower does not, and a number touching another script is
+parted from it, so "超过1金" reads.
+
+Hovering a search box lists the words ("Words Butler Knows:",
+`SearchWords.AttachTip`). All Characters has chips over its list
+(`SearchWords.CHIPS`: Gear, Binds When Worn, Materials, Quest, Food,
+Upgrades, Worth Over 1g, On Auction); several can be lit and an item must
+pass all of them and the words; Clear Search lets them go
+(`UI.chipsOn`, session only, nothing saved). The footer says "N of M
+items" while it filters.
+
+Two more places per character in All Characters (`Everyone.PLACES` now
+`bags, bank, mail, worn, auction`), each in the total and the holder line:
+worn gear from `_G.BlackthornesEquipment.Butler:Worn()` (`{ { key, worn,
+at } }`, matched by key, the one playing by `UnitGUID` too;
+`Everyone.ReadWorn`) and items on auction from Tradeskills' `Holdings()`
+`auctions` and `auctionsAt` (listings not yet ended). Both read only, in a
+pcall, once a build; nothing without that addon. Worth is a vendor's price
+for greys, else the best of a vendor and `BlackthornesTS_API.GetPrice`;
+worth and upgrade answers are kept until `Verdicts.version` moves, item
+facts for the session. Tested in `tools/test_searchwords.lua`.
 
 ## At the mailbox and the bank
 
@@ -2935,9 +2981,11 @@ Forever 1.60.1 (a hotfix, announced 2026-11-20) makes GetRealmName, GetRealmID a
 
 ## The tooltip block (shared item tooltip lines)
 
-The owner said build it (2026-11-21, from the UI pass mockup), in Farmer, Tradeskills, Equipment and Butler. Every Blackthornes line on an item tooltip goes on in one block: a blank row with a thin gold line of our own on it (a texture, hidden when the tooltip clears), then each line as a yellow name ending ":" on the left and a white answer on the right, no blank rows between addons, "Hold Shift for more." last and once. `UI/TooltipBlock.lua` is the same file in the four (FILE_VERSION 1; a fix belongs in all four). `_G.BlackthornesTooltipBlock` holds the parts and the one hook (the item post call, else OnTooltipSetItem on GameTooltip, ItemRefTooltip and the shopping tooltips); the newest copy's writer wins. Each addon works out its own lines and hands them over with `TooltipBlock:Provide(part, section, order, fn)`, `fn(tooltip, data)` returning lines and whether one was held for Shift; it no longer writes item lines itself.
+The owner said build it (2026-11-21, from the UI pass mockup), in Farmer, Tradeskills, Equipment and Butler. Every Blackthornes line on an item tooltip goes on in one block: a blank row with a thin gold line of our own on it (a texture, hidden when the tooltip clears), then each line as a yellow name ending ":" on the left and a white answer on the right, no blank rows between addons, "Hold Shift for more." last and once. `UI/TooltipBlock.lua` is the same file in the four (FILE_VERSION 2; a fix belongs in all four). `_G.BlackthornesTooltipBlock` holds the parts and the one hook (the item post call, else OnTooltipSetItem on GameTooltip, ItemRefTooltip and the shopping tooltips); the newest copy's writer wins. Each addon works out its own lines and hands them over with `TooltipBlock:Provide(part, section, order, fn)`, `fn(tooltip, data)` returning lines and whether one was held for Shift; it no longer writes item lines itself.
 
 Order: price (Tradeskills `Tradeskills:price` 1, Butler vendor prices `Butler:price` 2), source (Farmer `Farmer:source` 1 "Farm At:", Equipment `Equipment:source` 2 "Drops From:"), advice (Equipment `Equipment:advice` 1 "For <spec>:", "For <alt>:", "Best Enchant:", "Weapon Master:", the suffix name or "Random Roll:", "Crafting:"; Butler `Butler:advice` 2 "Butler Says:"), holders (Butler `Butler:holders` 1 "You Have:", "Your Characters:"). Tradeskills maps its line names to the block's at write time (`ItemTooltip.BLOCK_LABELS`), so other windows keep "Demand" and the like; the stack count is read from the tooltip owner's bag slot. Pets' taming lines, Farmer's kill lines and Tradeskills' enchant spell lines are not item tooltips and are left alone. Tested in each addon's `tools/test_tooltipblock.lua`.
+
+Shift lines open at the bottom (the owner said build it, 2026-11-26, Tradeskills idea 8, a player asked). A line that shows only because Shift is held carries `shift = true`; the board writes every other line first, then a second blank row with its own thin gold line (`shared.shiftRules`, hidden on clear and at each write), then the Shift lines, each group in the block's order. Holding Shift adds to the bottom and nothing above moves. Each line keeps its Off, Shift or Always choice; a line on Always never gets `shift`. Detail lines that show only while Shift is held whatever the choice (Tradeskills' crate extras, Average Paid, Used In recipes) are always `shift`. The hook on OnTooltipCleared calls the newest copy's `Forget` (`shared.handlers.Forget`). No setting of its own: the hint shows only while a line is on Shift, so setting every line to Off or Always on the Tooltips page takes it away.
 ### Plain prose everywhere (the owner, 2026-11-21)
 
 The owner shared these six rules for writing and asked that they be kept
@@ -3158,6 +3206,31 @@ The owner said build it (2026-11-26, from the improvement mockups, #7).
 
 Tested in `tools/test_smallwins.lua`.
 
+## Look choices (Font, Colors, Fold Gem, 2026-11-26)
+
+The owner said build it (Equipment improvement idea 9, words from its
+mockup). Three rows on the All Addons page of every addon, picked once for
+all five: "Font:" House (the game's own, as before), Game (the game's plain
+chat font) or Clear (Liberation Sans, SIL Open Font License 1.1, shipped
+unchanged in `Media/Fonts` with its license; Chinese and Korean clients
+draw the house font for it, since it has no such letters); "Colors:" Warm
+(as before) or Darker (the warm tint taken out of the glass, gold kept);
+"Fold Gem:" Round Button (as before) or Small Bar (badge, title and the
+window's small number, along the window's top right corner).
+
+The logic is in `UI/SharedChoices.lua` (the same in all five): `Look`,
+`SetLook`, `Drawn`, `NeedsReload`, `FontPath`, `Recolor`. Picks are kept in
+every loaded addon's save as `lookChoices = { font, colors, fold, at }`
+(never rename it), the newest `at` winning, and Restore Defaults leaves it.
+Font and Colors are read once, the first time the addon draws after its
+save is in, so they wait for /reload (Settings shows Reload). `Theme.FONT`
+is looked up as read (`Theme.Font()`), and `Theme.Unpack`/`Theme.Font` put
+Darker into the palette in place, once. The fold pick counts from the next
+fold (`FoldWindow.Style`, `FoldWindow.Bar`, `FoldWindow.FitBar`). Font names
+use the keys `House##font`, `Game##font`, `Clear##font`, since "Clear" is a
+button's word elsewhere. Tested in `tools/test_housekit.lua` and
+`tools/test_foldwindow.lua`. Not yet seen in game.
+
 ## Calmer rows (2026-11-26)
 
 The owner said build it (2026-11-26, from the improvement mockups, #3).
@@ -3211,3 +3284,60 @@ lit ones first. Off unless ticked: "Right Now Card:" on the WINDOWS page,
   open (`folded[verdict] = false`).
 
 Tested in `tools/test_rightnow.lua`.
+## The restock list (2026-11-26)
+
+The top Discord ask; the owner said "build 1-10" from the mockup
+`butler-improve-2-restock`. Built in two PRs; this is PR 1 (the list, the
+low count and buying at a vendor). `Logic/Restock.lua` keeps what the
+character playing always carries: account wide by GUID,
+`restock[guid] = { name, lines = { { item, keep } } }`, item an item ID or
+the kind "food" or "water", with a copy in `BlackthornesButlerCharDB.restock`
+read when the GUID can't be (never rename either). Nothing is written
+when the GUID won't read. An empty list is off: no group, no button.
+
+- Kinds: "Food for my level" and "Water for my level" count every food
+  (or drink) in the bags that needs at least the level less
+  `Restock.LEVEL_SPAN` (15). Food and drink are told apart by the spell
+  the item casts, compared with the client's own names for spells 433
+  (Food) and 430 (Drink), after a class 0, subclass 5 check
+  (`Restock.KindOf`, cached). At a vendor a kind buys the best food that
+  counts: needs the most level, then cheapest a piece (`VendorIndex`).
+- `Restock:Low()` lists lines short of their number, read once a change
+  of the bags, the list or the level. The Butler window shows them as a
+  RESTOCK group right after Ammo (`UI.RestockRows`, row type `restock`):
+  "4 Healing Potion" with "You have 1 of 5." away from a vendor, "Buy 14
+  Haunch of Meat" with "This vendor sells it." and a Buy 14 button at one
+  who sells it. The Butler Bar shows "Restock N" left of Buy (or Sell, or
+  Open) for every line this vendor sells (`PlaceBar:WordRestock`,
+  `PlaceRestock`).
+- Buying goes through BuyMany's plan and run (`BuyMany:Plan`, `Start`), a
+  line at a time, each planned again on bags read afresh, so it never buys
+  past the need, the room or the purse. Only on the player's click.
+- Kept up to their count: `KeepHere:Effective` takes `Restock:Keep` as part
+  of its own number (a kind keeps its number of each item that counts).
+- Settings, Keep page, right column first: KEEP IN YOUR BAGS ("This
+  character"), columns ITEM OR KIND, KEEP (a box; 0 takes it off) and HAVE
+  (amber when short), dark glass rows, and a last row: drop an item on it,
+  or click for a menu of the kinds not on it yet (`UI/RestockList.lua`).
+- `/bbutler probe` has a restock line (spell names, how bag food reads).
+- PR 2, the other places, in order of cost (`Restock:Sources`, kept a
+  look by `SourcesFor`; item lines only, a kind is bought at a vendor):
+  your own bank ("Your bank has 3."), the other character who can spare
+  most past what it keeps ("Ana Stone has 40 in the bank.", Add a Job), a
+  craft one of yours can make ("Ana Stone can make them.", Queue through
+  Tradeskills' `QueueCraft`; who comes from Tradeskills' new
+  `Butler:MakersOf(itemID)`), and the auction house ("On the auction
+  house, about 2s 10c each." from `BlackthornesTS_API.GetPrice`; Search
+  only at the auction house, through `Quests:Search`). The row shows the
+  first two and one button (`Restock.RowAction`): Buy, else Search, else
+  Add a Job, else Queue.
+- Add a Job saves an ask account wide, `restockAsks = { { from (holder
+  key), fromName, to (full name), toGUID, itemID, count } }` (never
+  rename). Never aimed at the one playing. On the holder (`Restock:
+  AsksHere`, by GUID or `Errands:IsMe`) it is a RESTOCK row "Mail 20
+  Linen Bandage to Mira Vale" with Fill Mail at a mailbox (`MailsTo`), a
+  recipient in `Errands:Recipients`, and a take from the bank in
+  `Errands:BankWants`. It goes once mailed (`Restock:Mailed` from
+  `Errands:Sent`) or once the one who asked has enough (`PruneMyAsks`).
+  Tested in `tools/test_restocksources.lua`.
+- Tested in `tools/test_restock.lua`. Not yet seen in game.
