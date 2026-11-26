@@ -3341,3 +3341,12 @@ when the GUID won't read. An empty list is off: no group, no button.
   `Errands:Sent`) or once the one who asked has enough (`PruneMyAsks`).
   Tested in `tools/test_restocksources.lua`.
 - Tested in `tools/test_restock.lua`. Not yet seen in game.
+
+## The note stack's own spot (2026-11-26)
+
+`UI/Notice.lua` (shared by all five) reads `windowSpots["shared.notice"]`
+through `Notice.Spot`: the middle of the stack's top, in screen pixels.
+Farmer's Move Windows writes it when the player drags the Notes box. While
+it is set, every addon's notes stack there and leave the top shelf free.
+Window Locations: Set Default clears it with the other window spots. Never
+rename it.
