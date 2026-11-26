@@ -1556,6 +1556,6 @@ L["Your bank has %d."] = "Deine Bank hat %d."
 -- The Butler Bank window (UI/BankWindow.lua)
 L["Search the bank"] = "Bank durchsuchen"
 L["Take for Crafts"] = "Für Handwerk holen"
-L["Bank Bags:"] = "Bankfächer:"
+L["Bag Slots:"] = "Taschenplätze:"
 L["Butler Bank:"] = "Butler-Bank:"
 L["At a banker, opens your bank in the Butler Bags style beside your bags. The game's bank is still there underneath."] = "Öffnet beim Bankier deine Bank im Stil der Butler-Taschen neben deinen Taschen. Die Bank des Spiels ist darunter noch da."

@@ -1555,6 +1555,6 @@ L["Your bank has %d."] = "你的银行里有 %d 个。"
 -- The Butler Bank window (UI/BankWindow.lua)
 L["Search the bank"] = "搜索银行"
 L["Take for Crafts"] = "取出制作材料"
-L["Bank Bags:"] = "银行背包："
+L["Bag Slots:"] = "背包栏位："
 L["Butler Bank:"] = "Butler 银行："
 L["At a banker, opens your bank in the Butler Bags style beside your bags. The game's bank is still there underneath."] = "在银行职员处，以 Butler 背包的样式在背包旁打开你的银行。游戏自带的银行仍在下面。"
