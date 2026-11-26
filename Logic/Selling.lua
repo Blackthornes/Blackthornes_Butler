@@ -304,7 +304,7 @@ function Selling:Place()
     if not (button and window) or InCombat() then return false end
     -- On the Sell group's line while it is on screen (the owner asked
     -- 2026-10-12), else at the window's foot.
-    local row = ns.UI:HeaderRow("sell")
+    local row = ns.UI.DockRow and ns.UI:DockRow("sell") or ns.UI:HeaderRow("sell")
     self.onLine = row ~= nil and ns.UI.PlaceOnLine(button, row)
     if self.onLine then return true end
     if not ns.UI:Dock(button) then return false end

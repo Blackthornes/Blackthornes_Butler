@@ -73,6 +73,7 @@ UI\TooltipBlock.lua
 UI\Settings.lua
 UI\GoldGoals.lua
 UI\MainWindow.lua
+UI\RightNow.lua
 UI\FreeSpace.lua
 UI\WhoHas.lua
 UI\VerdictTip.lua
