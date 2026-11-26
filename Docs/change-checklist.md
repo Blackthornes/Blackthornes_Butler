@@ -153,3 +153,14 @@ Check: Never `local r = { pcall(fn, ...) }` and then `unpack(r, 2)`. Return
 Why: A table loses its length when an answer in the middle is nil and the
   last ones are too. The loot window's locked and quest flags and a mail's
   days left could read as nil (2026-11-24).
+
+## A hover that draws its list again (Butler)
+Lines: onEnter|onLeave|:Enter\(|:Left\(|list:Refresh\(\)
+Check: A list leaves and enters the row under a still mouse every time it
+  draws. So a row's enter or leave that draws the list again must not be
+  able to ask for that draw a second time from inside it: go through one
+  guarded draw (`UI:DrawForReason`). Test it with the mouse resting on the
+  row (`IsMouseOver` true) while the list draws.
+Why: Opening a row's reason drew the list, which left the row (closing it,
+  a draw) and entered it (opening it, a draw), without end. The game hung
+  with "script ran too long" (2026-11-26).
