@@ -200,6 +200,7 @@ function UI:Build()
     })
     self.list:SetPoint("TOPLEFT", 6, -6)
     self.list:SetPoint("BOTTOMRIGHT", -6, 6)
+    self:BuildChips(well)
 
     -- Gold goals sit at the bottom, under the list (UI/GoldGoals.lua; the
     -- owner, 2026-10-13: "the purse section goes at the bottom").
@@ -309,6 +310,7 @@ function UI:BuildHeader()
     search:SetPoint("LEFT", header, "LEFT", 48, -2)
     search:SetWidth(260)
     search:Hide()
+    ns.SearchWords.AttachTip(search)
     self.search = search
 
     -- Your bags' own search (the owner said yes, 2026-10-13), the same box
@@ -319,6 +321,7 @@ function UI:BuildHeader()
     bagSearch:SetPoint("LEFT", header, "LEFT", 48, -2)
     bagSearch:SetWidth(260)
     bagSearch:SetShown(self.view ~= "all")
+    ns.SearchWords.AttachTip(bagSearch)
     subtitle:Hide()
     self.bagSearch = bagSearch
 
@@ -333,10 +336,72 @@ function UI:BuildHeader()
 end
 
 --- Empty a search box and draw the list again (the empty block's Clear
---- Search).
+--- Search). All Characters' chips go dark with it.
 function UI:ClearSearch(box)
     if box and box.SetText then box:SetText("") end
+    if box == self.search then
+        self.chipsOn = {}
+        self:PaintChips()
+    end
     self:Refresh()
+end
+
+-- All Characters' chips (the owner said build it, 2026-11-26): the common
+-- words, one click each, over the list. Several can be lit at once; an
+-- item must pass them all, and what is typed too.
+UI.chipsOn = {}
+UI.CHIP_ROW = 24
+
+--- The chips along the top of the well, wrapped onto a second row when the
+--- words run long. Shown only on All Characters.
+function UI:BuildChips(well)
+    local row = CreateFrame("Frame", nil, well)
+    row:SetPoint("TOPLEFT", 8, -6)
+    row:SetPoint("TOPRIGHT", -8, -6)
+    self.chipRow, self.chips = row, {}
+    local room = WIDTH - 2 * PADDING - 16
+    local x, rows = 0, 1
+    for _, key in ipairs(ns.SearchWords.CHIPS) do
+        local chip = Widgets.CreateChip(row, ns.SearchWords.CHIP_WORDS[key], function()
+            UI.chipsOn[key] = not UI.chipsOn[key] or nil
+            UI:PaintChips()
+            UI:Refresh()
+        end)
+        local width = chip:GetWidth() or 34
+        if x > 0 and x + width > room then x, rows = 0, rows + 1 end
+        chip:SetPoint("TOPLEFT", row, "TOPLEFT", x, -(rows - 1) * UI.CHIP_ROW)
+        x = x + width + 4
+        self.chips[key] = chip
+    end
+    row:SetHeight(rows * UI.CHIP_ROW)
+    self.chipRows = rows
+    self:ShowChips(self.view == "all")
+    self:PaintChips()
+end
+
+function UI:PaintChips()
+    for key, chip in pairs(self.chips or {}) do
+        if chip.SetSelected then chip:SetSelected(self.chipsOn[key] == true) end
+    end
+end
+
+--- The chips show on All Characters, and the list moves down under them.
+function UI:ShowChips(all)
+    if not self.chipRow then return end
+    self.chipRow:SetShown(all)
+    local top = all and (6 + (self.chipRows or 1) * UI.CHIP_ROW) or 6
+    self.list:ClearAllPoints()
+    self.list:SetPoint("TOPLEFT", 6, -top)
+    self.list:SetPoint("BOTTOMRIGHT", -6, 6)
+end
+
+--- The chips lit, as one word for the drawn key ("gear,boe"), "" for none.
+function UI:ChipKey()
+    local keys = {}
+    for _, key in ipairs(ns.SearchWords.CHIPS) do
+        if self.chipsOn[key] then keys[#keys + 1] = key end
+    end
+    return table.concat(keys, ",")
 end
 
 --- Show one list or the other: "bags" or "all".
@@ -351,6 +416,7 @@ function UI:SetView(view)
     self.subtitle:Hide()
     self.search:SetShown(all)
     self.bagSearch:SetShown(not all)
+    self:ShowChips(all)
     if all then self.bagSearch:ClearFocus() else self.search:ClearFocus() end
     if ns.ButlerTabs then ns.ButlerTabs:Light(self) end
 
@@ -1081,12 +1147,23 @@ function UI:BagSearch()
     return (text:lower():gsub("^%s+", ""):gsub("%s+$", ""))
 end
 
---- Does an item row match the Your bags search? By name, as All
---- characters does (Everyone.Matches), or by item ID.
+--- An item row as the search reads it (Logic/SearchWords.lua).
+function UI.SearchItem(row)
+    local first = row.slots and row.slots[1] or nil
+    return {
+        itemID = row.itemID, name = row.name, link = row.link, quality = row.quality,
+        bound = row.bound, upgrade = row.upgrade, quest = first and first.quest or nil,
+        bag = first and first.bag or nil, slot = first and first.slot or nil,
+    }
+end
+
+--- Does an item row match the Your bags search? By name or item ID, as
+--- All characters does, and by the words Butler knows. `search` is the
+--- text or a query already read.
 function UI.RowMatches(row, search)
-    if search == "" then return true end
-    local name = type(row.name) == "string" and row.name:lower() or ""
-    return name:find(search, 1, true) ~= nil or tostring(row.itemID) == search
+    if search == nil or search == "" then return true end
+    if type(search) == "string" then search = ns.SearchWords.Parse(search) end
+    return ns.SearchWords.Match(search, UI.SearchItem(row))
 end
 
 function UI:Lines()
@@ -1097,10 +1174,11 @@ function UI:Lines()
     local search = self:BagSearch()
     if search ~= "" then
         self.matched = 0
+        local query = ns.SearchWords.Parse(search)
         for _, group in ipairs(ns.Verdicts:Groups()) do
             local rows, worth = {}, 0
             for _, row in ipairs(group.rows) do
-                if UI.RowMatches(row, search) then
+                if UI.RowMatches(row, query) then
                     rows[#rows + 1] = row
                     worth = worth + (row.worth or 0)
                 end
@@ -2459,12 +2537,13 @@ function UI:RefreshAll(force)
     end
 
     local search = self.search:GetText() or ""
-    local key = ("all:%d:%s:%d"):format(everyone.version, search, self.openVersion or 0)
+    local chips = self:ChipKey()
+    local key = ("all:%d:%s:%d:%s"):format(everyone.version, search, self.openVersion or 0, chips)
     if force or key ~= self.drawnKey then
         -- The same search keeps its place; a new one starts at the top.
-        local keep = self.drawnKey ~= nil and search == self.drawnSearch
-        self.drawnKey, self.drawnSearch = key, search
-        local lines, shown = everyone:Lines(search, self.open)
+        local keep = self.drawnKey ~= nil and search .. "|" .. chips == self.drawnSearch
+        self.drawnKey, self.drawnSearch = key, search .. "|" .. chips
+        local lines, shown = everyone:Lines(search, self.open, self.chipsOn)
         self.shownItems = shown
         self.list:SetData(lines, keep)
     end
@@ -2476,7 +2555,8 @@ function UI:RefreshAll(force)
         text = everyone:FromTradeskills() and L["No items seen yet."]
             or L["Your bags are empty. Blackthornes Tradeskills remembers your other characters' items."]
     elseif (self.shownItems or 0) == 0 then
-        text = L.Format('Nothing matches "%s".', search)
+        text = search ~= "" and L.Format('Nothing matches "%s".', search)
+            or L["Nothing matches the chips you picked."]
     end
     if text ~= "" and (self.shownItems or 0) == 0 and #everyone.sorted > 0 then
         self.emptyLabel:Set(text, L["Clear Search"], function() UI:ClearSearch(UI.search) end)
@@ -2496,9 +2576,16 @@ function UI:UpdateFooter()
         if not everyone:FromTradeskills() then
             text = L["Only your bags. Load Blackthornes Tradeskills to add your other characters."]
         else
-            text = L.Format("%s on %s.",
-                Plural(#everyone.sorted, L["item"], L["items"]),
-                Plural(everyone:Holders(), L["character"], L["characters"]))
+            local filtered = (self.search:GetText() or "") ~= "" or self:ChipKey() ~= ""
+            if filtered then
+                text = L.Format("%d of %s on %s.", self.shownItems or 0,
+                    Plural(#everyone.sorted, L["item"], L["items"]),
+                    Plural(everyone:Holders(), L["character"], L["characters"]))
+            else
+                text = L.Format("%s on %s.",
+                    Plural(#everyone.sorted, L["item"], L["items"]),
+                    Plural(everyone:Holders(), L["character"], L["characters"]))
+            end
         end
         self.footer:SetText(text)
         return
