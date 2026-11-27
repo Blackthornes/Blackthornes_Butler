@@ -207,6 +207,45 @@ suite.check("and forgets it", ns.db.bankWindow == nil)
 BankWindow:SetOn(true)
 BankWindow:Close()
 
+-- Sort: One Grid only, in Group By's old spot; it sorts the real bank.
+do
+    local sorted, played, savePlay = 0, {}, _G.PlaySound
+    _G.C_Container.SortBankBags = function() sorted = sorted + 1 end
+    _G.PlaySound = function(id) played[#played + 1] = id end
+    BankWindow:BankOpened()
+    BankWindow.groupIndex = 1
+    BankWindow:Draw()
+    suite.check("no Sort in Item Type", not BankWindow.sortButton:IsShown())
+    BankWindow.groupIndex = 2
+    BankWindow:Draw()
+    suite.check("Sort shows in One Grid", BankWindow.sortButton:IsShown())
+    BankWindow.sortButton:GetScript("OnClick")(BankWindow.sortButton)
+    suite.check("a click sorts the bank", sorted == 1)
+    suite.check("with the game's bag sort sound", played[1] == 73933)
+    ns.db.muteSounds = true
+    local saveMuted = ns.Muted
+    ns.Muted = function() return true end
+    BankWindow:Sort()
+    suite.check("Mute All Sounds keeps it quiet", sorted == 2 and #played == 1)
+    ns.Muted = saveMuted
+    ns.db.muteSounds = nil
+    _G.InCombatLockdown = function() return true end
+    BankWindow:Sort()
+    suite.check("nothing in a fight", sorted == 2)
+    BankWindow:UpdateSort()
+    suite.check("and the button greys", BankWindow.sortButton.IsEnabled == nil or not BankWindow.sortButton:IsEnabled())
+    _G.InCombatLockdown = nil
+    BankWindow:UpdateSort()
+    _G.C_Container.SortBankBags = nil
+    BankWindow:Draw()
+    suite.check("hidden where the client can't sort the bank", not BankWindow.sortButton:IsShown())
+    suite.check("the search box stays clear of Group By",
+        59 + BankWindow.search:GetWidth() <= 480 - 32 - BankWindow.sortButton:GetWidth() - 6 - BankWindow.groupStepper:GetWidth())
+    BankWindow.groupIndex = 1
+    _G.PlaySound = savePlay
+    BankWindow:Close()
+end
+
 -- In a fight it does not open.
 Errands.bankOpen = true
 _G.InCombatLockdown = function() return true end
