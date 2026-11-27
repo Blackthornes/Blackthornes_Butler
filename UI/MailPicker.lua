@@ -119,6 +119,18 @@ function Picker:Entries()
     return entries
 end
 
+--- Whether the list would have any name, from the last time it was read.
+--- The look every Picker.LOOK seconds asks this, not Entries: Entries asks
+--- Tradeskills for every character's bags, bank and mail, and doing that
+--- five times a second lagged the game at the mailbox (2026-11-27). Read
+--- again on each visit, when the list opens and after a mail goes.
+function Picker:HasEntries()
+    if self.hasEntries == nil then
+        self.hasEntries = #self:Entries() > 0
+    end
+    return self.hasEntries
+end
+
 --------------------------------------------------------------------------------
 -- Remembering the last name mailed
 --------------------------------------------------------------------------------
@@ -138,6 +150,7 @@ function Picker:Sent()
         if ok and type(full) == "string" and full ~= "" then name = full end
     end
     ns.db.namePickerLast = name
+    self.hasEntries = nil
 end
 
 function Picker:Failed()
@@ -281,6 +294,7 @@ function Picker:Toggle()
     end
     if InCombat() or not (self.button and self.button:IsShown()) then return end
     local entries = self:Entries()
+    self.hasEntries = #entries > 0
     if #entries == 0 then return end
     self:FillMenu(entries)
     local menu = self.menu
@@ -337,7 +351,7 @@ function Picker:Update()
         return
     end
     local x, y = Picker.BoxSpot()
-    if not x or #self:Entries() == 0 then
+    if not x or not self:HasEntries() then
         self:Hide()
         return
     end
@@ -365,6 +379,7 @@ end
 --- A frame of our own that looks only while a mailbox is open.
 function Picker:Watch(on)
     self.atMailbox = on and true or false
+    self.hasEntries = nil
     if not self.watcher then
         self.watcher = CreateFrame("Frame")
         self.watcher.wait = 0
