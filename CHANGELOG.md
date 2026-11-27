@@ -4,6 +4,12 @@ Versions follow [semantic versioning](https://semver.org): the middle number
 moves for new behaviour, the last for fixes alone. The newest version goes at
 the top; a release is refused if its version has no section here.
 
+## 1.27.1
+
+For WoW: Forever (interface 16001). `/reload` is enough after updating.
+
+- **Quest items.** Butler knows the items for 33 more quests, most of them Forever's own, so it can find them on the auction house.
+
 ## 1.27.0
 
 For WoW: Forever (interface 16001). A full restart is needed after updating.
