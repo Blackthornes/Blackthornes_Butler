@@ -1361,6 +1361,43 @@ If the call changes, change `Logic/Sisters.lua` too. Tested in
 `tools/test_keeplevelup.lua` and `tools/test_settings.lua`.
 
 
+
+## Mats and recipes to alts
+
+A player asked, the owner said build it (2026-11-27, from a mockup whose
+words he approved). Two boxes, both off unless ticked, account wide,
+never rename either:
+
+- "Send Level Up Materials to Alts:" (Keep page, LEVELING PROFESSIONS,
+  under Keep Level Up Materials; `altLevelUp`). Rule `altLevelUp` (step
+  7c, after `levelUp`): what another character's Road to 300 still needs,
+  less what it has, goes under Mail to it, "Used to level %s's %s. Needs
+  %d more." (`extra = { to, count, altLevel = true }`). Groups allots
+  stacks by `extra.altLevel` like an upgrade: past the count a stack is
+  judged again with `noAlt`, so the extra still sells; Fill Mail sends at
+  most `mailCount`.
+- "Mail Recipes to Who Can Learn Them:" (Errands page, MAIL AND BANK;
+  `altRecipes`). Rule `altRecipes` (step 7d): a recipe item goes to the
+  alt Tradeskills names, "%s can learn this" or "%s can learn this at %s
+  %d", one copy (a second goes on down the rules).
+
+Both have their own switch on the Order page (`OWN_SWITCH`), skip a bound
+stack and the one playing (`IsMe`, and `Allowed`). `Sisters:AltLevelUpFor`
+reads Tradeskills once per look, `Sisters:RecipeFor` once per item, inside
+a pcall, read only:
+
+```lua
+_G.BlackthornesTS.Butler:AltLevelUp()        -- { [itemID] = { to, count, profession } }, or nil
+_G.BlackthornesTS.Butler:RecipeFor(itemID)   -- { to, profession, skill, has, now }, or nil
+```
+
+Tradeskills works the alts' roads out over a few frames and calls
+`Verdicts:Changed()` when a new answer differs. Its Sell list reads
+`Verdicts:AltLevelUpOn()` and `Verdicts:AltRecipesOn()` to hold what an
+alt needs. Same realm and side only, never another account's character
+(Tradeskills decides who). Tested in `tools/test_altlevelup.lua` and
+`tools/test_settings.lua`.
+
 ## Food to Keep
 
 The owner asked and said build it from a mockup (2026-11-20): Pets'
