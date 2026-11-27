@@ -164,3 +164,11 @@ Check: A list leaves and enters the row under a still mouse every time it
 Why: Opening a row's reason drew the list, which left the row (closing it,
   a draw) and entered it (opening it, a draw), without end. The game hung
   with "script ran too long" (2026-11-26).
+
+## A look on a timer asks no sister for whole tables (Butler)
+Lines: OnUpdate|LOOK|Holdings\(
+Check: Code that runs every few frames (an OnUpdate look, a ticker) never
+  calls `Holdings()` or anything that reads every character's bags, bank
+  and mail. Read it once (a visit, a click, an event) and keep the answer.
+Why: The name picker's look asked Tradeskills for every character's
+  holdings five times a second at the mailbox (2026-11-27).

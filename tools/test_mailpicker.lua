@@ -13,6 +13,9 @@
 --   6. Hidden in a fight, when Send Mail is not up, away from the mailbox
 --      and when unticked.
 --   7. Without Tradeskills only LAST MAILED shows; with nothing, no button.
+--   8. The look it takes every 0.2 s asks Tradeskills for your characters
+--      once a visit, not each time (a player's game lagged at the mailbox,
+--      2026-11-27); opening the list and a mail that went ask again.
 
 local env = dofile(lfs_cwd .. "/tools/testenv.lua")
 local suite = env.NewSuite("mailpicker")
@@ -136,8 +139,30 @@ Picker:Update()
 suite.check("without Tradeskills only LAST MAILED", Names() == "LAST MAILED, Bob Wither", Names())
 suite.check("the button still shows", Showing())
 ns.db.namePickerLast = nil
-Picker:Update()
+env.Fire("MAIL_CLOSED")
+env.Fire("MAIL_SHOW")
 suite.check("nothing to show: no button", not Showing())
+env.Fire("MAIL_CLOSED")
+
+-- 8.
+local asked = 0
+_G.BlackthornesTS = { Butler = { Holdings = function() asked = asked + 1 return holdings end } }
+env.Fire("MAIL_SHOW")
+suite.check("at the mailbox the button shows again", Showing())
+local before = asked
+for _ = 1, 25 do Picker:Update() end
+suite.check("25 looks ask Tradeskills no more", asked == before, tostring(asked - before))
+Picker:Toggle()
+suite.check("opening the list asks once", asked == before + 1, tostring(asked - before))
+suite.check("and lists them", Picker.menu:IsShown())
+Picker:CloseMenu()
+Picker:Sending("Cara Stonefield")
+env.Fire("MAIL_SEND_SUCCESS")
+before = asked
+Picker:Update()
+suite.check("a mail that went looks again", asked == before + 1, tostring(asked - before))
+Picker:Update()
+suite.check("then rests", asked == before + 1, tostring(asked - before))
 env.Fire("MAIL_CLOSED")
 
 suite.done()

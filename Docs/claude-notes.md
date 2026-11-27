@@ -744,6 +744,11 @@ name is kept on `MAIL_SEND_SUCCESS` from a SendMail post-hook, not on
 `MAIL_FAILED`. "Name Picker:" under MAIL AND BANK on the Errands page.
 Saved, account wide, never rename them: `namePicker` (nil reads as off, so only a tick turns it on) and
 `namePickerLast`. Tested in `tools/test_mailpicker.lua`.
+The look asks `Picker:HasEntries()`, kept from the last read, not
+`Entries()`: that asks Tradeskills' `Holdings()` (every character's bags,
+bank, mail and auctions), and five times a second it lagged the mailbox
+(2026-11-27). Read again at each `MAIL_SHOW`, when the list opens and
+after a mail goes.
 
 
 ## The gold fund
