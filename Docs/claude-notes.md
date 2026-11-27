@@ -3463,6 +3463,14 @@ shown. Move to Bank stays on Butler Bags' own Bank heading.
 exists. That also takes them out of Butler Bags' Bank tab, the kept bank
 copy and Take from bank. Tested in `tools/test_bankwindow.lua`.
 
+Sort (Trent asked 2026-11-27, mockup butler-bank-sort, "Build it"): the
+Bags window's gold Sort button at the top right, shown in One Grid only
+(`BankWindow:UpdateSort`, greyed in a fight). Group By sits left of its
+spot in both views, so the stepper never moves when the view changes, and
+the search box narrows to fit (`LEAST_SEARCH`). A click runs
+`C_Container.SortBankBags` (seen present by the bank probe) with the Bags
+sort sound, quiet under Mute All Sounds, nothing in a fight. No new words.
+
 ## The note stack's own spot (2026-11-26)
 
 `UI/Notice.lua` (shared by all five) reads `windowSpots["shared.notice"]`

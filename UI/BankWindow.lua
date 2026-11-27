@@ -200,6 +200,15 @@ function BankWindow:Build()
     if ns.SearchWords and ns.SearchWords.AttachTip then ns.SearchWords.AttachTip(search) end
     self.search = search
 
+    -- Sort (One Grid only): the Bags window's button, in its spot at the
+    -- top right. Group By sits left of that spot in both views, so its
+    -- arrows never move under the mouse when the view changes.
+    local sort = Widgets.CreateButton(frame, L["Sort"], function() BankWindow:Sort() end, { height = 22 })
+    sort:SetWidth(math.max(70, Theme.TextWidth("small", L["Sort"]) + 28))
+    sort:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -CLOSE_RIGHT, -EDGE_PAD - 6)
+    sort:Hide()
+    self.sortButton = sort
+
     local words = {}
     for i, key in ipairs(self.GROUPS) do words[i] = ns.BagView.GROUP_WORDS[key] end
     local group = Widgets.CreateChoice(frame, {
@@ -211,11 +220,16 @@ function BankWindow:Build()
         end,
     })
     if ns.SettingsPages and ns.SettingsPages.FitStepper then ns.SettingsPages.FitStepper(group, words) end
-    group:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -CLOSE_RIGHT, -EDGE_PAD - 6)
+    local sortWidth = tonumber(sort:GetWidth()) or 70
+    group:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -CLOSE_RIGHT - sortWidth - 6, -EDGE_PAD - 6)
     self.groupStepper = group
     local groupLabel = Theme.CreateLabel(frame, "small", "muted", "RIGHT")
     groupLabel:SetPoint("RIGHT", group, "LEFT", -6, 0)
     groupLabel:SetText(L["Group By:"])
+    -- The search box gives up room so it never runs under Group By.
+    local groupLeft = WIDTH - CLOSE_RIGHT - sortWidth - 6 - (tonumber(group:GetWidth()) or 100)
+        - 6 - Theme.TextWidth("small", L["Group By:"]) - 10
+    search:SetWidth(math.max(BankWindow.LEAST_SEARCH, math.min(tonumber(search:GetWidth()) or 170, groupLeft - 59)))
 
     local rule = frame:CreateTexture(nil, "ARTWORK")
     rule:SetPoint("TOPLEFT", EDGE_PAD, -44)
@@ -228,6 +242,34 @@ function BankWindow:Build()
     if ns.SharedWindow and ns.SharedWindow.KeepSpot then ns.SharedWindow.KeepSpot(frame, self.SPOT_KEY) end
     frame:Hide()
     return frame
+end
+
+BankWindow.LEAST_SEARCH = 100
+
+--- The game sorts the bank on this client (`C_Container.SortBankBags`).
+function BankWindow.CanSort()
+    local container = rawget(_G, "C_Container")
+    return type(container) == "table" and type(container.SortBankBags) == "function"
+end
+
+--- Sort the real bank, with the game's bag sort sound, as the Bags button
+--- does. Nothing in a fight.
+function BankWindow:Sort()
+    if InCombat() or not BankWindow.CanSort() then return end
+    local play = rawget(_G, "PlaySound")
+    if type(play) == "function" and not (ns.Muted and ns.Muted()) then
+        local id = ns.BagWindow and ns.BagWindow.SortSound and ns.BagWindow.SortSound() or 73933
+        pcall(play, id)
+    end
+    pcall(C_Container.SortBankBags)
+end
+
+--- Shown in One Grid only, greyed in a fight.
+function BankWindow:UpdateSort()
+    local sort = self.sortButton
+    if not sort then return end
+    sort:SetShown(BankWindow.CanSort() and self.GROUPS[self:GroupIndex()] == "grid")
+    if sort.SetEnabled then sort:SetEnabled(not InCombat()) end
 end
 
 function BankWindow:BuildWell()
@@ -639,6 +681,7 @@ function BankWindow:Draw()
     self.contentHeight = y
     self.content:SetHeight(math.max(10, y))
     self:DrawFoot(places)
+    self:UpdateSort()
     self:SizeScroll()
 end
 
@@ -771,7 +814,9 @@ function BankWindow:OnEnable()
     for _, event in ipairs({ "BAG_UPDATE_DELAYED", "PLAYERBANKSLOTS_CHANGED", "ITEM_LOCK_CHANGED" }) do
         ns.RegisterEvent(self, event, Soon)
     end
+    ns.RegisterEvent(self, "PLAYER_REGEN_DISABLED", function() BankWindow:UpdateSort() end)
     ns.RegisterEvent(self, "PLAYER_REGEN_ENABLED", function()
+        BankWindow:UpdateSort()
         if BankWindow.makeWaiting then
             BankWindow.makeWaiting = false
             BankWindow:Changed()
