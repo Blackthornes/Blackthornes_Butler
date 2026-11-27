@@ -873,7 +873,6 @@ L["Mail Upgrades to Alts:"] = "把升级寄给小号："
 L["Gear that's an upgrade for another of your characters goes under Mail. Needs Blackthornes Equipment."] =
     "对你另一个角色是升级的装备会放到邮寄下面。需要 Blackthornes Equipment。"
 L["Character:"] = "角色："
-L["Characters That Get Them:"] = "收到的角色："
 L["Untick a character to leave them out of upgrade mail."] =
     "取消勾选一个角色，就不再给他寄升级。"
 L["Send To:"] = "寄给："

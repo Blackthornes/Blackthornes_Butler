@@ -874,7 +874,6 @@ L["Mail Upgrades to Alts:"] = "Verbesserungen an Twinks:"
 L["Gear that's an upgrade for another of your characters goes under Mail. Needs Blackthornes Equipment."] =
     "Ausrüstung, die für einen anderen deiner Charaktere besser ist, kommt unter Post. Braucht Blackthornes Equipment."
 L["Character:"] = "Charakter:"
-L["Characters That Get Them:"] = "Charaktere, die sie bekommen:"
 L["Untick a character to leave them out of upgrade mail."] =
     "Nimm den Haken weg, damit ein Charakter keine Verbesserungen per Post bekommt."
 L["Send To:"] = "Senden an:"

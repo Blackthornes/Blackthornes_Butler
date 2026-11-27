@@ -875,7 +875,6 @@ L["Mail Upgrades to Alts:"] = "Envoyer les améliorations :"
 L["Gear that's an upgrade for another of your characters goes under Mail. Needs Blackthornes Equipment."] =
     "L'équipement qui est une amélioration pour un autre de tes personnages va dans Courrier. Il faut Blackthornes Equipment."
 L["Character:"] = "Personnage :"
-L["Characters That Get Them:"] = "Personnages qui les reçoivent :"
 L["Untick a character to leave them out of upgrade mail."] =
     "Décoche un personnage pour qu'il ne reçoive plus d'améliorations par courrier."
 L["Send To:"] = "Envoyer à :"

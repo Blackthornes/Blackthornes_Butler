@@ -623,23 +623,17 @@ function SettingsUI.LevelClass(key)
     return type(class) == "string" and class or (level and tostring(level)) or ""
 end
 
-local UPGRADE_ROW = 26
+local UPGRADE_ROW = 22
 
-local function PaintTickRow(row)
-    local over = row.over == true
-    row.fill:SetColorTexture(Theme.Unpack(over and "glassHover" or row.band))
-    row.edge:SetShown(over)
-end
-
---- One row of Characters That Get Them: the tick, the whole name, level
---- and class, and Undo when single items are held back.
+--- One row of Characters That Get Them under upgrades, built like the
+--- level up list's rows (AltSendRow): the whole row is the tick, its
+--- label the name; level and class on the right, then Undo when single
+--- items are held back.
 local function UpgradeRow(list, index)
     local row = list.rows[index]
     if row then return row end
     row = CreateFrame("Frame", nil, list)
-    row:SetWidth(COLUMN_WIDTH)
-    row:SetHeight(UPGRADE_ROW)
-    row:EnableMouse(true)
+    row:SetSize(COLUMN_WIDTH, UPGRADE_ROW)
     row.fill = Theme.Fill(row, "glass")
     row.line = row:CreateTexture(nil, "BORDER")
     row.line:SetPoint("BOTTOMLEFT")
@@ -650,17 +644,22 @@ local function UpgradeRow(list, index)
     row.edge:SetPoint("TOPLEFT")
     row.edge:SetPoint("BOTTOMLEFT")
     row.edge:SetWidth(2)
-    row.edge:SetColorTexture(Theme.Unpack("accent"))
+    row.edge:SetColorTexture(Theme.Unpack("accentHi"))
     row.edge:Hide()
     row.tick = Widgets.CreateCheckbox(row, "", function(checked)
         if row.who then ns.Verdicts:HoldAllUpgrades(row.who, not checked) end
         SettingsUI:SyncUpgradeList()
     end)
-    row.tick:SetWidth(18)
-    row.tick:SetPoint("LEFT", 22, 0)
-    row.name = Theme.CreateLabel(row, "small", "text")
-    row.name:SetPoint("LEFT", row.tick, "RIGHT", 6, 0)
-    row.name:SetWordWrap(true)
+    row.tick:SetPoint("LEFT", 8, 0)
+    row.tick:HookScript("OnEnter", function()
+        row.fill:SetColorTexture(Theme.Unpack("glassHover"))
+        row.edge:Show()
+    end)
+    row.tick:HookScript("OnLeave", function()
+        row.fill:SetColorTexture(Theme.Unpack(row.band or "glass"))
+        row.edge:Hide()
+    end)
+    row.name = row.tick.label
     row.undo = Widgets.CreateButton(row, L["Undo"], function()
         if not row.who then return end
         for _, itemID in ipairs(ns.Verdicts:HeldItems(row.who)) do
@@ -670,8 +669,6 @@ local function UpgradeRow(list, index)
     end, { width = 70, height = 18 })
     row.undo:SetPoint("RIGHT", -8, 0)
     row.class = Theme.CreateLabel(row, "small", "muted", "RIGHT")
-    row:SetScript("OnEnter", function(self) self.over = true PaintTickRow(self) end)
-    row:SetScript("OnLeave", function(self) self.over = false PaintTickRow(self) end)
     list.rows[index] = row
     return row
 end
@@ -700,9 +697,10 @@ function SettingsUI:SyncUpgradeList()
         local row = UpgradeRow(list, index)
         row.who = entry.name
         row.band = (index % 2 == 0) and "glassAlt" or "glass"
-        PaintTickRow(row)
+        row.fill:SetColorTexture(Theme.Unpack(row.band))
         local on = not held[entry.name]
         row.tick:SetChecked(on)
+        row.tick:SetWidth(COLUMN_WIDTH - 16)
         row.name:SetText(entry.name)
         row.name:SetTextColor(Theme.Unpack(on and "text" or "dim"))
         local count = #ns.Verdicts:HeldItems(entry.name)
@@ -718,10 +716,7 @@ function SettingsUI:SyncUpgradeList()
         else
             row.class:SetPoint("RIGHT", -8, 0)
         end
-        -- The whole name, wrapped when it must, never shortened.
-        row.name:SetPoint("RIGHT", row.class, "LEFT", -8, 0)
-        local ok, textHeight = pcall(row.name.GetStringHeight, row.name)
-        local height = math.max(UPGRADE_ROW, ((ok and tonumber(textHeight)) or 0) + 10)
+        local height = UPGRADE_ROW
         row:SetHeight(height)
         row:ClearAllPoints()
         row:SetPoint("TOPLEFT", list, "TOPLEFT", 0, -y)
@@ -732,7 +727,7 @@ function SettingsUI:SyncUpgradeList()
     if #entries == 0 then
         if not rawget(list, "noneYet") then
             list.noneYet = Theme.CreateLabel(list, "small", "dim")
-            list.noneYet:SetPoint("TOPLEFT", 22, -6)
+            list.noneYet:SetPoint("TOPLEFT", 8, -4)
             list.noneYet:SetText(L["No characters yet"])
         end
         y = UPGRADE_ROW
@@ -1689,8 +1684,8 @@ function SettingsUI:BuildPages()
         L["Untick a character to leave them out of upgrade mail."])
     local upgradeList = CreateFrame("Frame", nil, pages.pages.keep.content)
     upgradeList:SetWidth(COLUMN_WIDTH)
-    upgradeList.fixedHeight = 26
-    upgradeList:SetHeight(26)
+    upgradeList.fixedHeight = 22
+    upgradeList:SetHeight(22)
     pages:Place("keep", 1, upgradeList, 2)
     upgradeList.rows = {}
     controls.upgradeList = upgradeList

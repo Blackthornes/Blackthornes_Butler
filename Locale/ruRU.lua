@@ -845,7 +845,6 @@ L["Butler learns what you keep, sell and mail. Your right-click picks always win
 L["Mail Upgrades to Alts:"] = "Улучшения другим:"
 L["Gear that's an upgrade for another of your characters goes under Mail. Needs Blackthornes Equipment."] = "Экипировка, которая лучше для другого твоего персонажа, идёт в «Почта». Нужен Blackthornes Equipment."
 L["Character:"] = "Персонаж:"
-L["Characters That Get Them:"] = "Кто получает:"
 L["Untick a character to leave them out of upgrade mail."] =
     "Сними галочку, чтобы персонаж не получал улучшения по почте."
 L["Send To:"] = "Кому:"
