@@ -1059,8 +1059,13 @@ an ID, so the ID comes from `Data/QuestItems.lua` (`ns.QUEST_ITEMS[questID]
 client's game tables say the item trades; written by
 `tools/make_quest_items.py <spawn database> <tables folder>`, never by hand), else
 an item in the bags with that name, else `GetItemInfoInstant(name)`.
-Forever's own quests work by name; one nothing names is looked at again
-when the bags or the item come in.
+One nothing names is looked at again when the bags or the item come in.
+Since 2026-11-27 `tools/forever_quest_objectives.json` (game facts, each
+quest's objectives and the items each lists) adds quests the spawn
+database lacks, Forever's own among them; an objective's item counts only
+when it is that objective's one item, since a second is a tool the quest
+hands you. `--keep-shipped <tables folder>` adds them to the shipped file
+without the spawn database. Tested in `tools/test_quests.lua`.
 
 When what the quests want moves (one more Clam Meat looted), only the
 items whose want moved are judged again (`Quests.moved`, gathered by

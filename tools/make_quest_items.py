@@ -1,6 +1,7 @@
 """Write Data/QuestItems.lua: the items quests ask you to collect.
 
     python tools/make_quest_items.py <spawn database folder> <folder with ItemSparse.csv>
+    python tools/make_quest_items.py --keep-shipped <folder with ItemSparse.csv>
 
 The quest log names what a quest wants ("Murloc Eye: 3/8") but not its item
 ID, and the auction house is searched by ID. So Butler ships, for each
@@ -15,12 +16,14 @@ Rerun this when Forever's build changes.
 """
 
 import csv
+import json
 import os
 import re
 import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 OUT = os.path.join(HERE, "..", "Data", "QuestItems.lua")
+OBJECTIVES = os.path.join(HERE, "forever_quest_objectives.json")
 
 # ItemSparse's Bonding: 0 none, 1 on pickup, 2 on equip, 3 on use, 4 quest.
 TRADEABLE = {0, 2, 3}
@@ -60,6 +63,26 @@ def read_quests(path):
     return quests
 
 
+def read_shipped(path):
+    """{ questID: [itemID, ...] } from the Data/QuestItems.lua shipped now."""
+    with open(path, encoding="utf-8") as handle:
+        text = handle.read().split("ns.QUEST_ITEMS = {", 1)[1]
+    return {int(quest): [int(i) for i in ids.split(",") if i.strip()]
+            for quest, ids in re.findall(r"\[(\d+)\]=\{([^}]*)\}", text)}
+
+
+def read_objectives(path):
+    """{ questID: [itemID, ...] }: each objective's item, when it has one only."""
+    with open(path, encoding="utf-8") as handle:
+        raw = json.load(handle)
+    quests = {}
+    for quest, objectives in raw.items():
+        ids = [items[0] for items in objectives if len(items) == 1]
+        if ids:
+            quests[int(quest)] = ids
+    return quests
+
+
 def read_bonding(folder):
     bonding = {}
     with open(os.path.join(folder, "ItemSparse.csv"), encoding="utf-8", newline="") as handle:
@@ -74,20 +97,30 @@ def main(argv):
     if len(argv) != 3:
         print(__doc__)
         return 1
-    quests = read_quests(os.path.join(argv[1], "db", "quests.lua"))
+    # Shipped rows were judged when they were written; a tables folder that
+    # lacks some of their items must not drop them.
+    shipped = {}
+    if argv[1] == "--keep-shipped":
+        shipped = read_shipped(OUT)
+        quests = dict(shipped)
+    else:
+        quests = read_quests(os.path.join(argv[1], "db", "quests.lua"))
+    for quest, ids in read_objectives(OBJECTIVES).items():
+        quests.setdefault(quest, ids)
     bonding = read_bonding(argv[2])
     kept = {}
     for quest, ids in quests.items():
         good = []
         for item in ids:
-            if item in bonding and bonding[item] in TRADEABLE and item not in good:
+            judged = quest in shipped or (item in bonding and bonding[item] in TRADEABLE)
+            if judged and item not in good:
                 good.append(item)
         if good:
             kept[quest] = good
 
     lines = [
         "-- Blackthornes Butler -- Data/QuestItems.lua",
-        "-- The items Classic's quests ask you to collect, by quest ID, kept only",
+        "-- The items quests ask you to collect, by quest ID, kept only",
         "-- when they can be traded (the Forever client's game tables say how each",
         "-- binds). The quest log gives the name and the counts; this gives the ID",
         "-- the auction house is searched by (Logic/Quests.lua).",
