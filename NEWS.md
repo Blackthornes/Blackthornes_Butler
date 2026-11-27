@@ -23,6 +23,11 @@ tell a friend: no hype, no questions to the reader, no exclamation marks
 outside the thanks line, no dashes as punctuation, no "now you can". The
 tool prints a note for a shipped line that reads like an advert.
 
+## 1.29.0
+
+- The Butler Bank has a Sort button when Group By is One Grid. Butler Bank is off unless ticked.
+- Butler keeps the pieces of Equipment's backup weapon set and marks them with blue swords.
+
 ## 1.28.0
 
 - Butler can mail your alts the materials for their Road to 300. It is off unless ticked.

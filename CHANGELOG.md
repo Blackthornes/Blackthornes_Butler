@@ -4,6 +4,13 @@ Versions follow [semantic versioning](https://semver.org): the middle number
 moves for new behaviour, the last for fixes alone. The newest version goes at
 the top; a release is refused if its version has no section here.
 
+## 1.29.0
+
+For WoW: Forever (interface 16001). `/reload` is enough after updating.
+
+- **Sort button on the bank.** The Butler Bank has a Sort button at the top right of its window. It sorts your bank, and does nothing in a fight. To turn it on: 1. Open Butler. 2. Click Settings. 3. On the General page, under Bags, tick Butler Bank:. 4. At a banker, set Group By: to One Grid. Butler Bank is off unless ticked.
+- **Backup set pieces stay.** Butler keeps the pieces of Equipment's backup weapon set. It no longer suggests selling, auctioning, disenchanting or mailing them, and a piece wears blue crossed swords in your bags. To turn it on: 1. Open Equipment. 2. Click Settings. 3. On the Gear page, tick Backup Weapon Set:. It is off unless ticked.
+
 ## 1.28.0
 
 For WoW: Forever (interface 16001). `/reload` is enough after updating. Tradeskills needs a full restart, so restart the game once for both.
