@@ -1569,3 +1569,5 @@ L["Mails a recipe to your character who has that profession and doesn't know it 
 L["Used to level %s's %s. Needs %d more."] = "Sert à %s pour monter %s. Il en faut encore %d."
 L["%s can learn this"] = "%s peut apprendre ça"
 L["%s can learn this at %s %d"] = "%s peut apprendre ça à %s %d"
+L["Characters That Get Them:"] = "Qui les reçoit :"
+L["Untick a character to leave them out of level up materials and recipes."] = "Décoche un personnage pour qu'il ne reçoive ni composants de montée ni recettes."

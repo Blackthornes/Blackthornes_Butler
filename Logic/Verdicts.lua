@@ -1584,6 +1584,30 @@ function Verdicts:SetAltRecipes(on)
     self:Changed(true)
 end
 
+--- The alts the player unticked under "Characters That Get Them:" (the
+--- owner said build it, 2026-11-27): { [character key] = true }, a fresh
+--- copy. Neither box sends them anything. Saved account wide by GUID as
+--- `altsLeftOut` (never rename it).
+function Verdicts:AltsLeftOut()
+    local copy = {}
+    local saved = ns.db and ns.db.altsLeftOut
+    if type(saved) == "table" then
+        for key, on in pairs(saved) do
+            if on == true and type(key) == "string" then copy[key] = true end
+        end
+    end
+    return copy
+end
+
+--- Leave a character out (`out` true) or let it get them again.
+function Verdicts:LeaveOut(key, out)
+    if not ns.db or type(key) ~= "string" or key == "" then return end
+    local saved = type(ns.db.altsLeftOut) == "table" and ns.db.altsLeftOut or {}
+    saved[key] = out and true or nil
+    ns.db.altsLeftOut = next(saved) and saved or nil
+    self:Changed(true)
+end
+
 function Verdicts:UpgradeHeld(itemID, to)
     if type(to) ~= "string" then return false end
     if List("noUpgradesFor")[to] then return true end

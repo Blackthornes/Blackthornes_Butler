@@ -113,7 +113,7 @@ end
 --- purpose. tools/test_restoredefaults.lua clicks every control and fails
 --- if one writes a key missing here.
 SettingsUI.SETTING_KEYS = {
-    "altLevelUp", "altRecipes", "altUpgrades", "arrowRoute", "auctionMargin", "bagGroupBy", "bagItemLevel", "bagItemSize",
+    "altLevelUp", "altRecipes", "altsLeftOut", "altUpgrades", "arrowRoute", "auctionMargin", "bagGroupBy", "bagItemLevel", "bagItemSize",
     "bagMarks", "bagNewGlow", "bagWindow", "bankAltAuctions", "bankWindow",
     "bankAltFullStacks", "bankAltStore", "bankAltWhen", "buyMany",
     "classTraining", "craftDetails", "craftPays", "disenchantAnyPrice",
@@ -1054,6 +1054,107 @@ local function RuleRow(list, index)
     return row
 end
 
+--- The characters that can get level up materials and recipes: the ones
+--- on this realm and side, never the one playing or another account's,
+--- each { key, name, professions } from Tradeskills' Holdings.
+function SettingsUI.AltsToSend()
+    local list = {}
+    if not ns.Errands then return list end
+    local holdings, me = ns.Errands:Holdings()
+    if type(holdings) ~= "table" then return list end
+    for _, entry in ipairs(holdings) do
+        local mine = ns.Errands.Mine and ns.Errands.Mine(entry)
+        local name = type(entry.short) == "string" and entry.short or entry.name
+        local sameRealm = not (me and me.realm and entry.realm) or me.realm == entry.realm
+        local sameSide = not (me and me.faction and entry.faction) or me.faction == entry.faction
+        if not mine and entry.linked == nil and type(entry.key) == "string" and type(name) == "string"
+            and sameRealm and sameSide then
+            local skills = {}
+            for _, profession in ipairs(type(entry.professions) == "table" and entry.professions or {}) do
+                if type(profession) == "table" and type(profession.name) == "string" then
+                    skills[#skills + 1] = ("%s %d"):format(profession.name, tonumber(profession.skill) or 0)
+                end
+            end
+            list[#list + 1] = { key = entry.key, name = name, professions = table.concat(skills, ", ") }
+        end
+    end
+    table.sort(list, function(a, b) return a.name < b.name end)
+    return list
+end
+
+local ALT_ROW = 22
+
+--- One row of Characters That Get Them, made once and kept.
+local function AltSendRow(list, index)
+    local row = list.rows[index]
+    if row then return row end
+    row = CreateFrame("Frame", nil, list)
+    row:SetSize(COLUMN_WIDTH, ALT_ROW)
+    row.fill = Theme.Fill(row, "glass")
+    row.line = row:CreateTexture(nil, "BORDER")
+    row.line:SetPoint("BOTTOMLEFT")
+    row.line:SetPoint("BOTTOMRIGHT")
+    row.line:SetHeight(1)
+    row.line:SetColorTexture(Theme.Unpack("border", 0.6))
+    row.edge = row:CreateTexture(nil, "ARTWORK")
+    row.edge:SetPoint("TOPLEFT")
+    row.edge:SetPoint("BOTTOMLEFT")
+    row.edge:SetWidth(2)
+    row.edge:SetColorTexture(Theme.Unpack("accentHi"))
+    row.edge:Hide()
+    row.check = Widgets.CreateCheckbox(row, "", function(checked)
+        if row.key then ns.Verdicts:LeaveOut(row.key, not checked) end
+        SettingsUI:SyncAltsOut()
+    end)
+    row.check:SetPoint("LEFT", 8, 0)
+    -- The whole row is the box, so the mouse lights the row it is on.
+    row.check:HookScript("OnEnter", function()
+        row.fill:SetColorTexture(Theme.Unpack("glassHover"))
+        row.edge:Show()
+    end)
+    row.check:HookScript("OnLeave", function()
+        row.fill:SetColorTexture(Theme.Unpack(row.band or "glass"))
+        row.edge:Hide()
+    end)
+    row.skills = Theme.CreateLabel(row, "small", "muted", "RIGHT")
+    row.skills:SetPoint("RIGHT", -8, 0)
+    list.rows[index] = row
+    return row
+end
+
+--- Characters That Get Them: a ticked row for each character Butler can
+--- send to, unticked when left out. Only drawn while Settings shows.
+function SettingsUI:SyncAltsOut()
+    local controls = self.controls
+    local list = controls and controls.altsList
+    if not list then return end
+    local alts = SettingsUI.AltsToSend()
+    local out = ns.Verdicts:AltsLeftOut()
+    local y = 0
+    for index, alt in ipairs(alts) do
+        local row = AltSendRow(list, index)
+        row.key = alt.key
+        row.band = (index % 2 == 0) and "glassAlt" or "glass"
+        row.fill:SetColorTexture(Theme.Unpack(row.band))
+        row.check.label:SetText(alt.name)
+        row.check:SetWidth(COLUMN_WIDTH - 16)
+        row.check:SetChecked(not out[alt.key])
+        row.check.label:SetTextColor(Theme.Unpack(out[alt.key] and "dim" or "text"))
+        row.skills:SetText(alt.professions)
+        row:ClearAllPoints()
+        row:SetPoint("TOPLEFT", list, "TOPLEFT", 0, -y)
+        row:Show()
+        y = y + ALT_ROW
+    end
+    for i = #alts + 1, #list.rows do list.rows[i]:Hide() end
+    local height = math.max(2, y)
+    if list.fixedHeight ~= height then
+        list.fixedHeight = height
+        list:SetHeight(height)
+        if self.pages and self.pages.fitted then self.pages:Fit() end
+    end
+end
+
 --- Mail rules: a row a rule, the headings' sort and the count. Only drawn
 --- while Settings shows.
 function SettingsUI:SyncMailRules()
@@ -1432,6 +1533,18 @@ function SettingsUI:BuildPages()
         ns.Verdicts:SetAltLevelUp(checked)
     end)
     controls.altLevelUp:SetPoint("TOPLEFT", CONTROL_X, -2)
+
+    -- Characters That Get Them (the owner said build it, 2026-11-27): a
+    -- tick a character on this realm and side, for both boxes.
+    pages:Row("keep", 1, L["Characters That Get Them:"],
+        L["Untick a character to leave them out of level up materials and recipes."])
+    local altsList = CreateFrame("Frame", nil, pages.pages.keep.content)
+    altsList:SetWidth(COLUMN_WIDTH)
+    altsList.fixedHeight = 2
+    altsList:SetHeight(2)
+    altsList.rows = {}
+    pages:Place("keep", 1, altsList, 2)
+    controls.altsList = altsList
 
     -- Upgrades held back from a character (the owner asked 2026-10-12):
     -- right-click an upgrade under Mail to hold it back; undone here.
@@ -2130,6 +2243,7 @@ function SettingsUI:Refresh()
     controls.namePicker:SetChecked(ns.MailPicker:Enabled())
     controls.altUpgrades:SetChecked(ns.Verdicts:AltUpgradesOn())
     controls.keepLevelUp:SetChecked(ns.Verdicts:KeepLevelUpOn())
+    self:SyncAltsOut()
     controls.altLevelUp:SetChecked(ns.Verdicts:AltLevelUpOn())
     controls.altRecipes:SetChecked(ns.Verdicts:AltRecipesOn())
     controls.disenchantGreens:SetChecked(ns.Verdicts:DisenchantGreensOn())

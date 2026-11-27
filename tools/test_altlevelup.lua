@@ -13,6 +13,9 @@
 --      that raises, mails nothing.
 --   7. A recipe goes to who can learn it, with the skill when it must
 --      train first; a second copy goes on down the rules.
+--   8. Characters That Get Them: a ticked row for each character on this
+--      realm and side; unticking one saves its key and Tradeskills is
+--      told to leave it out.
 
 local env = dofile(lfs_cwd .. "/tools/testenv.lua")
 local suite = env.NewSuite("altlevelup")
@@ -41,18 +44,23 @@ local tsButler = {
     Holdings = function()
         return {
             { key = "me", short = "Me Here", realm = "R", faction = "Horde", isCurrent = true },
-            { key = "bob", short = "Bob Stone", realm = "R", faction = "Horde" },
+            { key = "bob", short = "Bob Stone", realm = "R", faction = "Horde",
+                professions = { { name = "Tailoring", skill = 162 } } },
+            { key = "ali", short = "Ali Far", realm = "R", faction = "Alliance" },
         }
     end,
     Mailbox = function() end,
     LevelUpMaterials = function() return mats end,
-    AltLevelUp = function()
+    AltLevelUp = function(_, leaveOut)
         asked = asked + 1
+        if type(leaveOut) == "table" and leaveOut.bob then return {} end
         local copy = {}
         for id, need in pairs(needs) do copy[id] = { to = need.to, count = need.count, profession = need.profession } end
         return copy
     end,
-    RecipeFor = function(_, id) if id == PATTERN then return recipe end end,
+    RecipeFor = function(_, id, leaveOut)
+        if id == PATTERN and not (type(leaveOut) == "table" and leaveOut.bob) then return recipe end
+    end,
 }
 _G.BlackthornesTS = { Butler = tsButler }
 env.Enable(ns)
@@ -161,4 +169,24 @@ tsButler.RecipeFor = function() return nil end
 Verdicts:Changed(true)
 suite.check("nobody can learn it: no mail", MailRow(PATTERN) == nil)
 
+-- 8.
+recipe.now = true
+tsButler.RecipeFor = function(_, id, leaveOut)
+    if id == PATTERN and not (type(leaveOut) == "table" and leaveOut.bob) then return recipe end
+end
+Verdicts:Changed(true)
+local alts = ns.SettingsUI.AltsToSend()
+suite.check("one row: Bob, not the other side or the one playing", #alts == 1 and alts[1].name == "Bob Stone",
+    tostring(#alts))
+suite.check("with his professions", alts[1] and alts[1].professions == "Tailoring 162", alts[1] and alts[1].professions)
+suite.check("nobody left out at first", next(Verdicts:AltsLeftOut()) == nil)
+suite.check("so the pattern goes to Bob", MailRow(PATTERN) ~= nil)
+Verdicts:LeaveOut("bob", true)
+suite.check("unticked, saved by his key", ns.db.altsLeftOut and ns.db.altsLeftOut.bob == true)
+suite.check("and Tradeskills leaves him out", MailRow(PATTERN) == nil)
+Verdicts:LeaveOut("bob", false)
+suite.check("ticked again, nothing saved", ns.db.altsLeftOut == nil)
+suite.check("and the pattern goes again", MailRow(PATTERN) ~= nil)
+
+_G.BlackthornesTS = nil
 suite.done()

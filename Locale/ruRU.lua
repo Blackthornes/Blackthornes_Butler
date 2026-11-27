@@ -1522,3 +1522,5 @@ L["Mails a recipe to your character who has that profession and doesn't know it 
 L["Used to level %s's %s. Needs %d more."] = "Нужно %s для прокачки: %s. Ещё %d."
 L["%s can learn this"] = "%s может это выучить"
 L["%s can learn this at %s %d"] = "%s может выучить это при навыке %s %d"
+L["Characters That Get Them:"] = "Кто получает:"
+L["Untick a character to leave them out of level up materials and recipes."] = "Сними галочку, чтобы персонаж не получал материалы для прокачки и рецепты."
