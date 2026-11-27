@@ -85,6 +85,8 @@ function MinimapButton:Build()
     end
 
     local function UpdatePosition(angle)
+        -- A button drawer moved it (UI/SharedMinimap.lua): leave it there.
+        if ns.SharedMinimap and ns.SharedMinimap.TakenAway and ns.SharedMinimap.TakenAway(button) then return end
         local radius = GetOrbitRadius()
 
         button:ClearAllPoints()
