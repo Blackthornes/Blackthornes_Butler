@@ -4,6 +4,15 @@ Versions follow [semantic versioning](https://semver.org): the middle number
 moves for new behaviour, the last for fixes alone. The newest version goes at
 the top; a release is refused if its version has no section here.
 
+## 1.28.0
+
+For WoW: Forever (interface 16001). `/reload` is enough after updating. Tradeskills needs a full restart, so restart the game once for both.
+
+- **Send Level Up Materials to Alts.** Fill Mail sends each alt what its Road to 300 still needs, minus what it already has. The mail says what it is for. A stack past the need sells as usual. To turn it on: 1. Open Butler. 2. Click Settings. 3. On the Keep page, tick Send Level Up Materials to Alts:. It is off unless ticked.
+- **Mail Recipes to Who Can Learn Them.** A recipe nobody on your account knows goes to the alt with that profession, one copy only. To turn it on: 1. Open Butler. 2. Click Settings. 3. On the Errands page, under Mail and Bank, tick Mail Recipes to Who Can Learn Them:. It is off unless ticked.
+- **Characters That Get Them.** One tick list of your characters on this realm and side. Untick a character to leave them out of both mails above. To use it: 1. Open Butler. 2. Click Settings. 3. On the Keep page, untick a character under Characters That Get Them:.
+- **Upgrade mail list.** One tick list replaces the Character: drop-down, the Mail Them Upgrades: box and the Items Held Back: button. Untick a character to mail them no upgrades, or click Undo to bring back one held item. To use it: 1. Open Butler. 2. Click Settings. 3. On the Keep page, find Upgrades for Your Characters.
+
 ## 1.27.1
 
 For WoW: Forever (interface 16001). `/reload` is enough after updating.

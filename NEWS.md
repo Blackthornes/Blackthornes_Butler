@@ -23,6 +23,13 @@ tell a friend: no hype, no questions to the reader, no exclamation marks
 outside the thanks line, no dashes as punctuation, no "now you can". The
 tool prints a note for a shipped line that reads like an advert.
 
+## 1.28.0
+
+- Butler can mail your alts the materials for their Road to 300. It is off unless ticked.
+- Butler can mail a recipe to the alt who can learn it. It is off unless ticked.
+- A tick list lets you leave an alt out of both mails.
+- Upgrade mail has one tick list of characters.
+
 ## 1.27.1
 
 Fixes and changes:
