@@ -845,10 +845,8 @@ L["Butler learns what you keep, sell and mail. Your right-click picks always win
 L["Mail Upgrades to Alts:"] = "Улучшения другим:"
 L["Gear that's an upgrade for another of your characters goes under Mail. Needs Blackthornes Equipment."] = "Экипировка, которая лучше для другого твоего персонажа, идёт в «Почта». Нужен Blackthornes Equipment."
 L["Character:"] = "Персонаж:"
-L["Pick a character to see what you hold back from them."] = "Выбери персонажа, чтобы увидеть, что ты от него придерживаешь."
-L["Mail Them Upgrades:"] = "Отправлять улучшения:"
-L["Items Held Back:"] = "Придержано:"
-L["Lets these items go to this character again."] = "Снова разрешает отправлять эти вещи этому персонажу."
+L["Untick a character to leave them out of upgrade mail."] =
+    "Сними галочку, чтобы персонаж не получал улучшения по почте."
 L["Send To:"] = "Кому:"
 L["The character that gets the kinds of items you tick. Fill Mail sends them. A name in amber isn't one of your characters here."] = "Персонаж, который получает отмеченные виды вещей. «Заполнить письмо» отправляет их. Имя янтарного цвета не из твоих персонажей здесь."
 L["When:"] = "Когда:"

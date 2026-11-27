@@ -873,12 +873,8 @@ L["Mail Upgrades to Alts:"] = "把升级寄给小号："
 L["Gear that's an upgrade for another of your characters goes under Mail. Needs Blackthornes Equipment."] =
     "对你另一个角色是升级的装备会放到邮寄下面。需要 Blackthornes Equipment。"
 L["Character:"] = "角色："
-L["Pick a character to see what you hold back from them."] =
-    "选一个角色，看看你扣下了哪些不寄给他。"
-L["Mail Them Upgrades:"] = "给他们寄升级："
-L["Items Held Back:"] = "扣下的物品："
-L["Lets these items go to this character again."] =
-    "让这些物品又可以寄给这个角色。"
+L["Untick a character to leave them out of upgrade mail."] =
+    "取消勾选一个角色，就不再给他寄升级。"
 L["Send To:"] = "寄给："
 L["The character that gets the kinds of items you tick. Fill Mail sends them. A name in amber isn't one of your characters here."] =
     "收到你勾选的那些种类物品的角色。填写邮件会把它们寄出去。名字是琥珀色的，说明这里没有这个角色。"
