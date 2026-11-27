@@ -5,6 +5,12 @@
 local _, ns = ...
 
 ns.WHATS_NEW = {
+    { version = "1.28.0", lines = {
+        "Butler can mail your alts the materials for their Road to 300. It is off unless ticked.",
+        "Butler can mail a recipe to the alt who can learn it. It is off unless ticked.",
+        "A tick list lets you leave an alt out of both mails.",
+        "Upgrade mail has one tick list of characters.",
+    } },
     { version = "1.27.0", lines = {
         "A Right Now card sits at the top of the Butler window.",
         "Rows are calmer: one line each, greys folded.",
@@ -15,9 +21,5 @@ ns.WHATS_NEW = {
     } },
     { version = "1.26.0", lines = {
         "The All Addons page in Settings has a Set Default button. Click Confirm and this addon's settings go back to how they started.",
-    } },
-    { version = "1.25.0", lines = {
-        "Windows fold into a round button with the Butler badge.",
-        "Butler fills mail for your bank alts without Tradeskills.",
     } },
 }
