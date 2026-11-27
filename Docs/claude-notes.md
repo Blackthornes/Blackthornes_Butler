@@ -1387,9 +1387,19 @@ reads Tradeskills once per look, `Sisters:RecipeFor` once per item, inside
 a pcall, read only:
 
 ```lua
-_G.BlackthornesTS.Butler:AltLevelUp()        -- { [itemID] = { to, count, profession } }, or nil
-_G.BlackthornesTS.Butler:RecipeFor(itemID)   -- { to, profession, skill, has, now }, or nil
+_G.BlackthornesTS.Butler:AltLevelUp(leaveOut)        -- { [itemID] = { to, count, profession } }, or nil
+_G.BlackthornesTS.Butler:RecipeFor(itemID, leaveOut) -- { to, profession, skill, has, now }, or nil
 ```
+
+"Characters That Get Them:" (the owner said build it, 2026-11-27, from a
+mockup): under the altLevelUp row, a dark glass row with a box for each
+character on this realm and side from Tradeskills' Holdings (never the one
+playing or `linked`), with its professions (Holdings' `professions`,
+since 2026-11-27). Unticked ones are kept by key in `altsLeftOut`
+(`[key] = true`, account wide, never rename it; `Verdicts:AltsLeftOut`,
+`Verdicts:LeaveOut`) and passed to both calls as `leaveOut`, so an item or
+recipe goes to the next alt. Tradeskills' Sell list reads
+`Verdicts:AltsLeftOut()` too.
 
 Tradeskills works the alts' roads out over a few frames and calls
 `Verdicts:Changed()` when a new answer differs. Its Sell list reads

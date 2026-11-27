@@ -160,7 +160,8 @@ function Sisters:AltLevelUpFor(itemID)
     if not (butler and type(butler.AltLevelUp) == "function") then return nil end
     local version = ns.Verdicts and ns.Verdicts.version
     if not altMap or altVersion ~= version then
-        local ok, answer = pcall(butler.AltLevelUp, butler)
+        local leaveOut = ns.Verdicts and ns.Verdicts.AltsLeftOut and ns.Verdicts:AltsLeftOut() or nil
+        local ok, answer = pcall(butler.AltLevelUp, butler, leaveOut)
         altMap = ok and type(answer) == "table" and answer or {}
         altVersion = version
     end
@@ -176,7 +177,8 @@ end
 function Sisters:RecipeFor(itemID)
     local butler = Sisters.Butler("ts")
     if not (butler and type(butler.RecipeFor) == "function") then return nil end
-    local ok, answer = pcall(butler.RecipeFor, butler, itemID)
+    local leaveOut = ns.Verdicts and ns.Verdicts.AltsLeftOut and ns.Verdicts:AltsLeftOut() or nil
+    local ok, answer = pcall(butler.RecipeFor, butler, itemID, leaveOut)
     if not ok or type(answer) ~= "table" then return nil end
     local to = Sisters.String(answer, "to")
     if not to then return nil end

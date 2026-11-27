@@ -1567,3 +1567,5 @@ L["Mails a recipe to your character who has that profession and doesn't know it 
 L["Used to level %s's %s. Needs %d more."] = "%s 用来提升%s。还需要 %d 个。"
 L["%s can learn this"] = "%s 能学这个"
 L["%s can learn this at %s %d"] = "%s 在%s %d 时能学这个"
+L["Characters That Get Them:"] = "谁会收到："
+L["Untick a character to leave them out of level up materials and recipes."] = "取消勾选某个角色，就不给他寄升级材料和配方。"
