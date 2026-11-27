@@ -3,8 +3,8 @@
 -- review's mockup #4): tell Butler what to do with an item in one click or
 -- one key press.
 --
---   * Hold Alt with the mouse over a bag square and a small bar of marks
---     comes up above it. One click sets the mark through
+--   * The Quick Marks Bar key (below) brings up a small bar of marks above
+--     the bag square under the mouse. One click sets the mark through
 --     Verdicts:SetChoice; a click on the mark it has already takes it off.
 --     Only the marks that fit the item show: nothing bound gets Mail or
 --     Auction, only green or better gets Disenchant, and nothing a vendor
@@ -13,9 +13,10 @@
 --     is saved).
 --   * Keys on the game's Key Bindings page, under Blackthornes Butler
 --     (Bindings.xml): Mark to Sell, Mark to Keep and Keep For Now act on
---     the item under the mouse. Quick Marks Bar shows the bar; once it has
---     a key, Alt no longer does. None has a key until the player gives it
---     one, so no key of theirs is taken.
+--     the item under the mouse. Quick Marks Bar shows the bar. None has a
+--     key until the player gives it one, so no key of theirs is taken.
+--     Holding Alt over an item once showed the bar too; the owner asked
+--     to take that out (2026-11-27). Don't add it back.
 --   * Works on the game's bags and on Butler Bags. Never in a fight. No
 --     drag and drop (the owner's earlier no). Alt right-click's menu stays.
 --
@@ -81,7 +82,6 @@ function QuickMarks:Hover(owner, bag, slot)
     bag, slot = tonumber(bag), tonumber(slot)
     if not owner or not bag or not slot then return end
     self.hover = { owner = owner, bag = bag, slot = slot }
-    if self:AltShows() and self:AltDown() then self:ShowBar() end
 end
 
 --- The bag item under the mouse now: its slot as the client has it, and
@@ -185,19 +185,6 @@ end
 function QuickMarks:BarKey(keystate)
     if keystate == "up" then return end
     self:ShowBar()
-end
-
---- Alt shows the bar until the player gives the Quick Marks Bar a key.
-function QuickMarks:AltShows()
-    local fn = rawget(_G, "GetBindingKey")
-    if type(fn) ~= "function" then return true end
-    local ok, key = pcall(fn, QuickMarks.BAR_BINDING)
-    return not (ok and key)
-end
-
-function QuickMarks:AltDown()
-    local fn = rawget(_G, "IsAltKeyDown")
-    return type(fn) == "function" and fn() and true or false
 end
 
 --------------------------------------------------------------------------------
@@ -383,10 +370,5 @@ end
 
 function QuickMarks:OnEnable()
     self:InstallHooks()
-    ns.RegisterEvent(self, "MODIFIER_STATE_CHANGED", function(_, _, key, down)
-        if (key == "LALT" or key == "RALT") and down == 1 and QuickMarks:AltShows() then
-            QuickMarks:ShowBar()
-        end
-    end)
     ns.RegisterEvent(self, "PLAYER_REGEN_DISABLED", function() QuickMarks:HideBar() end)
 end

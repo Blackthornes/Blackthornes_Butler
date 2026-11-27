@@ -7,9 +7,10 @@
 --   2. A real mark ends Keep For Now; Reset This Item clears it.
 --   3. The bar shows only marks that fit: no Mail or Auction for bound,
 --      no Disenchant under green, no Sell for what no vendor buys.
---   4. Alt over a bag square (the game's, through its tooltip, or Butler
---      Bags) shows the bar; a click sets a mark, a second click takes it
---      off. Not in a fight, and not once the bar key has a key of its own.
+--   4. The bar key over a bag square (the game's, through its tooltip, or
+--      Butler Bags) shows the bar; a click sets a mark, a second click
+--      takes it off. Not in a fight. Holding Alt shows nothing (the owner
+--      asked, 2026-11-27).
 --   5. The keys mark the item under the mouse, set only, never toggle.
 --   6. Every key and new word is named and in every language.
 
@@ -92,11 +93,15 @@ suite.check("the game's bag tooltip is hooked, not changed", hooked ~= nil)
 local square = env.Stub({ IsMouseOver = function() return true end, IsVisible = function() return true end })
 _G.GameTooltip.GetOwner = function() return square end
 hooked(_G.GameTooltip, 0, 2)
-suite.check("no bar without Alt", not (QuickMarks.bar and QuickMarks.bar:IsShown()))
+suite.check("hovering alone shows no bar", not (QuickMarks.bar and QuickMarks.bar:IsShown()))
 alt = true
 env.Fire("MODIFIER_STATE_CHANGED", "LALT", 1)
+suite.check("holding Alt over an item shows no bar", not (QuickMarks.bar and QuickMarks.bar:IsShown()))
+hooked(_G.GameTooltip, 0, 2)
+suite.check("nor does hovering with Alt held", not (QuickMarks.bar and QuickMarks.bar:IsShown()))
+QuickMarks:BarKey("down")
 local bar = QuickMarks.bar
-suite.check("Alt over a game bag square shows the bar", bar and bar:IsShown())
+suite.check("the bar key over a game bag square shows the bar", bar and bar:IsShown())
 suite.check("for that item", bar and bar.entry and bar.entry.itemID == 802)
 
 QuickMarks:Click("keep")
@@ -120,13 +125,12 @@ square.IsMouseOver = function() return true end
 alt = false
 local bagSquare = env.Stub({ bfrBag = 0, bfrSlot = 3, IsMouseOver = function() return true end })
 QuickMarks:Hover(bagSquare, 0, 3)
-alt = true
-env.Fire("MODIFIER_STATE_CHANGED", "LALT", 1)
+QuickMarks:BarKey("down")
 suite.check("Butler Bags squares show it too", bar:IsShown() and bar.entry.itemID == 803)
 
 QuickMarks:HideBar()
 fighting = true
-env.Fire("MODIFIER_STATE_CHANGED", "LALT", 1)
+QuickMarks:BarKey("down")
 suite.check("never in a fight", not bar:IsShown())
 suite.check("no marks in a fight", not QuickMarks:Pick(Entry(3), "keep", true))
 fighting = false
@@ -134,13 +138,8 @@ QuickMarks:ShowBar()
 env.Fire("PLAYER_REGEN_DISABLED")
 suite.check("a fight starting closes the bar", not bar:IsShown())
 
-barKey = "CTRL-Q"
-env.Fire("MODIFIER_STATE_CHANGED", "LALT", 1)
-suite.check("with its own key, Alt shows nothing", not bar:IsShown())
-QuickMarks:BarKey("down")
-suite.check("the bar key shows it", bar:IsShown())
-barKey = nil
-QuickMarks:HideBar()
+QuickMarks:BarKey("up")
+suite.check("letting go of the bar key does nothing", not bar:IsShown())
 
 -- 5.
 alt = false
