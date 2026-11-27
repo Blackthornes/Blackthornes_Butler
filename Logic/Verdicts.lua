@@ -358,6 +358,11 @@ function Verdicts:Judge(entry, noAlt, pastKeep, pastWear)
     if bankAlt and bankAlt.FullStacksOn and bankAlt:FullStacksOn() then
         key = key .. (bankAlt:FullStack(entry) and "|full" or "|short")
     end
+    -- The set's own copy and a spare beside it share a link but not an
+    -- answer (STEPS.sets).
+    if entry.itemID and self:InSet(entry.itemID) and Verdicts.SetCopyHere(entry.itemID, entry.bag, entry.slot) then
+        key = key .. "|set"
+    end
     local known = memo[key]
     if known then return known[1], known[2], known[3], known[4] end
 
@@ -571,7 +576,8 @@ Verdicts.STEPS = STEPS
 -- broken, whatever a list or a sister says (a player asked, 2026-10-13).
 function STEPS.sets(self, c)
     local set = self:InSet(c.itemID)
-    if set then
+    local entry = c.entry or {}
+    if set and Verdicts.SetCopyHere(c.itemID, entry.bag, entry.slot) then
         return "keep", type(set) == "string" and L.Format("In your %s equipment set", set)
             or L["In one of your equipment sets"], nil, true
     end
@@ -1119,6 +1125,56 @@ function Verdicts:InSet(itemID)
     if not itemID then return nil end
     if not setItems then setItems = Verdicts.ReadSets() end
     return setItems[itemID]
+end
+
+--- Where the game keeps a set's piece: { bags, bag, slot }, or nil when
+--- the client won't say. Read through whichever helper this client has.
+local function SetSpot(location)
+    location = tonumber(location)
+    if not location or location < 2 then return nil end
+    local data = rawget(_G, "EquipmentManager_GetLocationData")
+    if type(data) == "function" then
+        local ok, found = pcall(data, location)
+        if ok and type(found) == "table" then
+            return { bags = found.isBags == true, bag = found.bag, slot = found.slot }
+        end
+    end
+    local unpack = rawget(_G, "EquipmentManager_UnpackLocation")
+    if type(unpack) ~= "function" then return nil end
+    -- Counted with select, since a worn piece's bag is nil.
+    local function Pack(...) return select("#", ...), { ... } end
+    local ok, n, r = pcall(function() return Pack(unpack(location)) end)
+    if not ok or type(r) ~= "table" or r[3] == nil then return nil end
+    -- Newer clients put a void storage flag before the slot.
+    if n >= 6 then return { bags = r[3] == true, bag = r[6], slot = r[5] } end
+    return { bags = r[3] == true, bag = r[5], slot = r[4] }
+end
+
+--- Is the copy in this bag slot the one a set uses? InSet answers by item,
+--- so a new crafted copy read as the set's while the set's own copy was
+--- worn (a player's Toughened Leather Gloves, 2026-11-27). False only when
+--- the client shows every set copy of it somewhere else (worn, the bank,
+--- another bag slot); true when one is here or the client won't say.
+function Verdicts.SetCopyHere(itemID, bag, slot)
+    itemID, bag, slot = tonumber(itemID), tonumber(bag), tonumber(slot)
+    if not itemID or not bag or not slot then return true end
+    local setIDs = Client("C_EquipmentSet.GetEquipmentSetIDs")
+    if type(setIDs) ~= "table" then return true end
+    local found = false
+    for _, setID in ipairs(setIDs) do
+        local ids = Client("C_EquipmentSet.GetItemIDs", setID)
+        if type(ids) ~= "table" then return true end
+        local locations = Client("C_EquipmentSet.GetItemLocations", setID)
+        for index, id in pairs(ids) do
+            if tonumber(id) == itemID then
+                found = true
+                local spot = type(locations) == "table" and SetSpot(locations[index])
+                if not spot then return true end
+                if spot.bags and tonumber(spot.bag) == bag and tonumber(spot.slot) == slot then return true end
+            end
+        end
+    end
+    return not found
 end
 
 --- The sets changed: read them again and judge again.
