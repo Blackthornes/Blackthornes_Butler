@@ -162,6 +162,7 @@ function BagView:Marks(entry)
     local result = {
         verdict = verdict,
         upgrade = Sisters.String(said.equipment, "upgrade") == "now",
+        backup = Sisters.True(said.equipment, "backup"),
         sell = verdict == "sell" or verdict == "auction",
         vendor = verdict == "sell",
         mail = verdict == "mail",
