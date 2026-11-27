@@ -247,6 +247,20 @@ keep and an item no vendor buys alike (a player's alchemist was never sent
 its materials, 2026-10-14); soulbound and the character playing never.
 Tested in `tools/test_altcraftfirst.lua`.
 
+## Equipment's backup weapon set is kept
+
+The owner said build it from `equipment-backup-set-shown` (2026-11-27),
+after Butler said Disenchant for the off hand of his Equipment backup set.
+Equipment's Advise answers `backup = true` for a piece of that set
+(`Backup:InSet`, with "Backup Weapon Set:" ticked in Equipment, or the set
+beating what is worn). `STEPS.sets` (always first) then says Keep, "Kept
+for your backup set.", unless the player marked it on an Always list
+(`Choice`), so it is never sold, auctioned, broken or mailed. Its square
+wears a `backup` mark (`BagView:Marks`, after `upgrade` in
+`BagWindow.MARK_ORDER`): crossed swords tinted blue (`BagWindow.SWORDS`,
+`SWORDS_COLOR`), like Equipment's own bag mark; `ShowMark` puts the colour
+back for every other mark. Tested in `tools/test_backupset.lua`.
+
 ## Soulbound gear your class can never wear
 
 A player asked (2026-11-10, the owner said build it): soulbound green or

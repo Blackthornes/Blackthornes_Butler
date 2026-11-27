@@ -594,6 +594,15 @@ function STEPS.sets(self, c)
         return "keep", type(set) == "string" and L.Format("In your %s equipment set", set)
             or L["In one of your equipment sets"], nil, true
     end
+    -- A piece of Equipment's backup weapon set is never sold, auctioned,
+    -- broken or mailed away (the owner, 2026-11-27: Butler said Disenchant
+    -- for his backup off hand). An Always mark of the player's still wins.
+    if not Choice(c) then
+        local eq = Eq(c)
+        if Sisters.True(eq, "backup") then
+            return "keep", L["Kept for your backup set."], nil, true
+        end
+    end
 end
 
 --- Can this quest item go on the auction house? By how it binds: not on
