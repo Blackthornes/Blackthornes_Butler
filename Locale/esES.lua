@@ -874,12 +874,9 @@ L["Mail Upgrades to Alts:"] = "Enviar mejoras a alts:"
 L["Gear that's an upgrade for another of your characters goes under Mail. Needs Blackthornes Equipment."] =
     "El equipo que es una mejora para otro de tus personajes va a Correo. Necesita Blackthornes Equipment."
 L["Character:"] = "Personaje:"
-L["Pick a character to see what you hold back from them."] =
-    "Elige un personaje para ver lo que le retienes."
-L["Mail Them Upgrades:"] = "Enviarle mejoras:"
-L["Items Held Back:"] = "Objetos retenidos:"
-L["Lets these items go to this character again."] =
-    "Deja que estos objetos vuelvan a ir a este personaje."
+L["Characters That Get Them:"] = "Personajes que las reciben:"
+L["Untick a character to leave them out of upgrade mail."] =
+    "Desmarca un personaje para que no reciba mejoras por correo."
 L["Send To:"] = "Enviar a:"
 L["The character that gets the kinds of items you tick. Fill Mail sends them. A name in amber isn't one of your characters here."] =
     "El personaje que recibe los tipos de objetos que marques. Llenar correo se los envía. Un nombre en ámbar no es uno de tus personajes de aquí."

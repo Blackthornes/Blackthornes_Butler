@@ -612,16 +612,139 @@ function SettingsUI:SyncGoldFor()
     controls.goldUsual:SetShown(own ~= nil)
 end
 
---- The picked character's upgrade mail: the tick, and Undo with how many
---- items are held back (dim with none).
-function SettingsUI:SyncHeld()
-    local controls = self.controls
-    if not (controls and controls.heldPick) then return end
-    local name = controls.heldPick:GetName()
-    controls.heldAll:SetChecked(not (name and (ns.db.noUpgradesFor or {})[name]))
-    local count = name and #ns.Verdicts:HeldItems(name) or 0
-    controls.heldItems:SetText(count > 0 and L.Format("Undo %d", count) or L["None"])
-    controls.heldItems:SetLabelColor(count == 0 and "dim" or nil)
+--- Level and class for a character's row, "32 Mage", from the notes Gold
+--- Goals keeps by GUID; "" when Butler has none.
+function SettingsUI.LevelClass(key)
+    local data = key and ns.GoldGoals and ns.GoldGoals:Data().characters
+    local note = data and data[key]
+    if type(note) ~= "table" then return "" end
+    local level, class = tonumber(note.level), note.className
+    if level and type(class) == "string" then return ("%d %s"):format(level, class) end
+    return type(class) == "string" and class or (level and tostring(level)) or ""
+end
+
+local UPGRADE_ROW = 26
+
+local function PaintTickRow(row)
+    local over = row.over == true
+    row.fill:SetColorTexture(Theme.Unpack(over and "glassHover" or row.band))
+    row.edge:SetShown(over)
+end
+
+--- One row of Characters That Get Them: the tick, the whole name, level
+--- and class, and Undo when single items are held back.
+local function UpgradeRow(list, index)
+    local row = list.rows[index]
+    if row then return row end
+    row = CreateFrame("Frame", nil, list)
+    row:SetWidth(COLUMN_WIDTH)
+    row:SetHeight(UPGRADE_ROW)
+    row:EnableMouse(true)
+    row.fill = Theme.Fill(row, "glass")
+    row.line = row:CreateTexture(nil, "BORDER")
+    row.line:SetPoint("BOTTOMLEFT")
+    row.line:SetPoint("BOTTOMRIGHT")
+    row.line:SetHeight(1)
+    row.line:SetColorTexture(Theme.Unpack("border", 0.6))
+    row.edge = row:CreateTexture(nil, "ARTWORK")
+    row.edge:SetPoint("TOPLEFT")
+    row.edge:SetPoint("BOTTOMLEFT")
+    row.edge:SetWidth(2)
+    row.edge:SetColorTexture(Theme.Unpack("accent"))
+    row.edge:Hide()
+    row.tick = Widgets.CreateCheckbox(row, "", function(checked)
+        if row.who then ns.Verdicts:HoldAllUpgrades(row.who, not checked) end
+        SettingsUI:SyncUpgradeList()
+    end)
+    row.tick:SetWidth(18)
+    row.tick:SetPoint("LEFT", 22, 0)
+    row.name = Theme.CreateLabel(row, "small", "text")
+    row.name:SetPoint("LEFT", row.tick, "RIGHT", 6, 0)
+    row.name:SetWordWrap(true)
+    row.undo = Widgets.CreateButton(row, L["Undo"], function()
+        if not row.who then return end
+        for _, itemID in ipairs(ns.Verdicts:HeldItems(row.who)) do
+            ns.Verdicts:HoldUpgrade(itemID, row.who, false)
+        end
+        SettingsUI:SyncUpgradeList()
+    end, { width = 70, height = 18 })
+    row.undo:SetPoint("RIGHT", -8, 0)
+    row.class = Theme.CreateLabel(row, "small", "muted", "RIGHT")
+    row:SetScript("OnEnter", function(self) self.over = true PaintTickRow(self) end)
+    row:SetScript("OnLeave", function(self) self.over = false PaintTickRow(self) end)
+    list.rows[index] = row
+    return row
+end
+
+--- Draw Characters That Get Them again: your characters on this realm
+--- and side, and anyone else something is held back from (so it can be
+--- undone). Grows the page only when its height changed.
+function SettingsUI:SyncUpgradeList()
+    local list = self.controls and self.controls.upgradeList
+    if not list then return end
+    local entries, seen = {}, {}
+    for _, entry in ipairs(ns.Errands:CharacterEntries()) do
+        seen[entry.name] = true
+        entries[#entries + 1] = entry
+    end
+    for _, name in ipairs(ns.Verdicts:HeldNames()) do
+        if not seen[name] and not ns.Errands:IsMe(name) then
+            entries[#entries + 1] = { name = name }
+        end
+    end
+    table.sort(entries, function(a, b) return a.name < b.name end)
+    local held = ns.db.noUpgradesFor or {}
+
+    local y = 0
+    for index, entry in ipairs(entries) do
+        local row = UpgradeRow(list, index)
+        row.who = entry.name
+        row.band = (index % 2 == 0) and "glassAlt" or "glass"
+        PaintTickRow(row)
+        local on = not held[entry.name]
+        row.tick:SetChecked(on)
+        row.name:SetText(entry.name)
+        row.name:SetTextColor(Theme.Unpack(on and "text" or "dim"))
+        local count = #ns.Verdicts:HeldItems(entry.name)
+        if count > 0 then
+            row.undo:SetText(L.Format("Undo %d", count))
+            row.undo:SetWidth(math.max(70, Theme.TextWidth("small", row.undo.label:GetText() or "") + 20))
+        end
+        row.undo:SetShown(count > 0)
+        row.class:SetText(SettingsUI.LevelClass(entry.key))
+        row.class:ClearAllPoints()
+        if count > 0 then
+            row.class:SetPoint("RIGHT", row.undo, "LEFT", -8, 0)
+        else
+            row.class:SetPoint("RIGHT", -8, 0)
+        end
+        -- The whole name, wrapped when it must, never shortened.
+        row.name:SetPoint("RIGHT", row.class, "LEFT", -8, 0)
+        local ok, textHeight = pcall(row.name.GetStringHeight, row.name)
+        local height = math.max(UPGRADE_ROW, ((ok and tonumber(textHeight)) or 0) + 10)
+        row:SetHeight(height)
+        row:ClearAllPoints()
+        row:SetPoint("TOPLEFT", list, "TOPLEFT", 0, -y)
+        row:Show()
+        y = y + height
+    end
+    for index = #entries + 1, #list.rows do list.rows[index]:Hide() end
+    if #entries == 0 then
+        if not rawget(list, "noneYet") then
+            list.noneYet = Theme.CreateLabel(list, "small", "dim")
+            list.noneYet:SetPoint("TOPLEFT", 22, -6)
+            list.noneYet:SetText(L["No characters yet"])
+        end
+        y = UPGRADE_ROW
+    end
+    if rawget(list, "noneYet") then list.noneYet:SetShown(#entries == 0) end
+
+    local height = math.ceil(y)
+    if list.fixedHeight ~= height then
+        list.fixedHeight = height
+        list:SetHeight(height)
+        if self.pages and self.pages.fitted then self.pages:Fit() end
+    end
 end
 
 -- The characters and items the keep pickers step through.
@@ -1557,30 +1680,20 @@ function SettingsUI:BuildPages()
     end)
     controls.altUpgrades:SetPoint("TOPLEFT", CONTROL_X, -2)
 
-    local heldRow = pages:Row("keep", 1, L["Character:"],
-        L["Pick a character to see what you hold back from them."])
-    controls.heldPick = SettingsUI.CharacterPicker(heldRow, CONTROL_X, function()
-        SettingsUI:SyncHeld()
-    end)
-
-    local allRow = pages:Row("keep", 1, L["Mail Them Upgrades:"], nil)
-    controls.heldAll = Widgets.CreateCheckbox(allRow, L["On"], function(checked)
-        local name = controls.heldPick:GetName()
-        if name then ns.Verdicts:HoldAllUpgrades(name, not checked) end
-    end)
-    controls.heldAll:SetPoint("TOPLEFT", CONTROL_X, -2)
-
-    local itemsRow = pages:Row("keep", 1, L["Items Held Back:"],
-        L["Lets these items go to this character again."])
-    controls.heldItems = Widgets.CreateButton(itemsRow, L["Undo"], function()
-        local name = controls.heldPick:GetName()
-        if not name then return end
-        for _, itemID in ipairs(ns.Verdicts:HeldItems(name)) do
-            ns.Verdicts:HoldUpgrade(itemID, name, false)
-        end
-        SettingsUI:SyncHeld()
-    end, { width = 100, height = 20 })
-    controls.heldItems:SetPoint("TOPLEFT", CONTROL_X, 0)
+    -- Who gets upgrades (the owner asked 2026-11-27, from the mockup
+    -- butler-upgrade-mail-list): one tick a character on this realm and
+    -- side, in place of a name picker and a second box. Unticked is
+    -- noUpgradesFor[name], as before, so no choice is lost. A row with
+    -- single items held back shows Undo and their count.
+    pages:Row("keep", 1, L["Characters That Get Them:"],
+        L["Untick a character to leave them out of upgrade mail."])
+    local upgradeList = CreateFrame("Frame", nil, pages.pages.keep.content)
+    upgradeList:SetWidth(COLUMN_WIDTH)
+    upgradeList.fixedHeight = 26
+    upgradeList:SetHeight(26)
+    pages:Place("keep", 1, upgradeList, 2)
+    upgradeList.rows = {}
+    controls.upgradeList = upgradeList
 
     -- What this character always carries (Logic/Restock.lua,
     -- UI/RestockList.lua; the owner said build it, 2026-11-26).
@@ -2285,17 +2398,7 @@ function SettingsUI:Refresh()
     table.sort(names)
     controls.goldPick:SetNames(names)
     self:SyncGoldFor()
-    local heldNames, seen = {}, {}
-    for _, name in ipairs(ns.Errands:Characters()) do
-        seen[name] = true
-        heldNames[#heldNames + 1] = name
-    end
-    for _, name in ipairs(ns.Verdicts:HeldNames()) do
-        if not seen[name] then heldNames[#heldNames + 1] = name end
-    end
-    table.sort(heldNames)
-    controls.heldPick:SetNames(heldNames)
-    self:SyncHeld()
+    self:SyncUpgradeList()
     self:SyncKeepHere()
     self:SyncKeepAcross()
     if ns.RestockList then ns.RestockList:Sync() end

@@ -680,10 +680,17 @@ Tradeskills' `UI/QueueMailPanel.lua` reads it.
   "Never mail upgrades to NAME" (`HoldAllUpgrades`, `noUpgradesFor[name]
   = true`), account wide by full name; never rename either. The alt
   branch skips a held item (`Verdicts:UpgradeHeld`), so it gets its next
-  verdict and Fill mail leaves it. Settings > Selling > Upgrades for your
-  characters picks a character, ticks Mail them upgrades and has Undo for
-  its held items; `/bbutler upgrademail` lists them and `upgrademail undo
-  NAME` undoes both. Tested in `tools/test_holdupgrade.lua`.
+  verdict and Fill mail leaves it. Settings > Keep > Upgrades for your
+  characters lists them under "Characters That Get Them:" (the owner
+  asked 2026-11-27, mockup butler-upgrade-mail-list; it replaced a name
+  picker and a Mail Them Upgrades box): one tick a character on this
+  realm and side (`Errands:CharacterEntries`), never the one playing,
+  plus any name still held back. Unticked is `noUpgradesFor[name]`, so
+  old choices carry over. Level and class come from Gold Goals' notes
+  (`SettingsUI.LevelClass`); a row with single items held back shows
+  "Undo N" (`SettingsUI:SyncUpgradeList`). `/bbutler upgrademail` lists
+  them and `upgrademail undo NAME` undoes both. Tested in
+  `tools/test_holdupgrade.lua`.
 - **Fill the next mail** (the owner's goal, 2026-10-11: do the work for
   the player): once a mail Butler filled goes (`MAIL_SEND_SUCCESS`, with
   `Errands.sending` set by `FillMail`), `Errands:Sent` waits

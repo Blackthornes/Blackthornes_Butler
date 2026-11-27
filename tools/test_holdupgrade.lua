@@ -6,7 +6,7 @@
 --   2. "Don't mail this" moves that item to its next verdict, and Fill mail
 --      leaves it out.
 --   3. "Never mail upgrades" does it for every upgrade to that character.
---   4. Settings shows both and undoes them; so does the command.
+--   4. Settings lists each character with a tick and Undo; so does the command.
 --   5. Nothing else is deleted: the player's lists stay as they were.
 
 local env = dofile(lfs_cwd .. "/tools/testenv.lua")
@@ -92,19 +92,43 @@ menu.holdAll:GetScript("OnClick")(menu.holdAll)
 suite.check("never mail upgrades is remembered", ns.db.noUpgradesFor["Bob Stone"] == true)
 suite.check("no upgrade goes to them now", Rows("mail")[406] == nil)
 
--- 4. Settings.
+-- 4. Settings: Characters That Get Them, one tick a character (the owner
+-- asked 2026-11-27, in place of a name picker and a second box).
 ns.HandleSlash("settings")
 local controls = ns.SettingsUI.controls
-suite.check("Settings picks the character", controls.heldPick:GetName() == "Bob Stone")
-suite.check("with Mail them upgrades unticked", not controls.heldAll:GetChecked())
-suite.check("and one item held back", controls.heldItems.label:GetText() == "Undo 1",
-    controls.heldItems.label:GetText())
-controls.heldAll:GetScript("OnClick")(controls.heldAll)
-suite.check("ticking it mails upgrades again", ns.db.noUpgradesFor["Bob Stone"] == nil)
+local list = controls.upgradeList
+local function RowFor(name)
+    for _, row in ipairs(list.rows) do
+        if row:IsShown() and row.who == name then return row end
+    end
+end
+local bob = RowFor("Bob Stone")
+suite.check("the list names Bob Stone in full", bob ~= nil and bob.name:GetText() == "Bob Stone")
+suite.check("and never the character playing", RowFor("Me Here") == nil)
+suite.check("Bob is unticked, from the saved choice", bob and not bob.tick:GetChecked())
+suite.check("his row shows one item held back", bob and bob.undo:IsShown()
+    and bob.undo.label:GetText() == "Undo 1", bob and bob.undo.label:GetText())
+suite.check("the list has room for its rows", list.fixedHeight >= 26)
+bob.tick:GetScript("OnClick")(bob.tick)
+suite.check("ticking him mails upgrades again", ns.db.noUpgradesFor["Bob Stone"] == nil)
 suite.check("so the ring goes", Rows("mail")[406] ~= nil)
-controls.heldItems:GetScript("OnClick")(controls.heldItems)
+suite.check("and the tick stays on", RowFor("Bob Stone").tick:GetChecked())
+bob.undo:GetScript("OnClick")(bob.undo)
 suite.check("Undo lets the gloves go again", ns.db.noUpgradeMail[405] == nil and Rows("mail")[405] ~= nil)
-suite.check("and the button says none are left", controls.heldItems.label:GetText() == "None")
+suite.check("and Undo goes away", not RowFor("Bob Stone").undo:IsShown())
+bob.tick:GetScript("OnClick")(bob.tick)
+suite.check("unticking saves the same key as before", ns.db.noUpgradesFor["Bob Stone"] == true)
+Verdicts:HoldAllUpgrades("Bob Stone", false)
+
+-- Someone held back who is not on this realm and side still shows, so it
+-- can be undone.
+Verdicts:HoldAllUpgrades("Old Friend", true)
+ns.SettingsUI:SyncUpgradeList()
+suite.check("an old name held back still shows, unticked",
+    RowFor("Old Friend") ~= nil and not RowFor("Old Friend").tick:GetChecked())
+Verdicts:HoldAllUpgrades("Old Friend", false)
+ns.SettingsUI:SyncUpgradeList()
+suite.check("and leaves once let go", RowFor("Old Friend") == nil)
 
 -- The command.
 Verdicts:HoldUpgrade(405, "Bob Stone", true)

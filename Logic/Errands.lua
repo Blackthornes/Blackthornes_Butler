@@ -394,6 +394,25 @@ function Errands:Characters()
     return names
 end
 
+--- The same characters as Characters(), each with its key (the GUID
+--- Tradeskills files it under) beside its full name: { name, key }, in
+--- name order. The key is for reading notes only; mail goes by name.
+function Errands:CharacterEntries()
+    local list, me = Names()
+    if not list then return {} end
+    local out, seen = {}, {}
+    for _, entry in ipairs(list) do
+        local short = type(entry) == "table" and (Text(entry.short) or Text(entry.name))
+        if short and not Mine(entry) and not self:IsMe(short) and not seen[short]
+            and ns.Everyone.SameSide(entry, me) then
+            seen[short] = true
+            out[#out + 1] = { name = short, key = Text(entry.key) }
+        end
+    end
+    table.sort(out, function(a, b) return a.name < b.name end)
+    return out
+end
+
 --- Tell Tradeskills whether Butler's window covers the mailbox now, so its
 --- mail panel steps aside or comes back. Only said when it changes.
 --- `shown` is the window's state when the caller knows it (its OnHide).
