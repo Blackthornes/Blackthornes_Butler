@@ -5,16 +5,19 @@
 local _, ns = ...
 
 ns.WHATS_NEW = {
+    { version = "1.27.0", lines = {
+        "A Right Now card sits at the top of the Butler window.",
+        "Rows are calmer: one line each, greys folded.",
+        "Butler Bank opens the bank in the Butler Bags style. It is off unless ticked.",
+        "The Restock list tops items up from your bank, other characters and vendors.",
+        "Search takes words such as gear, boe, quest and over 1g.",
+        "Quick marks mark an item in one click or one key.",
+    } },
     { version = "1.26.0", lines = {
         "The All Addons page in Settings has a Set Default button. Click Confirm and this addon's settings go back to how they started.",
     } },
     { version = "1.25.0", lines = {
         "Windows fold into a round button with the Butler badge.",
         "Butler fills mail for your bank alts without Tradeskills.",
-    } },
-    { version = "1.24.0", lines = {
-        "Panels and rows have a warm brown-black look.",
-        "Item rows link in chat and try on gear.",
-        "Butler has its own key in Key Bindings.",
     } },
 }

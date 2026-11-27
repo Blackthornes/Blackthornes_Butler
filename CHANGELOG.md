@@ -4,6 +4,27 @@ Versions follow [semantic versioning](https://semver.org): the middle number
 moves for new behaviour, the last for fixes alone. The newest version goes at
 the top; a release is refused if its version has no section here.
 
+## 1.27.0
+
+For WoW: Forever (interface 16001). A full restart is needed after updating.
+
+- **Right Now.** A card at the top of the Butler window shows what to do next.
+- **Calmer rows.** Each row is one line, greys are folded and sold rows slide out.
+- **Butler Bank.** At a banker the bank opens in the Butler Bags style with a search, Group By and Take for Crafts. Turn it on with Butler Bank under Bags on the General page. It is off unless ticked and needs Use Butler Bags.
+- **Restock list.** It lists your bank, other characters, crafts and the auction house, and keeps items in your bags topped up at a vendor.
+- **Search.** All Characters, Your Bags and the Bags window take words such as gear, boe, quest, food, grey, upgrade, worn, on auction, over 1g and level 30 to 40.
+- **Quick marks.** Mark a bag item in one click or one key. Keep For Now keeps an item until logout. The marks bar shows from the Quick Marks Bar key, which has no key until you set one.
+- **Set Up Butler.** New accounts see a card with three choices: bank alt, disenchanter and where Butler shows up.
+- **Quest Items.** A Quest Items group, one rule for a kind of item and a Bags button.
+- **Auction Only If It Pays.** A drop-down on the Selling page sets how much more than the vendor the auction house must pay before Butler says Auction. It starts at 0.
+- **Look.** The All Addons page has Font, Colors and Fold Gem rows, picked once for all five addons.
+- **Tooltips.** Lines that show only while Shift is held go at the bottom of the block.
+- **Fix.** The game no longer hangs when the mouse rests on a row with its reason open.
+- **Fix.** The mailbox name picker no longer lags.
+- **Fix.** A spare copy of gear is judged on its own while the equipment set's copy is worn.
+- **Fix.** Rows show an item's name when its bag link comes with none.
+- **Fix.** The minimap button stays where a button drawer puts it.
+
 ## 1.26.6
 
 For WoW: Forever (interface 16001). `/reload` is enough after updating.

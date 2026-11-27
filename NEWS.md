@@ -23,6 +23,23 @@ tell a friend: no hype, no questions to the reader, no exclamation marks
 outside the thanks line, no dashes as punctuation, no "now you can". The
 tool prints a note for a shipped line that reads like an advert.
 
+## 1.27.0
+
+- A Right Now card sits at the top of the Butler window.
+- Rows are calmer: one line each, greys folded.
+- Butler Bank opens the bank in the Butler Bags style. It is off unless ticked.
+- The Restock list tops items up from your bank, other characters and vendors.
+- Search takes words such as gear, boe, quest and over 1g.
+- Quick marks mark an item in one click or one key.
+
+Fixes and changes:
+- The game no longer hangs when the mouse rests on a row with its reason open.
+- The mailbox name picker no longer lags.
+- A spare copy of gear is judged on its own while the equipment set's copy is worn.
+- Rows show an item's name when its bag link comes with none.
+- The minimap button stays where a button drawer puts it.
+- Shift tooltip lines sit at the bottom of the tooltip.
+
 ## 1.26.6
 
 Fixes and changes:
