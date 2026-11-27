@@ -5,6 +5,10 @@
 local _, ns = ...
 
 ns.WHATS_NEW = {
+    { version = "1.29.0", lines = {
+        "The Butler Bank has a Sort button when Group By is One Grid. Butler Bank is off unless ticked.",
+        "Butler keeps the pieces of Equipment's backup weapon set and marks them with blue swords.",
+    } },
     { version = "1.28.0", lines = {
         "Butler can mail your alts the materials for their Road to 300. It is off unless ticked.",
         "Butler can mail a recipe to the alt who can learn it. It is off unless ticked.",
@@ -18,8 +22,5 @@ ns.WHATS_NEW = {
         "The Restock list tops items up from your bank, other characters and vendors.",
         "Search takes words such as gear, boe, quest and over 1g.",
         "Quick marks mark an item in one click or one key.",
-    } },
-    { version = "1.26.0", lines = {
-        "The All Addons page in Settings has a Set Default button. Click Confirm and this addon's settings go back to how they started.",
     } },
 }
