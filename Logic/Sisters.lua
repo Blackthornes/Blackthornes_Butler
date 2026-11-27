@@ -146,6 +146,44 @@ function Sisters:LevelUpFor(itemID)
     return name
 end
 
+--------------------------------------------------------------------------------
+-- Mats and recipes to alts (a player asked, the owner said build it, 2026-11-27)
+--------------------------------------------------------------------------------
+
+local altMap, altVersion
+
+--- { to, count, profession } when another character's Road to 300 still
+--- needs `itemID`, less what it has; nil otherwise. Tradeskills is asked
+--- once per look (Verdicts.version), not once per item.
+function Sisters:AltLevelUpFor(itemID)
+    local butler = Sisters.Butler("ts")
+    if not (butler and type(butler.AltLevelUp) == "function") then return nil end
+    local version = ns.Verdicts and ns.Verdicts.version
+    if not altMap or altVersion ~= version then
+        local ok, answer = pcall(butler.AltLevelUp, butler)
+        altMap = ok and type(answer) == "table" and answer or {}
+        altVersion = version
+    end
+    local need = altMap[itemID]
+    if type(need) ~= "table" then return nil end
+    local to, count = Sisters.String(need, "to"), Sisters.Number(need, "count")
+    if not to or not count or count < 1 then return nil end
+    return { to = to, count = math.floor(count), profession = Sisters.String(need, "profession") or "?" }
+end
+
+--- { to, profession, skill, now } for a recipe item that should go to the
+--- character who can learn it; nil otherwise.
+function Sisters:RecipeFor(itemID)
+    local butler = Sisters.Butler("ts")
+    if not (butler and type(butler.RecipeFor) == "function") then return nil end
+    local ok, answer = pcall(butler.RecipeFor, butler, itemID)
+    if not ok or type(answer) ~= "table" then return nil end
+    local to = Sisters.String(answer, "to")
+    if not to then return nil end
+    return { to = to, profession = Sisters.String(answer, "profession") or "?",
+        skill = math.floor(Sisters.Number(answer, "skill") or 0), now = Sisters.True(answer, "now") }
+end
+
 --- Queue at least `crafts` of a recipe in Tradeskills.
 -- @return true, or false
 function Sisters:QueueCraft(recipeID, crafts)

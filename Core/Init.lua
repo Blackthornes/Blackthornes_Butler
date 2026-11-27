@@ -334,6 +334,8 @@ local DEFAULTS = {
     -- (Verdicts:KeepLevelUpOn; the owner, 2026-11-17, off by default).
     -- Never rename it.
     keepLevelUp = false,
+    altLevelUp = false,
+    altRecipes = false,
 
     -- On the character Tradeskills names as the disenchanter, every green
     -- it can break goes under Disenchant, whatever it is worth

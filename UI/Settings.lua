@@ -113,7 +113,7 @@ end
 --- purpose. tools/test_restoredefaults.lua clicks every control and fails
 --- if one writes a key missing here.
 SettingsUI.SETTING_KEYS = {
-    "altUpgrades", "arrowRoute", "auctionMargin", "bagGroupBy", "bagItemLevel", "bagItemSize",
+    "altLevelUp", "altRecipes", "altUpgrades", "arrowRoute", "auctionMargin", "bagGroupBy", "bagItemLevel", "bagItemSize",
     "bagMarks", "bagNewGlow", "bagWindow", "bankAltAuctions", "bankWindow",
     "bankAltFullStacks", "bankAltStore", "bankAltWhen", "buyMany",
     "classTraining", "craftDetails", "craftPays", "disenchantAnyPrice",
@@ -1293,6 +1293,14 @@ function SettingsUI:BuildPages()
     end, false)
     controls.namePicker:SetPoint("TOPLEFT", CONTROL_X, -2)
 
+    -- Mail Recipes to Who Can Learn Them (the owner said build it, 2026-11-27).
+    local recipeRow = pages:Row("selling", 1, L["Mail Recipes to Who Can Learn Them:"],
+        L["Mails a recipe to your character who has that profession and doesn't know it yet."])
+    controls.altRecipes = Widgets.CreateCheckbox(recipeRow, L["On"], function(checked)
+        ns.Verdicts:SetAltRecipes(checked)
+    end)
+    controls.altRecipes:SetPoint("TOPLEFT", CONTROL_X, -2)
+
     -- Jobs for the craft queue on other characters (Logic/Jobs.lua, asked
     -- 2026-10-11).
     local jobRow = pages:Row("selling", 1, L["Jobs at Login:"],
@@ -1416,6 +1424,14 @@ function SettingsUI:BuildPages()
         ns.Verdicts:SetKeepLevelUp(checked)
     end)
     controls.keepLevelUp:SetPoint("TOPLEFT", CONTROL_X, -2)
+
+    -- Send Level Up Materials to Alts (the owner said build it, 2026-11-27).
+    local altLevelRow = pages:Row("keep", 1, L["Send Level Up Materials to Alts:"],
+        L["Mails your other characters what their orange and yellow crafts still use, up to what they need to reach 300. Counts what they already have."])
+    controls.altLevelUp = Widgets.CreateCheckbox(altLevelRow, L["On"], function(checked)
+        ns.Verdicts:SetAltLevelUp(checked)
+    end)
+    controls.altLevelUp:SetPoint("TOPLEFT", CONTROL_X, -2)
 
     -- Upgrades held back from a character (the owner asked 2026-10-12):
     -- right-click an upgrade under Mail to hold it back; undone here.
@@ -2114,6 +2130,8 @@ function SettingsUI:Refresh()
     controls.namePicker:SetChecked(ns.MailPicker:Enabled())
     controls.altUpgrades:SetChecked(ns.Verdicts:AltUpgradesOn())
     controls.keepLevelUp:SetChecked(ns.Verdicts:KeepLevelUpOn())
+    controls.altLevelUp:SetChecked(ns.Verdicts:AltLevelUpOn())
+    controls.altRecipes:SetChecked(ns.Verdicts:AltRecipesOn())
     controls.disenchantGreens:SetChecked(ns.Verdicts:DisenchantGreensOn())
     controls.craftPays:SetChecked(ns.Verdicts:CraftPaysOn())
     controls.alwaysDisenchant:SetChecked(ns.Verdicts:AlwaysDisenchantOn())

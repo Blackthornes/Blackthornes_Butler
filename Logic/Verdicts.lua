@@ -36,6 +36,15 @@
 --   7b. Tradeskills: an orange or yellow craft on its
 --      Level Up list uses it, with "Keep Level Up
 --      Materials:" ticked (keepLevelUp)            Keep
+--   7c. Tradeskills: another character's Road to 300
+--      still needs it, less what that one has,
+--      with "Send Level Up Materials to Alts:"
+--      ticked (altLevelUp); past what it needs a
+--      stack goes on down the rules                Mail
+--   7d. A recipe item nobody on the account knows,
+--      for the character who has the profession,
+--      with "Mail Recipes to Who Can Learn Them:"
+--      ticked (altRecipes)                         Mail
 --   8. Pets: the pet eats it                       Keep
 --   8b. Tradeskills: bought on the auction house
 --      to disenchant                              Disenchant, or Mail to
@@ -386,7 +395,7 @@ end
 Verdicts.FIRST = { "sets", "quests" }
 Verdicts.DEFAULT_ORDER = {
     "keepHere", "keepList", "bankList", "mailList", "lists", "kinds", "buyback", "noValue", "sellList", "auctionList", "disenchantList", "ammo",
-    "upgrades", "altCrafts", "goals", "queue", "levelUp", "altUpgrades", "petFood",
+    "upgrades", "altCrafts", "goals", "queue", "levelUp", "altLevelUp", "altRecipes", "altUpgrades", "petFood",
     "bought", "levelEnch", "greensHere", "disenchanter", "mailHabit",
     "sellHabit", "greys", "bankAlt", "sellBelow",
 }
@@ -399,6 +408,10 @@ local OWN_SWITCH = {
         set = function(on) Verdicts:SetAltUpgrades(on) end },
     levelUp = { on = function() return Verdicts:KeepLevelUpOn() end,
         set = function(on) Verdicts:SetKeepLevelUp(on) end },
+    altLevelUp = { on = function() return Verdicts:AltLevelUpOn() end,
+        set = function(on) Verdicts:SetAltLevelUp(on) end },
+    altRecipes = { on = function() return Verdicts:AltRecipesOn() end,
+        set = function(on) Verdicts:SetAltRecipes(on) end },
     greensHere = { on = function() return Verdicts:DisenchantGreensOn() end,
         set = function(on) Verdicts:SetDisenchantGreens(on) end },
     -- These need an amount or a character, so their own page turns them on.
@@ -923,6 +936,34 @@ function STEPS.levelUp(self, c)
     if not profession then return nil end
     local unit = Unit(c)
     return "keep", L.Format("Used to level your %s", profession), unit, unit ~= nil
+end
+
+-- Send Level Up Materials to Alts (a player asked, the owner said build
+-- it, 2026-11-27): what another character's Road to 300 still needs, less
+-- what it has, goes to it. It comes after this character's own queue and
+-- Keep Level Up Materials. Groups lets a stack past the count go on down
+-- the rules, so the extra still sells.
+function STEPS.altLevelUp(self, c)
+    if c.noAlt or not self:AltLevelUpOn() or c.entry.bound then return nil end
+    local need = Sisters:AltLevelUpFor(c.itemID)
+    if not need or self:IsMe(need.to) then return nil end
+    local unit = Unit(c)
+    return "mail", L.Format("Used to level %s's %s. Needs %d more.", need.to, need.profession, need.count),
+        unit, unit ~= nil, { to = need.to, count = need.count, altLevel = true }
+end
+
+-- Mail Recipes to Who Can Learn Them (2026-11-27): a recipe nobody on the
+-- account knows goes to the character with that profession. Tradeskills
+-- leaves out one the character playing can learn now, and a character
+-- that already has a copy. A bound recipe can't go (Allowed).
+function STEPS.altRecipes(self, c)
+    if c.noAlt or not self:AltRecipesOn() or c.entry.bound then return nil end
+    local recipe = Sisters:RecipeFor(c.itemID)
+    if not recipe or self:IsMe(recipe.to) then return nil end
+    local reason = recipe.now and L.Format("%s can learn this", recipe.to)
+        or L.Format("%s can learn this at %s %d", recipe.to, recipe.profession, recipe.skill)
+    local unit = Unit(c)
+    return "mail", reason, unit, unit ~= nil, { to = recipe.to, count = 1, altLevel = true }
 end
 
 function STEPS.altUpgrades(self, c)
@@ -1514,6 +1555,32 @@ end
 function Verdicts:SetKeepLevelUp(on)
     if not ns.db then return end
     ns.db.keepLevelUp = on and true or false
+    self:Changed(true)
+end
+
+--- Whether Butler mails other characters what their Road to 300 still
+--- needs: off unless ticked (`altLevelUp`, account wide; the owner,
+--- 2026-11-27). Never rename it.
+function Verdicts:AltLevelUpOn()
+    return ns.db ~= nil and ns.db.altLevelUp == true
+end
+
+function Verdicts:SetAltLevelUp(on)
+    if not ns.db then return end
+    ns.db.altLevelUp = on and true or false
+    self:Changed(true)
+end
+
+--- Whether Butler mails a recipe to the character who can learn it: off
+--- unless ticked (`altRecipes`, account wide; the owner, 2026-11-27).
+--- Never rename it.
+function Verdicts:AltRecipesOn()
+    return ns.db ~= nil and ns.db.altRecipes == true
+end
+
+function Verdicts:SetAltRecipes(on)
+    if not ns.db then return end
+    ns.db.altRecipes = on and true or false
     self:Changed(true)
 end
 
@@ -2113,6 +2180,16 @@ function Verdicts:Groups()
                 verdict, reason, unit, extra = self:Judge(entry, true, pastKeep, pastWear)
             else
                 allotted["e" .. id] = (allotted["e" .. id] or 0) + (extra.yield or 1) * (entry.count or 1)
+            end
+        end
+        -- An alt's level-up materials or recipe: past what it needs, a
+        -- stack goes on down the rules, so the extra still sells.
+        if extra and extra.altLevel then
+            local id = "l" .. tostring(entry.itemID)
+            if (allotted[id] or 0) >= (extra.count or 1) then
+                verdict, reason, unit, extra = self:Judge(entry, true, pastKeep, pastWear)
+            else
+                allotted[id] = (allotted[id] or 0) + entry.count
             end
         end
         if extra and extra.upgrade then
