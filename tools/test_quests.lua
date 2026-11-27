@@ -43,6 +43,12 @@ suite.check("a name with no counts is the name", Quests.ParseObjective("Garrick'
 suite.check("nothing is nothing", Quests.ParseObjective(nil) == nil and Quests.ParseObjective("  ") == nil)
 suite.check("the data knows Westfall Stew's items",
     ns.QUEST_ITEMS[38] and ns.QUEST_ITEMS[38][2] == 730)
+suite.check("the data knows Forever's own quests too (Copper Bar for 95217)",
+    ns.QUEST_ITEMS[95217] and ns.QUEST_ITEMS[95217][1] == 2840)
+-- 4726's one item objective lists the essence and the tool you catch it
+-- with; the tool can be traded, the essence can't. Listing the tool alone
+-- would name it as the thing to collect.
+suite.check("a tool the quest hands you is not taken for its item", ns.QUEST_ITEMS[4726] == nil)
 
 local fake = env.FakeBags({
     { bag = 0, slot = 1, id = 730, name = "Murloc Eye", quality = 1, price = 16, count = 3 },
