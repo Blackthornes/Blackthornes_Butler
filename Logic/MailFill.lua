@@ -223,14 +223,33 @@ local function NumSlots(bag)
     return ok and tonumber(slots) or 0
 end
 
---- What a bag slot holds: itemID, count, locked, bound. nil when empty.
+--- What a bag slot holds: itemID, count, locked, bound, link. nil when empty.
 local function SlotHolds(bag, slot)
-    local ok, itemID, count, locked, bound = Call(function()
+    local ok, itemID, count, locked, bound, link = Call(function()
         local info = Container("GetContainerItemInfo")(bag, slot)
         if type(info) ~= "table" then return nil end
-        return tonumber(info.itemID), tonumber(info.stackCount) or 1, info.isLocked == true, info.isBound == true
+        local link = type(info.hyperlink) == "string" and info.hyperlink or nil
+        return tonumber(info.itemID), tonumber(info.stackCount) or 1, info.isLocked == true,
+            info.isBound == true, link
     end)
-    if ok then return itemID, count, locked, bound end
+    if ok then return itemID, count, locked, bound, link end
+end
+
+--- Of the stacks of one item, the ones that are `link`: two versions of
+--- one item ("of the Monkey" kept, "of the Bear" to mail) share an item ID,
+--- and the kept one went in the mail (found 2026-11-28). A link the bags no
+--- longer hold still matches when only one version is there; with two, none.
+function MailFill.OnlyLink(stacks, link)
+    if type(link) ~= "string" or link == "" then return stacks end
+    local same, links, kinds = {}, {}, 0
+    for _, stack in ipairs(stacks) do
+        if stack.link == link then same[#same + 1] = stack end
+        local seen = stack.link or ""
+        if not links[seen] then links[seen] = true kinds = kinds + 1 end
+    end
+    if #same > 0 then return same end
+    if kinds == 1 then return stacks end
+    return {}
 end
 
 local function Bags()
@@ -238,19 +257,21 @@ local function Bags()
 end
 
 --- The bag stacks to take for `count` of an item: whole stacks first, the
---- biggest first, and one split for the rest.
+--- biggest first, and one split for the rest. With `link`, only that
+--- version of the item (MailFill.OnlyLink).
 --- @return list of { bag, slot, count, split }
-function MailFill:PlanStacks(itemID, count, taken)
+function MailFill:PlanStacks(itemID, count, taken, link)
     local stacks = {}
     for _, bag in ipairs(Bags()) do
         for slot = 1, NumSlots(bag) do
-            local id, size, locked, bound = SlotHolds(bag, slot)
+            local id, size, locked, bound, slotLink = SlotHolds(bag, slot)
             local key = bag .. ":" .. slot
             if id == itemID and not bound and not locked and not taken[key] then
-                stacks[#stacks + 1] = { bag = bag, slot = slot, size = size or 1, key = key }
+                stacks[#stacks + 1] = { bag = bag, slot = slot, size = size or 1, key = key, link = slotLink }
             end
         end
     end
+    stacks = MailFill.OnlyLink(stacks, link)
     table.sort(stacks, function(a, b)
         if a.size ~= b.size then return a.size > b.size end
         if a.bag ~= b.bag then return a.bag < b.bag end
@@ -414,7 +435,10 @@ function MailFill:Fill(to, items, money, onDone)
     local list = {}
     for _, item in ipairs(type(items) == "table" and items or {}) do
         local itemID, count = tonumber(item.itemID), tonumber(item.count)
-        if itemID and count and count > 0 then list[#list + 1] = { itemID = itemID, count = math.floor(count) } end
+        local link = type(item.link) == "string" and item.link ~= "" and item.link or nil
+        if itemID and count and count > 0 then
+            list[#list + 1] = { itemID = itemID, count = math.floor(count), link = link }
+        end
     end
     money = tonumber(money)
     money = money and money >= 1 and math.floor(money) or nil
@@ -443,7 +467,7 @@ function MailFill:Fill(to, items, money, onDone)
     local room = MaxAttachments() - alreadyIn
     local steps, taken = {}, {}
     for _, item in ipairs(list) do
-        for _, step in ipairs(self:PlanStacks(item.itemID, item.count, taken)) do
+        for _, step in ipairs(self:PlanStacks(item.itemID, item.count, taken, item.link)) do
             step.itemID = item.itemID
             steps[#steps + 1] = step
         end

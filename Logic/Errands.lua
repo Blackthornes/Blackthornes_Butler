@@ -85,12 +85,21 @@ function Errands:Recipients()
             if type(row.mailCount) == "number" and row.mailCount > 0 then
                 count = math.min(count, row.mailCount)
             end
-            local item = recipient.byID[row.itemID]
+            -- Each version of an item by its link, so Fill mail takes the
+            -- one Butler said to mail ("of the Bear"), never the one kept
+            -- ("of the Monkey"); found 2026-11-28.
+            local link = type(row.link) == "string" and row.link ~= "" and row.link or nil
+            local key = row.itemID
+            local item = recipient.byID[key]
+            if item and link and item.link and item.link ~= link then
+                key = row.itemID .. "|" .. link
+                item = recipient.byID[key]
+            end
             if item then
                 item.count = item.count + count
             else
-                item = { itemID = row.itemID, count = count }
-                recipient.byID[row.itemID] = item
+                item = { itemID = row.itemID, count = count, link = link }
+                recipient.byID[key] = item
                 recipient.items[#recipient.items + 1] = item
             end
             recipient.count = recipient.count + count
@@ -504,7 +513,11 @@ function Errands:FillMail(to)
     if self:IsMe(recipient.to) then return false, L["That's the character you're on."] end
 
     local items = {}
-    for _, item in ipairs(recipient.items) do items[#items + 1] = { itemID = item.itemID, count = item.count } end
+    -- Each item's link rides along, so the filler takes that version
+    -- (Tradeskills' Butler:FillMail reads it since 2026-11-28).
+    for _, item in ipairs(recipient.items) do
+        items[#items + 1] = { itemID = item.itemID, count = item.count, link = item.link }
+    end
     Errands.FewestStacksFirst(items)
 
     local ok, started, why, fullName
