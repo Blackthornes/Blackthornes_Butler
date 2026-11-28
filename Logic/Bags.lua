@@ -5,7 +5,8 @@
 -- or sale), so they only mark the bags stale, and one read follows 0.2 s
 -- after the last of them, only while someone looks (the Butler window is up
 -- or a vendor is open). The read goes over the slots a few dozen a frame,
--- and only a slot whose key (link, count, locked) changed is read further.
+-- and only a slot whose key (link, count, locked, bound, no value) changed
+-- is read further.
 -- Bags.version moves only when something did, so the window redraws only
 -- then.
 
@@ -52,6 +53,8 @@ function Bags.ReadSlot(bag, slot)
         local link = info.hyperlink
         local count = tonumber(info.stackCount) or 1
         local locked = info.isLocked and true or false
+        local bound = info.isBound and true or false
+        local noValue = info.hasNoValue and true or false
         return {
             bag = bag, slot = slot,
             itemID = info.itemID,
@@ -59,11 +62,15 @@ function Bags.ReadSlot(bag, slot)
             count = count,
             quality = tonumber(info.quality),
             locked = locked,
-            noValue = info.hasNoValue and true or false,
-            bound = info.isBound and true or false,
+            noValue = noValue,
+            bound = bound,
             openable = info.hasLoot and true or false,
             icon = info.iconFileID,
-            key = ("%s:%d:%s"):format(tostring(link or info.itemID), count, locked and "l" or ""),
+            -- Bound and no value are in the key too: a piece worn and put
+            -- back in the same slot keeps its link and count but comes
+            -- back soulbound.
+            key = ("%s:%d:%s%s%s"):format(tostring(link or info.itemID), count,
+                locked and "l" or "", bound and "b" or "", noValue and "n" or ""),
         }
     end)
     return ok and entry or nil
